@@ -8,12 +8,21 @@ import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { Camera, Clock, MapPin } from 'lucide-react';
 
 export const metadata: Metadata = {
-    title: 'Event & Lifestyle Photography | Wandering Kite Studio',
-    description: 'Professional event and lifestyle photography services. Capturing authentic moments with creative storytelling. Based in India.',
-    keywords: ['event photographer', 'lifestyle photography', 'wedding photography', 'portrait photography', 'photography services India'],
+    title: 'Event & Lifestyle Photography Coimbatore | Wandering Kite Studio',
+    description: 'Professional event and lifestyle photography in Coimbatore and across India. Capturing authentic moments with creative storytelling. Wedding, portrait, and commercial photography services.',
+    keywords: [
+        'event photographer Coimbatore',
+        'lifestyle photography Coimbatore',
+        'wedding photography Coimbatore',
+        'portrait photography Coimbatore',
+        'commercial photography India',
+        'photography services India',
+        'event photography Tamil Nadu',
+        'professional photographer Coimbatore',
+    ],
     openGraph: {
-        title: 'Event & Lifestyle Photography',
-        description: 'Professional photography that captures authentic moments',
+        title: 'Event & Lifestyle Photography Coimbatore',
+        description: 'Professional photography that captures authentic moments in Coimbatore and across India',
         images: ['/og-photography.jpg'],
     },
 };

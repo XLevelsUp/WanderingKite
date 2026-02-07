@@ -9,12 +9,21 @@ import { podcastTestimonials, podcastProcessSteps, podcastFAQs } from '@/lib/ser
 import { Mic, Headphones, Radio, Zap } from 'lucide-react';
 
 export const metadata: Metadata = {
-    title: 'Podcast Recording Studio | Wandering Kite Studio',
-    description: 'Professional podcast recording studio with acoustic treatment, multi-track recording, and premium microphones. Hourly rates available.',
-    keywords: ['podcast studio', 'podcast recording near me', 'audio recording studio', 'podcast production India'],
+    title: 'Podcast Recording Studio Coimbatore | Professional Audio | Wandering Kite',
+    description: 'Professional podcast recording studio in Coimbatore with acoustic treatment, multi-track recording, and premium microphones. Hourly rates available. Serving Coimbatore and Tamil Nadu.',
+    keywords: [
+        'podcast studio Coimbatore',
+        'podcast recording near me',
+        'audio recording studio Coimbatore',
+        'podcast production India',
+        'podcast studio Tamil Nadu',
+        'professional podcast recording Coimbatore',
+        'audio production studio India',
+        'podcast recording India',
+    ],
     openGraph: {
-        title: 'Podcast Recording Studio',
-        description: 'Fully-equipped podcast studio with professional acoustics',
+        title: 'Podcast Recording Studio Coimbatore',
+        description: 'Fully-equipped podcast studio with professional acoustics in Coimbatore',
         images: ['/og-podcast.jpg'],
     },
 };

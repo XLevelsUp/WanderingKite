@@ -10,12 +10,23 @@ import { rentalsTestimonials, rentalsProcessSteps, rentalsFAQs } from '@/lib/ser
 import { Video, Shield, Headphones } from 'lucide-react';
 
 export const metadata: Metadata = {
-    title: 'Camera & Equipment Rentals | Wandering Kite Studio',
-    description: 'Rent professional cameras, lenses, lighting, and audio equipment. Sony, Canon, Rode available. Daily & weekly rates. Based in India.',
-    keywords: ['camera rental', 'DSLR rent', 'photography equipment rental', 'lens rental', 'lighting rental', 'audio equipment rental'],
+    title: 'Camera & Equipment Rentals Coimbatore | Sony, Canon | Wandering Kite',
+    description: 'Rent professional cameras, lenses, lighting, and audio equipment in Coimbatore. Sony, Canon, Rode available. Daily & weekly rates. Serving Coimbatore and Tamil Nadu.',
+    keywords: [
+        'camera rental Coimbatore',
+        'DSLR rent Coimbatore',
+        'photography equipment rental Coimbatore',
+        'lens rental Coimbatore',
+        'lighting rental India',
+        'audio equipment rental',
+        'Sony camera rental Coimbatore',
+        'Canon lens rental India',
+        'camera rental near me',
+        'video equipment rental Tamil Nadu',
+    ],
     openGraph: {
-        title: 'Professional Camera & Equipment Rentals',
-        description: 'Premium photography and video equipment for rent',
+        title: 'Professional Camera & Equipment Rentals Coimbatore',
+        description: 'Premium photography and video equipment for rent in Coimbatore',
         images: ['/og-rentals.jpg'],
     },
 };

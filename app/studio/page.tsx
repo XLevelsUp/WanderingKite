@@ -9,12 +9,21 @@ import { studioTestimonials, studioProcessSteps, studioFAQs } from '@/lib/servic
 import { Building2, Maximize, Lightbulb, Wifi } from 'lucide-react';
 
 export const metadata: Metadata = {
-    title: 'Premium Studio Space Rental | Wandering Kite Studio',
-    description: 'Rent our fully-equipped photography and video studio space. Professional lighting, backdrops, and amenities. Hourly and daily rates available.',
-    keywords: ['photography studio rental', 'video studio rental', 'studio space near me', 'photo studio India'],
+    title: 'Photography Studio Rental Coimbatore | 1200 sq ft | Wandering Kite',
+    description: 'Rent our fully-equipped 1200 sq ft photography and video studio in Coimbatore. Professional lighting, backdrops, and amenities. Hourly and daily rates available.',
+    keywords: [
+        'photography studio rental Coimbatore',
+        'video studio rental Coimbatore',
+        'studio space near me',
+        'photo studio Coimbatore',
+        'studio rental Tamil Nadu',
+        'photography studio India',
+        'video production studio Coimbatore',
+        'studio space rental India',
+    ],
     openGraph: {
-        title: 'Premium Studio Space Rental',
-        description: 'Professional studio facilities for photography and video production',
+        title: 'Premium Studio Space Rental Coimbatore',
+        description: 'Professional 1200 sq ft studio facilities for photography and video production in Coimbatore',
         images: ['/og-studio.jpg'],
     },
 };
