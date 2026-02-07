@@ -110,14 +110,14 @@ export function Footer() {
                             <li className="flex items-start gap-2">
                                 <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0" />
                                 <span>
-                                    123 Creative Hub, MG Road
+                                    NO 178, 1st Floor A Rammachandra Road
                                     <br />
-                                    Bangalore, Karnataka 560001
+                                    RS Puram, Coimbatore, Tamil Nadu 641002
                                 </span>
                             </li>
                             <li>
                                 <a
-                                    href="https://maps.google.com/?q=Wandering+Kite+Studio+Bangalore"
+                                    href="https://maps.google.com/?q=NO+178+Rammachandra+Road+RS+Puram+Coimbatore"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300"
