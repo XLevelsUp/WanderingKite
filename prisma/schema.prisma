@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  EMPLOYEE
+}
+
+enum EquipmentStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
+  RETIRED
+}
+
+enum OrderStatus {
+  PENDING
+  ACTIVE
+  RETURNED
+  LATE
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  fullName      String?
+  role          UserRole  @default(EMPLOYEE)
+  
+  // Self-relation: Manager -> Subordinates
+  managerId     String?
+  manager       User?     @relation("ManagementHierarchy", fields: [managerId], references: [id])
+  subordinates  User[]    @relation("ManagementHierarchy")
+
+  // Relationships to Orders
+  assignedOrders Order[]  @relation("AssignedEmployee")
+  supervisedOrders Order[] @relation("Supervisor")
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("profiles") // Mapping to existing Supabase profiles table
+}
+
+model Client {
+  id          String   @id @default(uuid())
+  name        String
+  email       String   @unique
+  phone       String?
+  address     String?
+  govtId      String?
+  orders      Order[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("clients")
+}
+
+model Equipment {
+  id            String          @id @default(uuid())
+  name          String
+  serialNumber  String          @unique
+  status        EquipmentStatus @default(AVAILABLE)
+  rentalPrice   Float
+  description   String?
+  
+  orderItems    OrderItem[]
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@map("equipment")
+}
+
+model Order {
+  id                String      @id @default(uuid())
+  
+  clientId          String
+  client            Client      @relation(fields: [clientId], references: [id])
+  
+  assignedEmployeeId String
+  assignedEmployee   User       @relation("AssignedEmployee", fields: [assignedEmployeeId], references: [id])
+  
+  supervisorId      String
+  supervisor        User        @relation("Supervisor", fields: [supervisorId], references: [id])
+
+  usageLocation     String
+  status            OrderStatus @default(PENDING)
+  
+  orderItems        OrderItem[]
+  
+  notes             String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id            String    @id @default(uuid())
+  
+  orderId       String
+  order         Order     @relation(fields: [orderId], references: [id])
+  
+  equipmentId   String
+  equipment     Equipment @relation(fields: [equipmentId], references: [id])
+  
+  priceAtRental Float
+
+  createdAt     DateTime  @default(now())
+
+  @@map("order_items")
+}
