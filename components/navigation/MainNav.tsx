@@ -1,15 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { Camera, Video, Building2, Mic, MessageCircle } from 'lucide-react';
+import { Camera, Video, Building2, MessageCircle } from 'lucide-react';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { siteConfig } from '@/config/site';
 
 const navItems = [
   { label: 'Photography', href: '/photography', icon: Camera },
   { label: 'Rentals', href: '/rentals', icon: Video },
-  { label: 'Studio', href: '/studio', icon: Building2 },
-  { label: 'Podcast', href: '/podcast', icon: Mic },
+  { label: 'The Studio Space', href: '/studio', icon: Building2 },
 ];
 
 export function MainNav() {

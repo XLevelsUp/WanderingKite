@@ -202,52 +202,142 @@ export default function PhotographyPage() {
                 </div>
             </section>
 
-            {/* Services & Pricing */}
+            {/* Services */}
             <section className="border-t border-zinc-800 bg-zinc-900/30 py-24">
                 <div className="container mx-auto px-6">
-                    <h2 className="mb-12 text-center text-4xl font-bold">Services</h2>
-                    <div className="mx-auto grid max-w-4xl gap-6">
-                        <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-                            <div>
-                                <h3 className="mb-2 text-xl font-bold">Event Photography</h3>
-                                <p className="text-zinc-400">Weddings, corporate events, parties</p>
+                    <h2 className="mb-4 text-center text-4xl font-bold">Our Services</h2>
+                    <p className="mb-16 text-center text-zinc-400">Choose the session that fits your story</p>
+
+                    {/* ── Photography ──────────────────────────────────────── */}
+                    <div className="mb-16">
+                        {/* Events */}
+                        <div className="mb-10">
+                            <div className="mb-6 flex items-center gap-3">
+                                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-sm font-semibold text-amber-500">
+                                    Events
+                                </span>
+                                <div className="h-px flex-1 bg-zinc-800" />
                             </div>
-                            <a
-                                href={generateWhatsAppLink('photography', "Hi! I'd like to inquire about event photography pricing.")}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="rounded-full bg-amber-500 px-6 py-3 font-semibold text-zinc-950 transition-colors hover:bg-amber-400"
-                            >
-                                Get Quote
-                            </a>
+                            <div className="grid gap-4 sm:grid-cols-3">
+                                {[
+                                    { title: 'Wedding', desc: 'Full-day coverage with dual-shooter kits & premium editing' },
+                                    { title: 'Engagements', desc: 'Intimate pre-wedding & engagement sessions' },
+                                    { title: 'Birthdays', desc: 'Birthday milestones, parties & celebrations' },
+                                ].map((s) => (
+                                    <div key={s.title} className="flex flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+                                        <div>
+                                            <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
+                                            <p className="text-sm text-zinc-400">{s.desc}</p>
+                                        </div>
+                                        <a
+                                            href={generateWhatsAppLink('photography', `Hi! I'd like to inquire about ${s.title} photography.`)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="mt-5 inline-block rounded-full bg-amber-500 px-5 py-2.5 text-center text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-400"
+                                        >
+                                            Get Quote
+                                        </a>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-                            <div>
-                                <h3 className="mb-2 text-xl font-bold">Lifestyle Shoots</h3>
-                                <p className="text-zinc-400">Personal branding, family portraits</p>
+
+                        {/* Portraits */}
+                        <div>
+                            <div className="mb-6 flex items-center gap-3">
+                                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-sm font-semibold text-amber-500">
+                                    Portraits
+                                </span>
+                                <div className="h-px flex-1 bg-zinc-800" />
                             </div>
-                            <a
-                                href={generateWhatsAppLink('photography', "Hi! I'd like to inquire about lifestyle photography pricing.")}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="rounded-full bg-amber-500 px-6 py-3 font-semibold text-zinc-950 transition-colors hover:bg-amber-400"
-                            >
-                                Get Quote
-                            </a>
+                            <div className="grid gap-4 sm:grid-cols-3">
+                                {[
+                                    { title: 'Family', desc: 'Studio & outdoor family portrait sessions' },
+                                    { title: 'Maternity', desc: 'Elegant maternity & expecting mother shoots' },
+                                    { title: 'Baby Shoots', desc: 'Safe, gentle newborn & baby photography' },
+                                ].map((s) => (
+                                    <div key={s.title} className="flex flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+                                        <div>
+                                            <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
+                                            <p className="text-sm text-zinc-400">{s.desc}</p>
+                                        </div>
+                                        <a
+                                            href={generateWhatsAppLink('photography', `Hi! I'd like to inquire about ${s.title} photography.`)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="mt-5 inline-block rounded-full bg-amber-500 px-5 py-2.5 text-center text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-400"
+                                        >
+                                            Get Quote
+                                        </a>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-                            <div>
-                                <h3 className="mb-2 text-xl font-bold">Commercial Photography</h3>
-                                <p className="text-zinc-400">Product shoots, brand campaigns</p>
-                            </div>
-                            <a
-                                href={generateWhatsAppLink('photography', "Hi! I'd like to inquire about commercial photography pricing.")}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="rounded-full bg-amber-500 px-6 py-3 font-semibold text-zinc-950 transition-colors hover:bg-amber-400"
-                            >
-                                Get Quote
-                            </a>
+                    </div>
+
+                    {/* ── Corporate ─────────────────────────────────────────── */}
+                    <div className="mb-16">
+                        <div className="mb-6 flex items-center gap-3">
+                            <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1 text-sm font-semibold text-blue-400">
+                                Corporate
+                            </span>
+                            <div className="h-px flex-1 bg-zinc-800" />
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            {[
+                                { title: 'Product', desc: 'E-commerce & catalogue product photography' },
+                                { title: 'Cinematic Videos', desc: 'Brand films & corporate video production' },
+                                { title: 'Social Media Content', desc: 'Platform-ready reels, posts & campaigns' },
+                                { title: 'Model Shoots', desc: 'Fashion & model portfolio sessions' },
+                                { title: 'Headshot', desc: 'Professional headshots for teams & founders' },
+                            ].map((s) => (
+                                <div key={s.title} className="flex flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+                                    <div>
+                                        <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
+                                        <p className="text-sm text-zinc-400">{s.desc}</p>
+                                    </div>
+                                    <a
+                                        href={generateWhatsAppLink('photography', `Hi! I'd like to inquire about ${s.title}.`)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="mt-5 inline-block rounded-full border border-blue-500/40 bg-blue-500/10 px-5 py-2.5 text-center text-sm font-semibold text-blue-400 transition-colors hover:bg-blue-500/20"
+                                    >
+                                        Get Quote
+                                    </a>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* ── Commercial ────────────────────────────────────────── */}
+                    <div>
+                        <div className="mb-6 flex items-center gap-3">
+                            <span className="rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1 text-sm font-semibold text-purple-400">
+                                Commercial
+                            </span>
+                            <div className="h-px flex-1 bg-zinc-800" />
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-3">
+                            {[
+                                { title: 'Ads', desc: 'High-concept advertisement productions' },
+                                { title: 'Music Videos', desc: 'Full-production music videos with cinema kit' },
+                                { title: 'Short Films', desc: 'Narrative short film production & post' },
+                            ].map((s) => (
+                                <div key={s.title} className="flex flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+                                    <div>
+                                        <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
+                                        <p className="text-sm text-zinc-400">{s.desc}</p>
+                                    </div>
+                                    <a
+                                        href={generateWhatsAppLink('photography', `Hi! I'd like to inquire about ${s.title}.`)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="mt-5 inline-block rounded-full border border-purple-500/40 bg-purple-500/10 px-5 py-2.5 text-center text-sm font-semibold text-purple-400 transition-colors hover:bg-purple-500/20"
+                                    >
+                                        Get Quote
+                                    </a>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
