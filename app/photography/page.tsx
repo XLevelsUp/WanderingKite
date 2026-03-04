@@ -78,9 +78,14 @@ const processSteps = [
     },
     {
         number: '4',
-        title: 'Editing & Delivery',
-        description: 'Within 7-10 days, receive professionally edited high-resolution images via cloud link. Unlimited revisions included.',
+        title: 'Post Production',
+        description: 'Our team of editors meticulously selects and enhances the best images from your shoot. We focus on natural color correction, subtle retouching, and preserving the authentic mood of the moment.',
     },
+    {
+        number: '5',
+        title: 'Delivery',
+        description: 'Within 7-10 days, receive professionally edited high-resolution images via cloud link. Unlimited revisions included.',
+    }
 ];
 
 const faqs = [
@@ -118,10 +123,10 @@ export default function PhotographyPage() {
                             Photography Services
                         </div>
                         <h1 className="mb-6 text-5xl font-bold leading-tight md:text-6xl lg:text-7xl">
-                            Event & Lifestyle
+                            Photography &
                             <br />
                             <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
-                                Photography
+                                Cinematography
                             </span>
                         </h1>
                         <p className="mb-8 text-xl text-zinc-400">
@@ -289,7 +294,7 @@ export default function PhotographyPage() {
                                 { title: 'Cinematic Videos', desc: 'Brand films & corporate video production' },
                                 { title: 'Social Media Content', desc: 'Platform-ready reels, posts & campaigns' },
                                 { title: 'Model Shoots', desc: 'Fashion & model portfolio sessions' },
-                                { title: 'Headshot', desc: 'Professional headshots for teams & founders' },
+                                { title: 'Headshot Photography', desc: 'Professional headshots for teams & founders' },
                             ].map((s) => (
                                 <div key={s.title} className="flex flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
                                     <div>

@@ -43,14 +43,14 @@ export default function RentalsPage() {
             <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">
                 <div className="container mx-auto px-6">
                     <div className="mx-auto max-w-4xl text-center">
-                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm text-blue-500">
+                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-sm text-amber-500">
                             <Video className="h-4 w-4" />
                             Equipment Rentals
                         </div>
                         <h1 className="mb-6 text-5xl font-bold leading-tight md:text-6xl lg:text-7xl">
                             Professional Camera &
                             <br />
-                            <span className="bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
+                            <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
                                 Equipment Rentals
                             </span>
                         </h1>
@@ -69,8 +69,8 @@ export default function RentalsPage() {
                     <div className="grid gap-8 md:grid-cols-3">
                         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 text-center">
                             <div className="mb-4 flex justify-center">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
-                                    <Shield className="h-6 w-6 text-blue-500" />
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+                                    <Shield className="h-6 w-6 text-amber-500" />
                                 </div>
                             </div>
                             <h3 className="mb-3 text-xl font-bold">Insured Equipment</h3>
@@ -80,8 +80,8 @@ export default function RentalsPage() {
                         </div>
                         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 text-center">
                             <div className="mb-4 flex justify-center">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
-                                    <Video className="h-6 w-6 text-blue-500" />
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+                                    <Video className="h-6 w-6 text-amber-500" />
                                 </div>
                             </div>
                             <h3 className="mb-3 text-xl font-bold">Latest Gear</h3>
@@ -91,8 +91,8 @@ export default function RentalsPage() {
                         </div>
                         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 text-center">
                             <div className="mb-4 flex justify-center">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
-                                    <Headphones className="h-6 w-6 text-blue-500" />
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+                                    <Headphones className="h-6 w-6 text-amber-500" />
                                 </div>
                             </div>
                             <h3 className="mb-3 text-xl font-bold">24/7 Support</h3>
@@ -159,25 +159,25 @@ export default function RentalsPage() {
                         <h2 className="mb-8 text-center text-4xl font-bold">Rental Terms</h2>
                         <div className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8">
                             <div className="flex items-start gap-3">
-                                <span className="text-blue-500">•</span>
+                                <span className="text-amber-500">•</span>
                                 <p className="text-zinc-300">
                                     <strong>Booking:</strong> Reserve via WhatsApp at least 24 hours in advance
                                 </p>
                             </div>
                             <div className="flex items-start gap-3">
-                                <span className="text-blue-500">•</span>
+                                <span className="text-amber-500">•</span>
                                 <p className="text-zinc-300">
                                     <strong>Security Deposit:</strong> Refundable deposit required for all rentals
                                 </p>
                             </div>
                             <div className="flex items-start gap-3">
-                                <span className="text-blue-500">•</span>
+                                <span className="text-amber-500">•</span>
                                 <p className="text-zinc-300">
                                     <strong>Pickup/Delivery:</strong> Flexible pickup times or delivery available (charges apply)
                                 </p>
                             </div>
                             <div className="flex items-start gap-3">
-                                <span className="text-blue-500">•</span>
+                                <span className="text-amber-500">•</span>
                                 <p className="text-zinc-300">
                                     <strong>Late Returns:</strong> Additional charges apply for late returns
                                 </p>
@@ -188,13 +188,13 @@ export default function RentalsPage() {
             </section>
 
             {/* Testimonials */}
-            <Testimonials testimonials={rentalsTestimonials} accentColor="blue" />
+            <Testimonials testimonials={rentalsTestimonials} accentColor="amber" />
 
             {/* Process Timeline */}
-            <ProcessTimeline steps={rentalsProcessSteps} accentColor="blue" />
+            <ProcessTimeline steps={rentalsProcessSteps} accentColor="amber" />
 
             {/* FAQ */}
-            <ServiceFAQ faqs={rentalsFAQs} accentColor="blue" />
+            <ServiceFAQ faqs={rentalsFAQs} accentColor="amber" />
 
             <BookingFlyout service="rentals" />
             <Footer />

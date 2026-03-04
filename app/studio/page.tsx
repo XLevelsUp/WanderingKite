@@ -64,14 +64,14 @@ export default function StudioPage() {
             <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">
                 <div className="container mx-auto px-6">
                     <div className="mx-auto max-w-4xl text-center">
-                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-2 text-sm text-purple-500">
+                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-sm text-amber-500">
                             <Building2 className="h-4 w-4" />
                             Studio Rental
                         </div>
                         <h1 className="mb-6 text-5xl font-bold leading-tight md:text-6xl lg:text-7xl">
                             Premium Studio
                             <br />
-                            <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+                            <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
                                 Space Rental
                             </span>
                         </h1>
@@ -83,7 +83,7 @@ export default function StudioPage() {
                             href={generateWhatsAppLink('studio')}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-block rounded-full bg-purple-500 px-8 py-4 font-semibold text-white transition-all hover:bg-purple-400 hover:shadow-lg hover:shadow-purple-500/50"
+                            className="inline-block rounded-full bg-amber-500 px-8 py-4 font-semibold text-white transition-all hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/50"
                         >
                             Book Your Slot
                         </a>
@@ -99,8 +99,8 @@ export default function StudioPage() {
                         {facilities.map((facility, index) => (
                             <div key={index} className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 text-center">
                                 <div className="mb-4 flex justify-center">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-500/10">
-                                        <facility.icon className="h-6 w-6 text-purple-500" />
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+                                        <facility.icon className="h-6 w-6 text-amber-500" />
                                     </div>
                                 </div>
                                 <h3 className="mb-2 text-lg font-bold">{facility.title}</h3>
@@ -120,7 +120,7 @@ export default function StudioPage() {
                     {/* Space Allocation */}
                     <div className="mb-16">
                         <div className="mb-6 flex items-center gap-3">
-                            <span className="rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1 text-sm font-semibold text-purple-400">
+                            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-sm font-semibold text-amber-400">
                                 Space Allocation
                             </span>
                             <div className="h-px flex-1 bg-zinc-800" />
@@ -131,9 +131,9 @@ export default function StudioPage() {
                                 { title: 'Half Day', desc: '4 hours · All lighting · Multiple backdrops · Makeup area', badge: 'Most Popular' },
                                 { title: 'Full Day', desc: '8 hours · All equipment · Flexible scheduling · Refreshments', badge: null },
                             ].map((s) => (
-                                <div key={s.title} className={`relative flex flex-col justify-between rounded-xl border p-6 ${s.badge ? 'border-purple-500 bg-purple-500/5' : 'border-zinc-800 bg-zinc-900/50'}`}>
+                                <div key={s.title} className={`relative flex flex-col justify-between rounded-xl border p-6 ${s.badge ? 'border-amber-500 bg-amber-500/5' : 'border-zinc-800 bg-zinc-900/50'}`}>
                                     {s.badge && (
-                                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-purple-500 px-4 py-1 text-xs font-semibold text-white">
+                                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-4 py-1 text-xs font-semibold text-white">
                                             {s.badge}
                                         </span>
                                     )}
@@ -145,7 +145,7 @@ export default function StudioPage() {
                                         href={generateWhatsAppLink('studio', `Hi! I'd like to book the ${s.title} studio package.`)}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="mt-5 inline-block rounded-full bg-purple-500 px-5 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-purple-400"
+                                        className="mt-5 inline-block rounded-full bg-amber-500 px-5 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-amber-400"
                                     >
                                         Book Now
                                     </a>
@@ -157,16 +157,17 @@ export default function StudioPage() {
                     {/* Podcast Studio */}
                     <div className="mb-16">
                         <div className="mb-6 flex items-center gap-3">
-                            <span className="rounded-full border border-green-500/30 bg-green-500/10 px-4 py-1 text-sm font-semibold text-green-400">
+                            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-sm font-semibold text-amber-400">
                                 Podcast Studio
                             </span>
                             <div className="h-px flex-1 bg-zinc-800" />
                         </div>
-                        <div className="grid gap-4 sm:grid-cols-3">
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             {[
                                 { title: 'Solo Creator', desc: 'Single host setup · Multi-track recording · Basic editing' },
                                 { title: 'Interview Setup', desc: '2–3 guests · Video recording option · Multi-camera angles' },
                                 { title: 'Full Production', desc: 'Up to 4 guests · 4K video · Advanced editing · Same-day delivery' },
+                                { title: 'Multi Camera Setup', desc: '3–5 camera angles · Cinematic podcast look · Live switching · Full 4K' },
                             ].map((s) => (
                                 <div key={s.title} className="flex flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
                                     <div>
@@ -177,7 +178,7 @@ export default function StudioPage() {
                                         href={generateWhatsAppLink('studio', `Hi! I'd like to inquire about the Podcast ${s.title} package.`)}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="mt-5 inline-block rounded-full border border-green-500/40 bg-green-500/10 px-5 py-2.5 text-center text-sm font-semibold text-green-400 transition-colors hover:bg-green-500/20"
+                                        className="mt-5 inline-block rounded-full border border-amber-500/40 bg-amber-500/10 px-5 py-2.5 text-center text-sm font-semibold text-amber-400 transition-colors hover:bg-amber-500/20"
                                     >
                                         Get Quote
                                     </a>
@@ -228,7 +229,7 @@ export default function StudioPage() {
                         <h2 className="mb-8 text-center text-4xl font-bold">What's Included</h2>
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-                                <h3 className="mb-3 font-bold text-purple-500">Equipment</h3>
+                                <h3 className="mb-3 font-bold text-amber-500">Equipment</h3>
                                 <ul className="space-y-2 text-sm text-zinc-300">
                                     <li>• Continuous LED lights (3x)</li>
                                     <li>• Strobe lights (2x)</li>
@@ -237,7 +238,7 @@ export default function StudioPage() {
                                 </ul>
                             </div>
                             <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-                                <h3 className="mb-3 font-bold text-purple-500">Amenities</h3>
+                                <h3 className="mb-3 font-bold text-amber-500">Amenities</h3>
                                 <ul className="space-y-2 text-sm text-zinc-300">
                                     <li>• Changing/makeup room</li>
                                     <li>• High-speed WiFi</li>
@@ -251,13 +252,13 @@ export default function StudioPage() {
             </section>
 
             {/* Testimonials */}
-            <Testimonials testimonials={studioTestimonials} accentColor="purple" />
+            <Testimonials testimonials={studioTestimonials} accentColor="amber" />
 
             {/* Process Timeline */}
-            <ProcessTimeline steps={studioProcessSteps} accentColor="purple" />
+            <ProcessTimeline steps={studioProcessSteps} accentColor="amber" />
 
             {/* FAQ */}
-            <ServiceFAQ faqs={studioFAQs} accentColor="purple" />
+            <ServiceFAQ faqs={studioFAQs} accentColor="amber" />
 
             <BookingFlyout service="studio" />
             <Footer />
