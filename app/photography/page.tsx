@@ -113,7 +113,7 @@ const faqs = [
 
 export default function PhotographyPage() {
     return (
-        <main className="min-h-screen bg-zinc-950 pt-20">
+        <main className="min-h-screen bg-background pt-20">
             {/* Hero Section */}
             <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">
                 <div className="container mx-auto px-6">
@@ -129,7 +129,7 @@ export default function PhotographyPage() {
                                 Cinematography
                             </span>
                         </h1>
-                        <p className="mb-8 text-xl text-zinc-400">
+                        <p className="mb-8 text-xl text-muted-foreground">
                             Capturing authentic moments with creative storytelling. From events to portraits,
                             we create visual narratives that resonate.
                         </p>
@@ -146,34 +146,34 @@ export default function PhotographyPage() {
             </section>
 
             {/* Our Approach */}
-            <section className="border-t border-zinc-800 py-24">
+            <section className="border-t border-border py-24">
                 <div className="container mx-auto px-6">
                     <h2 className="mb-12 text-center text-4xl font-bold">Our Approach</h2>
                     <div className="grid gap-8 md:grid-cols-3">
-                        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8">
+                        <div className="rounded-2xl border border-border bg-muted/50 p-8">
                             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
                                 <Camera className="h-6 w-6 text-amber-500" />
                             </div>
                             <h3 className="mb-3 text-xl font-bold">Authentic Storytelling</h3>
-                            <p className="text-zinc-400">
+                            <p className="text-muted-foreground">
                                 We capture genuine emotions and candid moments that tell your unique story.
                             </p>
                         </div>
-                        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8">
+                        <div className="rounded-2xl border border-border bg-muted/50 p-8">
                             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
                                 <Clock className="h-6 w-6 text-amber-500" />
                             </div>
                             <h3 className="mb-3 text-xl font-bold">Professional Delivery</h3>
-                            <p className="text-zinc-400">
+                            <p className="text-muted-foreground">
                                 High-quality edited images delivered within 7-10 days of your session.
                             </p>
                         </div>
-                        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8">
+                        <div className="rounded-2xl border border-border bg-muted/50 p-8">
                             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
                                 <MapPin className="h-6 w-6 text-amber-500" />
                             </div>
                             <h3 className="mb-3 text-xl font-bold">On-Location Flexibility</h3>
-                            <p className="text-zinc-400">
+                            <p className="text-muted-foreground">
                                 We travel to your venue or suggest stunning locations across India.
                             </p>
                         </div>
@@ -182,14 +182,14 @@ export default function PhotographyPage() {
             </section>
 
             {/* Portfolio Grid */}
-            <section className="border-t border-zinc-800 py-24">
+            <section className="border-t border-border py-24">
                 <div className="container mx-auto px-6">
                     <h2 className="mb-12 text-center text-4xl font-bold">Portfolio</h2>
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         {portfolioImages.map((image) => (
                             <div
                                 key={image.id}
-                                className="group relative aspect-square overflow-hidden rounded-xl bg-zinc-900"
+                                className="group relative aspect-square overflow-hidden rounded-xl bg-card"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-orange-500/20 opacity-0 transition-opacity group-hover:opacity-100" />
                                 <div className="flex h-full items-center justify-center">
@@ -208,10 +208,10 @@ export default function PhotographyPage() {
             </section>
 
             {/* Services */}
-            <section className="border-t border-zinc-800 bg-zinc-900/30 py-24">
+            <section className="border-t border-border bg-muted/30 py-24">
                 <div className="container mx-auto px-6">
                     <h2 className="mb-4 text-center text-4xl font-bold">Our Services</h2>
-                    <p className="mb-16 text-center text-zinc-400">Choose the session that fits your story</p>
+                    <p className="mb-16 text-center text-muted-foreground">Choose the session that fits your story</p>
 
                     {/* ── Photography ──────────────────────────────────────── */}
                     <div className="mb-16">
@@ -221,7 +221,7 @@ export default function PhotographyPage() {
                                 <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-sm font-semibold text-amber-500">
                                     Events
                                 </span>
-                                <div className="h-px flex-1 bg-zinc-800" />
+                                <div className="h-px flex-1 bg-secondary" />
                             </div>
                             <div className="grid gap-4 sm:grid-cols-3">
                                 {[
@@ -229,10 +229,10 @@ export default function PhotographyPage() {
                                     { title: 'Engagements', desc: 'Intimate pre-wedding & engagement sessions' },
                                     { title: 'Birthdays', desc: 'Birthday milestones, parties & celebrations' },
                                 ].map((s) => (
-                                    <div key={s.title} className="flex flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+                                    <div key={s.title} className="flex flex-col justify-between rounded-xl border border-border bg-muted/50 p-6">
                                         <div>
                                             <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
-                                            <p className="text-sm text-zinc-400">{s.desc}</p>
+                                            <p className="text-sm text-muted-foreground">{s.desc}</p>
                                         </div>
                                         <a
                                             href={generateWhatsAppLink('photography', `Hi! I'd like to inquire about ${s.title} photography.`)}
@@ -253,7 +253,7 @@ export default function PhotographyPage() {
                                 <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-sm font-semibold text-amber-500">
                                     Portraits
                                 </span>
-                                <div className="h-px flex-1 bg-zinc-800" />
+                                <div className="h-px flex-1 bg-secondary" />
                             </div>
                             <div className="grid gap-4 sm:grid-cols-3">
                                 {[
@@ -261,10 +261,10 @@ export default function PhotographyPage() {
                                     { title: 'Maternity', desc: 'Elegant maternity & expecting mother shoots' },
                                     { title: 'Baby Shoots', desc: 'Safe, gentle newborn & baby photography' },
                                 ].map((s) => (
-                                    <div key={s.title} className="flex flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+                                    <div key={s.title} className="flex flex-col justify-between rounded-xl border border-border bg-muted/50 p-6">
                                         <div>
                                             <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
-                                            <p className="text-sm text-zinc-400">{s.desc}</p>
+                                            <p className="text-sm text-muted-foreground">{s.desc}</p>
                                         </div>
                                         <a
                                             href={generateWhatsAppLink('photography', `Hi! I'd like to inquire about ${s.title} photography.`)}
@@ -286,7 +286,7 @@ export default function PhotographyPage() {
                             <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1 text-sm font-semibold text-blue-400">
                                 Corporate
                             </span>
-                            <div className="h-px flex-1 bg-zinc-800" />
+                            <div className="h-px flex-1 bg-secondary" />
                         </div>
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             {[
@@ -296,10 +296,10 @@ export default function PhotographyPage() {
                                 { title: 'Model Shoots', desc: 'Fashion & model portfolio sessions' },
                                 { title: 'Headshot Photography', desc: 'Professional headshots for teams & founders' },
                             ].map((s) => (
-                                <div key={s.title} className="flex flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+                                <div key={s.title} className="flex flex-col justify-between rounded-xl border border-border bg-muted/50 p-6">
                                     <div>
                                         <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
-                                        <p className="text-sm text-zinc-400">{s.desc}</p>
+                                        <p className="text-sm text-muted-foreground">{s.desc}</p>
                                     </div>
                                     <a
                                         href={generateWhatsAppLink('photography', `Hi! I'd like to inquire about ${s.title}.`)}
@@ -320,7 +320,7 @@ export default function PhotographyPage() {
                             <span className="rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1 text-sm font-semibold text-purple-400">
                                 Commercial
                             </span>
-                            <div className="h-px flex-1 bg-zinc-800" />
+                            <div className="h-px flex-1 bg-secondary" />
                         </div>
                         <div className="grid gap-4 sm:grid-cols-3">
                             {[
@@ -328,10 +328,10 @@ export default function PhotographyPage() {
                                 { title: 'Music Videos', desc: 'Full-production music videos with cinema kit' },
                                 { title: 'Short Films', desc: 'Narrative short film production & post' },
                             ].map((s) => (
-                                <div key={s.title} className="flex flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+                                <div key={s.title} className="flex flex-col justify-between rounded-xl border border-border bg-muted/50 p-6">
                                     <div>
                                         <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
-                                        <p className="text-sm text-zinc-400">{s.desc}</p>
+                                        <p className="text-sm text-muted-foreground">{s.desc}</p>
                                     </div>
                                     <a
                                         href={generateWhatsAppLink('photography', `Hi! I'd like to inquire about ${s.title}.`)}

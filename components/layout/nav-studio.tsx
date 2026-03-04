@@ -109,7 +109,7 @@ function DomainDropdown({ domainKey, domain, isActive }: DomainDropdownProps) {
                                 <DomainIcon name={domain.iconName} className="h-3.5 w-3.5 text-primary" />
                             </div>
                             <div className="flex-1">
-                                <p className="text-xs font-semibold text-white">{domain.label}</p>
+                                <p className="text-xs font-semibold text-foreground">{domain.label}</p>
                                 <p className="text-[10px] text-foreground/40">View all services</p>
                             </div>
                             <ArrowRight className="h-3 w-3 text-foreground/30 transition-all group-hover/header:translate-x-0.5 group-hover/header:text-primary" />
@@ -132,7 +132,7 @@ function DomainDropdown({ domainKey, domain, isActive }: DomainDropdownProps) {
                                             className={cn(
                                                 'group/item flex cursor-pointer items-start gap-2.5 rounded-lg px-2 py-2',
                                                 'text-foreground/60 outline-none transition-all duration-150',
-                                                'hover:bg-primary/8 hover:text-white focus:bg-primary/8 focus:text-white',
+                                                'hover:bg-primary/8 hover:text-foreground focus:bg-primary/8 focus:text-foreground',
                                             )}
                                         >
                                             <div className="flex-1 min-w-0">
@@ -173,8 +173,8 @@ function MobileDomainAccordion({ domainKey, domain, onClose }: MobileDomainAccor
                 className={cn(
                     'flex w-full items-center justify-between px-4 py-3.5',
                     'text-sm font-medium text-foreground/70 transition-colors',
-                    'hover:text-white',
-                    open && 'text-white',
+                    'hover:text-foreground',
+                    open && 'text-foreground',
                 )}
                 aria-expanded={open}
             >
@@ -216,7 +216,7 @@ function MobileDomainAccordion({ domainKey, domain, onClose }: MobileDomainAccor
                                         className={cn(
                                             'flex items-center gap-2 rounded-lg px-3 py-2.5',
                                             'text-sm text-foreground/60 transition-colors',
-                                            'hover:bg-white/5 hover:text-white',
+                                            'hover:bg-white/5 hover:text-foreground',
                                         )}
                                     >
                                         {item.label}
@@ -251,7 +251,7 @@ function MobileSheet() {
                     className={cn(
                         'flex h-10 w-10 items-center justify-center rounded-full',
                         'border border-white/10 bg-white/5 text-foreground/70',
-                        'transition-all duration-200 hover:bg-white/10 hover:text-white',
+                        'transition-all duration-200 hover:bg-white/10 hover:text-foreground',
                         'md:hidden',
                     )}
                     aria-label="Open navigation menu"
@@ -287,7 +287,7 @@ function MobileSheet() {
                         <Link
                             href="/"
                             onClick={() => setOpen(false)}
-                            className="text-lg font-bold text-white"
+                            className="text-lg font-bold text-foreground"
                         >
                             {siteConfig.name}
                         </Link>
@@ -296,7 +296,7 @@ function MobileSheet() {
                                 className={cn(
                                     'flex h-8 w-8 items-center justify-center rounded-full',
                                     'border border-white/10 text-foreground/50',
-                                    'transition-colors hover:bg-white/8 hover:text-white',
+                                    'transition-colors hover:bg-white/8 hover:text-foreground',
                                 )}
                                 aria-label="Close menu"
                             >
@@ -329,7 +329,7 @@ function MobileSheet() {
                                 'border border-primary/35 bg-primary/8',
                                 'px-5 py-2.5 text-sm font-semibold text-primary',
                                 'transition-all duration-200',
-                                'hover:bg-primary/18 hover:border-primary/60 hover:text-white',
+                                'hover:bg-primary/18 hover:border-primary/60 hover:text-foreground',
                             )}
                         >
                             <MessageCircle className="h-4 w-4" />
@@ -364,7 +364,7 @@ export function StudioNavigation() {
             className={cn(
                 'fixed top-0 z-40 w-full',
                 'border-b border-primary/12',
-                'bg-[rgba(10,10,11,0.85)] backdrop-blur-xl',
+                'bg-background/85 backdrop-blur-xl',
             )}
         >
             <div className="container mx-auto flex h-20 items-center justify-between px-6">
@@ -373,7 +373,7 @@ export function StudioNavigation() {
                 <Link href="/" className="group flex items-center gap-2">
                     <span
                         className={cn(
-                            'text-xl font-bold text-white transition-all duration-300',
+                            'text-xl font-bold text-foreground transition-all duration-300',
                             'group-hover:text-gradient-gold md:text-2xl',
                         )}
                     >
@@ -405,7 +405,7 @@ export function StudioNavigation() {
                             'px-5 py-2.5 text-sm font-semibold text-primary',
                             'transition-all duration-200',
                             'hover:bg-primary/18 hover:border-primary/60',
-                            'hover:text-white hover:shadow-[0_0_20px_hsl(var(--primary)/0.20)]',
+                            'hover:text-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.20)]',
                         )}
                     >
                         <MessageCircle className="h-4 w-4" />

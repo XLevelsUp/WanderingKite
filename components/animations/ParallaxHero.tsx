@@ -69,7 +69,7 @@ export function ParallaxHero({ title, subtitle, gradientFrom, gradientTo, badge,
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.5 }}
-                        className="mb-8 text-xl text-zinc-400"
+                        className="mb-8 text-xl text-muted-foreground"
                     >
                         {subtitle}
                     </motion.p>
@@ -84,7 +84,7 @@ export function ParallaxHero({ title, subtitle, gradientFrom, gradientTo, badge,
                             href={cta.href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`inline-block rounded-full px-8 py-4 font-semibold transition-all ${gradientFrom.includes('amber') ? 'bg-amber-500 text-zinc-950 hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/50' : gradientFrom.includes('blue') ? 'bg-blue-500 text-white hover:bg-blue-400 hover:shadow-lg hover:shadow-blue-500/50' : gradientFrom.includes('purple') ? 'bg-purple-500 text-white hover:bg-purple-400 hover:shadow-lg hover:shadow-purple-500/50' : 'bg-green-500 text-white hover:bg-green-400 hover:shadow-lg hover:shadow-green-500/50'}`}
+                            className={`inline-block rounded-full px-8 py-4 font-semibold transition-all ${gradientFrom.includes('amber') ? 'bg-amber-500 text-zinc-950 hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/50' : gradientFrom.includes('blue') ? 'bg-blue-500 text-foreground hover:bg-blue-400 hover:shadow-lg hover:shadow-blue-500/50' : gradientFrom.includes('purple') ? 'bg-purple-500 text-foreground hover:bg-purple-400 hover:shadow-lg hover:shadow-purple-500/50' : 'bg-green-500 text-foreground hover:bg-green-400 hover:shadow-lg hover:shadow-green-500/50'}`}
                         >
                             {cta.text}
                         </motion.a>

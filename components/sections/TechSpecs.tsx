@@ -38,14 +38,14 @@ const gear = [
 
 export function TechSpecs() {
     return (
-        <section className="border-t border-zinc-800 py-24">
+        <section className="border-t border-border py-24">
             <div className="container mx-auto px-6">
                 <FadeIn>
                     <div className="mb-16 text-center">
                         <h2 className="mb-4 text-4xl font-bold md:text-5xl">
                             Professional-Grade Equipment
                         </h2>
-                        <p className="mx-auto max-w-2xl text-lg text-zinc-400">
+                        <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
                             The same gear used by top production houses and content creators worldwide.
                         </p>
                     </div>
@@ -56,7 +56,7 @@ export function TechSpecs() {
                         <motion.div
                             key={item.name}
                             variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-                            className="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-zinc-700"
+                            className="group relative overflow-hidden rounded-2xl border border-border bg-muted/50 p-6 transition-all hover:border-border"
                         >
                             {/* Badge */}
                             <div className="absolute right-4 top-4">
@@ -66,18 +66,18 @@ export function TechSpecs() {
                             </div>
 
                             {/* Icon */}
-                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800">
-                                <item.icon className="h-6 w-6 text-zinc-400" />
+                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
+                                <item.icon className="h-6 w-6 text-muted-foreground" />
                             </div>
 
                             {/* Content */}
                             <h3 className="mb-2 text-lg font-bold">{item.name}</h3>
-                            <p className="mb-4 text-sm text-zinc-500">{item.category}</p>
+                            <p className="mb-4 text-sm text-muted-foreground">{item.category}</p>
 
                             {/* Specs */}
                             <ul className="space-y-1">
                                 {item.specs.map((spec) => (
-                                    <li key={spec} className="flex items-center gap-2 text-xs text-zinc-400">
+                                    <li key={spec} className="flex items-center gap-2 text-xs text-muted-foreground">
                                         <span className="h-1 w-1 rounded-full bg-zinc-600" />
                                         {spec}
                                     </li>
@@ -92,7 +92,7 @@ export function TechSpecs() {
 
                 <FadeIn delay={0.4}>
                     <div className="mt-12 text-center">
-                        <p className="text-sm text-zinc-500">
+                        <p className="text-sm text-muted-foreground">
                             All equipment is insured, regularly serviced, and sanitized between rentals
                         </p>
                     </div>

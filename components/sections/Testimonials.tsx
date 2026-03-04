@@ -25,11 +25,11 @@ const accentColors = {
 
 export function Testimonials({ testimonials, accentColor = 'amber' }: TestimonialsProps) {
     return (
-        <section className="border-t border-zinc-800 bg-zinc-900/30 py-24">
+        <section className="border-t border-border bg-muted/30 py-24">
             <div className="container mx-auto px-6">
                 <FadeIn>
                     <h2 className="mb-4 text-center text-4xl font-bold">What Our Clients Say</h2>
-                    <p className="mx-auto mb-12 max-w-2xl text-center text-zinc-400">
+                    <p className="mx-auto mb-12 max-w-2xl text-center text-muted-foreground">
                         Real feedback from creators who've worked with us
                     </p>
                 </FadeIn>
@@ -37,7 +37,7 @@ export function Testimonials({ testimonials, accentColor = 'amber' }: Testimonia
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {testimonials.map((testimonial, index) => (
                         <FadeIn key={index} delay={index * 0.1}>
-                            <div className="relative h-full rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+                            <div className="relative h-full rounded-xl border border-border bg-muted/50 p-6">
                                 <Quote className={`mb-4 h-8 w-8 ${accentColors[accentColor]} opacity-50`} />
 
                                 {/* Rating */}
@@ -54,12 +54,12 @@ export function Testimonials({ testimonials, accentColor = 'amber' }: Testimonia
                                 </div>
 
                                 {/* Content */}
-                                <p className="mb-6 text-zinc-300">{testimonial.content}</p>
+                                <p className="mb-6 text-muted-foreground">{testimonial.content}</p>
 
                                 {/* Author */}
-                                <div className="border-t border-zinc-800 pt-4">
-                                    <p className="font-semibold text-white">{testimonial.name}</p>
-                                    <p className="text-sm text-zinc-500">{testimonial.role}</p>
+                                <div className="border-t border-border pt-4">
+                                    <p className="font-semibold text-foreground">{testimonial.name}</p>
+                                    <p className="text-sm text-muted-foreground">{testimonial.role}</p>
                                     {testimonial.service && (
                                         <p className={`mt-1 text-xs ${accentColors[accentColor]}`}>
                                             {testimonial.service}

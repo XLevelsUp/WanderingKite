@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
     return (
-        <main className="min-h-screen bg-zinc-950 pt-20">
+        <main className="min-h-screen bg-background pt-20">
             {/* Hero */}
-            <section className="border-b border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 py-16">
+            <section className="border-b border-border bg-gradient-to-b from-zinc-900 to-zinc-950 py-16">
                 <div className="container mx-auto px-6">
                     <div className="mx-auto max-w-4xl text-center">
                         <div className="mb-6 flex justify-center">
@@ -20,7 +20,7 @@ export default function TermsPage() {
                             </div>
                         </div>
                         <h1 className="mb-4 text-4xl font-bold md:text-5xl">Rental Terms & Conditions</h1>
-                        <p className="text-zinc-400">Last updated: January 20, 2026</p>
+                        <p className="text-muted-foreground">Last updated: January 20, 2026</p>
                     </div>
                 </div>
             </section>
@@ -29,10 +29,10 @@ export default function TermsPage() {
             <section className="py-16">
                 <div className="container mx-auto px-6">
                     <div className="prose prose-invert mx-auto max-w-4xl">
-                        <div className="space-y-8 text-zinc-300">
+                        <div className="space-y-8 text-muted-foreground">
                             {/* Agreement */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">1. Agreement to Terms</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">1. Agreement to Terms</h2>
                                 <p className="leading-relaxed">
                                     By renting equipment or booking studio/podcast space from Wandering Kite Studio ("we," "our," or "us"), you ("Renter," "you," or "your") agree to be bound by these Terms and Conditions. Please read them carefully before making a booking.
                                 </p>
@@ -40,15 +40,15 @@ export default function TermsPage() {
 
                             {/* Booking & Reservations */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">2. Booking & Reservations</h2>
-                                <h3 className="mb-3 text-xl font-semibold text-white">2.1 How to Book</h3>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">2. Booking & Reservations</h2>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">2.1 How to Book</h3>
                                 <ul className="mb-4 list-disc space-y-2 pl-6">
                                     <li>All bookings must be made via WhatsApp at +91 70100 92090</li>
                                     <li>Minimum advance booking: 24 hours for equipment, 48 hours for studio/podcast space</li>
                                     <li>Bookings are confirmed only after payment of the security deposit</li>
                                 </ul>
 
-                                <h3 className="mb-3 text-xl font-semibold text-white">2.2 Availability</h3>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">2.2 Availability</h3>
                                 <p className="leading-relaxed">
                                     Equipment and space availability is subject to real-time status. We reserve the right to decline bookings if items are unavailable or under maintenance.
                                 </p>
@@ -56,15 +56,15 @@ export default function TermsPage() {
 
                             {/* Security Deposit */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">3. Security Deposit</h2>
-                                <h3 className="mb-3 text-xl font-semibold text-white">3.1 Deposit Amounts</h3>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">3. Security Deposit</h2>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">3.1 Deposit Amounts</h3>
                                 <ul className="mb-4 list-disc space-y-2 pl-6">
                                     <li><strong>Cameras & Lenses:</strong> ₹5,000 - ₹10,000 (depending on equipment value)</li>
                                     <li><strong>Lighting & Audio:</strong> ₹2,000 - ₹5,000</li>
                                     <li><strong>Studio/Podcast Space:</strong> ₹3,000</li>
                                 </ul>
 
-                                <h3 className="mb-3 text-xl font-semibold text-white">3.2 Refund Policy</h3>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">3.2 Refund Policy</h3>
                                 <p className="mb-4 leading-relaxed">
                                     Security deposits are fully refundable upon safe return of equipment or completion of studio booking, subject to:
                                 </p>
@@ -78,15 +78,15 @@ export default function TermsPage() {
 
                             {/* Rental Period */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">4. Rental Period & Pricing</h2>
-                                <h3 className="mb-3 text-xl font-semibold text-white">4.1 Rental Duration</h3>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">4. Rental Period & Pricing</h2>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">4.1 Rental Duration</h3>
                                 <ul className="mb-4 list-disc space-y-2 pl-6">
                                     <li><strong>Daily Rental:</strong> 24-hour period from pickup time</li>
                                     <li><strong>Weekly Rental:</strong> 7 consecutive days</li>
                                     <li><strong>Studio/Podcast:</strong> Hourly, half-day (4 hours), or full-day (8 hours)</li>
                                 </ul>
 
-                                <h3 className="mb-3 text-xl font-semibold text-white">4.2 Late Returns</h3>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">4.2 Late Returns</h3>
                                 <p className="leading-relaxed">
                                     Late returns incur additional charges: 50% of daily rate for delays up to 4 hours, full daily rate for delays beyond 4 hours. Contact us immediately if you need an extension (subject to availability).
                                 </p>
@@ -94,15 +94,15 @@ export default function TermsPage() {
 
                             {/* Pickup & Delivery */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">5. Pickup & Delivery</h2>
-                                <h3 className="mb-3 text-xl font-semibold text-white">5.1 Pickup</h3>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">5. Pickup & Delivery</h2>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">5.1 Pickup</h3>
                                 <ul className="mb-4 list-disc space-y-2 pl-6">
                                     <li>Equipment must be picked up from our location: 123 Creative Hub, MG Road, Bangalore</li>
                                     <li>Valid government-issued ID required at pickup</li>
                                     <li>Renter must inspect equipment and sign rental agreement</li>
                                 </ul>
 
-                                <h3 className="mb-3 text-xl font-semibold text-white">5.2 Delivery (Optional)</h3>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">5.2 Delivery (Optional)</h3>
                                 <p className="leading-relaxed">
                                     Delivery and pickup services available within Bangalore city limits for an additional fee (₹500-₹1,500 depending on distance). Delivery must be arranged at least 48 hours in advance.
                                 </p>
@@ -110,8 +110,8 @@ export default function TermsPage() {
 
                             {/* Equipment Care */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">6. Equipment Care & Responsibility</h2>
-                                <h3 className="mb-3 text-xl font-semibold text-white">6.1 Renter's Responsibility</h3>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">6. Equipment Care & Responsibility</h2>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">6.1 Renter's Responsibility</h3>
                                 <p className="mb-4 leading-relaxed">You agree to:</p>
                                 <ul className="mb-4 list-disc space-y-2 pl-6">
                                     <li>Use equipment in a professional and careful manner</li>
@@ -121,7 +121,7 @@ export default function TermsPage() {
                                     <li>Immediately report any malfunction or damage</li>
                                 </ul>
 
-                                <h3 className="mb-3 text-xl font-semibold text-white">6.2 Prohibited Uses</h3>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">6.2 Prohibited Uses</h3>
                                 <ul className="list-disc space-y-2 pl-6">
                                     <li>Using equipment in hazardous environments (extreme weather, water, etc.) without prior approval</li>
                                     <li>Commercial use beyond agreed scope</li>
@@ -131,18 +131,18 @@ export default function TermsPage() {
 
                             {/* Damage & Loss */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">7. Damage, Loss & Theft</h2>
-                                <h3 className="mb-3 text-xl font-semibold text-white">7.1 Minor Damage</h3>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">7. Damage, Loss & Theft</h2>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">7.1 Minor Damage</h3>
                                 <p className="leading-relaxed">
                                     Normal wear and tear is expected. Minor cosmetic damage (scratches, scuffs) will not incur charges.
                                 </p>
 
-                                <h3 className="mb-3 text-xl font-semibold text-white">7.2 Major Damage</h3>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">7.2 Major Damage</h3>
                                 <p className="mb-4 leading-relaxed">
                                     Renter is liable for repair costs for functional damage. Costs will be deducted from the security deposit. If repair costs exceed the deposit, Renter must pay the difference.
                                 </p>
 
-                                <h3 className="mb-3 text-xl font-semibold text-white">7.3 Loss or Theft</h3>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">7.3 Loss or Theft</h3>
                                 <p className="mb-4 leading-relaxed">
                                     In case of loss or theft, Renter must:
                                 </p>
@@ -152,7 +152,7 @@ export default function TermsPage() {
                                     <li>Pay the full replacement value of the equipment (market price or insured value)</li>
                                 </ul>
 
-                                <h3 className="mb-3 text-xl font-semibold text-white">7.4 Damage Waiver (Optional)</h3>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">7.4 Damage Waiver (Optional)</h3>
                                 <p className="leading-relaxed">
                                     Purchase optional damage waiver for 10% of rental cost. Covers accidental damage (excludes theft, loss, and negligence).
                                 </p>
@@ -160,8 +160,8 @@ export default function TermsPage() {
 
                             {/* Studio/Podcast Terms */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">8. Studio & Podcast Space Terms</h2>
-                                <h3 className="mb-3 text-xl font-semibold text-white">8.1 Usage Rules</h3>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">8. Studio & Podcast Space Terms</h2>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">8.1 Usage Rules</h3>
                                 <ul className="mb-4 list-disc space-y-2 pl-6">
                                     <li>Maximum occupancy: 10 persons for studio, 6 persons for podcast space</li>
                                     <li>No smoking, alcohol, or illegal substances on premises</li>
@@ -169,7 +169,7 @@ export default function TermsPage() {
                                     <li>Equipment included in booking must not be removed from premises</li>
                                 </ul>
 
-                                <h3 className="mb-3 text-xl font-semibold text-white">8.2 Cancellation</h3>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">8.2 Cancellation</h3>
                                 <p className="leading-relaxed">
                                     Cancellations made 48+ hours in advance: Full refund. Cancellations within 48 hours: 50% refund. No-shows: No refund.
                                 </p>
@@ -177,7 +177,7 @@ export default function TermsPage() {
 
                             {/* Payment Terms */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">9. Payment Terms</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">9. Payment Terms</h2>
                                 <ul className="list-disc space-y-2 pl-6">
                                     <li>Payment accepted via UPI, bank transfer, cash, or card</li>
                                     <li>Full rental fee + security deposit due at booking confirmation</li>
@@ -188,7 +188,7 @@ export default function TermsPage() {
 
                             {/* Liability */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">10. Limitation of Liability</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">10. Limitation of Liability</h2>
                                 <p className="leading-relaxed">
                                     Wandering Kite Studio is not liable for any indirect, incidental, or consequential damages arising from equipment malfunction, data loss, or project delays. Our maximum liability is limited to the rental fee paid.
                                 </p>
@@ -196,7 +196,7 @@ export default function TermsPage() {
 
                             {/* Termination */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">11. Termination of Rental</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">11. Termination of Rental</h2>
                                 <p className="mb-4 leading-relaxed">
                                     We reserve the right to terminate a rental and demand immediate return of equipment if:
                                 </p>
@@ -210,15 +210,15 @@ export default function TermsPage() {
 
                             {/* Governing Law */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">12. Governing Law</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">12. Governing Law</h2>
                                 <p className="leading-relaxed">
                                     These terms are governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of courts in Bangalore, Karnataka.
                                 </p>
                             </div>
 
                             {/* Contact */}
-                            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-                                <h2 className="mb-4 text-2xl font-bold text-white">13. Contact Us</h2>
+                            <div className="rounded-xl border border-border bg-muted/50 p-6">
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">13. Contact Us</h2>
                                 <p className="mb-4 leading-relaxed">
                                     For questions about these terms or to report issues:
                                 </p>

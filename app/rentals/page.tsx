@@ -38,7 +38,7 @@ export default function RentalsPage() {
     const audio = equipmentCatalog.filter(e => e.category === 'audio');
 
     return (
-        <main className="min-h-screen bg-zinc-950 pt-20">
+        <main className="min-h-screen bg-background pt-20">
             {/* Hero Section */}
             <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">
                 <div className="container mx-auto px-6">
@@ -54,7 +54,7 @@ export default function RentalsPage() {
                                 Equipment Rentals
                             </span>
                         </h1>
-                        <p className="mb-8 text-xl text-zinc-400">
+                        <p className="mb-8 text-xl text-muted-foreground">
                             Access premium photography and video gear without the commitment.
                             Daily and weekly rates available.
                         </p>
@@ -63,40 +63,40 @@ export default function RentalsPage() {
             </section>
 
             {/* Why Rent From Us */}
-            <section className="border-t border-zinc-800 py-24">
+            <section className="border-t border-border py-24">
                 <div className="container mx-auto px-6">
                     <h2 className="mb-12 text-center text-4xl font-bold">Why Rent From Us</h2>
                     <div className="grid gap-8 md:grid-cols-3">
-                        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 text-center">
+                        <div className="rounded-2xl border border-border bg-muted/50 p-8 text-center">
                             <div className="mb-4 flex justify-center">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
                                     <Shield className="h-6 w-6 text-amber-500" />
                                 </div>
                             </div>
                             <h3 className="mb-3 text-xl font-bold">Insured Equipment</h3>
-                            <p className="text-zinc-400">
+                            <p className="text-muted-foreground">
                                 All gear is insured and well-maintained for your peace of mind.
                             </p>
                         </div>
-                        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 text-center">
+                        <div className="rounded-2xl border border-border bg-muted/50 p-8 text-center">
                             <div className="mb-4 flex justify-center">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
                                     <Video className="h-6 w-6 text-amber-500" />
                                 </div>
                             </div>
                             <h3 className="mb-3 text-xl font-bold">Latest Gear</h3>
-                            <p className="text-zinc-400">
+                            <p className="text-muted-foreground">
                                 Sony, Canon, and other premium brands updated regularly.
                             </p>
                         </div>
-                        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 text-center">
+                        <div className="rounded-2xl border border-border bg-muted/50 p-8 text-center">
                             <div className="mb-4 flex justify-center">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
                                     <Headphones className="h-6 w-6 text-amber-500" />
                                 </div>
                             </div>
                             <h3 className="mb-3 text-xl font-bold">24/7 Support</h3>
-                            <p className="text-zinc-400">
+                            <p className="text-muted-foreground">
                                 Quick response via WhatsApp for any technical questions.
                             </p>
                         </div>
@@ -105,7 +105,7 @@ export default function RentalsPage() {
             </section>
 
             {/* Cameras */}
-            <section className="border-t border-zinc-800 py-24">
+            <section className="border-t border-border py-24">
                 <div className="container mx-auto px-6">
                     <h2 className="mb-12 text-4xl font-bold">Cameras</h2>
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -117,7 +117,7 @@ export default function RentalsPage() {
             </section>
 
             {/* Lenses */}
-            <section className="border-t border-zinc-800 py-24">
+            <section className="border-t border-border py-24">
                 <div className="container mx-auto px-6">
                     <h2 className="mb-12 text-4xl font-bold">Lenses</h2>
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -129,7 +129,7 @@ export default function RentalsPage() {
             </section>
 
             {/* Lighting */}
-            <section className="border-t border-zinc-800 py-24">
+            <section className="border-t border-border py-24">
                 <div className="container mx-auto px-6">
                     <h2 className="mb-12 text-4xl font-bold">Lighting</h2>
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -141,7 +141,7 @@ export default function RentalsPage() {
             </section>
 
             {/* Audio */}
-            <section className="border-t border-zinc-800 py-24">
+            <section className="border-t border-border py-24">
                 <div className="container mx-auto px-6">
                     <h2 className="mb-12 text-4xl font-bold">Audio Equipment</h2>
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -153,32 +153,32 @@ export default function RentalsPage() {
             </section>
 
             {/* Rental Terms */}
-            <section className="border-t border-zinc-800 bg-zinc-900/30 py-24">
+            <section className="border-t border-border bg-muted/30 py-24">
                 <div className="container mx-auto px-6">
                     <div className="mx-auto max-w-3xl">
                         <h2 className="mb-8 text-center text-4xl font-bold">Rental Terms</h2>
-                        <div className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8">
+                        <div className="space-y-4 rounded-2xl border border-border bg-muted/50 p-8">
                             <div className="flex items-start gap-3">
                                 <span className="text-amber-500">•</span>
-                                <p className="text-zinc-300">
+                                <p className="text-muted-foreground">
                                     <strong>Booking:</strong> Reserve via WhatsApp at least 24 hours in advance
                                 </p>
                             </div>
                             <div className="flex items-start gap-3">
                                 <span className="text-amber-500">•</span>
-                                <p className="text-zinc-300">
+                                <p className="text-muted-foreground">
                                     <strong>Security Deposit:</strong> Refundable deposit required for all rentals
                                 </p>
                             </div>
                             <div className="flex items-start gap-3">
                                 <span className="text-amber-500">•</span>
-                                <p className="text-zinc-300">
+                                <p className="text-muted-foreground">
                                     <strong>Pickup/Delivery:</strong> Flexible pickup times or delivery available (charges apply)
                                 </p>
                             </div>
                             <div className="flex items-start gap-3">
                                 <span className="text-amber-500">•</span>
-                                <p className="text-zinc-300">
+                                <p className="text-muted-foreground">
                                     <strong>Late Returns:</strong> Additional charges apply for late returns
                                 </p>
                             </div>

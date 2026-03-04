@@ -124,21 +124,15 @@ body::before {
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(
-      ellipse 80% 50% at 20% -10%,
+    radial-gradient(ellipse 80% 50% at 20% -10%,
       hsl(var(--color-surface-2) / 0.55) 0%,
-      transparent 60%
-    ),
-    radial-gradient(
-      ellipse 60% 40% at 80% 10%,
+      transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 10%,
       hsl(var(--color-surface-2) / 0.3) 0%,
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse 100% 60% at 50% 100%,
+      transparent 55%),
+    radial-gradient(ellipse 100% 60% at 50% 100%,
       hsl(var(--color-surface-1) / 0.4) 0%,
-      transparent 60%
-    ),
+      transparent 60%),
     hsl(var(--background));
   pointer-events: none;
 }
@@ -149,13 +143,16 @@ body::before {
 ::-webkit-scrollbar {
   width: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: hsl(var(--color-surface-1));
 }
+
 ::-webkit-scrollbar-thumb {
   background: hsl(var(--color-neutral));
   border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary));
 }
@@ -188,11 +185,9 @@ body::before {
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: radial-gradient(
-      600px circle at var(--mouse-x, -400px) var(--mouse-y, -400px),
-      rgba(255, 255, 255, 0.055),
-      transparent 40%
-    );
+    background: radial-gradient(600px circle at var(--mouse-x, -400px) var(--mouse-y, -400px),
+        rgba(255, 255, 255, 0.055),
+        transparent 40%);
     opacity: 0;
     transition: opacity 0.35s ease;
     pointer-events: none;
@@ -205,25 +200,21 @@ body::before {
 
   /* Gradient text — uses primary brand color */
   .text-gradient-gold {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--foreground)) 0%,
-      hsl(var(--primary)) 60%,
-      hsl(var(--primary-foreground) / 0.8) 100%
-    );
+    background: linear-gradient(135deg,
+        hsl(var(--foreground)) 0%,
+        hsl(var(--primary)) 60%,
+        hsl(var(--primary-foreground) / 0.8) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .text-gradient-hero {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--foreground)) 0%,
-      hsl(var(--foreground)) 35%,
-      hsl(var(--primary)) 70%,
-      hsl(var(--chart-5)) 100%
-    );
+    background: linear-gradient(135deg,
+        hsl(var(--foreground)) 0%,
+        hsl(var(--foreground)) 30%,
+        #f59e0b 65%,
+        #ea580c 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

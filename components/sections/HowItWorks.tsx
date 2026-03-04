@@ -78,7 +78,7 @@ export function HowItWorks() {
                     </div>
                   </div>
 
-                  <h3 className='mb-3 text-xl font-semibold text-white'>
+                  <h3 className='mb-3 text-xl font-semibold text-foreground'>
                     {step.title}
                   </h3>
                   <p className='text-sm leading-relaxed text-foreground/60'>
@@ -109,7 +109,7 @@ export function HowItWorks() {
           <div className='mt-12 text-center'>
             <p className='text-sm text-foreground/45'>
               Average booking time:{' '}
-              <span className='font-semibold text-white'>5 minutes</span>
+              <span className='font-semibold text-foreground'>5 minutes</span>
             </p>
           </div>
         </FadeIn>

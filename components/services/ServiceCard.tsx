@@ -124,7 +124,7 @@ export function ServiceCard({
           {/* Title */}
           <h3
             className='
-            mb-3 text-xl font-semibold leading-snug text-white
+            mb-3 text-xl font-semibold leading-snug text-foreground
             transition-all duration-300 group-hover:text-gradient-gold
           '
           >
@@ -161,7 +161,7 @@ export function ServiceCard({
                 px-5 py-2.5 text-sm font-medium text-primary
                 transition-all duration-200
                 hover:border-primary/55 hover:bg-primary/16
-                hover:text-white hover:shadow-[0_0_16px_hsl(var(--primary)/0.20)]
+                hover:text-foreground hover:shadow-[0_0_16px_hsl(var(--primary)/0.20)]
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-transparent
               '
             >
