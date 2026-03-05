@@ -18,7 +18,7 @@ export function MainNav() {
       className='
       fixed top-0 z-40 w-full
       border-b border-primary/12
-      bg-background/85 backdrop-blur-xl
+      bg-black backdrop-blur-xl
     '
     >
       <div className='container mx-auto flex h-20 items-center justify-between px-6'>
@@ -27,9 +27,9 @@ export function MainNav() {
           <Image
             src="/wkfulllogo.png"
             alt={siteConfig.name}
-            width={240}
-            height={60}
-            className="h-[60px] w-auto transition-transform duration-300 group-hover:scale-105"
+            width={320}
+            height={80}
+            className="h-20 w-auto transition-transform duration-300 group-hover:scale-105"
             priority
           />
         </Link>
