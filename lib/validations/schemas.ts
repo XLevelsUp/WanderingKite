@@ -72,3 +72,121 @@ export const quickReturnSchema = z.object({
 });
 
 export type QuickReturnFormData = z.infer<typeof quickReturnSchema>;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Project Category Schemas (Studio ERP — Service Taxonomy)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Shared base fields present on every project submission form.
+ */
+const projectBaseSchema = z.object({
+  clientId: z.string().uuid('Select a valid client'),
+  title: z.string().min(2, 'Project title must be at least 2 characters'),
+  shootDate: z.string().datetime({ message: 'Provide a valid shoot date/time' }),
+  notes: z.string().max(2000).optional(),
+});
+
+// ── Photography — Events ─────────────────────────────────────────────────────
+
+const eventPhotographySchema = projectBaseSchema.extend({
+  domain: z.literal('photography'),
+  subDomain: z.literal('events'),
+  type: z.enum(['wedding', 'engagement', 'birthday']),
+  durationHours: z.number().int().min(1).max(24),
+  locationCount: z.number().int().min(1).max(10),
+  hssFlash: z.boolean().default(false),
+  secondShooterKit: z.string().uuid().optional(),
+});
+
+// ── Photography — Portraits ──────────────────────────────────────────────────
+
+const portraitPhotographySchema = projectBaseSchema.extend({
+  domain: z.literal('photography'),
+  subDomain: z.literal('portraits'),
+  type: z.enum(['family', 'maternity', 'baby-shoot']),
+  sessionType: z.enum(['studio', 'outdoor', 'hybrid']),
+  backdrop: z.enum(['white', 'black', 'grey', 'custom']).default('white'),
+});
+
+// ── Corporate ────────────────────────────────────────────────────────────────
+
+const corporateProjectSchema = projectBaseSchema.extend({
+  domain: z.literal('corporate'),
+  type: z.enum(['product', 'cinematic-video', 'social-media', 'model-shoot', 'headshot']),
+  deliverable: z.enum(['still', 'video', 'both']),
+  platform: z.enum(['instagram', 'youtube', 'linkedin', 'other']).optional(),
+  teleprompter: z.boolean().default(false),
+});
+
+// ── Commercial ───────────────────────────────────────────────────────────────
+// Music Videos require HSS flash + gimbal; validated at the discriminated level.
+
+const commercialProjectSchema = projectBaseSchema.extend({
+  domain: z.literal('commercial'),
+  type: z.enum(['ads', 'music-video', 'short-film']),
+  productionDays: z.number().int().min(1),
+  postProduction: z.boolean().default(false),
+  /** HSS flash — required for music-video and ads */
+  hssFlash: z.boolean(),
+  /** Motorised gimbal — required for music-video and short-film */
+  gimbal: z.boolean(),
+  drone: z.boolean().default(false),
+  slider: z.boolean().default(false),
+}).superRefine((data, ctx) => {
+  if (data.type === 'music-video') {
+    if (!data.hssFlash) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['hssFlash'],
+        message: 'Music Videos require High-Speed Sync flash in the kit',
+      });
+    }
+    if (!data.gimbal) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['gimbal'],
+        message: 'Music Videos require a motorised gimbal in the kit',
+      });
+    }
+  }
+  if (data.type === 'short-film' && !data.gimbal) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['gimbal'],
+      message: 'Short Films require a gimbal for cinematic movement',
+    });
+  }
+});
+
+// ── Studio Facilities ─────────────────────────────────────────────────────────
+
+const studioFacilitiesSchema = projectBaseSchema.extend({
+  domain: z.literal('studio-facilities'),
+  type: z.enum(['podcast', 'equipment-rental', 'space-allocation']),
+  durationHours: z.number().int().min(1).max(12),
+  resourceIds: z.array(z.string()).min(0),
+  videoPodcastRig: z.boolean().default(false),
+});
+
+// ── Top-level discriminated union ────────────────────────────────────────────
+// Zod discriminated unions with a two-level discriminant require nesting.
+// We discriminate first on `domain`, then sub-schemas handle `subDomain`/`type`.
+
+export const projectCategorySchema = z.discriminatedUnion('domain', [
+  // Photography re-discriminated on subDomain internally
+  eventPhotographySchema,
+  portraitPhotographySchema,
+  corporateProjectSchema,
+  commercialProjectSchema,
+  studioFacilitiesSchema,
+]);
+
+export type ProjectFormData = z.infer<typeof projectCategorySchema>;
+
+// Convenience sub-type exports
+export type EventPhotographyFormData = z.infer<typeof eventPhotographySchema>;
+export type PortraitPhotographyFormData = z.infer<typeof portraitPhotographySchema>;
+export type CorporateProjectFormData = z.infer<typeof corporateProjectSchema>;
+export type CommercialProjectFormData = z.infer<typeof commercialProjectSchema>;
+export type StudioFacilitiesFormData = z.infer<typeof studioFacilitiesSchema>;

@@ -35,14 +35,14 @@ export function FAQ() {
     const [openIndex, setOpenIndex] = useState<number | null>(0);
 
     return (
-        <section className="border-t border-zinc-800 py-24">
+        <section className="border-t border-border py-24">
             <div className="container mx-auto px-6">
                 <FadeIn>
                     <div className="mb-16 text-center">
                         <h2 className="mb-4 text-4xl font-bold md:text-5xl">
                             Frequently Asked Questions
                         </h2>
-                        <p className="mx-auto max-w-2xl text-lg text-zinc-400">
+                        <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
                             Everything you need to know before booking. Still have questions? WhatsApp us!
                         </p>
                     </div>
@@ -51,14 +51,14 @@ export function FAQ() {
                 <div className="mx-auto max-w-3xl">
                     {faqs.map((faq, index) => (
                         <FadeIn key={index} delay={index * 0.1}>
-                            <div className="mb-4 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50">
+                            <div className="mb-4 overflow-hidden rounded-xl border border-border bg-muted/50">
                                 <button
                                     onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                                    className="flex w-full items-center justify-between p-6 text-left transition-colors hover:bg-zinc-800/50"
+                                    className="flex w-full items-center justify-between p-6 text-left transition-colors hover:bg-secondary/50"
                                 >
-                                    <span className="pr-8 font-semibold text-white">{faq.question}</span>
+                                    <span className="pr-8 font-semibold text-foreground">{faq.question}</span>
                                     <ChevronDown
-                                        className={`h-5 w-5 flex-shrink-0 text-zinc-400 transition-transform ${openIndex === index ? 'rotate-180' : ''
+                                        className={`h-5 w-5 flex-shrink-0 text-muted-foreground transition-transform ${openIndex === index ? 'rotate-180' : ''
                                             }`}
                                     />
                                 </button>
@@ -67,7 +67,7 @@ export function FAQ() {
                                     className={`overflow-hidden transition-all duration-300 ${openIndex === index ? 'max-h-96' : 'max-h-0'
                                         }`}
                                 >
-                                    <div className="border-t border-zinc-800 p-6 pt-4 text-zinc-400">
+                                    <div className="border-t border-border p-6 pt-4 text-muted-foreground">
                                         {faq.answer}
                                     </div>
                                 </div>
@@ -78,12 +78,12 @@ export function FAQ() {
 
                 <FadeIn delay={0.6}>
                     <div className="mt-12 text-center">
-                        <p className="mb-4 text-zinc-400">Didn't find your answer?</p>
+                        <p className="mb-4 text-muted-foreground">Didn't find your answer?</p>
                         <a
                             href="https://wa.me/919876543210?text=Hi!%20I%20have%20a%20question..."
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-block rounded-full bg-green-600 px-8 py-3 font-semibold text-white transition-colors hover:bg-green-500"
+                            className="inline-block rounded-full bg-green-600 px-8 py-3 font-semibold text-foreground transition-colors hover:bg-green-500"
                         >
                             Ask on WhatsApp
                         </a>

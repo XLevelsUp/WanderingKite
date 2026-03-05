@@ -40,7 +40,7 @@ const pricingTiers = [
         name: 'Hourly',
         price: '1,500',
         duration: '/hour',
-        features: ['Minimum 2 hours', 'Basic lighting included', 'WiFi access', 'Changing room'],
+        features: ['Minimum 1 hour', 'Basic lighting included', 'WiFi access', 'Changing room'],
     },
     {
         name: 'Half Day',
@@ -53,29 +53,29 @@ const pricingTiers = [
         name: 'Full Day',
         price: '10,000',
         duration: '/8 hours',
-        features: ['8 hours studio time', 'All equipment included', 'Flexible scheduling', 'Refreshments'],
+        features: ['8 hours studio time', 'All equipment included', 'Flexible scheduling'],
     },
 ];
 
 export default function StudioPage() {
     return (
-        <main className="min-h-screen bg-zinc-950 pt-20">
+        <main className="min-h-screen bg-background pt-20">
             {/* Hero Section */}
             <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">
                 <div className="container mx-auto px-6">
                     <div className="mx-auto max-w-4xl text-center">
-                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-2 text-sm text-purple-500">
+                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-sm text-amber-500">
                             <Building2 className="h-4 w-4" />
                             Studio Rental
                         </div>
                         <h1 className="mb-6 text-5xl font-bold leading-tight md:text-6xl lg:text-7xl">
                             Premium Studio
                             <br />
-                            <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+                            <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
                                 Space Rental
                             </span>
                         </h1>
-                        <p className="mb-8 text-xl text-zinc-400">
+                        <p className="mb-8 text-xl text-muted-foreground">
                             Professional photography and video studio with state-of-the-art equipment
                             and flexible booking options.
                         </p>
@@ -83,7 +83,7 @@ export default function StudioPage() {
                             href={generateWhatsAppLink('studio')}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-block rounded-full bg-purple-500 px-8 py-4 font-semibold text-white transition-all hover:bg-purple-400 hover:shadow-lg hover:shadow-purple-500/50"
+                            className="inline-block rounded-full bg-amber-500 px-8 py-4 font-semibold text-foreground transition-all hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/50"
                         >
                             Book Your Slot
                         </a>
@@ -92,91 +92,154 @@ export default function StudioPage() {
             </section>
 
             {/* Facilities */}
-            <section className="border-t border-zinc-800 py-24">
+            <section className="border-t border-border py-24">
                 <div className="container mx-auto px-6">
                     <h2 className="mb-12 text-center text-4xl font-bold">Studio Facilities</h2>
                     <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
                         {facilities.map((facility, index) => (
-                            <div key={index} className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 text-center">
+                            <div key={index} className="rounded-2xl border border-border bg-muted/50 p-6 text-center">
                                 <div className="mb-4 flex justify-center">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-500/10">
-                                        <facility.icon className="h-6 w-6 text-purple-500" />
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+                                        <facility.icon className="h-6 w-6 text-amber-500" />
                                     </div>
                                 </div>
                                 <h3 className="mb-2 text-lg font-bold">{facility.title}</h3>
-                                <p className="text-sm text-zinc-400">{facility.description}</p>
+                                <p className="text-sm text-muted-foreground">{facility.description}</p>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* Pricing */}
-            <section className="border-t border-zinc-800 py-24">
+            {/* Services */}
+            <section className="border-t border-border py-24">
                 <div className="container mx-auto px-6">
-                    <h2 className="mb-12 text-center text-4xl font-bold">Pricing</h2>
-                    <div className="grid gap-6 md:grid-cols-3">
-                        {pricingTiers.map((tier) => (
-                            <div
-                                key={tier.name}
-                                className={`relative rounded-2xl border p-8 ${tier.popular
-                                    ? 'border-purple-500 bg-purple-500/5'
-                                    : 'border-zinc-800 bg-zinc-900/50'
-                                    }`}
-                            >
-                                {tier.popular && (
-                                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-purple-500 px-4 py-1 text-xs font-semibold text-white">
-                                        Most Popular
-                                    </span>
-                                )}
-                                <h3 className="mb-2 text-2xl font-bold">{tier.name}</h3>
-                                <div className="mb-6">
-                                    <span className="text-4xl font-bold text-purple-500">₹{tier.price}</span>
-                                    <span className="text-zinc-400">{tier.duration}</span>
+                    <h2 className="mb-4 text-center text-4xl font-bold">Our Services</h2>
+                    <p className="mb-16 text-center text-muted-foreground">Everything you need under one roof</p>
+
+                    {/* Space Allocation */}
+                    <div className="mb-16">
+                        <div className="mb-6 flex items-center gap-3">
+                            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-sm font-semibold text-amber-400">
+                                Space Allocation
+                            </span>
+                            <div className="h-px flex-1 bg-secondary" />
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-3">
+                            {[
+                                { title: 'Hourly', desc: 'Minimum 1 hour · Basic lighting · WiFi · Changing room', badge: null },
+                                { title: 'Half Day', desc: '4 hours · All lighting · Multiple backdrops · Makeup area', badge: 'Most Popular' },
+                                { title: 'Full Day', desc: '8 hours · All equipment · Flexible scheduling', badge: null },
+                            ].map((s) => (
+                                <div key={s.title} className={`relative flex flex-col justify-between rounded-xl border p-6 ${s.badge ? 'border-amber-500 bg-amber-500/5' : 'border-border bg-muted/50'}`}>
+                                    {s.badge && (
+                                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-4 py-1 text-xs font-semibold text-foreground">
+                                            {s.badge}
+                                        </span>
+                                    )}
+                                    <div>
+                                        <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
+                                        <p className="text-sm text-muted-foreground">{s.desc}</p>
+                                    </div>
+                                    <a
+                                        href={generateWhatsAppLink('studio', `Hi! I'd like to book the ${s.title} studio package.`)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="mt-5 inline-block rounded-full bg-amber-500 px-5 py-2.5 text-center text-sm font-semibold text-foreground transition-colors hover:bg-amber-400"
+                                    >
+                                        Book Now
+                                    </a>
                                 </div>
-                                <ul className="mb-8 space-y-3">
-                                    {tier.features.map((feature, index) => (
-                                        <li key={index} className="flex items-start gap-2 text-sm text-zinc-300">
-                                            <span className="text-purple-500">✓</span>
-                                            {feature}
-                                        </li>
-                                    ))}
-                                </ul>
-                                <a
-                                    href={generateWhatsAppLink('studio', `Hi! I'd like to book the ${tier.name} studio package.`)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={`block w-full rounded-lg py-3 text-center font-semibold transition-colors ${tier.popular
-                                        ? 'bg-purple-500 text-white hover:bg-purple-400'
-                                        : 'bg-white text-zinc-900 hover:bg-zinc-200'
-                                        }`}
-                                >
-                                    Book Now
-                                </a>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Podcast Studio */}
+                    <div className="mb-16">
+                        <div className="mb-6 flex items-center gap-3">
+                            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-sm font-semibold text-amber-400">
+                                Podcast Studio
+                            </span>
+                            <div className="h-px flex-1 bg-secondary" />
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            {[
+                                { title: 'Solo Creator', desc: 'Single host setup · Multi-track recording · Basic editing' },
+                                { title: 'Interview Setup', desc: '2–3 guests · Video recording option · Multi-camera angles' },
+                                { title: 'Full Production', desc: 'Up to 4 guests · 4K video · Advanced editing · Same-day delivery' },
+                                { title: 'Multi Camera Setup', desc: '3–5 camera angles · Cinematic podcast look · Live switching · Full 4K' },
+                            ].map((s) => (
+                                <div key={s.title} className="flex flex-col justify-between rounded-xl border border-border bg-muted/50 p-6">
+                                    <div>
+                                        <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
+                                        <p className="text-sm text-muted-foreground">{s.desc}</p>
+                                    </div>
+                                    <a
+                                        href={generateWhatsAppLink('studio', `Hi! I'd like to inquire about the Podcast ${s.title} package.`)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="mt-5 inline-block rounded-full border border-amber-500/40 bg-amber-500/10 px-5 py-2.5 text-center text-sm font-semibold text-amber-400 transition-colors hover:bg-amber-500/20"
+                                    >
+                                        Get Quote
+                                    </a>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Equipment Rental */}
+                    <div>
+                        <div className="mb-6 flex items-center gap-3">
+                            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-sm font-semibold text-amber-400">
+                                Equipment Rental
+                            </span>
+                            <div className="h-px flex-1 bg-secondary" />
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            {[
+                                { title: 'Cameras', desc: 'Sony A7 IV, Canon R6, Sony FX3 cinema body' },
+                                { title: 'Lenses', desc: 'Sony GM zooms, Sigma Art primes, cinema glass' },
+                                { title: 'Lighting', desc: 'Aputure & Godox LED, strobe kits, modifiers' },
+                                { title: 'Audio', desc: 'Rode shotguns, Zoom recorders, wireless lavs' },
+                            ].map((s) => (
+                                <div key={s.title} className="flex flex-col justify-between rounded-xl border border-border bg-muted/50 p-6">
+                                    <div>
+                                        <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
+                                        <p className="text-sm text-muted-foreground">{s.desc}</p>
+                                    </div>
+                                    <a
+                                        href={generateWhatsAppLink('studio', `Hi! I'd like to inquire about renting ${s.title}.`)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="mt-5 inline-block rounded-full border border-amber-500/40 bg-amber-500/10 px-5 py-2.5 text-center text-sm font-semibold text-amber-400 transition-colors hover:bg-amber-500/20"
+                                    >
+                                        Browse &amp; Rent
+                                    </a>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </section>
 
             {/* What's Included */}
-            <section className="border-t border-zinc-800 bg-zinc-900/30 py-24">
+            <section className="border-t border-border bg-muted/30 py-24">
                 <div className="container mx-auto px-6">
                     <div className="mx-auto max-w-3xl">
                         <h2 className="mb-8 text-center text-4xl font-bold">What's Included</h2>
                         <div className="grid gap-4 sm:grid-cols-2">
-                            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-                                <h3 className="mb-3 font-bold text-purple-500">Equipment</h3>
-                                <ul className="space-y-2 text-sm text-zinc-300">
+                            <div className="rounded-xl border border-border bg-muted/50 p-6">
+                                <h3 className="mb-3 font-bold text-amber-500">Equipment</h3>
+                                <ul className="space-y-2 text-sm text-muted-foreground">
                                     <li>• Continuous LED lights (3x)</li>
                                     <li>• Strobe lights (2x)</li>
                                     <li>• Light stands & modifiers</li>
                                     <li>• Reflectors & diffusers</li>
                                 </ul>
                             </div>
-                            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-                                <h3 className="mb-3 font-bold text-purple-500">Amenities</h3>
-                                <ul className="space-y-2 text-sm text-zinc-300">
+                            <div className="rounded-xl border border-border bg-muted/50 p-6">
+                                <h3 className="mb-3 font-bold text-amber-500">Amenities</h3>
+                                <ul className="space-y-2 text-sm text-muted-foreground">
                                     <li>• Changing/makeup room</li>
                                     <li>• High-speed WiFi</li>
                                     <li>• Air conditioning</li>
@@ -189,13 +252,13 @@ export default function StudioPage() {
             </section>
 
             {/* Testimonials */}
-            <Testimonials testimonials={studioTestimonials} accentColor="purple" />
+            <Testimonials testimonials={studioTestimonials} accentColor="amber" />
 
             {/* Process Timeline */}
-            <ProcessTimeline steps={studioProcessSteps} accentColor="purple" />
+            <ProcessTimeline steps={studioProcessSteps} accentColor="amber" />
 
             {/* FAQ */}
-            <ServiceFAQ faqs={studioFAQs} accentColor="purple" />
+            <ServiceFAQ faqs={studioFAQs} accentColor="amber" />
 
             <BookingFlyout service="studio" />
             <Footer />

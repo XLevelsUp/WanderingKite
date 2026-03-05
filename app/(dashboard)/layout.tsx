@@ -34,7 +34,7 @@ export default async function DashboardLayout({
     <div className='min-h-screen bg-[#0A0A0B] pt-20'>
       <div className='flex'>
         {/* Sidebar */}
-        <aside className='w-64 bg-[rgba(17,17,22,0.98)] border-r border-primary/12 text-white fixed left-0 top-20 bottom-0 overflow-y-auto backdrop-blur-xl'>
+        <aside className='w-64 bg-[rgba(17,17,22,0.98)] border-r border-primary/12 text-foreground fixed left-0 top-20 bottom-0 overflow-y-auto backdrop-blur-xl'>
           <div className='p-6'>
             <h1 className='text-xl font-bold mb-8 text-gradient-gold'>
               Rental System
@@ -93,7 +93,7 @@ export default async function DashboardLayout({
               <div className='text-sm text-foreground/50'>
                 <Link
                   href={`/dashboard/employees/${user.id}`}
-                  className='font-medium text-white hover:text-primary truncate block transition-colors duration-150'
+                  className='font-medium text-foreground hover:text-primary truncate block transition-colors duration-150'
                 >
                   {profile?.full_name || user.email}
                 </Link>

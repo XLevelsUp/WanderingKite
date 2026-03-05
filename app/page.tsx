@@ -136,7 +136,7 @@ export default function HomePage() {
             <p className='mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary opacity-80'>
               What We Offer
             </p>
-            <h2 className='text-4xl font-bold text-white'>Our Services</h2>
+            <h2 className='text-4xl font-bold text-foreground'>Our Services</h2>
           </div>
         </FadeIn>
 

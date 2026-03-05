@@ -41,11 +41,11 @@ export function ProcessTimeline({ steps, accentColor = 'amber' }: ProcessTimelin
     const colors = accentColors[accentColor];
 
     return (
-        <section className="border-t border-zinc-800 py-24">
+        <section className="border-t border-border py-24">
             <div className="container mx-auto px-6">
                 <FadeIn>
                     <h2 className="mb-4 text-center text-4xl font-bold">How It Works</h2>
-                    <p className="mx-auto mb-12 max-w-2xl text-center text-zinc-400">
+                    <p className="mx-auto mb-12 max-w-2xl text-center text-muted-foreground">
                         Simple, transparent process from inquiry to delivery
                     </p>
                 </FadeIn>
@@ -56,7 +56,7 @@ export function ProcessTimeline({ steps, accentColor = 'amber' }: ProcessTimelin
                             <div className="relative mb-8 flex gap-6 last:mb-0">
                                 {/* Timeline Line */}
                                 {index < steps.length - 1 && (
-                                    <div className="absolute left-6 top-16 h-full w-0.5 bg-zinc-800" />
+                                    <div className="absolute left-6 top-16 h-full w-0.5 bg-secondary" />
                                 )}
 
                                 {/* Step Number */}
@@ -66,9 +66,9 @@ export function ProcessTimeline({ steps, accentColor = 'amber' }: ProcessTimelin
 
                                 {/* Content */}
                                 <div className="flex-1 pb-8">
-                                    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-                                        <h3 className="mb-2 text-xl font-bold text-white">{step.title}</h3>
-                                        <p className="text-zinc-400">{step.description}</p>
+                                    <div className="rounded-xl border border-border bg-muted/50 p-6">
+                                        <h3 className="mb-2 text-xl font-bold text-foreground">{step.title}</h3>
+                                        <p className="text-muted-foreground">{step.description}</p>
                                     </div>
                                 </div>
                             </div>

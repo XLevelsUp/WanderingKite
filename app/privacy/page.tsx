@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
     return (
-        <main className="min-h-screen bg-zinc-950 pt-20">
+        <main className="min-h-screen bg-background pt-20">
             {/* Hero */}
-            <section className="border-b border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 py-16">
+            <section className="border-b border-border bg-gradient-to-b from-zinc-900 to-zinc-950 py-16">
                 <div className="container mx-auto px-6">
                     <div className="mx-auto max-w-4xl text-center">
                         <div className="mb-6 flex justify-center">
@@ -20,7 +20,7 @@ export default function PrivacyPage() {
                             </div>
                         </div>
                         <h1 className="mb-4 text-4xl font-bold md:text-5xl">Privacy Policy</h1>
-                        <p className="text-zinc-400">Last updated: January 20, 2026</p>
+                        <p className="text-muted-foreground">Last updated: January 20, 2026</p>
                     </div>
                 </div>
             </section>
@@ -29,10 +29,10 @@ export default function PrivacyPage() {
             <section className="py-16">
                 <div className="container mx-auto px-6">
                     <div className="prose prose-invert mx-auto max-w-4xl">
-                        <div className="space-y-8 text-zinc-300">
+                        <div className="space-y-8 text-muted-foreground">
                             {/* Introduction */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">1. Introduction</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">1. Introduction</h2>
                                 <p className="leading-relaxed">
                                     Wandering Kite Studio ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website, use our services, or interact with us via WhatsApp or other communication channels.
                                 </p>
@@ -40,8 +40,8 @@ export default function PrivacyPage() {
 
                             {/* Information We Collect */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">2. Information We Collect</h2>
-                                <h3 className="mb-3 text-xl font-semibold text-white">2.1 Personal Information</h3>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">2. Information We Collect</h2>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">2.1 Personal Information</h3>
                                 <p className="mb-4 leading-relaxed">We may collect the following personal information:</p>
                                 <ul className="mb-4 list-disc space-y-2 pl-6">
                                     <li>Name and contact details (phone number, email address)</li>
@@ -51,7 +51,7 @@ export default function PrivacyPage() {
                                     <li>Business information (if booking for commercial purposes)</li>
                                 </ul>
 
-                                <h3 className="mb-3 text-xl font-semibold text-white">2.2 Automatically Collected Information</h3>
+                                <h3 className="mb-3 text-xl font-semibold text-foreground">2.2 Automatically Collected Information</h3>
                                 <ul className="list-disc space-y-2 pl-6">
                                     <li>IP address and browser type</li>
                                     <li>Device information and operating system</li>
@@ -62,7 +62,7 @@ export default function PrivacyPage() {
 
                             {/* How We Use Your Information */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">3. How We Use Your Information</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">3. How We Use Your Information</h2>
                                 <p className="mb-4 leading-relaxed">We use your information to:</p>
                                 <ul className="list-disc space-y-2 pl-6">
                                     <li>Process bookings and rental agreements</li>
@@ -76,7 +76,7 @@ export default function PrivacyPage() {
 
                             {/* Data Sharing */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">4. Data Sharing and Disclosure</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">4. Data Sharing and Disclosure</h2>
                                 <p className="mb-4 leading-relaxed">We do not sell your personal information. We may share your data with:</p>
                                 <ul className="list-disc space-y-2 pl-6">
                                     <li><strong>Payment Processors:</strong> To process transactions securely</li>
@@ -88,7 +88,7 @@ export default function PrivacyPage() {
 
                             {/* WhatsApp Communication */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">5. WhatsApp Communication</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">5. WhatsApp Communication</h2>
                                 <p className="leading-relaxed">
                                     By initiating contact via WhatsApp, you consent to receive booking confirmations, updates, and promotional messages through this channel. We use WhatsApp Business and comply with their privacy policies. You can opt out of promotional messages at any time by messaging "STOP."
                                 </p>
@@ -96,7 +96,7 @@ export default function PrivacyPage() {
 
                             {/* Data Security */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">6. Data Security</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">6. Data Security</h2>
                                 <p className="leading-relaxed">
                                     We implement industry-standard security measures to protect your personal information, including encryption, secure servers, and restricted access. However, no method of transmission over the internet is 100% secure, and we cannot guarantee absolute security.
                                 </p>
@@ -104,7 +104,7 @@ export default function PrivacyPage() {
 
                             {/* Data Retention */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">7. Data Retention</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">7. Data Retention</h2>
                                 <p className="leading-relaxed">
                                     We retain your personal information for as long as necessary to fulfill the purposes outlined in this policy, comply with legal obligations, and resolve disputes. Rental records are kept for a minimum of 3 years for accounting and legal purposes.
                                 </p>
@@ -112,7 +112,7 @@ export default function PrivacyPage() {
 
                             {/* Your Rights */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">8. Your Rights</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">8. Your Rights</h2>
                                 <p className="mb-4 leading-relaxed">You have the right to:</p>
                                 <ul className="list-disc space-y-2 pl-6">
                                     <li>Access and request a copy of your personal data</li>
@@ -128,7 +128,7 @@ export default function PrivacyPage() {
 
                             {/* Cookies */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">9. Cookies and Tracking</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">9. Cookies and Tracking</h2>
                                 <p className="leading-relaxed">
                                     We use cookies and similar technologies to enhance your browsing experience, analyze website traffic, and personalize content. You can control cookie preferences through your browser settings.
                                 </p>
@@ -136,7 +136,7 @@ export default function PrivacyPage() {
 
                             {/* Third-Party Links */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">10. Third-Party Links</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">10. Third-Party Links</h2>
                                 <p className="leading-relaxed">
                                     Our website may contain links to third-party websites (e.g., Instagram, YouTube, Google Maps). We are not responsible for the privacy practices of these external sites. Please review their privacy policies before sharing your information.
                                 </p>
@@ -144,7 +144,7 @@ export default function PrivacyPage() {
 
                             {/* Children's Privacy */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">11. Children's Privacy</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">11. Children's Privacy</h2>
                                 <p className="leading-relaxed">
                                     Our services are not intended for individuals under 18 years of age. We do not knowingly collect personal information from minors. If you believe we have inadvertently collected such data, please contact us immediately.
                                 </p>
@@ -152,15 +152,15 @@ export default function PrivacyPage() {
 
                             {/* Changes to Policy */}
                             <div>
-                                <h2 className="mb-4 text-2xl font-bold text-white">12. Changes to This Policy</h2>
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">12. Changes to This Policy</h2>
                                 <p className="leading-relaxed">
                                     We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated "Last Updated" date. Continued use of our services after changes constitutes acceptance of the revised policy.
                                 </p>
                             </div>
 
                             {/* Contact */}
-                            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-                                <h2 className="mb-4 text-2xl font-bold text-white">13. Contact Us</h2>
+                            <div className="rounded-xl border border-border bg-muted/50 p-6">
+                                <h2 className="mb-4 text-2xl font-bold text-foreground">13. Contact Us</h2>
                                 <p className="mb-4 leading-relaxed">
                                     If you have questions about this Privacy Policy or wish to exercise your rights, please contact us:
                                 </p>

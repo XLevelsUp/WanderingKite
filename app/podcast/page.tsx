@@ -59,7 +59,7 @@ const packages = [
 
 export default function PodcastPage() {
     return (
-        <main className="min-h-screen bg-zinc-950 pt-20">
+        <main className="min-h-screen bg-background pt-20">
             {/* Hero Section */}
             <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">
                 <div className="container mx-auto px-6">
@@ -75,7 +75,7 @@ export default function PodcastPage() {
                                 Studio
                             </span>
                         </h1>
-                        <p className="mb-8 text-xl text-zinc-400">
+                        <p className="mb-8 text-xl text-muted-foreground">
                             Broadcast-quality podcast recording with professional acoustics,
                             premium microphones, and expert support.
                         </p>
@@ -83,7 +83,7 @@ export default function PodcastPage() {
                             href={generateWhatsAppLink('podcast')}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-block rounded-full bg-green-500 px-8 py-4 font-semibold text-white transition-all hover:bg-green-400 hover:shadow-lg hover:shadow-green-500/50"
+                            className="inline-block rounded-full bg-green-500 px-8 py-4 font-semibold text-foreground transition-all hover:bg-green-400 hover:shadow-lg hover:shadow-green-500/50"
                         >
                             Book Recording Session
                         </a>
@@ -92,19 +92,19 @@ export default function PodcastPage() {
             </section>
 
             {/* Equipment & Features */}
-            <section className="border-t border-zinc-800 py-24">
+            <section className="border-t border-border py-24">
                 <div className="container mx-auto px-6">
                     <h2 className="mb-12 text-center text-4xl font-bold">Studio Equipment</h2>
                     <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
                         {equipment.map((item, index) => (
-                            <div key={index} className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 text-center">
+                            <div key={index} className="rounded-2xl border border-border bg-muted/50 p-6 text-center">
                                 <div className="mb-4 flex justify-center">
                                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
                                         <item.icon className="h-6 w-6 text-green-500" />
                                     </div>
                                 </div>
                                 <h3 className="mb-2 text-lg font-bold">{item.title}</h3>
-                                <p className="text-sm text-zinc-400">{item.description}</p>
+                                <p className="text-sm text-muted-foreground">{item.description}</p>
                             </div>
                         ))}
                     </div>
@@ -112,7 +112,7 @@ export default function PodcastPage() {
             </section>
 
             {/* Packages */}
-            <section className="border-t border-zinc-800 py-24">
+            <section className="border-t border-border py-24">
                 <div className="container mx-auto px-6">
                     <h2 className="mb-12 text-center text-4xl font-bold">Recording Packages</h2>
                     <div className="grid gap-6 md:grid-cols-3">
@@ -121,22 +121,22 @@ export default function PodcastPage() {
                                 key={pkg.name}
                                 className={`relative rounded-2xl border p-8 ${pkg.popular
                                     ? 'border-green-500 bg-green-500/5'
-                                    : 'border-zinc-800 bg-zinc-900/50'
+                                    : 'border-border bg-muted/50'
                                     }`}
                             >
                                 {pkg.popular && (
-                                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-green-500 px-4 py-1 text-xs font-semibold text-white">
+                                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-green-500 px-4 py-1 text-xs font-semibold text-foreground">
                                         Most Popular
                                     </span>
                                 )}
                                 <h3 className="mb-2 text-2xl font-bold">{pkg.name}</h3>
                                 <div className="mb-6">
                                     <span className="text-4xl font-bold text-green-500">₹{pkg.price}</span>
-                                    <span className="text-zinc-400">{pkg.duration}</span>
+                                    <span className="text-muted-foreground">{pkg.duration}</span>
                                 </div>
                                 <ul className="mb-8 space-y-3">
                                     {pkg.features.map((feature, index) => (
-                                        <li key={index} className="flex items-start gap-2 text-sm text-zinc-300">
+                                        <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
                                             <span className="text-green-500">✓</span>
                                             {feature}
                                         </li>
@@ -147,7 +147,7 @@ export default function PodcastPage() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className={`block w-full rounded-lg py-3 text-center font-semibold transition-colors ${pkg.popular
-                                        ? 'bg-green-500 text-white hover:bg-green-400'
+                                        ? 'bg-green-500 text-foreground hover:bg-green-400'
                                         : 'bg-white text-zinc-900 hover:bg-zinc-200'
                                         }`}
                                 >
@@ -160,15 +160,15 @@ export default function PodcastPage() {
             </section>
 
             {/* Technical Specs */}
-            <section className="border-t border-zinc-800 bg-zinc-900/30 py-24">
+            <section className="border-t border-border bg-muted/30 py-24">
                 <div className="container mx-auto px-6">
                     <div className="mx-auto max-w-3xl">
                         <h2 className="mb-8 text-center text-4xl font-bold">Technical Specifications</h2>
-                        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8">
+                        <div className="rounded-2xl border border-border bg-muted/50 p-8">
                             <div className="grid gap-6 sm:grid-cols-2">
                                 <div>
                                     <h3 className="mb-3 font-bold text-green-500">Audio Setup</h3>
-                                    <ul className="space-y-2 text-sm text-zinc-300">
+                                    <ul className="space-y-2 text-sm text-muted-foreground">
                                         <li>• Rode Procaster microphones</li>
                                         <li>• Shure SM7B (premium option)</li>
                                         <li>• Scarlett 4i4 audio interface</li>
@@ -177,7 +177,7 @@ export default function PodcastPage() {
                                 </div>
                                 <div>
                                     <h3 className="mb-3 font-bold text-green-500">Room Acoustics</h3>
-                                    <ul className="space-y-2 text-sm text-zinc-300">
+                                    <ul className="space-y-2 text-sm text-muted-foreground">
                                         <li>• Professional acoustic panels</li>
                                         <li>• Bass traps in corners</li>
                                         <li>• Isolated recording booth</li>
@@ -186,7 +186,7 @@ export default function PodcastPage() {
                                 </div>
                                 <div>
                                     <h3 className="mb-3 font-bold text-green-500">Video Option</h3>
-                                    <ul className="space-y-2 text-sm text-zinc-300">
+                                    <ul className="space-y-2 text-sm text-muted-foreground">
                                         <li>• Multi-camera setup (2-3 angles)</li>
                                         <li>• 4K video recording</li>
                                         <li>• Professional lighting</li>
@@ -195,7 +195,7 @@ export default function PodcastPage() {
                                 </div>
                                 <div>
                                     <h3 className="mb-3 font-bold text-green-500">Amenities</h3>
-                                    <ul className="space-y-2 text-sm text-zinc-300">
+                                    <ul className="space-y-2 text-sm text-muted-foreground">
                                         <li>• High-speed WiFi</li>
                                         <li>• Air conditioning</li>
                                         <li>• Green room/lounge</li>

@@ -91,7 +91,7 @@ export function EquipmentCard({
 
         {/* Card body */}
         <div className='p-5'>
-          <h3 className='mb-3 text-base font-semibold text-white'>{name}</h3>
+          <h3 className='mb-3 text-base font-semibold text-foreground'>{name}</h3>
 
           {/* Specs */}
           <ul className='mb-4 space-y-1.5'>

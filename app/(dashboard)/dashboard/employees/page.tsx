@@ -43,7 +43,7 @@ export default async function EmployeesPage() {
           <p className='text-[10px] font-semibold uppercase tracking-[0.22em] text-primary opacity-75 mb-1'>
             Team Management
           </p>
-          <h2 className='text-3xl font-bold tracking-tight text-white'>
+          <h2 className='text-3xl font-bold tracking-tight text-foreground'>
             Employees
           </h2>
         </div>
@@ -58,7 +58,7 @@ export default async function EmployeesPage() {
                 px-5 py-2.5 text-sm font-semibold text-primary
                 transition-all duration-200
                 hover:bg-primary/18 hover:border-primary/60
-                hover:text-white hover:shadow-[0_0_16px_hsl(var(--primary)/0.20)]
+                hover:text-foreground hover:shadow-[0_0_16px_hsl(var(--primary)/0.20)]
               '
               >
                 <Plus className='h-4 w-4' /> Add Employee

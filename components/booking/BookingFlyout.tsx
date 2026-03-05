@@ -50,7 +50,7 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
                     <p className='text-[10px] font-semibold uppercase tracking-[0.18em] text-primary opacity-80'>
                       Quick Inquiry
                     </p>
-                    <p className='mt-0.5 text-sm font-semibold text-white'>
+                    <p className='mt-0.5 text-sm font-semibold text-foreground'>
                       {service ?? 'Book a Session'}
                     </p>
                   </div>
@@ -110,7 +110,7 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
                   transition-all duration-200
                   hover:border-primary/60
                   hover:bg-primary/12
-                  hover:text-white
+                  hover:text-foreground
                   hover:shadow-[0_8px_32px_hsl(var(--primary)/0.25)]
                   animate-pulse-gold
                 '
