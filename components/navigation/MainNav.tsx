@@ -70,7 +70,7 @@ export function MainNav() {
           '
         >
           <MessageCircle className='h-4 w-4' />
-          <span className='hidden sm:inline'>Contact Us</span>
+          <span className='hidden sm:inline'>Contact</span>
         </a>
       </div>
     </nav>
