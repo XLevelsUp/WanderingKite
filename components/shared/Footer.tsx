@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   MapPin,
@@ -63,7 +64,15 @@ export function Footer() {
         <div className='grid gap-12 md:grid-cols-2 lg:grid-cols-4'>
           {/* Column 1: Brand & Socials */}
           <div>
-            <h2 className='mb-4 text-2xl font-bold'>{siteConfig.name}</h2>
+            <Link href='/' className='mb-4 inline-block group'>
+              <Image
+                src="/wkfulllogo.png"
+                alt={siteConfig.name}
+                width={320}
+                height={80}
+                className="h-20 w-auto transition-transform duration-300 group-hover:scale-105"
+              />
+            </Link>
             <p className='mb-6 text-sm text-muted-foreground'>
               Creative infrastructure for modern creators. Empowering your
               vision with professional gear and spaces.
