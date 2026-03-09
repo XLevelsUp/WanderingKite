@@ -141,18 +141,55 @@ export function NewEquipmentForm({
             </Select>
           </div>
 
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='rental_price'>Rental Price (per day) *</Label>
+              <Input
+                id='rental_price'
+                name='rental_price'
+                type='number'
+                step='0.01'
+                min='0'
+                placeholder='0.00'
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label htmlFor='weekly_price'>Weekly Price</Label>
+              <Input
+                id='weekly_price'
+                name='weekly_price'
+                type='number'
+                step='0.01'
+                min='0'
+                placeholder='0.00'
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+
           <div className='space-y-2'>
-            <Label htmlFor='rental_price'>Rental Price (per day) *</Label>
+            <Label htmlFor='image_url'>Image URL</Label>
             <Input
-              id='rental_price'
-              name='rental_price'
-              type='number'
-              step='0.01'
-              min='0'
-              placeholder='0.00'
-              required
+              id='image_url'
+              name='image_url'
+              placeholder='/equipment/sony-a7iv.jpg or https://...'
               disabled={isLoading}
             />
+            <p className='text-xs text-muted-foreground'>Relative path or full URL for the equipment image.</p>
+          </div>
+
+          <div className='space-y-2'>
+            <Label htmlFor='specs'>Specifications</Label>
+            <Input
+              id='specs'
+              name='specs'
+              placeholder='33MP Full-Frame, 4K 60fps, IBIS'
+              disabled={isLoading}
+            />
+            <p className='text-xs text-muted-foreground'>Comma-separated list of key features.</p>
           </div>
 
           <div className='space-y-2'>

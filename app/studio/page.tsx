@@ -6,6 +6,7 @@ import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
 import { ServiceFAQ } from '@/components/sections/ServiceFAQ';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { studioTestimonials, studioProcessSteps, studioFAQs } from '@/lib/service-page-data';
+import { getEquipment } from '@/actions/equipment';
 import { Building2, Maximize, Lightbulb, Wifi } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -57,7 +58,24 @@ const pricingTiers = [
     },
 ];
 
-export default function StudioPage() {
+export default async function StudioPage() {
+    // Fetch live equipment summary
+    const equipment = await getEquipment();
+    
+    // Group up to 3 names per category for the preview text
+    const getTopItems = (catMatch: string) => {
+        const matches = equipment.filter(e => {
+            const catName = (e.categories as any)?.name?.toLowerCase() || '';
+            return catName.includes(catMatch);
+        });
+        return matches.slice(0, 3).map(e => e.name).join(', ') || `Various ${catMatch}s available`;
+    };
+
+    const previewCameras = getTopItems('camera');
+    const previewLenses = getTopItems('lens');
+    const previewLighting = getTopItems('light');
+    const previewAudio = getTopItems('audio');
+
     return (
         <main className="min-h-screen bg-background pt-20">
             {/* Hero Section */}
@@ -197,10 +215,10 @@ export default function StudioPage() {
                         </div>
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             {[
-                                { title: 'Cameras', desc: 'Sony A7 IV, Canon R6, Sony FX3 cinema body' },
-                                { title: 'Lenses', desc: 'Sony GM zooms, Sigma Art primes, cinema glass' },
-                                { title: 'Lighting', desc: 'Aputure & Godox LED, strobe kits, modifiers' },
-                                { title: 'Audio', desc: 'Rode shotguns, Zoom recorders, wireless lavs' },
+                                { title: 'Cameras', desc: previewCameras },
+                                { title: 'Lenses', desc: previewLenses },
+                                { title: 'Lighting', desc: previewLighting },
+                                { title: 'Audio', desc: previewAudio },
                             ].map((s) => (
                                 <div key={s.title} className="flex flex-col justify-between rounded-xl border border-border bg-muted/50 p-6">
                                     <div>

@@ -5,7 +5,8 @@ import { Testimonials } from '@/components/sections/Testimonials';
 import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
 import { ServiceFAQ } from '@/components/sections/ServiceFAQ';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
-import { Camera, Clock, MapPin } from 'lucide-react';
+import { getEquipment } from '@/actions/equipment';
+import { Camera, Clock, MapPin, Video, Monitor } from 'lucide-react';
 
 export const metadata: Metadata = {
     title: 'Event & Lifestyle Photography Coimbatore | Wandering Kite Studio',
@@ -111,7 +112,23 @@ const faqs = [
     },
 ];
 
-export default function PhotographyPage() {
+export default async function PhotographyPage() {
+    // Fetch live equipment summary
+    const equipment = await getEquipment();
+    
+    // Group up to 3 names per category for the preview text
+    const getTopItems = (catMatch: string) => {
+        const matches = equipment.filter(e => {
+            const catName = (e.categories as any)?.name?.toLowerCase() || '';
+            return catName.includes(catMatch);
+        });
+        return matches.slice(0, 3).map(e => e.name).join(', ') || `Various premium ${catMatch}s`;
+    };
+
+    const previewCameras = getTopItems('camera');
+    const previewLenses = getTopItems('lens');
+    const previewLighting = getTopItems('light');
+
     return (
         <main className="min-h-screen bg-background pt-20">
             {/* Hero Section */}
@@ -343,6 +360,34 @@ export default function PhotographyPage() {
                                     </a>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Our Equipment */}
+            <section className="border-t border-border bg-muted/30 py-24">
+                <div className="container mx-auto px-6">
+                    <div className="mx-auto max-w-4xl text-center">
+                        <h2 className="mb-4 text-4xl font-bold">Equipment We Use</h2>
+                        <p className="mb-12 text-muted-foreground">We use industry-standard gear to ensure the highest quality results.</p>
+                        
+                        <div className="grid gap-6 sm:grid-cols-3">
+                            <div className="rounded-2xl border border-border bg-background p-8 text-center">
+                                <Monitor className="mx-auto mb-4 h-8 w-8 text-amber-500" />
+                                <h3 className="mb-2 font-bold text-lg">Cameras</h3>
+                                <p className="text-sm text-muted-foreground">{previewCameras}</p>
+                            </div>
+                            <div className="rounded-2xl border border-border bg-background p-8 text-center">
+                                <Camera className="mx-auto mb-4 h-8 w-8 text-amber-500" />
+                                <h3 className="mb-2 font-bold text-lg">Lenses</h3>
+                                <p className="text-sm text-muted-foreground">{previewLenses}</p>
+                            </div>
+                            <div className="rounded-2xl border border-border bg-background p-8 text-center">
+                                <Video className="mx-auto mb-4 h-8 w-8 text-amber-500" />
+                                <h3 className="mb-2 font-bold text-lg">Lighting &amp; Grip</h3>
+                                <p className="text-sm text-muted-foreground">{previewLighting}</p>
+                            </div>
                         </div>
                     </div>
                 </div>

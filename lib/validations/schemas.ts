@@ -7,6 +7,9 @@ export const equipmentSchema = z.object({
   categoryId: z.string().uuid('Invalid category'),
   branchId: z.string().uuid('Invalid branch'),
   rentalPrice: z.number().positive('Price must be positive'),
+  weeklyPrice: z.number().min(0).default(0),
+  imageUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
+  specs: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
 });
 
