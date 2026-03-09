@@ -78,6 +78,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  const isProd = process.env.NODE_ENV === 'production';
+
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': ['LocalBusiness', 'ProfessionalService', 'Store'],
@@ -161,18 +164,22 @@ export default function RootLayout({
   return (
     <html lang='en' className='dark'>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <Script
-          src='https://www.googletagmanager.com/gtag/js?id=G-50PN3VN8P4'
-          strategy='afterInteractive'
-        />
-        <Script id='google-analytics' strategy='afterInteractive'>
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-50PN3VN8P4');
-          `}
-        </Script>
+        {isProd && GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+              strategy='afterInteractive'
+            />
+            <Script id='google-analytics' strategy='afterInteractive'>
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_ID}');
+              `}
+            </Script>
+          </>
+        )}
         <script
           type='application/ld+json'
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
