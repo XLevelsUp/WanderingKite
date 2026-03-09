@@ -5,7 +5,7 @@ import { Testimonials } from '@/components/sections/Testimonials';
 import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
 import { ServiceFAQ } from '@/components/sections/ServiceFAQ';
 import { EquipmentCard } from '@/components/services/EquipmentCard';
-import { equipmentCatalog } from '@/lib/equipment-data';
+import { getEquipment } from '@/actions/equipment';
 import { rentalsTestimonials, rentalsProcessSteps, rentalsFAQs } from '@/lib/service-page-data';
 import { Video, Shield, Headphones } from 'lucide-react';
 
@@ -31,11 +31,40 @@ export const metadata: Metadata = {
     },
 };
 
-export default function RentalsPage() {
-    const cameras = equipmentCatalog.filter(e => e.category === 'camera');
-    const lenses = equipmentCatalog.filter(e => e.category === 'lens');
-    const lighting = equipmentCatalog.filter(e => e.category === 'lighting');
-    const audio = equipmentCatalog.filter(e => e.category === 'audio');
+export default async function RentalsPage() {
+    // 1. Fetch live data
+    const remoteData = await getEquipment();
+
+    // 2. Format it to match the Card props
+    const equipmentItems = remoteData.map((e) => {
+        let parsedSpecs: string[] = [];
+        if (typeof e.specs === 'string') {
+            try {
+                parsedSpecs = JSON.parse(e.specs);
+            } catch (err) {}
+        } else if (Array.isArray(e.specs)) {
+            parsedSpecs = e.specs as string[];
+        }
+
+        // The joined table 'categories' returns either { name: string } or an array of it due to the join
+        const categoryName = (e.categories as any)?.name?.toLowerCase() || '';
+
+        return {
+            id: e.id,
+            name: e.name,
+            category: categoryName,
+            dailyRate: Number(e.rental_price),
+            weeklyRate: Number(e.weekly_price || 0),
+            image: e.image_url || '',
+            specs: parsedSpecs,
+            available: e.status === 'AVAILABLE',
+        };
+    });
+
+    const cameras = equipmentItems.filter(e => e.category === 'camera' || e.category === 'cameras');
+    const lenses = equipmentItems.filter(e => e.category === 'lens' || e.category === 'lenses');
+    const lighting = equipmentItems.filter(e => e.category === 'lighting' || e.category === 'lights');
+    const audio = equipmentItems.filter(e => e.category === 'audio');
 
     return (
         <main className="min-h-screen bg-background pt-20">

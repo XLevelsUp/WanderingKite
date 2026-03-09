@@ -116,6 +116,9 @@ export async function createEquipment(formData: FormData) {
     categoryId: formData.get('category_id') as string,
     branchId: formData.get('branch_id') as string,
     rentalPrice: parseFloat(formData.get('rental_price') as string),
+    weeklyPrice: parseFloat((formData.get('weekly_price') as string) || '0'),
+    imageUrl: (formData.get('image_url') as string) || '',
+    specs: (formData.get('specs') as string) || null,
     description: (formData.get('description') as string) || null,
   };
 
@@ -128,7 +131,10 @@ export async function createEquipment(formData: FormData) {
       serialNumber: validatedData.serialNumber,
       categoryId: validatedData.categoryId,
       branchId: validatedData.branchId,
-      rentalPrice: validatedData.rentalPrice,
+      rental_price: validatedData.rentalPrice,
+      weekly_price: validatedData.weeklyPrice,
+      image_url: validatedData.imageUrl,
+      specs: validatedData.specs ? JSON.stringify(validatedData.specs.split(',').map(s => s.trim()).filter(Boolean)) : '[]',
       description: validatedData.description,
       status: 'AVAILABLE',
     })
@@ -153,6 +159,9 @@ export async function updateEquipment(id: string, formData: FormData) {
     categoryId: formData.get('category_id') as string,
     branchId: formData.get('branch_id') as string,
     rentalPrice: parseFloat(formData.get('rental_price') as string),
+    weeklyPrice: parseFloat((formData.get('weekly_price') as string) || '0'),
+    imageUrl: (formData.get('image_url') as string) || '',
+    specs: (formData.get('specs') as string) || null,
     description: (formData.get('description') as string) || null,
   };
 
@@ -165,7 +174,10 @@ export async function updateEquipment(id: string, formData: FormData) {
       serialNumber: validatedData.serialNumber,
       categoryId: validatedData.categoryId,
       branchId: validatedData.branchId,
-      rentalPrice: validatedData.rentalPrice,
+      rental_price: validatedData.rentalPrice,
+      weekly_price: validatedData.weeklyPrice,
+      image_url: validatedData.imageUrl,
+      specs: validatedData.specs ? JSON.stringify(validatedData.specs.split(',').map(s => s.trim()).filter(Boolean)) : '[]',
       description: validatedData.description,
     })
     .eq('id', id)
