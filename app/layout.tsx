@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { MainNav } from '@/components/navigation/MainNav';
@@ -160,6 +161,18 @@ export default function RootLayout({
   return (
     <html lang='en' className='dark'>
       <body className={`${inter.variable} font-sans antialiased`}>
+        <Script
+          src='https://www.googletagmanager.com/gtag/js?id=G-50PN3VN8P4'
+          strategy='afterInteractive'
+        />
+        <Script id='google-analytics' strategy='afterInteractive'>
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-50PN3VN8P4');
+          `}
+        </Script>
         <script
           type='application/ld+json'
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
