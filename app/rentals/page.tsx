@@ -7,28 +7,113 @@ import { ServiceFAQ } from '@/components/sections/ServiceFAQ';
 import { EquipmentCard } from '@/components/services/EquipmentCard';
 import { getEquipment } from '@/actions/equipment';
 import { rentalsTestimonials, rentalsProcessSteps, rentalsFAQs } from '@/lib/service-page-data';
+import { JsonLd } from '@/lib/schema-helpers';
 import { Video, Shield, Headphones } from 'lucide-react';
 
 export const metadata: Metadata = {
-    title: 'Camera & Equipment Rentals Coimbatore | Sony, Canon | Wandering Kite',
-    description: 'Rent professional cameras, lenses, lighting, and audio equipment in Coimbatore. Sony, Canon, Rode available. Daily & weekly rates. Serving Coimbatore and Tamil Nadu.',
+    title: 'Camera & Lens Rental Coimbatore | Sony, Canon, Rode | Daily Rates',
+    description: 'Rent Sony, Canon cameras, lenses, lighting & Rode audio gear in Coimbatore. Insured equipment. Daily & weekly rates. Delivery available. Book on WhatsApp.',
     keywords: [
+        // Answer the Public: "rent / hire / borrow" camera patterns
         'camera rental Coimbatore',
-        'DSLR rent Coimbatore',
-        'photography equipment rental Coimbatore',
+        'rent camera near me Coimbatore',
+        'DSLR rental Coimbatore',
+        'mirrorless camera rental Coimbatore',
+        'Sony A7 rental Coimbatore',
+        'Canon R6 rental Coimbatore',
+        // Lens-specific
         'lens rental Coimbatore',
-        'lighting rental India',
-        'audio equipment rental',
-        'Sony camera rental Coimbatore',
-        'Canon lens rental India',
-        'camera rental near me',
-        'video equipment rental Tamil Nadu',
+        'prime lens rental Coimbatore',
+        'zoom lens rental Tamil Nadu',
+        // Lighting & audio
+        'lighting equipment rental Coimbatore',
+        'Rode microphone rental Coimbatore',
+        'audio equipment rental Tamil Nadu',
+        // Intent + comparison
+        'camera rental per day Coimbatore',
+        'camera rental with delivery Coimbatore',
+        // Neighboring cities
+        'camera rental Tirupur',
+        'equipment rental near Erode',
+        'photography gear rental Salem',
+        // Purpose-based
+        'camera rental for wedding Coimbatore',
+        'video camera rental Coimbatore',
+        'photography equipment rental Coimbatore',
     ],
     openGraph: {
-        title: 'Professional Camera & Equipment Rentals Coimbatore',
-        description: 'Premium photography and video equipment for rent in Coimbatore',
-        images: ['/og-rentals.jpg'],
+        title: 'Camera & Equipment Rental Coimbatore | Sony, Canon, Rode',
+        description: 'Rent professional cameras, lenses & audio gear in Coimbatore. Daily & weekly rates. Insured & well-maintained.',
+        url: 'https://wanderingkite.in/rentals',
+        images: [{ url: '/og-rentals.jpg', width: 1200, height: 630 }],
     },
+    alternates: {
+        canonical: 'https://wanderingkite.in/rentals',
+    },
+};
+
+const rentalsFaqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+        {
+            '@type': 'Question',
+            name: 'What documents are required to rent a camera in Coimbatore?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'You will need a valid government-issued photo ID (Aadhaar, PAN, Driving License, or Passport) and proof of address. For high-value equipment, a secondary ID may also be requested.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'Can I extend my camera rental period?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Yes! Contact us at least 2 hours before your rental ends. Extensions are subject to availability and charged at prorated rates.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'What is the security deposit for camera rentals in Coimbatore?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Security deposits vary by equipment value: ₹5,000–₹10,000 for cameras and lenses, ₹2,000–₹5,000 for lighting and audio equipment. Deposits are fully refundable upon safe return.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'Do you offer delivery of rental equipment in Coimbatore?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Yes, delivery is available within Coimbatore city limits. Delivery charges range from ₹500–₹1,500 depending on distance and must be arranged 48 hours in advance.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'Is insurance included with camera rentals?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Basic insurance is included with all rentals. For complete coverage, purchase our optional damage waiver at 10% of the rental cost, which covers accidental damage (excludes theft and loss).',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'What camera brands are available for rent at Wandering Kite Studio?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'We stock Sony, Canon, and Nikon camera bodies, along with prime and zoom lenses. Audio gear includes Rode and Shure microphones. Inventory is updated regularly with the latest professional equipment.',
+            },
+        },
+    ],
+};
+
+const rentalsBreadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://wanderingkite.in' },
+        { '@type': 'ListItem', position: 2, name: 'Camera & Equipment Rentals', item: 'https://wanderingkite.in/rentals' },
+    ],
 };
 
 export default async function RentalsPage() {
@@ -67,6 +152,8 @@ export default async function RentalsPage() {
     const audio = equipmentItems.filter(e => e.category === 'audio');
 
     return (
+        <>
+        <JsonLd data={[rentalsFaqSchema, rentalsBreadcrumbSchema]} />
         <main className="min-h-screen bg-background pt-20">
             {/* Hero Section */}
             <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">
@@ -228,5 +315,6 @@ export default async function RentalsPage() {
             <BookingFlyout service="rentals" />
             <Footer />
         </main>
+        </>
     );
 }

@@ -7,26 +7,148 @@ import { ServiceFAQ } from '@/components/sections/ServiceFAQ';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { studioTestimonials, studioProcessSteps, studioFAQs } from '@/lib/service-page-data';
 import { getEquipment } from '@/actions/equipment';
+import { JsonLd } from '@/lib/schema-helpers';
 import { Building2, Maximize, Lightbulb, Wifi } from 'lucide-react';
 
 export const metadata: Metadata = {
-    title: 'Photography Studio Rental Coimbatore | 1200 sq ft | Wandering Kite',
-    description: 'Rent our fully-equipped 1200 sq ft photography and video studio in Coimbatore. Professional lighting, backdrops, and amenities. Hourly and daily rates available.',
+    title: 'Photography Studio Rental Coimbatore | 1200 sq ft | Book by Hour',
+    description: "Rent Coimbatore's 1200 sq ft photography & video studio in RS Puram. Cyclorama wall, ProFoto strobes, backdrops. From ₹1,500/hr. Book on WhatsApp today.",
     keywords: [
+        // Core local terms
         'photography studio rental Coimbatore',
+        'studio space for rent Coimbatore',
+        'photo studio RS Puram Coimbatore',
         'video studio rental Coimbatore',
-        'studio space near me',
-        'photo studio Coimbatore',
-        'studio rental Tamil Nadu',
-        'photography studio India',
-        'video production studio Coimbatore',
-        'studio space rental India',
+        // Size/spec-based queries
+        '1200 sq ft studio Coimbatore',
+        'studio with cyclorama wall Coimbatore',
+        'studio with white backdrop Coimbatore',
+        // Pricing intent (high-conversion)
+        'studio rental per hour Coimbatore',
+        'hourly studio rental Coimbatore',
+        'half day studio rental Coimbatore',
+        'affordable studio rental Coimbatore',
+        // Use case
+        'fashion photography studio Coimbatore',
+        'product shoot studio Coimbatore',
+        'corporate video studio Coimbatore',
+        'YouTube video studio Coimbatore',
+        // Neighboring cities
+        'studio rental near Tirupur',
+        'photo studio Salem Tamil Nadu',
+        'studio for rent Tamil Nadu',
+        // Equipment included
+        'studio with Profoto lighting Coimbatore',
+        'studio rental with equipment included',
     ],
     openGraph: {
-        title: 'Premium Studio Space Rental Coimbatore',
-        description: 'Professional 1200 sq ft studio facilities for photography and video production in Coimbatore',
-        images: ['/og-studio.jpg'],
+        title: 'Photography Studio Rental Coimbatore | 1200 sq ft | RS Puram',
+        description: '1200 sq ft photography & video studio in Coimbatore with cyclorama, ProFoto lights & backdrops. Book from ₹1,500/hr.',
+        url: 'https://wanderingkite.in/studio',
+        images: [{ url: '/og-studio.jpg', width: 1200, height: 630 }],
     },
+    alternates: {
+        canonical: 'https://wanderingkite.in/studio',
+    },
+};
+
+const studioFaqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+        {
+            '@type': 'Question',
+            name: 'What equipment is included in the photography studio rental in Coimbatore?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'All packages include continuous LED lights (3×), strobe lights (2×), light stands, modifiers, reflectors, diffusers, and multiple backdrops (white, black, and colored seamless paper). Additional cameras and lenses can be rented separately.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'How much does it cost to rent the photography studio in Coimbatore?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Hourly rate starts at ₹1,500 (minimum 1 hour). Half-day (4 hours) is ₹6,000, and a full day (8 hours) is ₹10,000. All packages include lighting equipment and WiFi.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'Is parking available at the Coimbatore studio?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Yes, free parking is available for up to 3 vehicles. The studio is located in RS Puram, Coimbatore with additional street parking nearby for larger crews.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'Can I cancel or reschedule my studio booking?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Cancellations 72+ hours in advance receive a 100% refund. 48–72 hours: 75% refund. 24–48 hours: 50% refund. Less than 24 hours: no refund. One free reschedule is allowed if done 48+ hours in advance.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'Can I bring my own camera equipment to the studio?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Absolutely! You are welcome to bring your own cameras, lenses, and lighting. The studio provides the space and standard included equipment.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'Does the studio have a green screen and cyclorama wall?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Yes, the 1200 sq ft studio features a cyclorama wall, green screen, and multiple seamless paper backdrops. The 14ft ceilings allow for a wide range of lighting setups.',
+            },
+        },
+    ],
+};
+
+const studioBreadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://wanderingkite.in' },
+        { '@type': 'ListItem', position: 2, name: 'Studio Space Rental', item: 'https://wanderingkite.in/studio' },
+    ],
+};
+
+const studioPricingSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    '@id': 'https://wanderingkite.in/studio#service',
+    name: 'Photography Studio Rental Coimbatore',
+    provider: { '@id': 'https://wanderingkite.in/#business' },
+    areaServed: { '@type': 'City', name: 'Coimbatore' },
+    offers: [
+        {
+            '@type': 'Offer',
+            name: 'Hourly Studio Rental',
+            price: '1500',
+            priceCurrency: 'INR',
+            priceSpecification: {
+                '@type': 'UnitPriceSpecification',
+                price: '1500',
+                priceCurrency: 'INR',
+                unitText: 'HOUR',
+            },
+        },
+        {
+            '@type': 'Offer',
+            name: 'Half Day Studio Rental',
+            price: '6000',
+            priceCurrency: 'INR',
+        },
+        {
+            '@type': 'Offer',
+            name: 'Full Day Studio Rental',
+            price: '10000',
+            priceCurrency: 'INR',
+        },
+    ],
 };
 
 const facilities = [
@@ -77,6 +199,8 @@ export default async function StudioPage() {
     const previewAudio = getTopItems('audio');
 
     return (
+        <>
+        <JsonLd data={[studioFaqSchema, studioBreadcrumbSchema, studioPricingSchema]} />
         <main className="min-h-screen bg-background pt-20">
             {/* Hero Section */}
             <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">
@@ -281,5 +405,6 @@ export default async function StudioPage() {
             <BookingFlyout service="studio" />
             <Footer />
         </main>
+        </>
     );
 }

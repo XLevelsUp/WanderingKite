@@ -6,26 +6,148 @@ import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
 import { ServiceFAQ } from '@/components/sections/ServiceFAQ';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { podcastTestimonials, podcastProcessSteps, podcastFAQs } from '@/lib/service-page-data';
+import { JsonLd } from '@/lib/schema-helpers';
 import { Mic, Headphones, Radio, Zap } from 'lucide-react';
 
 export const metadata: Metadata = {
-    title: 'Podcast Recording Studio Coimbatore | Professional Audio | Wandering Kite',
-    description: 'Professional podcast recording studio in Coimbatore with acoustic treatment, multi-track recording, and premium microphones. Hourly rates available. Serving Coimbatore and Tamil Nadu.',
+    title: 'Podcast Recording Studio Coimbatore | Rode, Shure | Book Now',
+    description: 'Acoustic-treated podcast studio in Coimbatore with Rode Procaster, Shure SM7B & 4K video. From ₹1,200/hr. Solo to full production packages. Book on WhatsApp.',
     keywords: [
+        // Core podcast intent
         'podcast studio Coimbatore',
-        'podcast recording near me',
-        'audio recording studio Coimbatore',
+        'podcast recording studio Coimbatore',
+        'record podcast Coimbatore',
+        'podcast studio near me Coimbatore',
+        // Equipment-specific (high-intent)
+        'Rode microphone studio Coimbatore',
+        'Shure SM7B recording Coimbatore',
+        'multi-track recording studio Coimbatore',
+        'acoustic recording studio Coimbatore',
+        // "how to" / question intent (Answer the Public)
+        'how to record a podcast in Coimbatore',
+        'podcast recording cost Coimbatore',
+        'professional podcast studio Tamil Nadu',
+        // Video podcast trend
+        'video podcast studio Coimbatore',
+        '4K podcast recording Coimbatore',
+        'YouTube podcast studio Coimbatore',
+        // Persona-based
+        'podcast studio for startups Coimbatore',
+        'interview recording studio Coimbatore',
+        // Neighboring cities
+        'podcast studio Tirupur',
+        'audio recording studio Tamil Nadu',
         'podcast production India',
-        'podcast studio Tamil Nadu',
-        'professional podcast recording Coimbatore',
-        'audio production studio India',
         'podcast recording India',
     ],
     openGraph: {
-        title: 'Podcast Recording Studio Coimbatore',
-        description: 'Fully-equipped podcast studio with professional acoustics in Coimbatore',
-        images: ['/og-podcast.jpg'],
+        title: 'Podcast Recording Studio Coimbatore | Rode, Shure, 4K Video',
+        description: 'Professional podcast studio in Coimbatore with acoustic treatment, Rode Procaster, Shure SM7B & 4K video option. From ₹1,200/hr.',
+        url: 'https://wanderingkite.in/podcast',
+        images: [{ url: '/og-podcast.jpg', width: 1200, height: 630 }],
     },
+    alternates: {
+        canonical: 'https://wanderingkite.in/podcast',
+    },
+};
+
+const podcastFaqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+        {
+            '@type': 'Question',
+            name: 'Do I need any technical knowledge to record a podcast in Coimbatore?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Not at all! Our audio engineer handles all technical setup at our Coimbatore studio. You just need to show up and focus on your content. We guide you through the entire recording process.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'How much does podcast recording cost in Coimbatore?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Solo Creator sessions start at ₹1,200/hour. Interview Setup is ₹1,800/hour (2–3 people). Full Production (up to 4 guests with video) is ₹5,000 for 4 hours. All packages include Rode Procaster or Shure SM7B microphones.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'Can I record a video podcast at your Coimbatore studio?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Yes! Video recording is available with Interview Setup and Full Production packages. We use a multi-camera setup (2–3 angles) with 4K recording, professional lighting, and green screen option.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'Can I bring multiple guests to the podcast studio?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Yes. Solo Creator supports 1 host, Interview Setup supports 2–3 people, and Full Production supports up to 4 guests. Each person gets their own dedicated microphone and headphones.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'What podcast editing is included in the recording package?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Basic editing includes noise reduction, level balancing, and removing long pauses. The Full Production package includes advanced editing: intro/outro music, sound effects, and mastering. Audio files are delivered as WAV and MP3.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'What microphones are available at the Coimbatore podcast studio?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Our studio is equipped with Rode Procaster and Shure SM7B microphones, a Scarlett 4i4 audio interface, and a Zoom H6 multi-track recorder. You can also bring your own XLR microphone.',
+            },
+        },
+    ],
+};
+
+const podcastBreadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://wanderingkite.in' },
+        { '@type': 'ListItem', position: 2, name: 'Podcast Studio', item: 'https://wanderingkite.in/podcast' },
+    ],
+};
+
+const podcastPricingSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    '@id': 'https://wanderingkite.in/podcast#service',
+    name: 'Podcast Recording Studio Coimbatore',
+    provider: { '@id': 'https://wanderingkite.in/#business' },
+    areaServed: { '@type': 'City', name: 'Coimbatore' },
+    offers: [
+        {
+            '@type': 'Offer',
+            name: 'Solo Creator Podcast Recording',
+            price: '1200',
+            priceCurrency: 'INR',
+            priceSpecification: {
+                '@type': 'UnitPriceSpecification',
+                price: '1200',
+                priceCurrency: 'INR',
+                unitText: 'HOUR',
+            },
+        },
+        {
+            '@type': 'Offer',
+            name: 'Interview Setup Podcast Recording',
+            price: '1800',
+            priceCurrency: 'INR',
+        },
+        {
+            '@type': 'Offer',
+            name: 'Full Production Podcast Package',
+            price: '5000',
+            priceCurrency: 'INR',
+        },
+    ],
 };
 
 const equipment = [
@@ -59,6 +181,8 @@ const packages = [
 
 export default function PodcastPage() {
     return (
+        <>
+        <JsonLd data={[podcastFaqSchema, podcastBreadcrumbSchema, podcastPricingSchema]} />
         <main className="min-h-screen bg-background pt-20">
             {/* Hero Section */}
             <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">
@@ -220,5 +344,6 @@ export default function PodcastPage() {
             <BookingFlyout service="podcast" />
             <Footer />
         </main>
+        </>
     );
 }
