@@ -125,7 +125,7 @@ export interface BrandConfig {
 export const brandConfig: BrandConfig = {
   name: 'Wandering Kite',
   description:
-    'Professional photography services, camera & equipment rentals, studio space, and podcast recording in Coimbatore, Tamil Nadu.',
+    'Photography, camera & equipment rentals, 1200 sq ft studio & podcast recording in RS Puram, Coimbatore. 4.9★ on Google. 500+ projects delivered.',
   url: 'https://wanderingkite.in',
 
   colors: {

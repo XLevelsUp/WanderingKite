@@ -6,26 +6,112 @@ import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
 import { ServiceFAQ } from '@/components/sections/ServiceFAQ';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { getEquipment } from '@/actions/equipment';
+import { JsonLd } from '@/lib/schema-helpers';
 import { Camera, Clock, MapPin, Video, Monitor } from 'lucide-react';
 
 export const metadata: Metadata = {
-    title: 'Event & Lifestyle Photography Coimbatore | Wandering Kite Studio',
-    description: 'Professional event and lifestyle photography in Coimbatore and across India. Capturing authentic moments with creative storytelling. Wedding, portrait, and commercial photography services.',
+    title: 'Photographer in Coimbatore | Weddings, Events & Commercial',
+    description: 'Professional photographer in Coimbatore — weddings, events, portraits, product & commercial shoots. 7-10 day delivery. 500+ projects. Get a free quote.',
     keywords: [
+        // Answer the Public: "photographer in / near / for" patterns
+        'photographer in Coimbatore',
+        'photographer near RS Puram',
+        'best wedding photographer Coimbatore',
         'event photographer Coimbatore',
-        'lifestyle photography Coimbatore',
+        'portrait photographer Coimbatore',
+        // Service-specific
         'wedding photography Coimbatore',
-        'portrait photography Coimbatore',
-        'commercial photography India',
-        'photography services India',
-        'event photography Tamil Nadu',
-        'professional photographer Coimbatore',
+        'product photography Coimbatore',
+        'corporate photography Coimbatore',
+        'newborn photography Coimbatore',
+        'maternity photography Coimbatore',
+        // Commercial / content
+        'commercial photographer Tamil Nadu',
+        'brand photography Coimbatore',
+        'social media content photographer Coimbatore',
+        'headshot photographer Coimbatore',
+        'music video production Coimbatore',
+        // Neighboring cities
+        'photographer Tirupur',
+        'wedding photographer Salem',
+        'event photography Erode',
+        // Intent signals
+        'hire photographer Coimbatore',
+        'photography packages Coimbatore price',
     ],
     openGraph: {
-        title: 'Event & Lifestyle Photography Coimbatore',
-        description: 'Professional photography that captures authentic moments in Coimbatore and across India',
-        images: ['/og-photography.jpg'],
+        title: 'Photographer in Coimbatore | Weddings, Events & Commercial',
+        description: 'Professional photography for weddings, events, portraits & commercial projects in Coimbatore. 500+ projects delivered.',
+        url: 'https://wanderingkite.in/photography',
+        images: [{ url: '/og-photography.jpg', width: 1200, height: 630 }],
     },
+    alternates: {
+        canonical: 'https://wanderingkite.in/photography',
+    },
+};
+
+const photographyFaqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+        {
+            '@type': 'Question',
+            name: 'How far in advance should I book a photographer in Coimbatore?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'For events and weddings in Coimbatore, we recommend booking at least 30 days in advance. For lifestyle and portrait sessions, 7–14 days is usually sufficient. Last-minute bookings may be accommodated based on availability.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'Do you travel outside Coimbatore for destination shoots?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Yes! We cover destination weddings and events across India including Tirupur, Salem, Erode, and beyond. Travel and accommodation costs are additional and will be included in your custom quote.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'How many edited photos will I receive?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'This varies by package: Events (200–300 photos), Weddings (500–800 photos), Lifestyle sessions (50–100 photos). All photos are professionally edited and color-corrected.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'Can I request specific photography styles or shot lists?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Absolutely! During the consultation, share your Pinterest boards, reference photos, or specific must-have shots. We will create a shot list to ensure we capture everything you want.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'What is the photography delivery timeline?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Within 7–10 days, you receive professionally edited high-resolution images via cloud link. Unlimited revisions are included.',
+            },
+        },
+        {
+            '@type': 'Question',
+            name: 'What is the advance payment required to confirm a photography booking?',
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'A 30% advance payment secures your date. The remaining balance is due on or before the day of the shoot.',
+            },
+        },
+    ],
+};
+
+const photographyBreadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://wanderingkite.in' },
+        { '@type': 'ListItem', position: 2, name: 'Photography', item: 'https://wanderingkite.in/photography' },
+    ],
 };
 
 const portfolioImages = [
@@ -130,6 +216,8 @@ export default async function PhotographyPage() {
     const previewLighting = getTopItems('light');
 
     return (
+        <>
+        <JsonLd data={[photographyFaqSchema, photographyBreadcrumbSchema]} />
         <main className="min-h-screen bg-background pt-20">
             {/* Hero Section */}
             <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">
@@ -405,5 +493,6 @@ export default async function PhotographyPage() {
             <BookingFlyout service="photography" />
             <Footer />
         </main>
+        </>
     );
 }
