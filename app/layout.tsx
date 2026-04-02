@@ -78,8 +78,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-  const isProd = process.env.NODE_ENV === 'production';
+  // GA4: use env var with hardcoded fallback so Vercel always tracks
+  const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? 'G-50PN3VN8P4';
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -164,7 +164,8 @@ export default function RootLayout({
   return (
     <html lang='en' className='dark'>
       <body className={`${inter.variable} font-sans antialiased`}>
-        {isProd && GA_ID && (
+        {/* Google Analytics 4 – loads whenever GA_ID is available */}
+        {GA_ID && (
           <>
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
@@ -175,7 +176,15 @@ export default function RootLayout({
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 gtag('js', new Date());
-                gtag('config', '${GA_ID}');
+                gtag('config', '${GA_ID}', {
+                  send_page_view: true,
+                  enhanced_measurement: {
+                    scrolls: true,
+                    outbound_clicks: true,
+                    file_downloads: true,
+                    video_engagement: true
+                  }
+                });
               `}
             </Script>
           </>
