@@ -4,8 +4,8 @@ import { z } from 'zod';
 export const equipmentSchema = z.object({
   name: z.string().min(1, 'Equipment name is required'),
   serialNumber: z.string().min(1, 'Serial number is required'),
-  categoryId: z.string().uuid('Invalid category'),
-  branchId: z.string().uuid('Invalid branch'),
+  categoryId: z.string().uuid('Invalid category').optional().or(z.literal('')),
+  branchId: z.string().uuid('Invalid branch').optional().or(z.literal('')),
   rentalPrice: z.number().positive('Price must be positive'),
   weeklyPrice: z.number().min(0).default(0),
   imageUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
