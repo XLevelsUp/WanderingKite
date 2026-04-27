@@ -78,7 +78,7 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
   const category = (equipment.categories as any)?.name as string | undefined;
   const branch   = (equipment.branches  as any)?.name as string | undefined;
   const specs    = Array.isArray(equipment.specs) ? equipment.specs as string[] : [];
-  const imageUrl = (equipment as any).image_url as string | null;
+  const imageUrl = ((equipment as any).image_url ?? (equipment as any).imageUrl) as string | null;
   const rentalPrice = Number((equipment as any).rental_price ?? (equipment as any).rentalPrice ?? 0);
   const weeklyPrice = Number((equipment as any).weekly_price ?? (equipment as any).weeklyPrice ?? 0);
 
