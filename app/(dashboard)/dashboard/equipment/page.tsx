@@ -16,7 +16,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Link from 'next/link';
-import { User, MapPin, Radio } from 'lucide-react';
+import Image from 'next/image';
+import { User, MapPin, Radio, Package } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -198,6 +199,7 @@ export default async function EquipmentPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12"></TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Serial Number</TableHead>
                 <TableHead>Category</TableHead>
@@ -225,6 +227,25 @@ export default async function EquipmentPage() {
                       item.activeAssignment ? 'bg-blue-500/[0.02]' : ''
                     }
                   >
+                    {/* Thumbnail */}
+                    <TableCell className="w-12 pr-0">
+                      <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-border bg-muted/40 shrink-0">
+                        {(item as any).image_url ? (
+                          <Image
+                            src={(item as any).image_url}
+                            alt={item.name}
+                            fill
+                            className="object-contain p-1"
+                            sizes="40px"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center">
+                            <Package className="h-5 w-5 text-muted-foreground/30" />
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className='font-medium'>{item.name}</TableCell>
                     <TableCell className='font-mono text-xs text-foreground/60'>
                       {item.serialNumber}

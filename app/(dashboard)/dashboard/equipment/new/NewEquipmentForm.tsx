@@ -1,11 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  createEquipment,
-  getCategories,
-  getBranches,
-} from '@/actions/equipment';
+import { createEquipment } from '@/actions/equipment';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,12 +21,40 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
+import { ImageUpload } from '@/components/shared/ImageUpload';
 
 interface NewEquipmentFormProps {
   categories: Array<{ id: string; name: string }>;
   branches: Array<{ id: string; name: string }>;
 }
 
+// ── ImageUploadField ──────────────────────────────────────────────────────────
+// Keeps the public URL in state and syncs it to a hidden <input> so FormData
+// picks it up on submit — no changes needed to the server action.
+function ImageUploadField({
+  name,
+  defaultValue,
+  disabled,
+}: {
+  name: string;
+  defaultValue?: string;
+  disabled?: boolean;
+}) {
+  const [url, setUrl] = useState(defaultValue ?? '');
+  return (
+    <>
+      <input type='hidden' name={name} value={url} />
+      <ImageUpload
+        value={url || null}
+        onChange={setUrl}
+        bucket='equipment-images'
+        disabled={disabled}
+      />
+    </>
+  );
+}
+
+// ── Form ──────────────────────────────────────────────────────────────────────
 export function NewEquipmentForm({
   categories,
   branches,
@@ -171,14 +195,11 @@ export function NewEquipmentForm({
           </div>
 
           <div className='space-y-2'>
-            <Label htmlFor='image_url'>Image URL</Label>
-            <Input
-              id='image_url'
-              name='image_url'
-              placeholder='/equipment/sony-a7iv.jpg or https://...'
-              disabled={isLoading}
-            />
-            <p className='text-xs text-muted-foreground'>Relative path or full URL for the equipment image.</p>
+            <Label>Equipment Image</Label>
+            <p className='text-xs text-muted-foreground'>
+              Drag &amp; drop an image, or click to browse. Uploaded automatically to Supabase Storage.
+            </p>
+            <ImageUploadField name='image_url' disabled={isLoading} />
           </div>
 
           <div className='space-y-2'>

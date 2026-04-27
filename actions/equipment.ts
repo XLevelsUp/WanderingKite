@@ -44,6 +44,7 @@ export async function getEquipmentWithFieldStatus() {
       serialNumber,
       status,
       rentalPrice,
+      image_url,
       description,
       deletedAt,
       categories(name),
@@ -129,15 +130,15 @@ export async function createEquipment(formData: FormData) {
     .insert({
       name: validatedData.name,
       serialNumber: validatedData.serialNumber,
-      categoryId: validatedData.categoryId,
-      branchId: validatedData.branchId,
-      rental_price: validatedData.rentalPrice,
-      weekly_price: validatedData.weeklyPrice,
-      image_url: validatedData.imageUrl,
-      specs: validatedData.specs ? JSON.stringify(validatedData.specs.split(',').map(s => s.trim()).filter(Boolean)) : '[]',
+      categoryId: validatedData.categoryId || null,
+      branchId: validatedData.branchId || null,
+      rentalPrice: validatedData.rentalPrice,
+      weeklyPrice: validatedData.weeklyPrice,
+      image_url: validatedData.imageUrl || null,
+      specs: validatedData.specs ? JSON.stringify(validatedData.specs.split(',').map((s: string) => s.trim()).filter(Boolean)) : '[]',
       description: validatedData.description,
       status: 'AVAILABLE',
-    })
+    } as any)
     .select()
     .single();
 
@@ -167,22 +168,20 @@ export async function updateEquipment(id: string, formData: FormData) {
 
   const validatedData = equipmentSchema.parse(rawData);
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('equipment')
     .update({
       name: validatedData.name,
       serialNumber: validatedData.serialNumber,
-      categoryId: validatedData.categoryId,
-      branchId: validatedData.branchId,
-      rental_price: validatedData.rentalPrice,
-      weekly_price: validatedData.weeklyPrice,
-      image_url: validatedData.imageUrl,
-      specs: validatedData.specs ? JSON.stringify(validatedData.specs.split(',').map(s => s.trim()).filter(Boolean)) : '[]',
+      categoryId: validatedData.categoryId || null,
+      branchId: validatedData.branchId || null,
+      rentalPrice: validatedData.rentalPrice,
+      weeklyPrice: validatedData.weeklyPrice,
+      image_url: validatedData.imageUrl || null,
+      specs: validatedData.specs ? JSON.stringify(validatedData.specs.split(',').map((s: string) => s.trim()).filter(Boolean)) : '[]',
       description: validatedData.description,
-    })
-    .eq('id', id)
-    .select()
-    .single();
+    } as any)
+    .eq('id', id);
 
   if (error) {
     throw new Error(`Failed to update equipment: ${error.message}`);
@@ -190,7 +189,7 @@ export async function updateEquipment(id: string, formData: FormData) {
 
   revalidatePath('/dashboard/equipment');
   revalidatePath(`/dashboard/equipment/${id}`);
-  return data;
+  return { id };
 }
 
 // Update equipment status

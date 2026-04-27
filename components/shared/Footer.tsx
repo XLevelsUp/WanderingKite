@@ -10,6 +10,7 @@ import {
   Youtube,
   Linkedin,
   Clock,
+  ShieldCheck,
 } from 'lucide-react';
 import { siteConfig } from '@/config/site';
 
@@ -206,24 +207,34 @@ export function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className='border-t border-border'>
+      <div className='border-t border-border pb-24 md:pb-12'>
         <div className='container mx-auto px-6 py-6'>
           <div className='flex flex-col items-center justify-between gap-4 md:flex-row'>
             <p className='text-sm text-muted-foreground'>
               © {new Date().getFullYear()} {siteConfig.name}. All rights
               reserved.
             </p>
-            <p className='text-sm text-zinc-600'>
-              Built with ❤️ by{' '}
-              <a
-                href='https://xlevelsup.com'
-                target='_blank'
-                rel='noopener noreferrer'
-                className='text-muted-foreground hover:text-foreground'
+            <div className='flex items-center gap-6'>
+              <Link 
+                href="/dashboard"
+                className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 text-sm"
+                title="Admin Dashboard"
               >
-                XLevelsUp
-              </a>
-            </p>
+                <ShieldCheck className="h-4 w-4" />
+                <span className="sr-only">Admin Dashboard</span>
+              </Link>
+              <p className='text-sm text-zinc-600'>
+                Built with ❤️ by{' '}
+                <a
+                  href='https://xlevelsup.com'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='text-muted-foreground hover:text-foreground'
+                >
+                  XLevelsUp
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       </div>
