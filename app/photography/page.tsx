@@ -7,6 +7,8 @@ import { ServiceFAQ } from '@/components/sections/ServiceFAQ';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { getEquipment } from '@/actions/equipment';
 import { Camera, Clock, MapPin, Video, Monitor } from 'lucide-react';
+import { PortfolioCategories } from '@/components/sections/PortfolioCategories';
+import ServiceTerms from '@/components/sections/ServiceTerms';
 
 export const metadata: Metadata = {
     title: 'Event & Lifestyle Photography Coimbatore | Wandering Kite Studio',
@@ -28,14 +30,7 @@ export const metadata: Metadata = {
     },
 };
 
-const portfolioImages = [
-    { id: 1, category: 'Events', alt: 'Event photography sample' },
-    { id: 2, category: 'Lifestyle', alt: 'Lifestyle photography sample' },
-    { id: 3, category: 'Portraits', alt: 'Portrait photography sample' },
-    { id: 4, category: 'Events', alt: 'Event photography sample' },
-    { id: 5, category: 'Lifestyle', alt: 'Lifestyle photography sample' },
-    { id: 6, category: 'Portraits', alt: 'Portrait photography sample' },
-];
+
 
 const testimonials = [
     {
@@ -202,25 +197,7 @@ export default async function PhotographyPage() {
             <section className="border-t border-border py-24">
                 <div className="container mx-auto px-6">
                     <h2 className="mb-12 text-center text-4xl font-bold">Portfolio</h2>
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {portfolioImages.map((image) => (
-                            <div
-                                key={image.id}
-                                className="group relative aspect-square overflow-hidden rounded-xl bg-card"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-orange-500/20 opacity-0 transition-opacity group-hover:opacity-100" />
-                                <div className="flex h-full items-center justify-center">
-                                    <div className="text-center">
-                                        <Camera className="mx-auto mb-2 h-12 w-12 text-zinc-700" />
-                                        <p className="text-sm text-zinc-600">{image.category}</p>
-                                    </div>
-                                </div>
-                                <div className="absolute bottom-0 left-0 right-0 translate-y-full bg-gradient-to-t from-zinc-950 p-4 transition-transform group-hover:translate-y-0">
-                                    <p className="text-sm font-semibold">{image.category}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    <PortfolioCategories />
                 </div>
             </section>
 
@@ -401,7 +378,7 @@ export default async function PhotographyPage() {
 
             {/* FAQ */}
             <ServiceFAQ faqs={faqs} accentColor="amber" />
-
+            <ServiceTerms type="photography" />
             <BookingFlyout service="photography" />
             <Footer />
         </main>

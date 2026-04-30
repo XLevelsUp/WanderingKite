@@ -24,7 +24,6 @@ const services = [
 const legal = [
   { name: 'Privacy Policy', href: '/privacy' },
   { name: 'Rental Terms', href: '/terms' },
-  { name: 'Refund Policy', href: '/refunds' },
 ];
 
 export function Footer() {

@@ -8,6 +8,9 @@ import { EquipmentCard } from '@/components/services/EquipmentCard';
 import { getEquipment } from '@/actions/equipment';
 import { rentalsTestimonials, rentalsProcessSteps, rentalsFAQs } from '@/lib/service-page-data';
 import { Video, Shield, Headphones } from 'lucide-react';
+import { RentalCartProvider } from '@/components/rentals/RentalCartContext';
+import { RentalCartSummary } from '@/components/rentals/RentalCartSummary';
+import ServiceTerms from '@/components/sections/ServiceTerms';
 
 export const metadata: Metadata = {
     title: 'Camera & Equipment Rentals Coimbatore | Sony, Canon | Wandering Kite',
@@ -53,8 +56,8 @@ export default async function RentalsPage() {
             id: e.id,
             name: e.name,
             category: categoryName,
-            dailyRate: Number(e.rental_price),
-            weeklyRate: Number(e.weekly_price || 0),
+            dailyRate: Number((e as any).rentalPrice ?? e.rental_price ?? 0),
+            weeklyRate: Number((e as any).weeklyPrice ?? (e as any).weekly_price ?? 0),
             image: e.image_url || '',
             specs: parsedSpecs,
             available: e.status === 'AVAILABLE',
@@ -67,166 +70,169 @@ export default async function RentalsPage() {
     const audio = equipmentItems.filter(e => e.category === 'audio');
 
     return (
-        <main className="min-h-screen bg-background pt-20">
-            {/* Hero Section */}
-            <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">
-                <div className="container mx-auto px-6">
-                    <div className="mx-auto max-w-4xl text-center">
-                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-sm text-amber-500">
-                            <Video className="h-4 w-4" />
-                            Equipment Rentals
-                        </div>
-                        <h1 className="mb-6 text-5xl font-bold leading-tight md:text-6xl lg:text-7xl">
-                            Professional Camera &
-                            <br />
-                            <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+        <RentalCartProvider>
+            <main className="min-h-screen bg-background pt-20">
+                {/* Hero Section */}
+                <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">
+                    <div className="container mx-auto px-6">
+                        <div className="mx-auto max-w-4xl text-center">
+                            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-sm text-amber-500">
+                                <Video className="h-4 w-4" />
                                 Equipment Rentals
-                            </span>
-                        </h1>
-                        <p className="mb-8 text-xl text-muted-foreground">
-                            Access premium photography and video gear without the commitment.
-                            Daily and weekly rates available.
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            {/* Why Rent From Us */}
-            <section className="border-t border-border py-24">
-                <div className="container mx-auto px-6">
-                    <h2 className="mb-12 text-center text-4xl font-bold">Why Rent From Us</h2>
-                    <div className="grid gap-8 md:grid-cols-3">
-                        <div className="rounded-2xl border border-border bg-muted/50 p-8 text-center">
-                            <div className="mb-4 flex justify-center">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
-                                    <Shield className="h-6 w-6 text-amber-500" />
-                                </div>
                             </div>
-                            <h3 className="mb-3 text-xl font-bold">Insured Equipment</h3>
-                            <p className="text-muted-foreground">
-                                All gear is insured and well-maintained for your peace of mind.
-                            </p>
-                        </div>
-                        <div className="rounded-2xl border border-border bg-muted/50 p-8 text-center">
-                            <div className="mb-4 flex justify-center">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
-                                    <Video className="h-6 w-6 text-amber-500" />
-                                </div>
-                            </div>
-                            <h3 className="mb-3 text-xl font-bold">Latest Gear</h3>
-                            <p className="text-muted-foreground">
-                                Sony, Canon, and other premium brands updated regularly.
-                            </p>
-                        </div>
-                        <div className="rounded-2xl border border-border bg-muted/50 p-8 text-center">
-                            <div className="mb-4 flex justify-center">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
-                                    <Headphones className="h-6 w-6 text-amber-500" />
-                                </div>
-                            </div>
-                            <h3 className="mb-3 text-xl font-bold">24/7 Support</h3>
-                            <p className="text-muted-foreground">
-                                Quick response via WhatsApp for any technical questions.
+                            <h1 className="mb-6 text-5xl font-bold leading-tight md:text-6xl lg:text-7xl">
+                                Professional Camera &
+                                <br />
+                                <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+                                    Equipment Rentals
+                                </span>
+                            </h1>
+                            <p className="mb-8 text-xl text-muted-foreground">
+                                Access premium photography and video gear without the commitment.
+                                Daily and weekly rates available.
                             </p>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Cameras */}
-            <section className="border-t border-border py-24">
-                <div className="container mx-auto px-6">
-                    <h2 className="mb-12 text-4xl font-bold">Cameras</h2>
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {cameras.map(equipment => (
-                            <EquipmentCard key={equipment.id} {...equipment} />
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Lenses */}
-            <section className="border-t border-border py-24">
-                <div className="container mx-auto px-6">
-                    <h2 className="mb-12 text-4xl font-bold">Lenses</h2>
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {lenses.map(equipment => (
-                            <EquipmentCard key={equipment.id} {...equipment} />
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Lighting */}
-            <section className="border-t border-border py-24">
-                <div className="container mx-auto px-6">
-                    <h2 className="mb-12 text-4xl font-bold">Lighting</h2>
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {lighting.map(equipment => (
-                            <EquipmentCard key={equipment.id} {...equipment} />
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Audio */}
-            <section className="border-t border-border py-24">
-                <div className="container mx-auto px-6">
-                    <h2 className="mb-12 text-4xl font-bold">Audio Equipment</h2>
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {audio.map(equipment => (
-                            <EquipmentCard key={equipment.id} {...equipment} />
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Rental Terms */}
-            <section className="border-t border-border bg-muted/30 py-24">
-                <div className="container mx-auto px-6">
-                    <div className="mx-auto max-w-3xl">
-                        <h2 className="mb-8 text-center text-4xl font-bold">Rental Terms</h2>
-                        <div className="space-y-4 rounded-2xl border border-border bg-muted/50 p-8">
-                            <div className="flex items-start gap-3">
-                                <span className="text-amber-500">•</span>
+                {/* Why Rent From Us */}
+                <section className="border-t border-border py-24">
+                    <div className="container mx-auto px-6">
+                        <h2 className="mb-12 text-center text-4xl font-bold">Why Rent From Us</h2>
+                        <div className="grid gap-8 md:grid-cols-3">
+                            <div className="rounded-2xl border border-border bg-muted/50 p-8 text-center">
+                                <div className="mb-4 flex justify-center">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+                                        <Shield className="h-6 w-6 text-amber-500" />
+                                    </div>
+                                </div>
+                                <h3 className="mb-3 text-xl font-bold">Insured Equipment</h3>
                                 <p className="text-muted-foreground">
-                                    <strong>Booking:</strong> Reserve via WhatsApp at least 24 hours in advance
+                                    All gear is insured and well-maintained for your peace of mind.
                                 </p>
                             </div>
-                            <div className="flex items-start gap-3">
-                                <span className="text-amber-500">•</span>
+                            <div className="rounded-2xl border border-border bg-muted/50 p-8 text-center">
+                                <div className="mb-4 flex justify-center">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+                                        <Video className="h-6 w-6 text-amber-500" />
+                                    </div>
+                                </div>
+                                <h3 className="mb-3 text-xl font-bold">Latest Gear</h3>
                                 <p className="text-muted-foreground">
-                                    <strong>Security Deposit:</strong> Refundable deposit required for all rentals
+                                    Sony, Canon, and other premium brands updated regularly.
                                 </p>
                             </div>
-                            <div className="flex items-start gap-3">
-                                <span className="text-amber-500">•</span>
+                            <div className="rounded-2xl border border-border bg-muted/50 p-8 text-center">
+                                <div className="mb-4 flex justify-center">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+                                        <Headphones className="h-6 w-6 text-amber-500" />
+                                    </div>
+                                </div>
+                                <h3 className="mb-3 text-xl font-bold">24/7 Support</h3>
                                 <p className="text-muted-foreground">
-                                    <strong>Pickup/Delivery:</strong> Flexible pickup times or delivery available (charges apply)
-                                </p>
-                            </div>
-                            <div className="flex items-start gap-3">
-                                <span className="text-amber-500">•</span>
-                                <p className="text-muted-foreground">
-                                    <strong>Late Returns:</strong> Additional charges apply for late returns
+                                    Quick response via WhatsApp for any technical questions.
                                 </p>
                             </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Testimonials */}
-            <Testimonials testimonials={rentalsTestimonials} accentColor="amber" />
+                {/* Cameras */}
+                <section className="border-t border-border py-24">
+                    <div className="container mx-auto px-6">
+                        <h2 className="mb-12 text-4xl font-bold">Cameras</h2>
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {cameras.map(equipment => (
+                                <EquipmentCard key={equipment.id} {...equipment} />
+                            ))}
+                        </div>
+                    </div>
+                </section>
 
-            {/* Process Timeline */}
-            <ProcessTimeline steps={rentalsProcessSteps} accentColor="amber" />
+                {/* Lenses */}
+                <section className="border-t border-border py-24">
+                    <div className="container mx-auto px-6">
+                        <h2 className="mb-12 text-4xl font-bold">Lenses</h2>
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {lenses.map(equipment => (
+                                <EquipmentCard key={equipment.id} {...equipment} />
+                            ))}
+                        </div>
+                    </div>
+                </section>
 
-            {/* FAQ */}
-            <ServiceFAQ faqs={rentalsFAQs} accentColor="amber" />
+                {/* Lighting */}
+                <section className="border-t border-border py-24">
+                    <div className="container mx-auto px-6">
+                        <h2 className="mb-12 text-4xl font-bold">Lighting</h2>
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {lighting.map(equipment => (
+                                <EquipmentCard key={equipment.id} {...equipment} />
+                            ))}
+                        </div>
+                    </div>
+                </section>
 
-            <BookingFlyout service="rentals" />
-            <Footer />
-        </main>
+                {/* Audio */}
+                <section className="border-t border-border py-24">
+                    <div className="container mx-auto px-6">
+                        <h2 className="mb-12 text-4xl font-bold">Audio Equipment</h2>
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {audio.map(equipment => (
+                                <EquipmentCard key={equipment.id} {...equipment} />
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Rental Terms */}
+                <section className="border-t border-border bg-muted/30 py-24 pb-48">
+                    <div className="container mx-auto px-6">
+                        <div className="mx-auto max-w-3xl">
+                            <h2 className="mb-8 text-center text-4xl font-bold">Rental Terms</h2>
+                            <div className="space-y-4 rounded-2xl border border-border bg-muted/50 p-8">
+                                <div className="flex items-start gap-3">
+                                    <span className="text-amber-500">•</span>
+                                    <p className="text-muted-foreground">
+                                        <strong>Booking:</strong> Reserve via WhatsApp at least 24 hours in advance
+                                    </p>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <span className="text-amber-500">•</span>
+                                    <p className="text-muted-foreground">
+                                        <strong>Security Deposit:</strong> Refundable deposit required for all rentals
+                                    </p>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <span className="text-amber-500">•</span>
+                                    <p className="text-muted-foreground">
+                                        <strong>Pickup/Delivery:</strong> Flexible pickup times or delivery available (charges apply)
+                                    </p>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <span className="text-amber-500">•</span>
+                                    <p className="text-muted-foreground">
+                                        <strong>Late Returns:</strong> Additional charges apply for late returns
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Testimonials */}
+                <Testimonials testimonials={rentalsTestimonials} accentColor="amber" />
+
+                {/* Process Timeline */}
+                <ProcessTimeline steps={rentalsProcessSteps} accentColor="amber" />
+
+                {/* FAQ */}
+                <ServiceFAQ faqs={rentalsFAQs} accentColor="amber" />
+                <ServiceTerms type="rentals" />
+                <BookingFlyout service="rentals" />
+                <RentalCartSummary />
+                <Footer />
+            </main>
+        </RentalCartProvider>
     );
 }

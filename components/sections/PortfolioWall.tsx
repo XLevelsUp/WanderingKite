@@ -2,41 +2,50 @@
 
 import { FadeIn } from "@/components/animations/FadeIn";
 import { Camera, Play } from "lucide-react";
+import Link from "next/link";
+import { motion } from "framer-motion";
 
 const portfolioItems = [
     {
-        id: 1,
+        id: 'wedding-photography',
         type: "Wedding",
-        title: "Destination Wedding - Jaipur",
-        category: "Photography",
+        title: "Wedding Photography",
+        category: "Coimbatore Weddings",
         span: "col-span-2 row-span-2",
     },
     {
-        id: 2,
-        type: "Podcast",
-        title: "Tech Talks Series",
-        category: "Podcast Studio",
+        id: 'pre-wedding-shoots',
+        type: "Pre-Wedding",
+        title: "Pre-Wedding Shoots",
+        category: "Scenic Locations",
         span: "col-span-1 row-span-1",
     },
     {
-        id: 3,
-        type: "Fashion",
-        title: "Studio Fashion Shoot",
-        category: "Studio Rental",
+        id: 'birthday-parties',
+        type: "Events",
+        title: "Birthday Parties",
+        category: "Local Events",
         span: "col-span-1 row-span-1",
     },
     {
-        id: 4,
-        type: "Corporate",
-        title: "Product Launch Event",
-        category: "Photography",
+        id: 'maternity-newborn',
+        type: "Family",
+        title: "Maternity & Newborn",
+        category: "Studio Sessions",
         span: "col-span-1 row-span-2",
     },
     {
-        id: 5,
-        type: "Music",
-        title: "Music Video Production",
-        category: "Equipment Rental",
+        id: 'corporate-brand',
+        type: "Corporate",
+        title: "Corporate & Brand",
+        category: "B2B/Products",
+        span: "col-span-1 row-span-2",
+    },
+    {
+        id: 'fashion-model-portfolios',
+        type: "Fashion",
+        title: "Fashion & Model",
+        category: "Professional Headshots",
         span: "col-span-2 row-span-1",
     },
 ];
@@ -59,32 +68,31 @@ export function PortfolioWall() {
                 {/* Masonry Grid */}
                 <div className="grid auto-rows-[200px] grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
                     {portfolioItems.map((item, index) => (
-                        <FadeIn key={item.id} delay={index * 0.1}>
-                            <div
-                                className={`group relative overflow-hidden rounded-xl border border-border bg-card ${item.span}`}
-                            >
-                                {/* Placeholder Background */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900" />
+                        <FadeIn key={item.id} delay={index * 0.1} className={item.span}>
+                            <Link href={`/photography/${item.id}`} className="block h-full w-full">
+                                <motion.div
+                                    layoutId={`gallery-card-${item.id}`}
+                                    className="group relative h-full w-full overflow-hidden rounded-xl border border-border bg-card"
+                                >
+                                    {/* Placeholder Background */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900" />
 
-                                {/* Icon Overlay */}
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    {item.type === "Podcast" ? (
-                                        <Play className="h-16 w-16 text-zinc-700" />
-                                    ) : (
-                                        <Camera className="h-16 w-16 text-zinc-700" />
-                                    )}
-                                </div>
-
-                                {/* Content Overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100">
-                                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                                        <span className="mb-2 inline-block rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-foreground backdrop-blur-sm">
-                                            {item.category}
-                                        </span>
-                                        <h3 className="text-lg font-bold text-foreground">{item.title}</h3>
+                                    {/* Icon Overlay */}
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <Camera className="h-16 w-16 text-zinc-700 transition-transform duration-500 group-hover:scale-110" />
                                     </div>
-                                </div>
-                            </div>
+
+                                    {/* Content Overlay */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+                                        <div className="absolute bottom-0 left-0 right-0 p-6">
+                                            <span className="mb-2 inline-block rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-foreground backdrop-blur-sm">
+                                                {item.category}
+                                            </span>
+                                            <h3 className="text-lg font-bold text-foreground">{item.title}</h3>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </Link>
                         </FadeIn>
                     ))}
                 </div>
@@ -109,3 +117,4 @@ export function PortfolioWall() {
         </section>
     );
 }
+

@@ -17,6 +17,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: 'monthly',
             priority: 1.0,
         },
+        ...['events', 'portraits', 'corporate', 'commercial'].map((cat) => ({
+            url: `${baseUrl}/photography/${cat}`,
+            lastModified: currentDate,
+            changeFrequency: 'monthly' as const,
+            priority: 0.9,
+        })),
+        ...[
+            'events/wedding', 'events/engagements', 'events/birthdays',
+            'portraits/family', 'portraits/maternity', 'portraits/baby-shoots',
+            'corporate/product', 'corporate/cinematic-videos', 'corporate/social-media', 'corporate/model-shoots', 'corporate/headshots',
+            'commercial/ads', 'commercial/music-videos', 'commercial/short-films'
+        ].map((subCat) => ({
+            url: `${baseUrl}/photography/${subCat}`,
+            lastModified: currentDate,
+            changeFrequency: 'monthly' as const,
+            priority: 0.8,
+        })),
         {
             url: `${baseUrl}/rentals`,
             lastModified: currentDate,
@@ -48,10 +65,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.5,
         },
         {
-            url: `${baseUrl}/refunds`,
+            url: `${baseUrl}/about/founder`,
             lastModified: currentDate,
-            changeFrequency: 'yearly',
-            priority: 0.5,
+            changeFrequency: 'monthly',
+            priority: 0.9,
         },
     ];
 }

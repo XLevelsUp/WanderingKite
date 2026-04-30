@@ -6,6 +6,7 @@ import { Footer } from '@/components/shared/Footer';
 import { HowItWorks } from '@/components/sections/HowItWorks';
 import { TechSpecs } from '@/components/sections/TechSpecs';
 import { FAQ } from '@/components/sections/FAQ';
+import { TeamSection } from '@/components/sections/TeamSection';
 import { FadeIn } from '@/components/animations/FadeIn';
 import { StaggerContainer } from '@/components/animations/StaggerContainer';
 import { Camera, Video, Building2, Mic } from 'lucide-react';
@@ -170,6 +171,9 @@ export default function HomePage() {
 
       {/* ── Tech Specs ──────────────────────────────────── */}
       <TechSpecs />
+
+      {/* ── Team Section ────────────────────────────────── */}
+      <TeamSection />
 
       {/* ── Trust Section ───────────────────────────────── */}
       <FadeIn>

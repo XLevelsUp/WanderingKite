@@ -145,8 +145,8 @@ export async function createEquipment(formData: FormData) {
   if (error) {
     throw new Error(`Failed to create equipment: ${error.message}`);
   }
-
   revalidatePath('/dashboard/equipment');
+  revalidatePath('/rentals');
   return data;
 }
 
@@ -186,9 +186,9 @@ export async function updateEquipment(id: string, formData: FormData) {
   if (error) {
     throw new Error(`Failed to update equipment: ${error.message}`);
   }
-
   revalidatePath('/dashboard/equipment');
   revalidatePath(`/dashboard/equipment/${id}`);
+  revalidatePath('/rentals');
   return { id };
 }
 
@@ -215,9 +215,9 @@ export async function updateEquipmentStatus(
   if (error) {
     throw new Error(`Failed to update equipment status: ${error.message}`);
   }
-
   revalidatePath('/dashboard/equipment');
   revalidatePath(`/dashboard/equipment/${id}`);
+  revalidatePath('/rentals');
   return data;
 }
 
@@ -233,8 +233,8 @@ export async function deleteEquipment(id: string) {
   if (error) {
     throw new Error(`Failed to delete equipment: ${error.message}`);
   }
-
   revalidatePath('/dashboard/equipment');
+  revalidatePath('/rentals');
 }
 
 // Chain of custody: get all assignment history for a piece of equipment
