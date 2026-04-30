@@ -2,59 +2,73 @@ import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
     const baseUrl = 'https://wanderingkite.in';
-    // Static date for major pages — prevents false freshness signals on every build.
-    // Update this manually when page content changes substantially.
-    const lastMajorUpdate = new Date('2025-12-01');
     const currentDate = new Date();
 
     return [
         {
             url: baseUrl,
-            lastModified: lastMajorUpdate,
+            lastModified: currentDate,
             changeFrequency: 'monthly',
-            priority: 1.0, // Home is the canonical highest-priority page
+            priority: 0.9,
         },
         {
             url: `${baseUrl}/photography`,
-            lastModified: lastMajorUpdate,
+            lastModified: currentDate,
             changeFrequency: 'monthly',
-            priority: 0.9,
+            priority: 1.0,
         },
+        ...['events', 'portraits', 'corporate', 'commercial'].map((cat) => ({
+            url: `${baseUrl}/photography/${cat}`,
+            lastModified: currentDate,
+            changeFrequency: 'monthly' as const,
+            priority: 0.9,
+        })),
+        ...[
+            'events/wedding', 'events/engagements', 'events/birthdays',
+            'portraits/family', 'portraits/maternity', 'portraits/baby-shoots',
+            'corporate/product', 'corporate/cinematic-videos', 'corporate/social-media', 'corporate/model-shoots', 'corporate/headshots',
+            'commercial/ads', 'commercial/music-videos', 'commercial/short-films'
+        ].map((subCat) => ({
+            url: `${baseUrl}/photography/${subCat}`,
+            lastModified: currentDate,
+            changeFrequency: 'monthly' as const,
+            priority: 0.8,
+        })),
         {
             url: `${baseUrl}/rentals`,
-            lastModified: currentDate, // Equipment inventory is dynamic
-            changeFrequency: 'weekly', // Signals Googlebot to recrawl more often
-            priority: 0.9,
+            lastModified: currentDate,
+            changeFrequency: 'monthly',
+            priority: 1.0,
         },
         {
             url: `${baseUrl}/studio`,
-            lastModified: lastMajorUpdate,
+            lastModified: currentDate,
             changeFrequency: 'monthly',
-            priority: 0.9,
+            priority: 1.0,
         },
         {
             url: `${baseUrl}/podcast`,
-            lastModified: lastMajorUpdate,
+            lastModified: currentDate,
             changeFrequency: 'monthly',
-            priority: 0.9,
+            priority: 1.0,
         },
         {
             url: `${baseUrl}/privacy`,
-            lastModified: lastMajorUpdate,
+            lastModified: currentDate,
             changeFrequency: 'yearly',
-            priority: 0.3,
+            priority: 0.5,
         },
         {
             url: `${baseUrl}/terms`,
-            lastModified: lastMajorUpdate,
+            lastModified: currentDate,
             changeFrequency: 'yearly',
-            priority: 0.3,
+            priority: 0.5,
         },
         {
-            url: `${baseUrl}/refunds`,
-            lastModified: lastMajorUpdate,
-            changeFrequency: 'yearly',
-            priority: 0.3,
+            url: `${baseUrl}/about/founder`,
+            lastModified: currentDate,
+            changeFrequency: 'monthly',
+            priority: 0.9,
         },
     ];
 }

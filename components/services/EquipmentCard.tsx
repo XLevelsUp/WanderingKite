@@ -3,9 +3,12 @@
 import { useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Camera } from 'lucide-react';
+import Image from 'next/image';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
+import { useRentalCart } from '../rentals/RentalCartContext';
 
 interface EquipmentCardProps {
+  id: string;
   name: string;
   image: string;
   dailyRate: number;
@@ -15,13 +18,17 @@ interface EquipmentCardProps {
 }
 
 export function EquipmentCard({
+  id,
   name,
+  image,
   dailyRate,
   weeklyRate,
   available,
   specs,
 }: EquipmentCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const { selectedItems, toggleItem } = useRentalCart();
+  const isSelected = selectedItems?.has(id) || false;
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -47,20 +54,30 @@ export function EquipmentCard({
     >
       <div
         ref={cardRef}
-        className='
+        className={`
           relative h-full overflow-hidden rounded-2xl
-          border border-primary/15
           bg-[rgba(17,17,22,0.80)] backdrop-blur-md
           transition-all duration-300
-          group-hover:border-primary/40
-          group-hover:shadow-[0_20px_60px_hsl(var(--primary)/0.20)]
-        '
+          ${isSelected 
+            ? 'border-2 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.2)]' 
+            : 'border border-primary/15 group-hover:border-primary/40 group-hover:shadow-[0_20px_60px_hsl(var(--primary)/0.20)]'}
+        `}
       >
         {/* Image / placeholder */}
         <div className='relative aspect-square overflow-hidden bg-[rgba(26,29,46,0.80)]'>
-          <div className='flex h-full items-center justify-center'>
-            <Camera className='h-16 w-16 text-primary/25 transition-all duration-300 group-hover:text-primary/50' />
-          </div>
+          {image ? (
+            <Image
+              src={image}
+              alt={name}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105 opacity-90"
+            />
+          ) : (
+            <div className='flex h-full items-center justify-center'>
+              <Camera className='h-16 w-16 text-primary/25 transition-all duration-300 group-hover:text-primary/50' />
+            </div>
+          )}
 
           {/* Availability badge */}
           {available ? (
@@ -121,24 +138,22 @@ export function EquipmentCard({
           </div>
 
           {/* CTA */}
-          <a
-            href={generateWhatsAppLink(
-              'rentals',
-              `I'd like to rent the ${name}`,
-            )}
-            target='_blank'
-            rel='noopener noreferrer'
-            className='
+          <button
+            onClick={() => available && toggleItem({ id, name, dailyRate })}
+            disabled={!available}
+            className={`
               block w-full rounded-xl py-3 text-center
-              bg-primary text-primary-foreground
-              text-sm font-semibold
-              transition-all duration-200
-              hover:opacity-90 hover:shadow-[0_8px_28px_hsl(var(--primary)/0.35)]
-              hover:scale-[1.02] active:scale-[0.98]
-            '
+              text-sm font-semibold transition-all duration-200
+              ${!available 
+                ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-50' 
+                : isSelected
+                  ? 'bg-amber-500/20 text-amber-500 border border-amber-500/50 hover:bg-amber-500/30'
+                  : 'bg-primary text-primary-foreground hover:opacity-90 hover:shadow-[0_8px_28px_hsl(var(--primary)/0.35)] hover:scale-[1.02] active:scale-[0.98]'
+              }
+            `}
           >
-            Rent This
-          </a>
+            {isSelected ? 'Remove from Quote' : 'Add to Quote'}
+          </button>
         </div>
       </div>
     </motion.div>
