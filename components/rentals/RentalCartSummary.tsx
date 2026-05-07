@@ -24,7 +24,7 @@ export function RentalCartSummary() {
       className="fixed bottom-0 left-0 w-full z-50 p-4 pointer-events-none"
     >
       <div className="container mx-auto max-w-5xl">
-        <div className="pointer-events-auto rounded-2xl border border-amber-500/30 bg-zinc-950/95 backdrop-blur-xl p-4 md:p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="pointer-events-auto rounded-2xl border border-warning/30 bg-zinc-950/95 backdrop-blur-xl p-4 md:p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex flex-col md:flex-row items-center justify-between gap-6">
           
           <div className="flex-1 w-full">
             <div className="flex items-center justify-between mb-3">
@@ -58,7 +58,7 @@ export function RentalCartSummary() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="text-3xl font-bold text-amber-500 inline-block"
+                    className="text-3xl font-bold text-warning inline-block"
                   >
                     {formatINR(Math.round(finalTotal))}
                   </motion.span>
@@ -72,7 +72,7 @@ export function RentalCartSummary() {
               href={generateWhatsAppLink('rentals', generateBookingMessage())}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full md:w-auto rounded-full bg-amber-500 px-8 py-4 text-center font-bold text-zinc-950 transition-all hover:bg-amber-400 hover:shadow-[0_0_30px_-5px_rgba(245,158,11,0.5)] whitespace-nowrap"
+              className="w-full md:w-auto rounded-full bg-warning px-8 py-4 text-center font-bold text-warning-foreground transition-all hover:opacity-90 hover:shadow-[0_0_30px_-5px_hsl(var(--color-warning)/0.5)] whitespace-nowrap"
             >
               Request Booking
             </a>

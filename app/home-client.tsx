@@ -9,6 +9,7 @@ import { FAQ } from "@/components/sections/FAQ";
 import { FadeIn } from "@/components/animations/FadeIn";
 import { StaggerContainer } from "@/components/animations/StaggerContainer";
 import { motion } from "framer-motion";
+import { TeamSection } from "@/components/sections/TeamSection";
 
 const services = [
   {
@@ -23,20 +24,6 @@ const services = [
     delay: 0,
   },
   {
-    title: "Equipment Rentals",
-    tagline: "Pro-Grade Gear",
-    description:
-      "Professional cameras, lenses, and lighting gear for your creative projects — by the day or week.",
-    iconName: "video" as const,
-    href: "/rentals",
-    features: [
-      "Sony & Canon Bodies",
-      "Prime & Zoom Lenses",
-      "Full Lighting Kit",
-    ],
-    delay: 0.1,
-  },
-  {
     title: "Studio Space",
     tagline: "1200 sq ft",
     description:
@@ -45,21 +32,7 @@ const services = [
     href: "/studio",
     badge: "New",
     features: ["Cyclorama Wall", "ProFoto Lighting", "Green Screen"],
-    delay: 0.2,
-  },
-  {
-    title: "Podcast Studio",
-    tagline: "Acoustically Treated",
-    description:
-      "Fully-equipped podcast recording space with professional acoustics and multitrack recording.",
-    iconName: "podcast" as const,
-    href: "/podcast",
-    features: [
-      "Acoustic Treatment",
-      "Rode Podmic Setup",
-      "Multitrack Recording",
-    ],
-    delay: 0.3,
+    delay: 0.1,
   },
 ];
 
@@ -139,7 +112,7 @@ export function HomePageClient() {
           </div>
         </FadeIn>
 
-        <StaggerContainer className="mt-12 grid gap-6 md:grid-cols-2 lg:gap-8">
+        <StaggerContainer className="mt-12 mx-auto grid max-w-5xl gap-6 md:grid-cols-2 lg:gap-8">
           {services.map((svc) => (
             <motion.div
               key={svc.href}
@@ -166,6 +139,11 @@ export function HomePageClient() {
 
       {/* ── How It Works ────────────────────────────────── */}
       <HowItWorks />
+
+      {/* ── Team ──────────────────────────────── */}
+      <FadeIn>
+        <TeamSection />
+      </FadeIn>
 
       {/* ── Tech Specs ──────────────────────────────────── */}
       <TechSpecs />

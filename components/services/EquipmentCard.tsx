@@ -59,7 +59,7 @@ export function EquipmentCard({
           bg-[rgba(17,17,22,0.80)] backdrop-blur-md
           transition-all duration-300
           ${isSelected 
-            ? 'border-2 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.2)]' 
+            ? 'border-2 border-warning shadow-[0_0_20px_hsl(var(--color-warning)/0.2)]' 
             : 'border border-primary/15 group-hover:border-primary/40 group-hover:shadow-[0_20px_60px_hsl(var(--primary)/0.20)]'}
         `}
       >
@@ -147,7 +147,7 @@ export function EquipmentCard({
               ${!available 
                 ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-50' 
                 : isSelected
-                  ? 'bg-amber-500/20 text-amber-500 border border-amber-500/50 hover:bg-amber-500/30'
+                  ? 'bg-warning/20 text-warning border border-warning/50 hover:bg-warning/30'
                   : 'bg-primary text-primary-foreground hover:opacity-90 hover:shadow-[0_8px_28px_hsl(var(--primary)/0.35)] hover:scale-[1.02] active:scale-[0.98]'
               }
             `}

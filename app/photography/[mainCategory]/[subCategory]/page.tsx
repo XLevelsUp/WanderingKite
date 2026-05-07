@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { GalleryTemplate } from '@/components/sections/GalleryTemplate';
+import { getShootsBySubCategory } from '@/actions/shoots';
 
 const categoryData = {
     events: {
@@ -101,6 +102,8 @@ export default async function SubCategoryPage({ params }: Props) {
         },
     };
 
+    const shoots = await getShootsBySubCategory(subCategory);
+
     return (
         <>
             <script
@@ -116,7 +119,8 @@ export default async function SubCategoryPage({ params }: Props) {
                     title: sub.title,
                     category: category.title,
                     focus: sub.description
-                }} 
+                }}
+                shoots={shoots}
             />
         </>
     );

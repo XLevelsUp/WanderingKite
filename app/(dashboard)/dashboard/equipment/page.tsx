@@ -18,6 +18,7 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import { User, MapPin, Radio, Package } from 'lucide-react';
+import { DeleteEquipmentButton } from '@/components/dashboard/DeleteEquipmentButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -277,6 +278,7 @@ export default async function EquipmentPage() {
                           History
                         </Button>
                       </Link>
+                      <DeleteEquipmentButton equipmentId={item.id} equipmentName={item.name} />
                     </TableCell>
                   </TableRow>
                 ))

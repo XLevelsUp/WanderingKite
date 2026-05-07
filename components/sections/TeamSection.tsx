@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, User } from 'lucide-react';
+import { ArrowRight, User, Users } from 'lucide-react';
 import { FadeIn } from '@/components/animations/FadeIn';
 import { StaggerContainer } from '@/components/animations/StaggerContainer';
 
@@ -15,13 +15,7 @@ const founder = {
   image: '/images/team/founder.jpg', // User will replace with actual local path
 };
 
-const teamMembers = [
-  { id: '1', name: 'Team Member 1', role: 'Creative Director', image: '/images/team/member1.jpg' },
-  { id: '2', name: 'Team Member 2', role: 'Lead Photographer', image: '/images/team/member2.jpg' },
-  { id: '3', name: 'Team Member 3', role: 'Cinematographer', image: '/images/team/member3.jpg' },
-  { id: '4', name: 'Team Member 4', role: 'Studio Manager', image: '/images/team/member4.jpg' },
-  { id: '5', name: 'Team Member 5', role: 'Editor', image: '/images/team/member5.jpg' },
-];
+// Removed individual team members array per new design requirements
 
 export function TeamSection() {
   return (
@@ -38,7 +32,7 @@ export function TeamSection() {
         </div>
       </FadeIn>
 
-      <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+      <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto">
         
         {/* Founder Card - Clickable */}
         <motion.div
@@ -80,37 +74,42 @@ export function TeamSection() {
           </Link>
         </motion.div>
 
-        {/* Team Members - Static */}
-        {teamMembers.map((member) => (
-          <motion.div
-            key={member.id}
-            variants={{
-              hidden: { opacity: 0, y: 30 },
-              visible: { opacity: 1, y: 0 }
-            }}
-            className="lg:col-span-1"
-          >
-            <div className="relative h-full overflow-hidden rounded-3xl border border-white/5 bg-zinc-900/50 backdrop-blur-sm group">
-              <div className="aspect-[4/5] relative bg-zinc-800">
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent z-10" />
-                <div className="absolute inset-0 flex items-center justify-center opacity-10 transition-opacity duration-500 group-hover:opacity-20">
-                  <User className="w-16 h-16" />
-                </div>
-              </div>
-              
-              <div className="absolute bottom-0 left-0 right-0 p-6 z-20 transition-transform duration-500 group-hover:-translate-y-2">
-                <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">
-                  {member.role}
-                </p>
-                <h3 className="text-xl font-bold text-white">
-                  {member.name}
-                </h3>
+        {/* Team Members - Group Photo */}
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, y: 30 },
+            visible: { opacity: 1, y: 0 }
+          }}
+          className="lg:col-span-1 h-full"
+        >
+          <div className="relative h-full overflow-hidden rounded-3xl border border-white/5 bg-zinc-900/50 backdrop-blur-sm group flex flex-col">
+            <div className="aspect-[4/3] md:h-full md:aspect-auto relative bg-zinc-800 flex-1">
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent z-10" />
+              <div className="absolute inset-0 flex items-center justify-center opacity-10 transition-opacity duration-500 group-hover:opacity-20">
+                <Users className="w-20 h-20" />
               </div>
             </div>
-          </motion.div>
-        ))}
+            
+            <div className="absolute bottom-0 left-0 right-0 p-8 z-20 transition-transform duration-500 group-hover:-translate-y-2">
+              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+                The Collective
+              </p>
+              <h3 className="text-2xl font-bold text-white">
+                Our Team
+              </h3>
+            </div>
+          </div>
+        </motion.div>
 
       </StaggerContainer>
+
+      <FadeIn>
+        <div className="mt-12 text-center">
+          <p className="text-muted-foreground text-lg tracking-wide">
+            Meet the people behind the lens
+          </p>
+        </div>
+      </FadeIn>
     </section>
   );
 }

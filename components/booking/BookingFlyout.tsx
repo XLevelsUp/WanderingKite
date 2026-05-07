@@ -112,7 +112,7 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
                   hover:bg-primary/12
                   hover:text-foreground
                   hover:shadow-[0_8px_32px_hsl(var(--primary)/0.25)]
-                  animate-pulse-gold
+                  animate-pulse-brand
                 '
               >
                 <MessageCircle className='h-4 w-4' />
