@@ -129,7 +129,7 @@ export const brandConfig: BrandConfig = {
   url: 'https://wanderingkite.in',
 
   colors: {
-    // Primary: electric blue
+    // /* --- PREVIOUS COLOR TEMPLATE (Electric Blue) --- */
     primary: '217 91% 60%',
     primaryForeground: '0 0% 100%',
 
@@ -140,6 +140,16 @@ export const brandConfig: BrandConfig = {
     // Accent: matches secondary (used for hover states)
     accent: '240 8% 10%',
     accentForeground: '217 91% 60%',
+
+    /* --- NEW COLOR TEMPLATE (Orange-Red) ---
+     primary: '19 100% 50%',
+    primaryForeground: '0 0% 100%',
+    secondary: '240 8% 10%',
+    secondaryForeground: '0 0% 98%',
+    accent: '240 8% 10%',
+    accentForeground: '20 100% 50%',
+    */
+    
 
     // Muted
     muted: '240 8% 10%',

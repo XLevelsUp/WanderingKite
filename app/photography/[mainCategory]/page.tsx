@@ -2,13 +2,14 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Camera, ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
 
 const categoryData = {
     events: {
         title: 'Event Photography',
         description: 'Professional event photography in Coimbatore. We capture your special moments.',
         subCategories: [
-            { id: 'wedding', title: 'Wedding', description: 'Full-day coverage with premium editing', span: 'col-span-1 row-span-2' },
+            { id: 'wedding', title: 'Wedding', description: 'Full-day coverage with premium editing', span: 'col-span-2 row-span-2' },
             { id: 'engagements', title: 'Engagements', description: 'Intimate pre-wedding sessions', span: 'col-span-1 row-span-1' },
             { id: 'birthdays', title: 'Birthdays', description: 'Birthday milestones & parties', span: 'col-span-1 row-span-1' },
         ]
@@ -17,7 +18,7 @@ const categoryData = {
         title: 'Portrait Sessions',
         description: 'Elegant portrait photography tailored for you.',
         subCategories: [
-            { id: 'family', title: 'Family', description: 'Studio & outdoor family portrait sessions', span: 'col-span-1 row-span-2' },
+            { id: 'family', title: 'Family', description: 'Studio & outdoor family portrait sessions', span: 'col-span-2 row-span-2' },
             { id: 'maternity', title: 'Maternity', description: 'Elegant maternity & expecting mother shoots', span: 'col-span-1 row-span-1' },
             { id: 'baby-shoots', title: 'Baby Shoots', description: 'Safe, gentle newborn photography', span: 'col-span-1 row-span-1' },
         ]
@@ -29,7 +30,7 @@ const categoryData = {
             { id: 'product', title: 'Product', description: 'E-commerce & catalogue product photography', span: 'col-span-2 row-span-2' },
             { id: 'cinematic-videos', title: 'Cinematic Videos', description: 'Brand films & corporate video', span: 'col-span-1 row-span-1' },
             { id: 'social-media', title: 'Social Media Content', description: 'Platform-ready reels & posts', span: 'col-span-1 row-span-1' },
-            { id: 'model-shoots', title: 'Model Shoots', description: 'Fashion & model portfolio sessions', span: 'col-span-1 row-span-1' },
+            { id: 'model-shoots', title: 'Model Shoots', description: 'Fashion & model portfolio sessions', span: 'col-span-2 row-span-1' },
             { id: 'headshots', title: 'Headshots', description: 'Professional headshots for teams', span: 'col-span-1 row-span-1' },
         ]
     },
@@ -37,8 +38,8 @@ const categoryData = {
         title: 'Commercial Productions',
         description: 'High-concept commercial photography and video productions.',
         subCategories: [
-            { id: 'ads', title: 'Ads', description: 'High-concept advertisement productions', span: 'col-span-1 row-span-2' },
-            { id: 'music-videos', title: 'Music Videos', description: 'Full-production music videos', span: 'col-span-2 row-span-1' },
+            { id: 'ads', title: 'Ads', description: 'High-concept advertisement productions', span: 'col-span-2 row-span-2' },
+            { id: 'music-videos', title: 'Music Videos', description: 'Full-production music videos', span: 'col-span-1 row-span-1' },
             { id: 'short-films', title: 'Short Films', description: 'Narrative short film production', span: 'col-span-1 row-span-1' },
         ]
     }
@@ -103,24 +104,24 @@ export default async function MainCategoryPage({ params }: Props) {
                             href={`/photography/${categoryId}/${sub.id}`}
                             className={`group relative overflow-hidden rounded-3xl border border-white/5 bg-zinc-900/50 shadow-2xl backdrop-blur-sm transition-transform duration-500 hover:-translate-y-2 ${sub.span}`}
                         >
-                            {/* Abstract gradient placeholder simulating an image */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900 transition-transform duration-700 group-hover:scale-105" />
+                            {/* Local Image */}
+                            <Image 
+                                src={`/images/photography/${categoryId}/${sub.id}.webp`}
+                                alt={sub.title}
+                                fill
+                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                            />
                             
                             {/* Overlays for depth and hover effects */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 transition-opacity duration-500 group-hover:opacity-80" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent opacity-80 transition-opacity duration-500 group-hover:opacity-90" />
                             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-orange-500/0 opacity-0 mix-blend-color-dodge transition-opacity duration-500 group-hover:opacity-100" />
                             
-                            {/* Content */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                                <div className="mb-4 rounded-full border border-white/10 bg-white/5 p-4 shadow-xl backdrop-blur-md transition-all duration-500 group-hover:scale-110 group-hover:border-amber-500/30 group-hover:bg-amber-500/20">
-                                    <Camera className="h-8 w-8 text-zinc-400 transition-colors duration-300 group-hover:text-amber-400" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold tracking-wide text-white">{sub.title}</h3>
-                                    <p className="mt-2 text-sm text-zinc-400 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-                                        {sub.description}
-                                    </p>
-                                </div>
+                            {/* Content at Bottom */}
+                            <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col justify-end translate-y-2 transition-transform duration-500 group-hover:translate-y-0">
+                                <h3 className="text-2xl font-bold tracking-wide text-white">{sub.title}</h3>
+                                <p className="mt-2 text-sm text-zinc-300 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+                                    {sub.description}
+                                </p>
                             </div>
                         </Link>
                     ))}

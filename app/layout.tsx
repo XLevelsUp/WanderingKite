@@ -6,6 +6,7 @@ import { MainNav } from '@/components/navigation/MainNav';
 import { BookingFlyout } from '@/components/booking/BookingFlyout';
 import { brandConfig } from '@/config/brand.config';
 import { siteConfig } from '@/config/site';
+import { ThemeProvider } from '@/components/theme/ThemeProvider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -228,6 +229,9 @@ export default function RootLayout({
 
   return (
     <html lang='en' className='dark'>
+      <head>
+        <ThemeProvider />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         {/* Google Analytics 4 – loads whenever GA_ID is available */}
         {GA_ID && (

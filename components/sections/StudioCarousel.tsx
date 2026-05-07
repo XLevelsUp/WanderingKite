@@ -1,108 +1,145 @@
-'use client';
+"use client";
 
-import React, { useEffect, useCallback, useState } from 'react';
-import useEmblaCarousel from 'embla-carousel-react';
-import Autoplay from 'embla-carousel-autoplay';
-import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useEffect, useCallback, useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
 
 const CAROUSEL_IMAGES = [
-  { id: 1, src: '/images/studio/placeholder-1.jpg', alt: 'Studio Full View' },
-  { id: 2, src: '/images/studio/placeholder-2.jpg', alt: 'Cyclorama Wall' },
-  { id: 3, src: '/images/studio/placeholder-3.jpg', alt: 'Lighting Setup' },
-  { id: 4, src: '/images/studio/placeholder-4.jpg', alt: 'Makeup & Changing Area' },
-  { id: 5, src: '/images/studio/placeholder-5.jpg', alt: 'Equipment Room' },
+  { id: 1, src: "/images/studio/placeholder1.webp", alt: "Studio Full View" },
+  { id: 2, src: "/images/studio/placeholder2.webp", alt: "Cyclorama Wall" },
+  { id: 3, src: "/images/studio/placeholder3.webp", alt: "Lighting Setup" },
+  {
+    id: 4,
+    src: "/images/studio/placeholder4.webp",
+    alt: "Makeup & Changing Area",
+  },
+  { id: 5, src: "/images/studio/placeholder5.webp", alt: "Equipment Room" },
 ];
 
 export function StudioCarousel() {
   const [emblaRef, emblaApi] = useEmblaCarousel(
-    { loop: true, align: 'center', skipSnaps: false },
-    [Autoplay({ delay: 4000, stopOnInteraction: false })]
+    {
+      loop: true,
+      align: "center",
+      skipSnaps: false,
+      containScroll: false,
+    },
+    [Autoplay({ delay: 5000, stopOnInteraction: false })],
   );
-  
+
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev();
-  }, [emblaApi]);
-
-  const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext();
-  }, [emblaApi]);
+  const scrollPrev = useCallback(
+    () => emblaApi && emblaApi.scrollPrev(),
+    [emblaApi],
+  );
+  const scrollNext = useCallback(
+    () => emblaApi && emblaApi.scrollNext(),
+    [emblaApi],
+  );
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
     setSelectedIndex(emblaApi.selectedScrollSnap());
-  }, [emblaApi, setSelectedIndex]);
+  }, [emblaApi]);
 
   useEffect(() => {
     if (!emblaApi) return;
     onSelect();
-    emblaApi.on('select', onSelect);
-    emblaApi.on('reInit', onSelect);
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
   }, [emblaApi, onSelect]);
 
   return (
-    <section className="py-12 relative overflow-hidden bg-zinc-950">
-      <div className="embla" ref={emblaRef}>
-        <div className="embla__container flex cursor-grab active:cursor-grabbing">
+    <section className="py-20 relative overflow-hidden bg-zinc-950">
+      <div className="embla !overflow-visible" ref={emblaRef}>
+        <div className="embla__container flex">
           {CAROUSEL_IMAGES.map((img, index) => {
             const isActive = index === selectedIndex;
+
             return (
               <div
                 key={img.id}
-                className="embla__slide flex-[0_0_100%] sm:flex-[0_0_50%] min-w-0 transition-all duration-700 ease-out"
-                style={{
-                  opacity: isActive ? 1 : 0.5,
-                  filter: isActive ? 'blur(0px)' : 'blur(8px)',
-                }}
+                className="embla__slide flex-[0_0_80%] sm:flex-[0_0_50%] min-w-0"
               >
-                <div className="relative aspect-[16/9] overflow-hidden border-x border-white/5 bg-zinc-900 shadow-2xl">
-                  {/* Glowing Outline for Active Slide */}
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeGlow"
-                      className="absolute inset-0 z-20 border-y border-amber-500/50 shadow-[inset_0_0_50px_rgba(245,158,11,0.2)] pointer-events-none"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.5 }}
-                    />
-                  )}
-                  
-                  {/* Abstract placeholder mimicking an image */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-950" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <p className={`font-medium uppercase tracking-widest text-sm sm:text-base transition-colors duration-500 ${isActive ? 'text-amber-500' : 'text-zinc-600'}`}>
-                      {img.alt}
-                    </p>
-                  </div>
-                  {/* Optional: Add actual image once uploaded to public folder */}
-                  {/* <Image src={img.src} alt={img.alt} fill className="object-cover opacity-80" /> */}
-                  
-                </div>
+                <motion.div
+                  animate={{
+                    scale: isActive ? 1 : 0.92,
+                    opacity: isActive ? 1 : 0.3,
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    ease: [0.32, 0.72, 0, 1],
+                  }}
+                  className="relative aspect-[16/10] sm:aspect-[16/9] overflow-hidden bg-zinc-900 shadow-2xl transition-all duration-500"
+                >
+                  {/* Glowing Border Animation for Active Slide */}
+                  <AnimatePresence>
+                    {isActive && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-20 border-2 border-warning/60 pointer-events-none shadow-[inset_0_0_40px_rgba(var(--warning-rgb),0.2)]"
+                        style={{
+                          boxShadow:
+                            "inset 0 0 30px rgba(234, 179, 8, 0.2), 0 0 20px rgba(234, 179, 8, 0.1)",
+                        }}
+                      />
+                    )}
+                  </AnimatePresence>
+
+                  <Image
+                    src={img.src}
+                    alt={img.alt}
+                    fill
+                    priority={isActive}
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                </motion.div>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Navigation Arrows */}
-      <div className="absolute inset-y-0 left-0 right-0 max-w-7xl mx-auto px-4 sm:px-12 pointer-events-none flex items-center justify-between z-30">
-        <button 
+      {/* Navigation Controls */}
+      <div className="max-w-7xl mx-auto mt-12 px-6 flex items-center justify-between">
+        {/* Progress Dots */}
+        <div className="flex gap-2.5">
+          {CAROUSEL_IMAGES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => emblaApi?.scrollTo(i)}
+              className={`h-1 transition-all duration-500 rounded-full ${
+                i === selectedIndex ? "w-12 bg-warning" : "w-3 bg-zinc-800"
+              }`}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Arrows */}
+        <div className="flex gap-4">
+          <button
             onClick={scrollPrev}
-            className="pointer-events-auto h-12 w-12 rounded-full bg-zinc-900/80 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-amber-500 hover:border-amber-500/50 hover:bg-zinc-800 transition-all backdrop-blur-md shadow-xl"
+            className="h-14 w-14 rounded-full border border-white/10 flex items-center justify-center text-white hover:bg-warning hover:text-black hover:border-warning transition-all duration-300"
             aria-label="Previous Slide"
-        >
-            <ChevronLeft className="h-6 w-6" />
-        </button>
-        <button 
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
             onClick={scrollNext}
-            className="pointer-events-auto h-12 w-12 rounded-full bg-zinc-900/80 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-amber-500 hover:border-amber-500/50 hover:bg-zinc-800 transition-all backdrop-blur-md shadow-xl"
+            className="h-14 w-14 rounded-full border border-white/10 flex items-center justify-center text-white hover:bg-warning hover:text-black hover:border-warning transition-all duration-300"
             aria-label="Next Slide"
-        >
-            <ChevronRight className="h-6 w-6" />
-        </button>
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
       </div>
     </section>
   );

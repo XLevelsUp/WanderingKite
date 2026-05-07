@@ -36,12 +36,13 @@ export default async function DashboardLayout({
         {/* Sidebar */}
         <aside className='w-64 bg-[rgba(17,17,22,0.98)] border-r border-primary/12 text-foreground fixed left-0 top-20 bottom-0 overflow-y-auto backdrop-blur-xl'>
           <div className='p-6'>
-            <h1 className='text-xl font-bold mb-8 text-gradient-gold'>
+            <h1 className='text-xl font-bold mb-8 text-gradient-brand'>
               Rental System
             </h1>
             <nav className='space-y-1'>
               {[
                 { href: '/dashboard', label: 'Dashboard' },
+                { href: '/dashboard/portfolio', label: 'Portfolio' },
                 { href: '/dashboard/equipment', label: 'Equipment' },
                 { href: '/dashboard/clients', label: 'Clients' },
                 { href: '/dashboard/rentals', label: 'Rentals' },

@@ -323,7 +323,7 @@ export default async function PhotographyPage() {
         {/* Portfolio Grid */}
         <section className="border-t border-border py-24">
           <div className="container mx-auto px-6">
-            <h2 className="mb-12 text-center text-4xl font-bold">Portfolio</h2>
+            <h2 className="mb-12 text-center text-4xl font-bold">Categories</h2>
             <PortfolioCategories />
           </div>
         </section>

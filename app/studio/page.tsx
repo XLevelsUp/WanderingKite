@@ -21,12 +21,45 @@ import {
   Zap,
   Box,
   PanelsTopLeft,
+  Mic,
+  Headphones,
+  Radio,
 } from "lucide-react";
 import { StudioCarousel } from "@/components/sections/StudioCarousel";
 import { StudioPricingEngine } from "@/components/studio/StudioPricingEngine";
+import { BackdropsGallery } from "@/components/studio/BackdropsGallery";
 import ServiceTerms from "@/components/sections/ServiceTerms";
 
 import { JsonLd } from "@/lib/schema-helpers";
+
+const podcastEquipment = [
+    { icon: Mic, title: 'Premium Microphones', description: 'Rode Procaster & Shure SM7B' },
+    { icon: Headphones, title: 'Studio Monitors', description: 'Closed-back headphones for all guests' },
+    { icon: Radio, title: 'Multi-Track Recording', description: 'Zoom H6 & audio interface' },
+    { icon: Zap, title: 'Acoustic Treatment', description: 'Professional soundproofing & panels' },
+];
+
+const podcastPackages = [
+    {
+        name: 'Solo Creator',
+        price: '1,200',
+        duration: '/hour',
+        features: ['1 host setup', 'Single mic & headphones', 'Basic editing included', 'WAV file delivery'],
+    },
+    {
+        name: 'Interview Setup',
+        price: '1,800',
+        duration: '/hour',
+        features: ['2-3 person setup', 'Multiple mics', 'Video recording option', 'Multi-track files'],
+        popular: true,
+    },
+    {
+        name: 'Full Production',
+        price: '5,000',
+        duration: '/4 hours',
+        features: ['Up to 4 guests', 'Video + audio', 'Professional editing', 'Same-day delivery'],
+    },
+];
 
 export const metadata: Metadata = {
   title: "Photography Studio Rental Coimbatore | 1200 sq ft | Book by Hour",
@@ -288,7 +321,7 @@ export default async function StudioPage() {
       <JsonLd
         data={[studioFaqSchema, studioBreadcrumbSchema, studioPricingSchema]}
       />
-      <main className="min-h-screen bg-background pt-20">
+      <main className="min-h-screen bg-background pt-16">
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-16 lg:py-24">
           <div className="container mx-auto px-6">
@@ -333,53 +366,78 @@ export default async function StudioPage() {
             </p>
 
             {/* Space Allocation / Pricing Engine */}
-            <StudioPricingEngine />
+            <StudioPricingEngine equipment={equipment} />
 
             {/* Podcast Studio */}
-            <div className="mb-16">
-              <div className="mb-6 flex items-center gap-3">
-                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-sm font-semibold text-amber-400">
+            <div className="mb-20">
+              <div className="mb-8 flex items-center gap-3">
+                <span className="rounded-full border border-green-500/30 bg-green-500/10 px-4 py-1 text-sm font-semibold text-green-500">
                   Podcast Studio
                 </span>
                 <div className="h-px flex-1 bg-secondary" />
               </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {[
-                  {
-                    title: "Solo Creator",
-                    desc: "Single host setup · Multi-track recording · Basic editing",
-                  },
-                  {
-                    title: "Interview Setup",
-                    desc: "2–3 guests · Video recording option · Multi-camera angles",
-                  },
-                  {
-                    title: "Full Production",
-                    desc: "Up to 4 guests · 4K video · Advanced editing · Same-day delivery",
-                  },
-                  {
-                    title: "Multi Camera Setup",
-                    desc: "3–5 camera angles · Cinematic podcast look · Live switching · Full 4K",
-                  },
-                ].map((s) => (
-                  <div
-                    key={s.title}
-                    className="flex flex-col justify-between rounded-xl border border-border bg-muted/50 p-6"
-                  >
-                    <div>
-                      <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
-                      <p className="text-sm text-muted-foreground">{s.desc}</p>
+              <p className="mb-8 text-muted-foreground text-lg">
+                Broadcast-quality podcast recording with professional acoustics, premium microphones, and expert support.
+              </p>
+              
+              <div className="mb-12">
+                <h3 className="mb-6 text-2xl font-bold">Studio Equipment</h3>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                  {podcastEquipment.map((item, index) => (
+                    <div key={index} className="rounded-xl border border-border bg-muted/30 p-5 flex items-start gap-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-500/10">
+                        <item.icon className="h-5 w-5 text-green-500" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm mb-1">{item.title}</h4>
+                        <p className="text-xs text-muted-foreground">{item.description}</p>
+                      </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+
+              <h3 className="mb-6 text-2xl font-bold">Recording Packages</h3>
+              <div className="grid gap-6 md:grid-cols-3">
+                {podcastPackages.map((pkg) => (
+                  <div
+                    key={pkg.name}
+                    className={`relative rounded-2xl border p-6 flex flex-col ${pkg.popular
+                      ? 'border-green-500/50 bg-green-500/5 shadow-[0_0_15px_-5px_hsl(var(--color-green)/0.15)]'
+                      : 'border-border bg-muted/50'
+                    }`}
+                  >
+                    {pkg.popular && (
+                      <span className="absolute -top-3 left-6 rounded-full bg-green-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
+                        Most Popular
+                      </span>
+                    )}
+                    <h4 className="mb-2 text-xl font-bold">{pkg.name}</h4>
+                    <div className="mb-6">
+                      <span className="text-3xl font-bold text-green-500">₹{pkg.price}</span>
+                      <span className="text-sm text-muted-foreground">{pkg.duration}</span>
+                    </div>
+                    <ul className="mb-8 space-y-3 flex-1">
+                      {pkg.features.map((feature, index) => (
+                        <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <span className="text-green-500 font-bold">✓</span>
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
                     <a
                       href={generateWhatsAppLink(
                         "studio",
-                        `Hi! I'd like to inquire about the Podcast ${s.title} package.`,
+                        `Hi! I'd like to book the ${pkg.name} podcast package in your studio.`
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-5 inline-block rounded-full border border-amber-500/40 bg-amber-500/10 px-5 py-2.5 text-center text-sm font-semibold text-amber-400 transition-colors hover:bg-amber-500/20"
+                      className={`block w-full rounded-xl py-3 text-center text-sm font-semibold transition-all ${pkg.popular
+                        ? 'bg-green-500 text-foreground hover:bg-green-400'
+                        : 'border border-green-500/40 bg-green-500/10 text-green-500 hover:bg-green-500/20'
+                      }`}
                     >
-                      Get Quote
+                      Book Session
                     </a>
                   </div>
                 ))}
@@ -453,6 +511,8 @@ export default async function StudioPage() {
             </div>
           </div>
         </section>
+
+        <BackdropsGallery />
 
         {/* Testimonials */}
         <Testimonials testimonials={studioTestimonials} accentColor="amber" />

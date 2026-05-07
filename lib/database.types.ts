@@ -9,6 +9,58 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      shoots: {
+        Row: {
+          id: string;
+          title: string;
+          description: string | null;
+          category: string;
+          sub_category: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          description?: string | null;
+          category: string;
+          sub_category?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          description?: string | null;
+          category?: string;
+          sub_category?: string | null;
+          created_at?: string;
+        };
+      };
+      gallery_images: {
+        Row: {
+          id: string;
+          shoot_id: string;
+          url: string;
+          alt_text: string | null;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          shoot_id: string;
+          url: string;
+          alt_text?: string | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          shoot_id?: string;
+          url?: string;
+          alt_text?: string | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+      };
       audit_logs: {
         Row: {
           id: string;
