@@ -203,9 +203,9 @@ export default function RootLayout({
           '@type': 'Offer',
           itemOffered: {
             '@type': 'Service',
-            '@id': 'https://wanderingkite.in/studio#service',
+            '@id': 'https://wanderingkite.in/studiospace#service',
             name: 'Photography Studio Rental',
-            url: 'https://wanderingkite.in/studio',
+            url: 'https://wanderingkite.in/studiospace',
             description:
               '1200 sq ft photography and video studio with cyclorama wall, ProFoto lighting, and backdrops. Hourly and full-day rates.',
             areaServed: 'Coimbatore',

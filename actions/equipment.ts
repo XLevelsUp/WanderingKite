@@ -18,10 +18,10 @@ export async function getEquipment() {
     .order('createdAt', { ascending: false });
 
   if (error) {
-    throw new Error(`Failed to fetch equipment: ${error.message}`);
+    return [];
   }
 
-  return data;
+  return data ?? [];
 }
 
 /**
@@ -64,9 +64,7 @@ export async function getEquipmentWithFieldStatus() {
     .order('createdAt', { ascending: false });
 
   if (error) {
-    throw new Error(
-      `Failed to fetch equipment with field status: ${error.message}`,
-    );
+    return [];
   }
 
   // PostgREST returns the join as an array — flatten to single active assignment
@@ -101,7 +99,7 @@ export async function getEquipmentById(id: string) {
     .single();
 
   if (error) {
-    throw new Error(`Failed to fetch equipment: ${error.message}`);
+    return null;
   }
 
   return data;
@@ -259,7 +257,6 @@ export async function getEquipmentAssignmentHistory(equipmentId: string) {
     .order('assignedAt', { ascending: false });
 
   if (error) {
-    console.warn('[assignment_history] Query failed:', error.message);
     return [];
   }
 
@@ -276,10 +273,10 @@ export async function getCategories() {
     .order('name');
 
   if (error) {
-    throw new Error(`Failed to fetch categories: ${error.message}`);
+    return [];
   }
 
-  return data;
+  return data ?? [];
 }
 
 // Get all branches (for dropdowns)
@@ -292,8 +289,8 @@ export async function getBranches() {
     .order('name');
 
   if (error) {
-    throw new Error(`Failed to fetch branches: ${error.message}`);
+    return [];
   }
 
-  return data;
+  return data ?? [];
 }

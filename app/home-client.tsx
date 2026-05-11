@@ -29,7 +29,7 @@ const services = [
     description:
       "Premium studio facilities for photography and video production with cyclorama wall.",
     iconName: "studio" as const,
-    href: "/studio",
+    href: "/studiospace",
     badge: "New",
     features: ["Cyclorama Wall", "ProFoto Lighting", "Green Screen"],
     delay: 0.1,

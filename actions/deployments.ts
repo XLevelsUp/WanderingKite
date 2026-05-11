@@ -90,8 +90,7 @@ export async function getActiveDeployments(): Promise<
     .order('"assignedAt"', { ascending: false });
 
   if (error) {
-    console.error('[getActiveDeployments] Query failed:', error.message);
-    throw new Error('Failed to fetch active deployments');
+    return [];
   }
 
   const now = Date.now();

@@ -97,11 +97,11 @@ export const metadata: Metadata = {
     title: "Photography Studio Rental Coimbatore | 1200 sq ft | RS Puram",
     description:
       "1200 sq ft photography & video studio in Coimbatore with cyclorama, ProFoto lights & backdrops. Book from ₹1,500/hr.",
-    url: "https://wanderingkite.in/studio",
+    url: "https://wanderingkite.in/studiospace",
     images: [{ url: "/og-studio.jpg", width: 1200, height: 630 }],
   },
   alternates: {
-    canonical: "https://wanderingkite.in/studio",
+    canonical: "https://wanderingkite.in/studiospace",
   },
 };
 
@@ -174,7 +174,7 @@ const studioBreadcrumbSchema = {
       "@type": "ListItem",
       position: 2,
       name: "Studio Space Rental",
-      item: "https://wanderingkite.in/studio",
+      item: "https://wanderingkite.in/studiospace",
     },
   ],
 };
@@ -182,7 +182,7 @@ const studioBreadcrumbSchema = {
 const studioPricingSchema = {
   "@context": "https://schema.org",
   "@type": "Service",
-  "@id": "https://wanderingkite.in/studio#service",
+  "@id": "https://wanderingkite.in/studiospace#service",
   name: "Photography Studio Rental Coimbatore",
   provider: { "@id": "https://wanderingkite.in/#business" },
   areaServed: { "@type": "City", name: "Coimbatore" },

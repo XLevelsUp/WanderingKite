@@ -1,7 +1,8 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Camera, ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Camera, ArrowLeft, X, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 
 import { generateWhatsAppLink } from '@/lib/whatsapp';
@@ -26,6 +27,9 @@ interface GalleryTemplateProps {
 }
 
 export function GalleryTemplate({ category, mainCategory, subCategory, shoots = [] }: GalleryTemplateProps) {
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [zoomLevel, setZoomLevel] = useState(1);
+
     // Extract all images from all shoots into a single flat array
     const allImages = shoots.flatMap(shoot => shoot.gallery_images || []);
     
@@ -107,7 +111,11 @@ export function GalleryTemplate({ category, mainCategory, subCategory, shoots = 
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             transition={{ duration: 0.6, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
                             whileHover={{ y: -5 }}
-                            className="group relative overflow-hidden rounded-3xl border border-white/5 bg-zinc-900/50 shadow-2xl backdrop-blur-sm break-inside-avoid"
+                            onClick={() => {
+                                setSelectedImage(img.url);
+                                setZoomLevel(1);
+                            }}
+                            className="group relative overflow-hidden rounded-3xl border border-white/5 bg-zinc-900/50 shadow-2xl backdrop-blur-sm break-inside-avoid cursor-pointer"
                         >
                             <img 
                                 src={img.url} 
@@ -124,6 +132,83 @@ export function GalleryTemplate({ category, mainCategory, subCategory, shoots = 
                     )}
                 </div>
             </section>
+
+            {/* Lightbox Modal */}
+            <AnimatePresence>
+                {selectedImage && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-xl"
+                        onClick={() => {
+                            setSelectedImage(null);
+                            setZoomLevel(1);
+                        }}
+                    >
+                        <div className="absolute top-6 left-6 z-50 flex gap-2">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setZoomLevel(z => Math.min(z + 0.5, 4));
+                                }}
+                                className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors"
+                                title="Zoom In"
+                            >
+                                <ZoomIn className="h-6 w-6" />
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setZoomLevel(z => Math.max(z - 0.5, 1));
+                                }}
+                                className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors"
+                                title="Zoom Out"
+                            >
+                                <ZoomOut className="h-6 w-6" />
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setZoomLevel(1);
+                                }}
+                                className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors"
+                                title="Reset Zoom"
+                            >
+                                <RotateCcw className="h-6 w-6" />
+                            </button>
+                        </div>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedImage(null);
+                                setZoomLevel(1);
+                            }}
+                            className="absolute top-6 right-6 z-50 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors"
+                            title="Close"
+                        >
+                            <X className="h-6 w-6" />
+                        </button>
+                        <motion.img
+                            drag={zoomLevel > 1}
+                            dragConstraints={{ left: -500, right: 500, top: -500, bottom: 500 }}
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: zoomLevel, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            src={selectedImage}
+                            alt="Expanded View"
+                            className={`max-h-[90vh] max-w-full rounded-lg object-contain shadow-2xl ${zoomLevel > 1 ? 'cursor-grab active:cursor-grabbing' : ''}`}
+                            onClick={(e) => e.stopPropagation()}
+                            onDoubleClick={(e) => {
+                                e.stopPropagation();
+                                setZoomLevel(z => z > 1 ? 1 : 2);
+                            }}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </main>
     );
 }

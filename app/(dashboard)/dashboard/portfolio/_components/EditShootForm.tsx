@@ -84,6 +84,8 @@ export function EditShootForm({ shoot }: { shoot: Shoot }) {
                 <option value='wedding'>Wedding</option>
                 <option value='engagements'>Engagements</option>
                 <option value='birthdays'>Birthdays</option>
+                <option value='house-warming'>House Warming</option>
+                <option value='puberty-ceremonies'>Puberty Ceremonies</option>
               </optgroup>
               <optgroup label="Portraits">
                 <option value='family'>Family</option>
