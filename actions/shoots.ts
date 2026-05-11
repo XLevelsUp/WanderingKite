@@ -15,7 +15,6 @@ export async function getShoots() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.warn(`Failed to fetch shoots: ${error.message}`);
     return [];
   }
   return data ?? [];
@@ -30,7 +29,6 @@ export async function getShootById(id: string) {
     .single();
 
   if (error) {
-    console.warn(`Failed to fetch shoot: ${error.message}`);
     return null;
   }
   return data;
@@ -45,7 +43,6 @@ export async function getShootsBySubCategory(subCategory: string) {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.warn(`Failed to fetch shoots: ${error.message}`);
     return [];
   }
   return data ?? [];

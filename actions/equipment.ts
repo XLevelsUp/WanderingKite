@@ -18,7 +18,6 @@ export async function getEquipment() {
     .order('createdAt', { ascending: false });
 
   if (error) {
-    console.warn(`Failed to fetch equipment: ${error.message}`);
     return [];
   }
 
@@ -65,9 +64,6 @@ export async function getEquipmentWithFieldStatus() {
     .order('createdAt', { ascending: false });
 
   if (error) {
-    console.warn(
-      `Failed to fetch equipment with field status: ${error.message}`,
-    );
     return [];
   }
 
@@ -103,7 +99,6 @@ export async function getEquipmentById(id: string) {
     .single();
 
   if (error) {
-    console.warn(`Failed to fetch equipment: ${error.message}`);
     return null;
   }
 
@@ -262,7 +257,6 @@ export async function getEquipmentAssignmentHistory(equipmentId: string) {
     .order('assignedAt', { ascending: false });
 
   if (error) {
-    console.warn('[assignment_history] Query failed:', error.message);
     return [];
   }
 
@@ -279,7 +273,6 @@ export async function getCategories() {
     .order('name');
 
   if (error) {
-    console.warn(`Failed to fetch categories: ${error.message}`);
     return [];
   }
 
@@ -296,7 +289,6 @@ export async function getBranches() {
     .order('name');
 
   if (error) {
-    console.warn(`Failed to fetch branches: ${error.message}`);
     return [];
   }
 

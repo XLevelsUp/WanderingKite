@@ -90,7 +90,6 @@ export async function getActiveDeployments(): Promise<
     .order('"assignedAt"', { ascending: false });
 
   if (error) {
-    console.warn('[getActiveDeployments] Query failed:', error.message);
     return [];
   }
 

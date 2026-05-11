@@ -14,7 +14,6 @@ export async function getClients() {
     .order('createdAt', { ascending: false });
 
   if (error) {
-    console.warn(`Failed to fetch clients: ${error.message}`);
     return [];
   }
 
