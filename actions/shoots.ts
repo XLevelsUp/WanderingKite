@@ -14,8 +14,11 @@ export async function getShoots() {
     .select('*, gallery_images(*)')
     .order('created_at', { ascending: false });
 
-  if (error) throw new Error(`Failed to fetch shoots: ${error.message}`);
-  return data;
+  if (error) {
+    console.warn(`Failed to fetch shoots: ${error.message}`);
+    return [];
+  }
+  return data ?? [];
 }
 
 export async function getShootById(id: string) {
@@ -26,7 +29,10 @@ export async function getShootById(id: string) {
     .eq('id', id)
     .single();
 
-  if (error) throw new Error(`Failed to fetch shoot: ${error.message}`);
+  if (error) {
+    console.warn(`Failed to fetch shoot: ${error.message}`);
+    return null;
+  }
   return data;
 }
 
@@ -38,8 +44,11 @@ export async function getShootsBySubCategory(subCategory: string) {
     .eq('sub_category', subCategory)
     .order('created_at', { ascending: false });
 
-  if (error) throw new Error(`Failed to fetch shoots: ${error.message}`);
-  return data;
+  if (error) {
+    console.warn(`Failed to fetch shoots: ${error.message}`);
+    return [];
+  }
+  return data ?? [];
 }
 
 export async function createShoot(formData: FormData) {

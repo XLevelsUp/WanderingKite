@@ -98,7 +98,7 @@ export async function getEquipmentForCategory(
         .eq('status', 'AVAILABLE');
 
     if (error) {
-        console.error('[SmartAllocation] Supabase error:', error.message);
+        console.warn('[SmartAllocation] Supabase error:', error.message);
         return { kitIds, available: [], missingIds: [...kitIds] };
     }
 
@@ -150,7 +150,7 @@ export async function getAllAvailableEquipment(): Promise<AvailableEquipmentRow[
         .order('name');
 
     if (error) {
-        console.error('[SmartAllocation] getAllAvailableEquipment error:', error.message);
+        console.warn('[SmartAllocation] getAllAvailableEquipment error:', error.message);
         return [];
     }
 

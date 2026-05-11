@@ -34,11 +34,11 @@ export async function getEmployees(query?: string) {
   const { data, error } = await dbQuery;
 
   if (error) {
-    console.error('Error fetching employees:', error);
-    throw new Error('Failed to fetch employees');
+    console.warn('Error fetching employees:', error);
+    return [];
   }
 
-  return data;
+  return data ?? [];
 }
 
 export async function getBranches() {
@@ -49,7 +49,7 @@ export async function getBranches() {
     .order('name');
 
   if (error) {
-    console.error('Error fetching branches:', error);
+    console.warn('Error fetching branches:', error);
     return [];
   }
 
@@ -66,7 +66,7 @@ export async function getEmployee(id: string) {
     .single();
 
   if (error) {
-    console.error('Error fetching employee:', error);
+    console.warn('Error fetching employee:', error);
     return null;
   }
 
@@ -254,7 +254,7 @@ export async function getAdmins() {
     .order('fullName');
 
   if (error) {
-    console.error('Error fetching admins:', error);
+    console.warn('Error fetching admins:', error);
     return [];
   }
 
