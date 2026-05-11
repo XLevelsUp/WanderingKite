@@ -36,9 +36,9 @@ export function Footer() {
             <div className="mb-4 flex justify-center">
               <Instagram className="h-12 w-12 text-pink-500" />
             </div>
-            <h3 className="mb-2 text-2xl font-bold">
+            <h2 className="mb-2 text-2xl font-bold">
               Get 10% Off Your First Rental
-            </h3>
+            </h2>
             <p className="mb-6 text-muted-foreground">
               Follow us on Instagram for exclusive deals, behind-the-scenes
               content, and creative inspiration
@@ -193,11 +193,11 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-            <div className="rounded-lg border border-border bg-muted/50 p-4">
+            <div className="rounded-lg border border-border bg-card p-4">
               <p className="text-xs text-muted-foreground">
                 Made by Creators for Creators
               </p>
-              <p className="mt-2 text-xs text-zinc-600">
+              <p className="mt-2 text-xs text-muted-foreground">
                 Trusted by 500+ creative professionals
               </p>
             </div>
@@ -222,7 +222,7 @@ export function Footer() {
                 <ShieldCheck className="h-4 w-4" />
                 <span className="sr-only">Admin Dashboard</span>
               </Link>
-              <p className="text-sm text-zinc-600">
+              <p className="text-sm text-muted-foreground">
                 Built with ❤️ by{" "}
                 <a
                   href="https://xlevelsup.com"

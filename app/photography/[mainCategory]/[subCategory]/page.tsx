@@ -23,6 +23,16 @@ const categoryData = {
         title: "Birthdays",
         description: "Birthday milestones & parties",
       },
+      {
+        id: "house-warming",
+        title: "House Warming",
+        description: "Memorable house warming ceremonies",
+      },
+      {
+        id: "puberty-ceremonies",
+        title: "Puberty Ceremonies",
+        description: "Traditional puberty ceremony coverage",
+      },
     ],
   },
   portraits: {

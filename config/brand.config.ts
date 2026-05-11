@@ -199,7 +199,7 @@ export const brandConfig: BrandConfig = {
   },
 
   radius: {
-    default: '0.75rem',
+    default: '21px',
     button: '0.5rem',
     card: '0.75rem',
   },
