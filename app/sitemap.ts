@@ -41,7 +41,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 1.0,
         },
         {
-            url: `${baseUrl}/studio`,
+            url: `${baseUrl}/studiospace`,
             lastModified: currentDate,
             changeFrequency: 'monthly',
             priority: 1.0,

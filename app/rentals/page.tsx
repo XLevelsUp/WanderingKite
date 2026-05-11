@@ -177,6 +177,9 @@ export default async function RentalsPage() {
     (e) => e.category === "lighting" || e.category === "lights",
   );
   const audio = equipmentItems.filter((e) => e.category === "audio");
+  const others = equipmentItems.filter(
+    (e) => e.category === "others" || e.category === "other" || e.category === "accessories",
+  );
 
   return (
     <RentalCartProvider>
@@ -291,6 +294,18 @@ export default async function RentalsPage() {
             <h2 className="mb-12 text-4xl font-bold">Audio Equipment</h2>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {audio.map((equipment) => (
+                <EquipmentCard key={equipment.id} {...equipment} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Others */}
+        <section className="border-t border-border py-24">
+          <div className="container mx-auto px-6">
+            <h2 className="mb-12 text-4xl font-bold">Other Equipment & Accessories</h2>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {others.map((equipment) => (
                 <EquipmentCard key={equipment.id} {...equipment} />
               ))}
             </div>

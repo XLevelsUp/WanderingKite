@@ -1,7 +1,7 @@
 export interface Equipment {
     id: string;
     name: string;
-    category: 'camera' | 'lens' | 'lighting' | 'audio';
+    category: 'camera' | 'lens' | 'lighting' | 'audio' | 'others';
     dailyRate: number;
     weeklyRate: number;
     image: string;

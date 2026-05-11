@@ -9,7 +9,7 @@ import { siteConfig } from "@/config/site";
 const navItems = [
   { label: "Photography", href: "/photography", icon: Camera },
   // { label: 'Rentals', href: '/rentals', icon: Video },
-  { label: "The Studio Space", href: "/studio", icon: Building2 },
+  { label: "The Studio Space", href: "/studiospace", icon: Building2 },
 ];
 
 export function MainNav() {

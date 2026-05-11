@@ -320,7 +320,7 @@ export const SERVICE_REGISTRY: Record<string, ServiceDomain> = {
 
     'studio-facilities': {
         label: 'Studio Facilities',
-        href: '/studio',
+        href: '/studiospace',
         iconName: 'Building2',
         groups: [
             {
@@ -328,7 +328,7 @@ export const SERVICE_REGISTRY: Record<string, ServiceDomain> = {
                 items: [
                     { label: 'Podcast Studio', slug: 'podcast', href: '/podcast', description: 'Acoustically treated podcast & interview studio' },
                     { label: 'Equipment Rental', slug: 'equipment-rental', href: '/rentals', description: 'Professional cameras, lenses, lighting & audio' },
-                    { label: 'Space Allocation', slug: 'space-allocation', href: '/studio', description: 'Hourly & full-day studio floor bookings' },
+                    { label: 'Space Allocation', slug: 'space-allocation', href: '/studiospace', description: 'Hourly & full-day studio floor bookings' },
                 ],
             },
         ],
