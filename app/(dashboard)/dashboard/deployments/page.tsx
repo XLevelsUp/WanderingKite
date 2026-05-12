@@ -51,10 +51,10 @@ function StatCard({
         />
       </div>
       <div>
-        <p className='text-2xl font-bold text-foreground/90 tabular-nums'>
+        <p className="text-2xl font-bold text-foreground/90 tabular-nums">
           {value}
         </p>
-        <p className='text-xs text-foreground/40 mt-0.5'>{label}</p>
+        <p className="text-xs text-foreground/40 mt-0.5">{label}</p>
       </div>
     </div>
   );
@@ -95,29 +95,29 @@ export default async function DeploymentsPage() {
   const activeEmployees = groups.length;
   const overdueCount = groups.reduce(
     (acc, g) => acc + g.assignments.filter((a) => a.isOverdue).length,
-    0,
+    0
   );
 
   return (
-    <div className='space-y-8'>
+    <div className="space-y-8">
       {/* ── Page Header ── */}
-      <div className='flex items-start justify-between gap-4'>
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <div className='flex items-center gap-2.5 mb-1.5'>
-            <div className='flex items-center justify-center w-9 h-9 rounded-xl bg-primary/12 ring-1 ring-primary/20'>
-              <Radio className='w-4.5 h-4.5 text-primary' />
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/12 ring-1 ring-primary/20">
+              <Radio className="w-4.5 h-4.5 text-primary" />
             </div>
-            <h1 className='text-2xl font-bold text-foreground/90 tracking-tight'>
+            <h1 className="text-2xl font-bold text-foreground/90 tracking-tight">
               Field Operations
             </h1>
           </div>
-          <p className='text-sm text-foreground/45 ml-11.5'>
+          <p className="text-sm text-foreground/45 ml-11.5">
             Live deployment matrix — equipment currently in the field
           </p>
         </div>
 
         {/* Right side: Live indicator + Assign button */}
-        <div className='flex items-center gap-3 flex-shrink-0 mt-1'>
+        <div className="flex items-center gap-3 flex-shrink-0 mt-1">
           {isAdmin && (
             <AssignEquipmentModal
               employees={formData.employees as any}
@@ -125,43 +125,43 @@ export default async function DeploymentsPage() {
               clients={formData.clients as any}
             />
           )}
-          <div className='flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/8'>
-            <span className='w-2 h-2 rounded-full bg-emerald-400 animate-pulse' />
-            <span className='text-xs text-foreground/40 font-medium'>Live</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/8">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-xs text-foreground/40 font-medium">Live</span>
           </div>
         </div>
       </div>
 
       {/* ── Stats Row ── */}
-      <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           icon={Package}
-          label='Active Deployments'
+          label="Active Deployments"
           value={totalDeployments}
         />
         <StatCard
           icon={Users}
-          label='Photographers in Field'
+          label="Photographers in Field"
           value={activeEmployees}
         />
         <StatCard
           icon={AlertTriangle}
-          label='Overdue Returns'
+          label="Overdue Returns"
           value={overdueCount}
           accent={overdueCount > 0}
         />
       </div>
 
       {/* ── Section Label ── */}
-      <div className='flex items-center gap-3'>
-        <div className='flex items-center gap-2'>
-          <Camera className='w-4 h-4 text-foreground/30' />
-          <span className='text-xs font-semibold text-foreground/35 uppercase tracking-widest'>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Camera className="w-4 h-4 text-foreground/30" />
+          <span className="text-xs font-semibold text-foreground/35 uppercase tracking-widest">
             Deployment Matrix
           </span>
         </div>
-        <div className='flex-1 h-px bg-white/6' />
-        <span className='text-xs text-foreground/25 tabular-nums'>
+        <div className="flex-1 h-px bg-white/6" />
+        <span className="text-xs text-foreground/25 tabular-nums">
           {totalDeployments} item{totalDeployments !== 1 ? 's' : ''} across{' '}
           {activeEmployees} employee{activeEmployees !== 1 ? 's' : ''}
         </span>

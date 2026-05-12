@@ -8,7 +8,8 @@ import { useNotify } from '@/hooks/useNotify';
 import { Loader2 } from 'lucide-react';
 
 export function RentalCartSummary() {
-  const { selectedItems, subtotal, gst, finalTotal, clearCart } = useRentalCart();
+  const { selectedItems, subtotal, gst, finalTotal, clearCart } =
+    useRentalCart();
   const [isLoading, setIsLoading] = useState(false);
   const { showError, showInfo } = useNotify();
 
@@ -17,7 +18,9 @@ export function RentalCartSummary() {
   const formatINR = (val: number) => `₹${val.toLocaleString('en-IN')}`;
 
   const generateBookingMessage = () => {
-    const itemNames = Array.from(selectedItems.values()).map(item => item.name).join(', ');
+    const itemNames = Array.from(selectedItems.values())
+      .map((item) => item.name)
+      .join(', ');
     return `Hi! I'd like to request a rental booking for the following equipment:\n\n[ ${itemNames} ]\n\nTotal Estimated Rate: ${formatINR(Math.round(finalTotal))} (incl. GST) / day.`;
   };
 
@@ -27,13 +30,19 @@ export function RentalCartSummary() {
 
     try {
       timeoutId = setTimeout(() => {
-        showInfo("This is taking longer than usual. Please check your connection.");
+        showInfo(
+          'This is taking longer than usual. Please check your connection.'
+        );
       }, 8000);
 
-      await new Promise(resolve => setTimeout(resolve, 300));
-      window.open(generateWhatsAppLink('rentals', generateBookingMessage()), '_blank', 'noopener,noreferrer');
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      window.open(
+        generateWhatsAppLink('rentals', generateBookingMessage()),
+        '_blank',
+        'noopener,noreferrer'
+      );
     } catch (error) {
-      showError("Failed to initiate booking request. Please try again.");
+      showError('Failed to initiate booking request. Please try again.');
     } finally {
       clearTimeout(timeoutId!);
       setIsLoading(false);
@@ -41,7 +50,7 @@ export function RentalCartSummary() {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 100, opacity: 0 }}
@@ -49,35 +58,42 @@ export function RentalCartSummary() {
     >
       <div className="container mx-auto max-w-5xl">
         <div className="pointer-events-auto rounded-2xl border border-warning/30 bg-zinc-950/95 backdrop-blur-xl p-4 md:p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex flex-col md:flex-row items-center justify-between gap-6">
-          
           <div className="flex-1 w-full">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">Estimated Total (Per Day)</h4>
-              <button 
+              <h4 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
+                Estimated Total (Per Day)
+              </h4>
+              <button
                 onClick={clearCart}
                 className="text-xs text-zinc-500 hover:text-red-400 transition-colors"
               >
                 Clear Cart
               </button>
             </div>
-            
+
             <div className="flex flex-wrap items-end gap-6 sm:gap-12">
               <div>
                 <p className="text-zinc-500 text-xs mb-1">Items</p>
-                <p className="font-mono text-lg text-white">{selectedItems.size}</p>
+                <p className="font-mono text-lg text-white">
+                  {selectedItems.size}
+                </p>
               </div>
               <div>
                 <p className="text-zinc-500 text-xs mb-1">Subtotal</p>
-                <p className="font-mono text-lg text-zinc-300">{formatINR(subtotal)}</p>
+                <p className="font-mono text-lg text-zinc-300">
+                  {formatINR(subtotal)}
+                </p>
               </div>
               <div>
                 <p className="text-zinc-500 text-xs mb-1">GST (18%)</p>
-                <p className="font-mono text-lg text-zinc-500">{formatINR(Math.round(gst))}</p>
+                <p className="font-mono text-lg text-zinc-500">
+                  {formatINR(Math.round(gst))}
+                </p>
               </div>
               <div>
                 <p className="text-white text-sm mb-1 font-bold">Total</p>
                 <AnimatePresence mode="popLayout">
-                  <motion.span 
+                  <motion.span
                     key={finalTotal}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -90,7 +106,7 @@ export function RentalCartSummary() {
               </div>
             </div>
           </div>
-          
+
           <div className="w-full md:w-auto flex flex-col items-center flex-shrink-0">
             <button
               onClick={handleBookingRequest}
@@ -98,7 +114,7 @@ export function RentalCartSummary() {
               className="w-full md:w-auto flex items-center justify-center gap-2 rounded-full bg-warning px-8 py-4 text-center font-bold text-warning-foreground transition-all hover:opacity-90 hover:shadow-[0_0_30px_-5px_hsl(var(--color-warning)/0.5)] whitespace-nowrap disabled:opacity-50 disabled:pointer-events-none"
             >
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {isLoading ? "Opening..." : "Request Booking"}
+              {isLoading ? 'Opening...' : 'Request Booking'}
             </button>
             <p className="text-xs text-zinc-500 mt-2">No payment required</p>
           </div>

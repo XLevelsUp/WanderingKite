@@ -2,7 +2,7 @@ import { siteConfig } from '@/config/site';
 
 export function generateWhatsAppLink(
   service?: string,
-  customMessage?: string,
+  customMessage?: string
 ): string {
   const baseMessage = customMessage || getDefaultMessage(service);
   const encodedMessage = encodeURIComponent(baseMessage);

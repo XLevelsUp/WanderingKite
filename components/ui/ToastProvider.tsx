@@ -14,38 +14,57 @@ interface ToastContextType {
   removeToast: (id: string) => void;
 }
 
-export const ToastContext = createContext<ToastContextType | undefined>(undefined);
+export const ToastContext = createContext<ToastContextType | undefined>(
+  undefined
+);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastProps[]>([]);
 
-  const addToast = useCallback((props: OmittedToastProps & { variant: ToastProps['variant'] }) => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { ...props, id, onClose: removeToast }]);
-  }, []);
+  const addToast = useCallback(
+    (props: OmittedToastProps & { variant: ToastProps['variant'] }) => {
+      const id = Math.random().toString(36).substring(2, 9);
+      setToasts((prev) => [...prev, { ...props, id, onClose: removeToast }]);
+    },
+    []
+  );
 
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const showSuccess = useCallback((title: string, options?: OmittedToastProps) => {
-    addToast({ title, variant: 'success', ...options });
-  }, [addToast]);
+  const showSuccess = useCallback(
+    (title: string, options?: OmittedToastProps) => {
+      addToast({ title, variant: 'success', ...options });
+    },
+    [addToast]
+  );
 
-  const showError = useCallback((title: string, options?: OmittedToastProps) => {
-    addToast({ title, variant: 'error', ...options });
-  }, [addToast]);
+  const showError = useCallback(
+    (title: string, options?: OmittedToastProps) => {
+      addToast({ title, variant: 'error', ...options });
+    },
+    [addToast]
+  );
 
-  const showWarning = useCallback((title: string, options?: OmittedToastProps) => {
-    addToast({ title, variant: 'warning', ...options });
-  }, [addToast]);
+  const showWarning = useCallback(
+    (title: string, options?: OmittedToastProps) => {
+      addToast({ title, variant: 'warning', ...options });
+    },
+    [addToast]
+  );
 
-  const showInfo = useCallback((title: string, options?: OmittedToastProps) => {
-    addToast({ title, variant: 'info', ...options });
-  }, [addToast]);
+  const showInfo = useCallback(
+    (title: string, options?: OmittedToastProps) => {
+      addToast({ title, variant: 'info', ...options });
+    },
+    [addToast]
+  );
 
   return (
-    <ToastContext.Provider value={{ showSuccess, showError, showWarning, showInfo, removeToast }}>
+    <ToastContext.Provider
+      value={{ showSuccess, showError, showWarning, showInfo, removeToast }}
+    >
       {children}
       <div
         aria-live="assertive"

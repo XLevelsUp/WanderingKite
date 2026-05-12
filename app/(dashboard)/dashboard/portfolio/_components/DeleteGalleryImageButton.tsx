@@ -5,7 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { deleteGalleryImage } from '@/actions/shoots';
 
-export function DeleteGalleryImageButton({ id, shootId }: { id: string; shootId: string }) {
+export function DeleteGalleryImageButton({
+  id,
+  shootId,
+}: {
+  id: string;
+  shootId: string;
+}) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {

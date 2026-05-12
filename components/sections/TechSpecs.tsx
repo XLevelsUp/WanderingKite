@@ -1,31 +1,31 @@
-"use client";
+'use client';
 
-import { FadeIn } from "@/components/animations/FadeIn";
-import { StaggerContainer } from "@/components/animations/StaggerContainer";
-import { motion } from "framer-motion";
-import { Camera, Video, Mic, Zap } from "lucide-react";
+import { FadeIn } from '@/components/animations/FadeIn';
+import { StaggerContainer } from '@/components/animations/StaggerContainer';
+import { motion } from 'framer-motion';
+import { Camera, Video, Mic, Zap } from 'lucide-react';
 
 const gear = [
   {
-    name: "Sony G-Master Lenses",
-    category: "Optics",
-    badge: "Industry Standard",
+    name: 'Sony G-Master Lenses',
+    category: 'Optics',
+    badge: 'Industry Standard',
     icon: Camera,
-    specs: ["f/1.4-2.8", "Full-Frame", "OSS"],
+    specs: ['f/1.4-2.8', 'Full-Frame', 'OSS'],
   },
   {
-    name: "Rode NTG & Procaster",
-    category: "Audio",
-    badge: "Broadcast Quality",
+    name: 'Rode NTG & Procaster',
+    category: 'Audio',
+    badge: 'Broadcast Quality',
     icon: Mic,
-    specs: ["XLR", "Low Noise", "Phantom Power"],
+    specs: ['XLR', 'Low Noise', 'Phantom Power'],
   },
   {
-    name: "Aputure LED Panels",
-    category: "Lighting",
-    badge: "CRI 96+",
+    name: 'Aputure LED Panels',
+    category: 'Lighting',
+    badge: 'CRI 96+',
     icon: Zap,
-    specs: ["Bi-Color", "DMX Control", "Wireless"],
+    specs: ['Bi-Color', 'DMX Control', 'Wireless'],
   },
 ];
 

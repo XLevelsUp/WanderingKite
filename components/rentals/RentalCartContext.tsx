@@ -1,6 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+} from 'react';
 
 export interface CartItem {
   id: string;
@@ -17,10 +23,18 @@ interface RentalCartContextType {
   finalTotal: number;
 }
 
-const RentalCartContext = createContext<RentalCartContextType | undefined>(undefined);
+const RentalCartContext = createContext<RentalCartContextType | undefined>(
+  undefined
+);
 
-export function RentalCartProvider({ children }: { children: React.ReactNode }) {
-  const [selectedItems, setSelectedItems] = useState<Map<string, CartItem>>(new Map());
+export function RentalCartProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [selectedItems, setSelectedItems] = useState<Map<string, CartItem>>(
+    new Map()
+  );
 
   const toggleItem = useCallback((item: CartItem) => {
     setSelectedItems((prev) => {
@@ -50,7 +64,16 @@ export function RentalCartProvider({ children }: { children: React.ReactNode }) 
   const finalTotal = subtotal + gst;
 
   return (
-    <RentalCartContext.Provider value={{ selectedItems, toggleItem, clearCart, subtotal, gst, finalTotal }}>
+    <RentalCartContext.Provider
+      value={{
+        selectedItems,
+        toggleItem,
+        clearCart,
+        subtotal,
+        gst,
+        finalTotal,
+      }}
+    >
       {children}
     </RentalCartContext.Provider>
   );

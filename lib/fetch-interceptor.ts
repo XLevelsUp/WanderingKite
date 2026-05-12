@@ -68,7 +68,10 @@ export function setupFetchInterceptor(config: FetchInterceptorConfig) {
           : input.url;
 
     // Fast pass-through for skipped requests or non-owned requests
-    if (init?.skipInterceptor || !isOwnedRequest(urlStr, config.allowedOrigins, config.allowedPrefixes)) {
+    if (
+      init?.skipInterceptor ||
+      !isOwnedRequest(urlStr, config.allowedOrigins, config.allowedPrefixes)
+    ) {
       return _originalFetch(input, init);
     }
 
@@ -86,25 +89,41 @@ export function setupFetchInterceptor(config: FetchInterceptorConfig) {
             config.onAuthError();
             break;
           case 403:
-            config.onError(response.status, urlStr, "You don't have permission to do that.");
+            config.onError(
+              response.status,
+              urlStr,
+              "You don't have permission to do that."
+            );
             break;
           case 404:
             // Handled mostly by silentCodes or custom logic if needed, but default is generic error
             // As per instructions, suppress silently if background. We rely on silentCodes=[404] if we want to suppress all.
             // If not suppressed, show error.
             if (!config.silentCodes.includes(404)) {
-              config.onError(response.status, urlStr, "Resource not found.");
+              config.onError(response.status, urlStr, 'Resource not found.');
             }
             break;
           case 429:
-            config.onError(response.status, urlStr, "Too many requests. Please wait a moment.");
+            config.onError(
+              response.status,
+              urlStr,
+              'Too many requests. Please wait a moment.'
+            );
             break;
           default:
             if (response.status >= 500) {
-              config.onError(response.status, urlStr, "Something went wrong on our end. Please try again.");
+              config.onError(
+                response.status,
+                urlStr,
+                'Something went wrong on our end. Please try again.'
+              );
             } else {
               // 400 Bad Request or other 4xx
-              config.onError(response.status, urlStr, "Something went wrong. Please try again.");
+              config.onError(
+                response.status,
+                urlStr,
+                'Something went wrong. Please try again.'
+              );
             }
             break;
         }
@@ -118,8 +137,8 @@ export function setupFetchInterceptor(config: FetchInterceptorConfig) {
       }
 
       // Network timeout / no response
-      config.onError(0, urlStr, "Request timed out. Check your connection.");
-      
+      config.onError(0, urlStr, 'Request timed out. Check your connection.');
+
       throw error;
     }
   };

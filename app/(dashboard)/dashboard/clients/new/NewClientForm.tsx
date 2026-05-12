@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { createNewClient } from "@/actions/clients";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { useState } from 'react';
+import { createNewClient } from '@/actions/clients';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { useRouter } from "next/navigation";
-import { useNotify } from "@/hooks/useNotify";
-import { Loader2 } from "lucide-react";
+} from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
+import { useNotify } from '@/hooks/useNotify';
+import { Loader2 } from 'lucide-react';
 
 export function NewClientForm() {
   const router = useRouter();
@@ -30,17 +30,17 @@ export function NewClientForm() {
     try {
       timeoutId = setTimeout(() => {
         showInfo(
-          "This is taking longer than usual. Please check your connection.",
+          'This is taking longer than usual. Please check your connection.'
         );
       }, 8000);
 
       const formData = new FormData(e.currentTarget);
       await createNewClient(formData);
-      showSuccess("Client created successfully");
-      router.push("/dashboard/clients");
+      showSuccess('Client created successfully');
+      router.push('/dashboard/clients');
       router.refresh();
     } catch (err: any) {
-      showError(err.message || "Failed to create client");
+      showError(err.message || 'Failed to create client');
     } finally {
       clearTimeout(timeoutId!);
       setIsLoading(false);
@@ -115,7 +115,7 @@ export function NewClientForm() {
           <div className="flex gap-4 pt-4">
             <Button type="submit" disabled={isLoading} className="gap-2">
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {isLoading ? "Creating..." : "Create Client"}
+              {isLoading ? 'Creating...' : 'Create Client'}
             </Button>
             <Button
               type="button"

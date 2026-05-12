@@ -1,29 +1,29 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { createEquipment } from "@/actions/equipment";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { useState } from 'react';
+import { createEquipment } from '@/actions/equipment';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { useRouter } from "next/navigation";
-import { ImageUpload } from "@/components/shared/ImageUpload";
-import { useNotify } from "@/hooks/useNotify";
-import { Loader2 } from "lucide-react";
+} from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
+import { ImageUpload } from '@/components/shared/ImageUpload';
+import { useNotify } from '@/hooks/useNotify';
+import { Loader2 } from 'lucide-react';
 
 interface NewEquipmentFormProps {
   categories: Array<{ id: string; name: string }>;
@@ -42,7 +42,7 @@ function ImageUploadField({
   defaultValue?: string;
   disabled?: boolean;
 }) {
-  const [url, setUrl] = useState(defaultValue ?? "");
+  const [url, setUrl] = useState(defaultValue ?? '');
   return (
     <>
       <input type="hidden" name={name} value={url} />
@@ -63,8 +63,8 @@ export function NewEquipmentForm({
 }: NewEquipmentFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedBranch, setSelectedBranch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedBranch, setSelectedBranch] = useState('');
   const { showError, showInfo, showSuccess } = useNotify();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -75,20 +75,20 @@ export function NewEquipmentForm({
     try {
       timeoutId = setTimeout(() => {
         showInfo(
-          "This is taking longer than usual. Please check your connection.",
+          'This is taking longer than usual. Please check your connection.'
         );
       }, 8000);
 
       const formData = new FormData(e.currentTarget);
-      formData.set("category_id", selectedCategory);
-      formData.set("branch_id", selectedBranch);
+      formData.set('category_id', selectedCategory);
+      formData.set('branch_id', selectedBranch);
 
       await createEquipment(formData);
-      showSuccess("Equipment created successfully");
-      router.push("/dashboard/equipment");
+      showSuccess('Equipment created successfully');
+      router.push('/dashboard/equipment');
       router.refresh();
     } catch (err: any) {
-      showError(err.message || "Failed to create equipment");
+      showError(err.message || 'Failed to create equipment');
     } finally {
       clearTimeout(timeoutId!);
       setIsLoading(false);
@@ -234,7 +234,7 @@ export function NewEquipmentForm({
           <div className="flex gap-4 pt-4">
             <Button type="submit" disabled={isLoading} className="gap-2">
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {isLoading ? "Creating..." : "Create Equipment"}
+              {isLoading ? 'Creating...' : 'Create Equipment'}
             </Button>
             <Button
               type="button"

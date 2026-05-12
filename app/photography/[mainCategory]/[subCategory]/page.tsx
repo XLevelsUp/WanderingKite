@@ -1,107 +1,107 @@
-import { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { GalleryTemplate } from "@/components/sections/GalleryTemplate";
-import { getShootsBySubCategory } from "@/actions/shoots";
-import { Footer } from "@/components/shared/Footer";
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { GalleryTemplate } from '@/components/sections/GalleryTemplate';
+import { getShootsBySubCategory } from '@/actions/shoots';
+import { Footer } from '@/components/shared/Footer';
 
 const categoryData = {
   events: {
-    title: "Event Photography",
+    title: 'Event Photography',
     subCategories: [
       {
-        id: "wedding",
-        title: "Wedding",
-        description: "Full-day coverage with premium editing",
+        id: 'wedding',
+        title: 'Wedding',
+        description: 'Full-day coverage with premium editing',
       },
       {
-        id: "engagements",
-        title: "Engagements",
-        description: "Intimate pre-wedding sessions",
+        id: 'engagements',
+        title: 'Engagements',
+        description: 'Intimate pre-wedding sessions',
       },
       {
-        id: "birthdays",
-        title: "Birthdays",
-        description: "Birthday milestones & parties",
+        id: 'birthdays',
+        title: 'Birthdays',
+        description: 'Birthday milestones & parties',
       },
       {
-        id: "house-warming",
-        title: "House Warming",
-        description: "Memorable house warming ceremonies",
+        id: 'house-warming',
+        title: 'House Warming',
+        description: 'Memorable house warming ceremonies',
       },
       {
-        id: "puberty-ceremonies",
-        title: "Puberty Ceremonies",
-        description: "Traditional puberty ceremony coverage",
+        id: 'puberty-ceremonies',
+        title: 'Puberty Ceremonies',
+        description: 'Traditional puberty ceremony coverage',
       },
     ],
   },
   portraits: {
-    title: "Portrait Sessions",
+    title: 'Portrait Sessions',
     subCategories: [
       {
-        id: "family",
-        title: "Family",
-        description: "Studio & outdoor family portrait sessions",
+        id: 'family',
+        title: 'Family',
+        description: 'Studio & outdoor family portrait sessions',
       },
       {
-        id: "maternity",
-        title: "Maternity",
-        description: "Elegant maternity & expecting mother shoots",
+        id: 'maternity',
+        title: 'Maternity',
+        description: 'Elegant maternity & expecting mother shoots',
       },
       {
-        id: "baby-shoots",
-        title: "Baby Shoots",
-        description: "Safe, gentle newborn photography",
+        id: 'baby-shoots',
+        title: 'Baby Shoots',
+        description: 'Safe, gentle newborn photography',
       },
     ],
   },
   corporate: {
-    title: "Corporate & Brand",
+    title: 'Corporate & Brand',
     subCategories: [
       {
-        id: "product",
-        title: "Product",
-        description: "E-commerce & catalogue product photography",
+        id: 'product',
+        title: 'Product',
+        description: 'E-commerce & catalogue product photography',
       },
       {
-        id: "cinematic-videos",
-        title: "Cinematic Videos",
-        description: "Brand films & corporate video",
+        id: 'cinematic-videos',
+        title: 'Cinematic Videos',
+        description: 'Brand films & corporate video',
       },
       {
-        id: "social-media",
-        title: "Social Media Content",
-        description: "Platform-ready reels & posts",
+        id: 'social-media',
+        title: 'Social Media Content',
+        description: 'Platform-ready reels & posts',
       },
       {
-        id: "model-shoots",
-        title: "Model Shoots",
-        description: "Fashion & model portfolio sessions",
+        id: 'model-shoots',
+        title: 'Model Shoots',
+        description: 'Fashion & model portfolio sessions',
       },
       {
-        id: "headshots",
-        title: "Headshots",
-        description: "Professional headshots for teams",
+        id: 'headshots',
+        title: 'Headshots',
+        description: 'Professional headshots for teams',
       },
     ],
   },
   commercial: {
-    title: "Commercial Productions",
+    title: 'Commercial Productions',
     subCategories: [
       {
-        id: "ads",
-        title: "Ads",
-        description: "High-concept advertisement productions",
+        id: 'ads',
+        title: 'Ads',
+        description: 'High-concept advertisement productions',
       },
       {
-        id: "music-videos",
-        title: "Music Videos",
-        description: "Full-production music videos",
+        id: 'music-videos',
+        title: 'Music Videos',
+        description: 'Full-production music videos',
       },
       {
-        id: "short-films",
-        title: "Short Films",
-        description: "Narrative short film production",
+        id: 'short-films',
+        title: 'Short Films',
+        description: 'Narrative short film production',
       },
     ],
   },
@@ -119,7 +119,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!category || !sub) {
     return {
-      title: "Category Not Found | Wandering Kite Studio",
+      title: 'Category Not Found | Wandering Kite Studio',
     };
   }
 
@@ -136,7 +136,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: `Professional ${sub.title} Photographer in Coimbatore`,
       description: `Professional ${sub.title} photography in Coimbatore. ${sub.description}.`,
-      images: ["/og-photography.jpg"],
+      images: ['/og-photography.jpg'],
     },
   };
 }
@@ -152,19 +152,19 @@ export default async function SubCategoryPage({ params }: Props) {
   }
 
   const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "ImageGallery",
+    '@context': 'https://schema.org',
+    '@type': 'ImageGallery',
     name: `${sub.title} Portfolio`,
     description: `Gallery of ${sub.title} by Wandering Kite Studio.`,
     url: `https://wanderingkite.in/photography/${mainCategory}/${subCategory}`,
     provider: {
-      "@type": "LocalBusiness",
-      name: "Wandering Kite Studio",
+      '@type': 'LocalBusiness',
+      name: 'Wandering Kite Studio',
       address: {
-        "@type": "PostalAddress",
-        addressLocality: "Coimbatore",
-        addressRegion: "Tamil Nadu",
-        addressCountry: "IN",
+        '@type': 'PostalAddress',
+        addressLocality: 'Coimbatore',
+        addressRegion: 'Tamil Nadu',
+        addressCountry: 'IN',
       },
     },
   };

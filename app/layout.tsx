@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     'geo.region': 'IN-TN',
     'geo.placename': 'Coimbatore',
     'geo.position': '11.0168;76.9558',
-    'ICBM': '11.0168, 76.9558',
+    ICBM: '11.0168, 76.9558',
   },
   openGraph: {
     type: 'website',
@@ -229,7 +229,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang='en' className='dark'>
+    <html lang="en" className="dark">
       <head>
         <ThemeProvider />
       </head>
@@ -239,9 +239,9 @@ export default function RootLayout({
           <>
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-              strategy='afterInteractive'
+              strategy="afterInteractive"
             />
-            <Script id='google-analytics' strategy='afterInteractive'>
+            <Script id="google-analytics" strategy="afterInteractive">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
@@ -260,7 +260,7 @@ export default function RootLayout({
           </>
         )}
         <script
-          type='application/ld+json'
+          type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
         <NotificationProvider>

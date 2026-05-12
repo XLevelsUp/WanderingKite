@@ -1,24 +1,24 @@
-"use client";
+'use client';
 
-import { FadeIn } from "@/components/animations/FadeIn";
-import { Check } from "lucide-react";
+import { FadeIn } from '@/components/animations/FadeIn';
+import { Check } from 'lucide-react';
 
 const steps = [
   {
-    number: "01",
-    title: "Browse & Select",
+    number: '01',
+    title: 'Browse & Select',
     description:
-      "Explore our equipment catalog or studio spaces. Check specs, pricing, and availability.",
+      'Explore our equipment catalog or studio spaces. Check specs, pricing, and availability.',
   },
   {
-    number: "02",
-    title: "Check Availability",
+    number: '02',
+    title: 'Check Availability',
     description:
-      "View real-time availability for your preferred dates. No hidden surprises.",
+      'View real-time availability for your preferred dates. No hidden surprises.',
   },
   {
-    number: "03",
-    title: "Book via WhatsApp",
+    number: '03',
+    title: 'Book via WhatsApp',
     description:
       "Tap 'Book Now' to open WhatsApp with pre-filled details. Confirm and you're set!",
   },
@@ -108,7 +108,7 @@ export function HowItWorks() {
         <FadeIn delay={0.5}>
           <div className="mt-12 text-center">
             <p className="text-sm text-foreground/45">
-              Average booking time:{" "}
+              Average booking time:{' '}
               <span className="font-semibold text-foreground">5 minutes</span>
             </p>
           </div>

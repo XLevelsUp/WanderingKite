@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import Link from "next/link";
+import Image from 'next/image';
+import Link from 'next/link';
 import {
   MapPin,
   Mail,
@@ -11,19 +11,19 @@ import {
   Linkedin,
   Clock,
   ShieldCheck,
-} from "lucide-react";
-import { siteConfig } from "@/config/site";
+} from 'lucide-react';
+import { siteConfig } from '@/config/site';
 
 const services = [
-  { name: "Photography", href: "/photography" },
+  { name: 'Photography', href: '/photography' },
   //{ name: "Equipment Rentals", href: "/rentals" },
-  { name: "Studio Space", href: "/studiospace" },
-  { name: "Podcast Studio", href: "/podcast" },
+  { name: 'Studio Space', href: '/studiospace' },
+  { name: 'Podcast Studio', href: '/podcast' },
 ];
 
 const legal = [
-  { name: "Privacy Policy", href: "/privacy" },
-  { name: "Rental Terms", href: "/terms" },
+  { name: 'Privacy Policy', href: '/privacy' },
+  { name: 'Rental Terms', href: '/terms' },
 ];
 
 export function Footer() {
@@ -50,7 +50,7 @@ export function Footer() {
               className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-4 font-semibold text-foreground transition-all hover:from-purple-500 hover:to-pink-500 hover:shadow-lg hover:shadow-pink-500/50"
             >
               <Instagram className="h-5 w-5" />
-              Follow @{siteConfig.name.toLowerCase().replace(/\s+/g, "")}
+              Follow @{siteConfig.name.toLowerCase().replace(/\s+/g, '')}
             </a>
             <p className="mt-4 text-xs text-muted-foreground">
               DM us "FIRST10" after following to claim your discount
@@ -134,8 +134,8 @@ export function Footer() {
                 <span>
                   {siteConfig.contact.address.street}
                   <br />
-                  {siteConfig.contact.address.city},{" "}
-                  {siteConfig.contact.address.state}{" "}
+                  {siteConfig.contact.address.city},{' '}
+                  {siteConfig.contact.address.state}{' '}
                   {siteConfig.contact.address.zip}
                 </span>
               </li>
@@ -160,7 +160,7 @@ export function Footer() {
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
                 <a
-                  href={`tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, "")}`}
+                  href={`tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`}
                   className="hover:text-foreground"
                 >
                   {siteConfig.contact.phone}
@@ -223,7 +223,7 @@ export function Footer() {
                 <span className="sr-only">Admin Dashboard</span>
               </Link>
               <p className="text-sm text-muted-foreground">
-                Built with ❤️ by{" "}
+                Built with ❤️ by{' '}
                 <a
                   href="https://xlevelsup.com"
                   target="_blank"

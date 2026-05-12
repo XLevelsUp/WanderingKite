@@ -1,129 +1,129 @@
-import { Metadata } from "next";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { Camera, ArrowLeft } from "lucide-react";
-import Image from "next/image";
-import { Footer } from "@/components/shared/Footer";
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { Camera, ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
+import { Footer } from '@/components/shared/Footer';
 
 const categoryData = {
   events: {
-    title: "Event Photography",
+    title: 'Event Photography',
     description:
-      "Professional event photography in Coimbatore. We capture your special moments.",
+      'Professional event photography in Coimbatore. We capture your special moments.',
     subCategories: [
       {
-        id: "wedding",
-        title: "Wedding",
-        description: "Full-day coverage with premium editing",
-        span: "col-span-2 row-span-2",
+        id: 'wedding',
+        title: 'Wedding',
+        description: 'Full-day coverage with premium editing',
+        span: 'col-span-2 row-span-2',
       },
       {
-        id: "engagements",
-        title: "Engagements",
-        description: "Intimate pre-wedding sessions",
-        span: "col-span-1 row-span-1",
+        id: 'engagements',
+        title: 'Engagements',
+        description: 'Intimate pre-wedding sessions',
+        span: 'col-span-1 row-span-1',
       },
       {
-        id: "birthdays",
-        title: "Birthdays",
-        description: "Birthday milestones & parties",
-        span: "col-span-1 row-span-1",
+        id: 'birthdays',
+        title: 'Birthdays',
+        description: 'Birthday milestones & parties',
+        span: 'col-span-1 row-span-1',
       },
       {
-        id: "house-warming",
-        title: "House Warming",
-        description: "Memorable house warming ceremonies",
-        span: "col-span-1 row-span-1",
+        id: 'house-warming',
+        title: 'House Warming',
+        description: 'Memorable house warming ceremonies',
+        span: 'col-span-1 row-span-1',
       },
       {
-        id: "puberty-ceremonies",
-        title: "Puberty Ceremonies",
-        description: "Traditional puberty ceremony coverage",
-        span: "col-span-2 row-span-1",
+        id: 'puberty-ceremonies',
+        title: 'Puberty Ceremonies',
+        description: 'Traditional puberty ceremony coverage',
+        span: 'col-span-2 row-span-1',
       },
     ],
   },
   portraits: {
-    title: "Portrait Sessions",
-    description: "Elegant portrait photography tailored for you.",
+    title: 'Portrait Sessions',
+    description: 'Elegant portrait photography tailored for you.',
     subCategories: [
       {
-        id: "family",
-        title: "Family",
-        description: "Studio & outdoor family portrait sessions",
-        span: "col-span-2 row-span-2",
+        id: 'family',
+        title: 'Family',
+        description: 'Studio & outdoor family portrait sessions',
+        span: 'col-span-2 row-span-2',
       },
       {
-        id: "maternity",
-        title: "Maternity",
-        description: "Elegant maternity & expecting mother shoots",
-        span: "col-span-1 row-span-1",
+        id: 'maternity',
+        title: 'Maternity',
+        description: 'Elegant maternity & expecting mother shoots',
+        span: 'col-span-1 row-span-1',
       },
       {
-        id: "baby-shoots",
-        title: "Baby Shoots",
-        description: "Safe, gentle newborn photography",
-        span: "col-span-1 row-span-1",
+        id: 'baby-shoots',
+        title: 'Baby Shoots',
+        description: 'Safe, gentle newborn photography',
+        span: 'col-span-1 row-span-1',
       },
     ],
   },
   corporate: {
-    title: "Corporate & Brand",
-    description: "High-quality corporate and brand photography services.",
+    title: 'Corporate & Brand',
+    description: 'High-quality corporate and brand photography services.',
     subCategories: [
       {
-        id: "product",
-        title: "Product",
-        description: "E-commerce & catalogue product photography",
-        span: "col-span-2 row-span-2",
+        id: 'product',
+        title: 'Product',
+        description: 'E-commerce & catalogue product photography',
+        span: 'col-span-2 row-span-2',
       },
       {
-        id: "cinematic-videos",
-        title: "Cinematic Videos",
-        description: "Brand films & corporate video",
-        span: "col-span-1 row-span-1",
+        id: 'cinematic-videos',
+        title: 'Cinematic Videos',
+        description: 'Brand films & corporate video',
+        span: 'col-span-1 row-span-1',
       },
       {
-        id: "social-media",
-        title: "Social Media Content",
-        description: "Platform-ready reels & posts",
-        span: "col-span-1 row-span-1",
+        id: 'social-media',
+        title: 'Social Media Content',
+        description: 'Platform-ready reels & posts',
+        span: 'col-span-1 row-span-1',
       },
       {
-        id: "model-shoots",
-        title: "Model Shoots",
-        description: "Fashion & model portfolio sessions",
-        span: "col-span-2 row-span-1",
+        id: 'model-shoots',
+        title: 'Model Shoots',
+        description: 'Fashion & model portfolio sessions',
+        span: 'col-span-2 row-span-1',
       },
       {
-        id: "headshots",
-        title: "Headshots",
-        description: "Professional headshots for teams",
-        span: "col-span-1 row-span-1",
+        id: 'headshots',
+        title: 'Headshots',
+        description: 'Professional headshots for teams',
+        span: 'col-span-1 row-span-1',
       },
     ],
   },
   commercial: {
-    title: "Commercial Productions",
-    description: "High-concept commercial photography and video productions.",
+    title: 'Commercial Productions',
+    description: 'High-concept commercial photography and video productions.',
     subCategories: [
       {
-        id: "ads",
-        title: "Ads",
-        description: "High-concept advertisement productions",
-        span: "col-span-2 row-span-2",
+        id: 'ads',
+        title: 'Ads',
+        description: 'High-concept advertisement productions',
+        span: 'col-span-2 row-span-2',
       },
       {
-        id: "music-videos",
-        title: "Music Videos",
-        description: "Full-production music videos",
-        span: "col-span-1 row-span-1",
+        id: 'music-videos',
+        title: 'Music Videos',
+        description: 'Full-production music videos',
+        span: 'col-span-1 row-span-1',
       },
       {
-        id: "short-films",
-        title: "Short Films",
-        description: "Narrative short film production",
-        span: "col-span-1 row-span-1",
+        id: 'short-films',
+        title: 'Short Films',
+        description: 'Narrative short film production',
+        span: 'col-span-1 row-span-1',
       },
     ],
   },
@@ -140,7 +140,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!category) {
     return {
-      title: "Category Not Found | Wandering Kite Studio",
+      title: 'Category Not Found | Wandering Kite Studio',
     };
   }
 

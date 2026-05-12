@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useCallback, useRef, useState } from "react";
-import Image from "next/image";
-import { createClient } from "@/lib/supabase/client";
+import { useCallback, useRef, useState } from 'react';
+import Image from 'next/image';
+import { createClient } from '@/lib/supabase/client';
 import {
   Upload,
   X,
@@ -10,8 +10,8 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-} from "lucide-react";
-import { useNotify } from "@/hooks/useNotify";
+} from 'lucide-react';
+import { useNotify } from '@/hooks/useNotify';
 
 interface ImageUploadProps {
   /** Current image URL (from DB). Controls the visible preview on load. */
@@ -26,31 +26,31 @@ interface ImageUploadProps {
   disabled?: boolean;
 }
 
-type UploadState = "idle" | "uploading" | "success" | "error";
+type UploadState = 'idle' | 'uploading' | 'success' | 'error';
 
 const ACCEPTED = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-  "image/dng",
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/dng',
 ];
 const MAX_MB = 50;
 
 async function compressImage(
   file: File,
   maxWidthPx = 1920,
-  qualityJpeg = 0.82,
+  qualityJpeg = 0.82
 ): Promise<File> {
   return new Promise((resolve) => {
     const img = new window.Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
       const scale = Math.min(1, maxWidthPx / img.width);
-      const canvas = document.createElement("canvas");
+      const canvas = document.createElement('canvas');
       canvas.width = img.width * scale;
       canvas.height = img.height * scale;
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext('2d')!;
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       canvas.toBlob(
         (blob) => {
@@ -60,13 +60,13 @@ async function compressImage(
             return;
           }
           resolve(
-            new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
-              type: "image/jpeg",
-            }),
+            new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), {
+              type: 'image/jpeg',
+            })
           );
         },
-        "image/jpeg",
-        qualityJpeg,
+        'image/jpeg',
+        qualityJpeg
       );
     };
     img.src = url;
@@ -76,13 +76,13 @@ async function compressImage(
 export function ImageUpload({
   value,
   onChange,
-  bucket = "equipment-images",
-  folder = "",
+  bucket = 'equipment-images',
+  folder = '',
   disabled = false,
 }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(value || null);
-  const [uploadState, setUploadState] = useState<UploadState>("idle");
-  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [uploadState, setUploadState] = useState<UploadState>('idle');
+  const [errorMsg, setErrorMsg] = useState<string>('');
   const [isDragOver, setIsDragOver] = useState(false);
   const [compressionStats, setCompressionStats] = useState<{
     before: number;
@@ -94,12 +94,12 @@ export function ImageUpload({
   // ── Upload logic ─────────────────────────────────────────────────────────────
   const uploadFile = useCallback(
     async (rawFile: File) => {
-      setErrorMsg("");
+      setErrorMsg('');
       setCompressionStats(null);
 
       // Client-side validation
       if (!ACCEPTED.includes(rawFile.type)) {
-        setErrorMsg("Only JPG, PNG, WebP or GIF images are supported.");
+        setErrorMsg('Only JPG, PNG, WebP or GIF images are supported.');
         return;
       }
       if (rawFile.size > MAX_MB * 1024 * 1024) {
@@ -107,7 +107,7 @@ export function ImageUpload({
         return;
       }
 
-      setUploadState("uploading");
+      setUploadState('uploading');
 
       let fileToUpload = rawFile;
       try {
@@ -117,7 +117,7 @@ export function ImageUpload({
           setCompressionStats({ before: rawFile.size, after: compressed.size });
         }
       } catch (err) {
-        console.error("Compression failed:", err);
+        console.error('Compression failed:', err);
       }
 
       // Show local preview immediately for snappy UX
@@ -129,16 +129,16 @@ export function ImageUpload({
       try {
         timeoutId = setTimeout(() => {
           showInfo(
-            "This is taking longer than usual. Please check your connection.",
+            'This is taking longer than usual. Please check your connection.'
           );
         }, 8000);
 
         const supabase = createClient();
-        const ext = fileToUpload.name.split(".").pop() ?? "jpg";
+        const ext = fileToUpload.name.split('.').pop() ?? 'jpg';
         const timestamp = Date.now();
         const safeName = fileToUpload.name
-          .replace(/\.[^/.]+$/, "")
-          .replace(/[^a-z0-9]/gi, "-")
+          .replace(/\.[^/.]+$/, '')
+          .replace(/[^a-z0-9]/gi, '-')
           .toLowerCase()
           .slice(0, 40);
         const filePath = folder
@@ -158,20 +158,20 @@ export function ImageUpload({
         const publicUrl = data.publicUrl;
 
         setPreview(publicUrl);
-        setUploadState("success");
+        setUploadState('success');
         onChange(publicUrl);
 
         // Revoke the temporary object URL
         URL.revokeObjectURL(objectUrl);
       } catch (err: any) {
-        setUploadState("error");
-        setErrorMsg(err.message ?? "Upload failed. Please try again.");
+        setUploadState('error');
+        setErrorMsg(err.message ?? 'Upload failed. Please try again.');
         // Keep the previous stable preview if one existed
         setPreview(value || null);
         showError(
-          "Upload failed. Please check your connection and try again.",
+          'Upload failed. Please check your connection and try again.',
           {
-            title: "Upload Failed",
+            title: 'Upload Failed',
             action: (
               <button
                 onClick={() => uploadFile(rawFile)}
@@ -180,13 +180,13 @@ export function ImageUpload({
                 Retry Upload
               </button>
             ),
-          },
+          }
         );
       } finally {
         clearTimeout(timeoutId!);
       }
     },
-    [bucket, folder, onChange, value, showError, showInfo],
+    [bucket, folder, onChange, value, showError, showInfo]
   );
 
   // ── Drag handlers ─────────────────────────────────────────────────────────
@@ -208,13 +208,13 @@ export function ImageUpload({
       } else {
         // Dragging from browser (e.g. Google Images) doesn't expose a File —
         // the browser blocks cross-origin file access. Show a clear error.
-        setUploadState("error");
+        setUploadState('error');
         setErrorMsg(
-          "Cannot drag images directly from Google. Right-click the image → Save as… then drag the saved file here.",
+          'Cannot drag images directly from Google. Right-click the image → Save as… then drag the saved file here.'
         );
       }
     },
-    [disabled, uploadFile],
+    [disabled, uploadFile]
   );
 
   const handleFileChange = useCallback(
@@ -222,17 +222,17 @@ export function ImageUpload({
       const file = e.target.files?.[0];
       if (file) uploadFile(file);
       // Reset input so the same file can be re-selected
-      e.target.value = "";
+      e.target.value = '';
     },
-    [uploadFile],
+    [uploadFile]
   );
 
   const handleClear = useCallback(() => {
     setPreview(null);
-    setUploadState("idle");
-    setErrorMsg("");
+    setUploadState('idle');
+    setErrorMsg('');
     setCompressionStats(null);
-    onChange("");
+    onChange('');
   }, [onChange]);
 
   const formatSize = (bytes: number) => {
@@ -241,7 +241,7 @@ export function ImageUpload({
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
-  const isUploading = uploadState === "uploading";
+  const isUploading = uploadState === 'uploading';
 
   return (
     <div className="space-y-2">
@@ -252,25 +252,25 @@ export function ImageUpload({
         aria-label="Upload equipment image"
         onClick={() => !disabled && !isUploading && fileRef.current?.click()}
         onKeyDown={(e) => {
-          if ((e.key === "Enter" || e.key === " ") && !disabled && !isUploading)
+          if ((e.key === 'Enter' || e.key === ' ') && !disabled && !isUploading)
             fileRef.current?.click();
         }}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={[
-          "relative flex min-h-[180px] cursor-pointer flex-col items-center justify-center",
-          "rounded-xl border-2 border-dashed transition-all duration-200",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          'relative flex min-h-[180px] cursor-pointer flex-col items-center justify-center',
+          'rounded-xl border-2 border-dashed transition-all duration-200',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           isDragOver
-            ? "border-amber-500 bg-amber-500/5 scale-[1.01]"
-            : uploadState === "error"
-              ? "border-red-500/50 bg-red-500/5"
+            ? 'border-amber-500 bg-amber-500/5 scale-[1.01]'
+            : uploadState === 'error'
+              ? 'border-red-500/50 bg-red-500/5'
               : preview
-                ? "border-border bg-muted/30"
-                : "border-border bg-muted/20 hover:border-amber-500/50 hover:bg-amber-500/5",
-          disabled ? "cursor-not-allowed opacity-60" : "",
-        ].join(" ")}
+                ? 'border-border bg-muted/30'
+                : 'border-border bg-muted/20 hover:border-amber-500/50 hover:bg-amber-500/5',
+          disabled ? 'cursor-not-allowed opacity-60' : '',
+        ].join(' ')}
       >
         {/* Preview image */}
         {preview && !isUploading ? (
@@ -287,7 +287,7 @@ export function ImageUpload({
             </div>
 
             {/* Success indicator */}
-            {uploadState === "success" && (
+            {uploadState === 'success' && (
               <div className="absolute top-2 left-2 flex flex-col gap-1">
                 <div className="flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-emerald-400 border border-emerald-500/30 w-fit">
                   <CheckCircle2 className="h-3 w-3" />
@@ -295,7 +295,7 @@ export function ImageUpload({
                 </div>
                 {compressionStats && (
                   <div className="flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-medium text-muted-foreground border border-border w-fit backdrop-blur-sm">
-                    {formatSize(compressionStats.before)} →{" "}
+                    {formatSize(compressionStats.before)} →{' '}
                     {formatSize(compressionStats.after)}
                   </div>
                 )}
@@ -336,7 +336,7 @@ export function ImageUpload({
               <p className="text-xs text-muted-foreground mt-0.5">
                 {compressionStats
                   ? `Compressed: ${formatSize(compressionStats.before)} → ${formatSize(compressionStats.after)}`
-                  : "Please wait while we upload your image"}
+                  : 'Please wait while we upload your image'}
               </p>
             </div>
           </div>
@@ -345,7 +345,7 @@ export function ImageUpload({
           <div className="flex flex-col items-center gap-3 py-8 px-4 text-center">
             <div
               className={`flex h-14 w-14 items-center justify-center rounded-2xl transition-colors ${
-                isDragOver ? "bg-amber-500/20" : "bg-muted"
+                isDragOver ? 'bg-amber-500/20' : 'bg-muted'
               }`}
             >
               {isDragOver ? (
@@ -357,8 +357,8 @@ export function ImageUpload({
             <div>
               <p className="text-sm font-medium text-foreground">
                 {isDragOver
-                  ? "Drop to upload"
-                  : "Drop image here, or click to browse"}
+                  ? 'Drop to upload'
+                  : 'Drop image here, or click to browse'}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 JPG, PNG, WebP or GIF · max {MAX_MB} MB
@@ -369,7 +369,7 @@ export function ImageUpload({
       </div>
 
       {/* Error message */}
-      {uploadState === "error" && errorMsg && (
+      {uploadState === 'error' && errorMsg && (
         <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           {errorMsg}
@@ -380,7 +380,7 @@ export function ImageUpload({
       <input
         ref={fileRef}
         type="file"
-        accept={ACCEPTED.join(",")}
+        accept={ACCEPTED.join(',')}
         className="sr-only"
         onChange={handleFileChange}
         disabled={disabled || isUploading}

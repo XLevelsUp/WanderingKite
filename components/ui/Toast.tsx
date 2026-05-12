@@ -58,7 +58,10 @@ export function Toast({
     >
       <div className="flex w-full items-start p-4">
         <div className="flex-shrink-0">
-          <Icon className={`h-5 w-5 ${variantStyles[variant]}`} aria-hidden="true" />
+          <Icon
+            className={`h-5 w-5 ${variantStyles[variant]}`}
+            aria-hidden="true"
+          />
         </div>
         <div className="ml-3 w-0 flex-1 pt-0.5">
           <p className="text-sm font-medium text-white">{title}</p>

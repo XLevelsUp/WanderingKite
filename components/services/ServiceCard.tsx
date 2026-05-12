@@ -1,11 +1,11 @@
 // components/services/ServiceCard.tsx
-"use client";
+'use client';
 
-import { useRef, useCallback } from "react";
-import Link from "next/link";
-import { motion } from "framer-motion";
+import { useRef, useCallback } from 'react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 // Import the necessary icons for mapping
-import { ArrowRight, Building2, Camera, Mic, Video } from "lucide-react";
+import { ArrowRight, Building2, Camera, Mic, Video } from 'lucide-react';
 
 // Define the mapping on the client side to avoid serialization issues
 const ICON_MAP = {
@@ -43,10 +43,10 @@ export function ServiceCard({
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     cardRef.current.style.setProperty(
-      "--mouse-x",
-      `${e.clientX - rect.left}px`,
+      '--mouse-x',
+      `${e.clientX - rect.left}px`
     );
-    cardRef.current.style.setProperty("--mouse-y", `${e.clientY - rect.top}px`);
+    cardRef.current.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
   }, []);
 
   return (
@@ -61,7 +61,7 @@ export function ServiceCard({
       className="group spotlight-card h-full"
       onMouseMove={handleMouseMove}
       style={
-        { "--mouse-x": "-400px", "--mouse-y": "-400px" } as React.CSSProperties
+        { '--mouse-x': '-400px', '--mouse-y': '-400px' } as React.CSSProperties
       }
     >
       <div

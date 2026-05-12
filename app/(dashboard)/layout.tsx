@@ -31,15 +31,15 @@ export default async function DashboardLayout({
     .single();
 
   return (
-    <div className='min-h-screen bg-[#0A0A0B] pt-20'>
-      <div className='flex'>
+    <div className="min-h-screen bg-[#0A0A0B] pt-20">
+      <div className="flex">
         {/* Sidebar */}
-        <aside className='w-64 bg-[rgba(17,17,22,0.98)] border-r border-primary/12 text-foreground fixed left-0 top-20 bottom-0 overflow-y-auto backdrop-blur-xl'>
-          <div className='p-6'>
-            <h1 className='text-xl font-bold mb-8 text-gradient-brand'>
+        <aside className="w-64 bg-[rgba(17,17,22,0.98)] border-r border-primary/12 text-foreground fixed left-0 top-20 bottom-0 overflow-y-auto backdrop-blur-xl">
+          <div className="p-6">
+            <h1 className="text-xl font-bold mb-8 text-gradient-brand">
               Rental System
             </h1>
-            <nav className='space-y-1'>
+            <nav className="space-y-1">
               {[
                 { href: '/dashboard', label: 'Dashboard' },
                 { href: '/dashboard/portfolio', label: 'Portfolio' },
@@ -51,7 +51,7 @@ export default async function DashboardLayout({
                 <a
                   key={item.href}
                   href={item.href}
-                  className='block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
+                  className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
                 >
                   {item.label}
                 </a>
@@ -60,20 +60,20 @@ export default async function DashboardLayout({
                 profile?.role === 'SUPER_ADMIN') && (
                 <>
                   <a
-                    href='/dashboard/deployments'
-                    className='block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
+                    href="/dashboard/deployments"
+                    className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
                   >
                     Field Ops
                   </a>
                   <a
-                    href='/dashboard/categories'
-                    className='block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
+                    href="/dashboard/categories"
+                    className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
                   >
                     Categories
                   </a>
                   <a
-                    href='/dashboard/branches'
-                    className='block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
+                    href="/dashboard/branches"
+                    className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
                   >
                     Branches
                   </a>
@@ -81,47 +81,47 @@ export default async function DashboardLayout({
               )}
               {profile?.role === 'SUPER_ADMIN' && (
                 <a
-                  href='/dashboard/audit-logs'
-                  className='block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
+                  href="/dashboard/audit-logs"
+                  className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
                 >
                   Audit Logs
                 </a>
               )}
             </nav>
           </div>
-          <div className='absolute bottom-0 left-0 right-0 p-6 border-t border-primary/12 bg-[rgba(17,17,22,0.98)]'>
-            <div className='flex items-center justify-between'>
-              <div className='text-sm text-foreground/50'>
+          <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-primary/12 bg-[rgba(17,17,22,0.98)]">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-foreground/50">
                 <Link
                   href={`/dashboard/employees/${user.id}`}
-                  className='font-medium text-foreground hover:text-primary truncate block transition-colors duration-150'
+                  className="font-medium text-foreground hover:text-primary truncate block transition-colors duration-150"
                 >
                   {profile?.full_name || user.email}
                 </Link>
-                <p className='text-xs mt-1 capitalize text-primary/55'>
+                <p className="text-xs mt-1 capitalize text-primary/55">
                   {profile?.role.replace('_', ' ').toLowerCase()}
                 </p>
               </div>
-              <form action='/auth/signout' method='post'>
+              <form action="/auth/signout" method="post">
                 <button
-                  className='text-primary/50 hover:text-primary transition-colors'
-                  title='Sign Out'
+                  className="text-primary/50 hover:text-primary transition-colors"
+                  title="Sign Out"
                 >
                   <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    width='20'
-                    height='20'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeWidth='2'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    className='lucide lucide-log-out'
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-log-out"
                   >
-                    <path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4' />
-                    <polyline points='16 17 21 12 16 7' />
-                    <line x1='21' x2='9' y1='12' y2='12' />
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" x2="9" y1="12" y2="12" />
                   </svg>
                 </button>
               </form>
@@ -130,7 +130,7 @@ export default async function DashboardLayout({
         </aside>
 
         {/* Main content */}
-        <main className='ml-64 flex-1 p-8 min-h-screen bg-[#0A0A0B]'>
+        <main className="ml-64 flex-1 p-8 min-h-screen bg-[#0A0A0B]">
           {children}
         </main>
       </div>

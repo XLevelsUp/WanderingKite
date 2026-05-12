@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Loader2 } from "lucide-react";
-import { generateWhatsAppLink } from "@/lib/whatsapp";
-import { useNotify } from "@/hooks/useNotify";
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MessageCircle, X, Loader2 } from 'lucide-react';
+import { generateWhatsAppLink } from '@/lib/whatsapp';
+import { useNotify } from '@/hooks/useNotify';
 
 interface BookingFlyoutProps {
   service?: string;
@@ -28,16 +28,22 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
     try {
       // Show slow network warning if it takes > 8s
       timeoutId = setTimeout(() => {
-        showInfo("This is taking longer than usual. Please check your connection.");
+        showInfo(
+          'This is taking longer than usual. Please check your connection.'
+        );
       }, 8000);
 
       // Simulate a small delay for the spinner (since it's just a URL open)
       // If there were a real tracking API call, it would go here.
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      window.open(generateWhatsAppLink(service), '_blank', 'noopener,noreferrer');
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      window.open(
+        generateWhatsAppLink(service),
+        '_blank',
+        'noopener,noreferrer'
+      );
     } catch (error) {
-      showError("Failed to open WhatsApp. Please try again.");
+      showError('Failed to open WhatsApp. Please try again.');
     } finally {
       clearTimeout(timeoutId!);
       setIsLoading(false);
@@ -51,7 +57,7 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
           initial={{ opacity: 0, y: 24, scale: 0.92 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 24, scale: 0.92 }}
-          transition={{ type: "spring", stiffness: 400, damping: 36 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 36 }}
           className="fixed bottom-6 right-6 z-50"
         >
           <AnimatePresence mode="wait">
@@ -77,7 +83,7 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
                       Quick Inquiry
                     </p>
                     <p className="mt-0.5 text-sm font-semibold text-foreground">
-                      {service ?? "Book a Session"}
+                      {service ?? 'Book a Session'}
                     </p>
                   </div>
                   <button
@@ -117,7 +123,7 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
                     ) : (
                       <MessageCircle className="h-4 w-4" />
                     )}
-                    {isLoading ? "Opening..." : "Open WhatsApp"}
+                    {isLoading ? 'Opening...' : 'Open WhatsApp'}
                   </button>
                 </div>
               </motion.div>

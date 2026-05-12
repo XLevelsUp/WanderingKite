@@ -55,7 +55,7 @@ export function EmployeeTable({
   const handleDelete = async (id: string) => {
     if (
       !confirm(
-        'Are you sure you want to delete this employee? This action cannot be undone.',
+        'Are you sure you want to delete this employee? This action cannot be undone.'
       )
     ) {
       return;
@@ -73,23 +73,23 @@ export function EmployeeTable({
   };
 
   return (
-    <div className='rounded-xl border border-primary/15 bg-[rgba(17,17,22,0.85)] backdrop-blur-md overflow-hidden'>
+    <div className="rounded-xl border border-primary/15 bg-[rgba(17,17,22,0.85)] backdrop-blur-md overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className='border-b border-primary/12 hover:bg-transparent'>
-            <TableHead className='text-primary font-semibold text-xs uppercase tracking-widest opacity-80 py-4'>
+          <TableRow className="border-b border-primary/12 hover:bg-transparent">
+            <TableHead className="text-primary font-semibold text-xs uppercase tracking-widest opacity-80 py-4">
               Name
             </TableHead>
-            <TableHead className='text-primary font-semibold text-xs uppercase tracking-widest opacity-80'>
+            <TableHead className="text-primary font-semibold text-xs uppercase tracking-widest opacity-80">
               Email
             </TableHead>
-            <TableHead className='text-primary font-semibold text-xs uppercase tracking-widest opacity-80'>
+            <TableHead className="text-primary font-semibold text-xs uppercase tracking-widest opacity-80">
               Role
             </TableHead>
-            <TableHead className='text-primary font-semibold text-xs uppercase tracking-widest opacity-80'>
+            <TableHead className="text-primary font-semibold text-xs uppercase tracking-widest opacity-80">
               Branch
             </TableHead>
-            <TableHead className='text-primary font-semibold text-xs uppercase tracking-widest opacity-80 text-right'>
+            <TableHead className="text-primary font-semibold text-xs uppercase tracking-widest opacity-80 text-right">
               Actions
             </TableHead>
           </TableRow>
@@ -99,7 +99,7 @@ export function EmployeeTable({
             <TableRow>
               <TableCell
                 colSpan={5}
-                className='h-24 text-center text-foreground/50'
+                className="h-24 text-center text-foreground/50"
               >
                 No employees found.
               </TableCell>
@@ -108,12 +108,12 @@ export function EmployeeTable({
             employees.map((employee) => (
               <TableRow
                 key={employee.id}
-                className='border-b border-primary/8 hover:bg-primary/6 transition-colors duration-150'
+                className="border-b border-primary/8 hover:bg-primary/6 transition-colors duration-150"
               >
-                <TableCell className='font-medium text-foreground py-4'>
+                <TableCell className="font-medium text-foreground py-4">
                   {employee.fullName || 'N/A'}
                 </TableCell>
-                <TableCell className='text-foreground/75'>
+                <TableCell className="text-foreground/75">
                   {employee.email}
                 </TableCell>
                 <TableCell>
@@ -123,47 +123,47 @@ export function EmployeeTable({
                     {employee.role.replace('_', ' ')}
                   </span>
                 </TableCell>
-                <TableCell className='text-foreground/65'>
+                <TableCell className="text-foreground/65">
                   {employee.branches?.name || (
-                    <span className='text-foreground/35 italic text-xs'>—</span>
+                    <span className="text-foreground/35 italic text-xs">—</span>
                   )}
                 </TableCell>
-                <TableCell className='text-right'>
+                <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
-                        variant='ghost'
-                        className='h-8 w-8 p-0 text-primary/60 hover:text-primary hover:bg-primary/10'
+                        variant="ghost"
+                        className="h-8 w-8 p-0 text-primary/60 hover:text-primary hover:bg-primary/10"
                       >
-                        <span className='sr-only'>Open menu</span>
-                        <MoreHorizontal className='h-4 w-4' />
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
-                      align='end'
-                      className='bg-[rgba(17,17,22,0.98)] border border-primary/18 backdrop-blur-xl text-foreground'
+                      align="end"
+                      className="bg-[rgba(17,17,22,0.98)] border border-primary/18 backdrop-blur-xl text-foreground"
                     >
-                      <DropdownMenuLabel className='text-primary text-xs uppercase tracking-widest opacity-70'>
+                      <DropdownMenuLabel className="text-primary text-xs uppercase tracking-widest opacity-70">
                         Actions
                       </DropdownMenuLabel>
                       <DropdownMenuItem
                         onClick={() =>
                           router.push(`/dashboard/employees/${employee.id}`)
                         }
-                        className='text-foreground hover:text-foreground focus:text-foreground hover:bg-primary/10 focus:bg-primary/10 cursor-pointer'
+                        className="text-foreground hover:text-foreground focus:text-foreground hover:bg-primary/10 focus:bg-primary/10 cursor-pointer"
                       >
-                        <Pencil className='mr-2 h-4 w-4 text-primary' />
+                        <Pencil className="mr-2 h-4 w-4 text-primary" />
                         Edit
                       </DropdownMenuItem>
                       {currentUserRole === 'SUPER_ADMIN' && (
                         <>
-                          <DropdownMenuSeparator className='bg-primary/12' />
+                          <DropdownMenuSeparator className="bg-primary/12" />
                           <DropdownMenuItem
-                            className='text-red-400 hover:text-red-300 focus:text-red-300 hover:bg-[rgba(239,68,68,0.10)] focus:bg-[rgba(239,68,68,0.10)] cursor-pointer'
+                            className="text-red-400 hover:text-red-300 focus:text-red-300 hover:bg-[rgba(239,68,68,0.10)] focus:bg-[rgba(239,68,68,0.10)] cursor-pointer"
                             onClick={() => handleDelete(employee.id)}
                             disabled={isDeleting}
                           >
-                            <Trash className='mr-2 h-4 w-4' />
+                            <Trash className="mr-2 h-4 w-4" />
                             Delete
                           </DropdownMenuItem>
                         </>

@@ -34,7 +34,7 @@ export function Modal({
           <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
           <p className="text-sm text-zinc-400">{description}</p>
         </div>
-        
+
         <div className="bg-zinc-900/50 p-4 border-t border-white/5 flex items-center justify-end gap-3">
           {!isBlocking && onCancel && (
             <button

@@ -25,7 +25,9 @@ export function TeamSection() {
           <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-500 opacity-80">
             The Visionaries
           </p>
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Meet the Team</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            Meet the Team
+          </h2>
           <p className="text-muted-foreground text-lg">
             The creative minds dedicated to crafting your visual legacy.
           </p>
@@ -33,18 +35,16 @@ export function TeamSection() {
       </FadeIn>
 
       <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto">
-        
         {/* Founder Card - Clickable */}
         <motion.div
           variants={{
             hidden: { opacity: 0, y: 30 },
-            visible: { opacity: 1, y: 0 }
+            visible: { opacity: 1, y: 0 },
           }}
           className="lg:col-span-1"
         >
           <Link href="/about/founder" className="block h-full group">
             <div className="relative h-full overflow-hidden rounded-3xl border border-amber-500/20 bg-zinc-900 shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:border-amber-500/50 hover:shadow-amber-500/10">
-              
               {/* Image Placeholder */}
               <div className="aspect-[4/5] relative bg-zinc-800">
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10" />
@@ -78,7 +78,7 @@ export function TeamSection() {
         <motion.div
           variants={{
             hidden: { opacity: 0, y: 30 },
-            visible: { opacity: 1, y: 0 }
+            visible: { opacity: 1, y: 0 },
           }}
           className="lg:col-span-1 h-full"
         >
@@ -89,18 +89,15 @@ export function TeamSection() {
                 <Users className="w-20 h-20" />
               </div>
             </div>
-            
+
             <div className="absolute bottom-0 left-0 right-0 p-8 z-20 transition-transform duration-500 group-hover:-translate-y-2">
               <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
                 The Collective
               </p>
-              <h3 className="text-2xl font-bold text-white">
-                Our Team
-              </h3>
+              <h3 className="text-2xl font-bold text-white">Our Team</h3>
             </div>
           </div>
         </motion.div>
-
       </StaggerContainer>
 
       <FadeIn>

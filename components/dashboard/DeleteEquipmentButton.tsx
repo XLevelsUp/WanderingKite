@@ -1,33 +1,43 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-export function DeleteEquipmentButton({ equipmentId, equipmentName }: { equipmentId: string; equipmentName: string }) {
+export function DeleteEquipmentButton({
+  equipmentId,
+  equipmentName,
+}: {
+  equipmentId: string;
+  equipmentName: string;
+}) {
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
   const handleDelete = async () => {
-    if (!confirm(`Are you sure you want to delete ${equipmentName}? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete ${equipmentName}? This action cannot be undone.`
+      )
+    ) {
       return;
     }
 
     setIsDeleting(true);
     try {
       const res = await fetch(`/api/equipment/${equipmentId}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (!res.ok) {
-        throw new Error("Failed to delete equipment");
+        throw new Error('Failed to delete equipment');
       }
 
       router.refresh(); // Refresh the page to show updated list
     } catch (error) {
       console.error(error);
-      alert("Failed to delete equipment.");
+      alert('Failed to delete equipment.');
     } finally {
       setIsDeleting(false);
     }

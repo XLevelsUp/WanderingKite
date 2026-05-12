@@ -1,4 +1,9 @@
-import { getEquipmentById, getEquipmentAssignmentHistory, getCategories, getBranches } from '@/actions/equipment';
+import {
+  getEquipmentById,
+  getEquipmentAssignmentHistory,
+  getCategories,
+  getBranches,
+} from '@/actions/equipment';
 import { EditEquipmentDialog, QuickImageUpload } from './EditEquipmentForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,21 +32,48 @@ import {
 export const dynamic = 'force-dynamic';
 
 // ── Status helpers ────────────────────────────────────────────────────────────
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  AVAILABLE: { label: 'Available',    color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', icon: CheckCircle2 },
-  RENTED:    { label: 'Rented',       color: 'bg-violet-500/10  text-violet-400  border-violet-500/20',  icon: Package },
-  IN_USE:    { label: 'In Use',       color: 'bg-blue-500/10    text-blue-400    border-blue-500/20',    icon: Package },
-  MAINTENANCE:{ label: 'Maintenance', color: 'bg-amber-500/10   text-amber-400   border-amber-500/20',   icon: Wrench },
-  LOST:      { label: 'Lost',         color: 'bg-red-500/10     text-red-400     border-red-500/20',     icon: XCircle },
+const STATUS_CONFIG: Record<
+  string,
+  { label: string; color: string; icon: React.ElementType }
+> = {
+  AVAILABLE: {
+    label: 'Available',
+    color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    icon: CheckCircle2,
+  },
+  RENTED: {
+    label: 'Rented',
+    color: 'bg-violet-500/10  text-violet-400  border-violet-500/20',
+    icon: Package,
+  },
+  IN_USE: {
+    label: 'In Use',
+    color: 'bg-blue-500/10    text-blue-400    border-blue-500/20',
+    icon: Package,
+  },
+  MAINTENANCE: {
+    label: 'Maintenance',
+    color: 'bg-amber-500/10   text-amber-400   border-amber-500/20',
+    icon: Wrench,
+  },
+  LOST: {
+    label: 'Lost',
+    color: 'bg-red-500/10     text-red-400     border-red-500/20',
+    icon: XCircle,
+  },
 };
 
 function StatusBadge({ status }: { status: string }) {
   const cfg = STATUS_CONFIG[status] ?? {
-    label: status, color: 'bg-white/5 text-foreground/40 border-white/10', icon: Info,
+    label: status,
+    color: 'bg-white/5 text-foreground/40 border-white/10',
+    icon: Info,
   };
   const Icon = cfg.icon;
   return (
-    <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border ${cfg.color}`}>
+    <span
+      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border ${cfg.color}`}
+    >
       <Icon className="w-3.5 h-3.5" />
       {cfg.label}
     </span>
@@ -49,7 +81,15 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 // ── Info row ─────────────────────────────────────────────────────────────────
-function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: React.ReactNode }) {
+function InfoRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: React.ReactNode;
+}) {
   return (
     <div className="flex items-start gap-3 py-3 border-b border-border/50 last:border-0">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/60">
@@ -64,7 +104,11 @@ function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label:
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────────
-export default async function EquipmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EquipmentDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
   const [equipment, categoriesRaw, branchesRaw] = await Promise.all([
     getEquipmentById(id).catch(() => null),
@@ -76,11 +120,18 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
   const history = await getEquipmentAssignmentHistory(id).catch(() => []);
 
   const category = (equipment.categories as any)?.name as string | undefined;
-  const branch   = (equipment.branches  as any)?.name as string | undefined;
-  const specs    = Array.isArray(equipment.specs) ? equipment.specs as string[] : [];
-  const imageUrl = ((equipment as any).image_url ?? (equipment as any).imageUrl) as string | null;
-  const rentalPrice = Number((equipment as any).rental_price ?? (equipment as any).rentalPrice ?? 0);
-  const weeklyPrice = Number((equipment as any).weekly_price ?? (equipment as any).weeklyPrice ?? 0);
+  const branch = (equipment.branches as any)?.name as string | undefined;
+  const specs = Array.isArray(equipment.specs)
+    ? (equipment.specs as string[])
+    : [];
+  const imageUrl = ((equipment as any).image_url ??
+    (equipment as any).imageUrl) as string | null;
+  const rentalPrice = Number(
+    (equipment as any).rental_price ?? (equipment as any).rentalPrice ?? 0
+  );
+  const weeklyPrice = Number(
+    (equipment as any).weekly_price ?? (equipment as any).weeklyPrice ?? 0
+  );
 
   // Minimal shape needed by the edit dialog
   const equipmentForEdit = {
@@ -101,7 +152,11 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
       {/* Back nav + Edit button */}
       <div className="flex items-center justify-between gap-4">
         <Link href="/dashboard/equipment">
-          <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2 text-muted-foreground hover:text-foreground"
+          >
             <ArrowLeft className="h-4 w-4" />
             Equipment
           </Button>
@@ -137,7 +192,9 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
             {/* Status banner */}
             <div className="flex items-center justify-between border-t border-border bg-muted/20 px-4 py-3">
               <StatusBadge status={equipment.status} />
-              <span className="text-xs text-muted-foreground font-mono">{(equipment as any).serialNumber}</span>
+              <span className="text-xs text-muted-foreground font-mono">
+                {(equipment as any).serialNumber}
+              </span>
             </div>
           </Card>
 
@@ -188,7 +245,9 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
             </Card>
             <Card className="bg-muted/30">
               <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground mb-1">Weekly Rate</p>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Weekly Rate
+                </p>
                 <p className="text-2xl font-bold text-foreground">
                   ₹{weeklyPrice.toLocaleString('en-IN')}
                 </p>
@@ -199,21 +258,37 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
           {/* Info rows */}
           <Card>
             <CardContent className="pt-4 pb-2">
-              <InfoRow icon={Hash}            label="Serial Number" value={(equipment as any).serialNumber} />
-              {category && <InfoRow icon={Tag}  label="Category"      value={category} />}
-              {branch   && <InfoRow icon={MapPin} label="Branch"      value={branch} />}
+              <InfoRow
+                icon={Hash}
+                label="Serial Number"
+                value={(equipment as any).serialNumber}
+              />
+              {category && (
+                <InfoRow icon={Tag} label="Category" value={category} />
+              )}
+              {branch && (
+                <InfoRow icon={MapPin} label="Branch" value={branch} />
+              )}
               <InfoRow
                 icon={CalendarDays}
                 label="Added On"
-                value={new Date((equipment as any).createdAt).toLocaleDateString('en-IN', {
-                  day: 'numeric', month: 'long', year: 'numeric',
+                value={new Date(
+                  (equipment as any).createdAt
+                ).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
                 })}
               />
               <InfoRow
                 icon={Clock}
                 label="Last Updated"
-                value={new Date((equipment as any).updatedAt).toLocaleDateString('en-IN', {
-                  day: 'numeric', month: 'long', year: 'numeric',
+                value={new Date(
+                  (equipment as any).updatedAt
+                ).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
                 })}
               />
             </CardContent>
@@ -255,7 +330,9 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
           </div>
           <div className="ml-auto">
             <Link href={`/dashboard/equipment/${id}/history`}>
-              <Button variant="outline" size="sm">Full History</Button>
+              <Button variant="outline" size="sm">
+                Full History
+              </Button>
             </Link>
           </div>
         </CardHeader>
@@ -263,7 +340,9 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
           {history.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
               <Package className="h-10 w-10 text-muted-foreground/20 mb-3" />
-              <p className="text-sm text-muted-foreground">No assignment history yet</p>
+              <p className="text-sm text-muted-foreground">
+                No assignment history yet
+              </p>
               <p className="text-xs text-muted-foreground/60 mt-1">
                 This equipment has never been deployed
               </p>
@@ -281,7 +360,9 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-medium truncate">
-                        {record.assignedTo?.fullName ?? record.assignedTo?.email ?? 'Unknown'}
+                        {record.assignedTo?.fullName ??
+                          record.assignedTo?.email ??
+                          'Unknown'}
                       </p>
                       {record.returnedAt ? (
                         <span className="shrink-0 inline-flex items-center gap-1 text-xs text-emerald-400">
@@ -296,16 +377,26 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
                     <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                       <span>
                         Out:{' '}
-                        {new Date(record.assignedAt).toLocaleDateString('en-IN', {
-                          day: 'numeric', month: 'short', year: 'numeric',
-                        })}
+                        {new Date(record.assignedAt).toLocaleDateString(
+                          'en-IN',
+                          {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          }
+                        )}
                       </span>
                       {record.returnedAt && (
                         <span>
                           In:{' '}
-                          {new Date(record.returnedAt).toLocaleDateString('en-IN', {
-                            day: 'numeric', month: 'short', year: 'numeric',
-                          })}
+                          {new Date(record.returnedAt).toLocaleDateString(
+                            'en-IN',
+                            {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            }
+                          )}
                         </span>
                       )}
                       {record.location && (
@@ -319,7 +410,11 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
               ))}
               {history.length > 5 && (
                 <Link href={`/dashboard/equipment/${id}/history`}>
-                  <Button variant="ghost" size="sm" className="w-full text-muted-foreground">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-muted-foreground"
+                  >
                     View all {history.length} records →
                   </Button>
                 </Link>

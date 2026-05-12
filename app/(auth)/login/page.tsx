@@ -53,10 +53,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4'>
-      <Card className='w-full max-w-md'>
-        <CardHeader className='space-y-1'>
-          <CardTitle className='text-2xl font-bold'>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold">
             Rental Management
           </CardTitle>
           <CardDescription>
@@ -64,29 +64,29 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
-          <CardContent className='space-y-4'>
+          <CardContent className="space-y-4">
             {error && (
-              <div className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm'>
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
                 {error}
               </div>
             )}
-            <div className='space-y-2'>
-              <Label htmlFor='email'>Email</Label>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
               <Input
-                id='email'
-                type='email'
-                placeholder='admin@example.com'
+                id="email"
+                type="email"
+                placeholder="admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
               />
             </div>
-            <div className='space-y-2'>
-              <Label htmlFor='password'>Password</Label>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
               <Input
-                id='password'
-                type='password'
+                id="password"
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -95,7 +95,7 @@ export default function LoginPage() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button type='submit' className='w-full' disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </CardFooter>

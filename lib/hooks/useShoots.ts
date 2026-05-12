@@ -9,8 +9,8 @@ import type { Database } from '@/lib/database.types';
  */
 export function useShoots() {
   const supabase = createClient();
-  // In the Database type, gallery_images isn't physically on the Row type, 
-  // but Supabase returns it via join when requested. 
+  // In the Database type, gallery_images isn't physically on the Row type,
+  // but Supabase returns it via join when requested.
   // We'll augment the type locally for the hook state.
   type ShootWithImages = Database['public']['Tables']['shoots']['Row'] & {
     gallery_images?: Database['public']['Tables']['gallery_images']['Row'][];
@@ -43,14 +43,18 @@ export function useShoots() {
     // Real‑time subscription for INSERT updates
     const subscription = supabase
       .channel('public:shoots')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'shoots',
-      }, (payload) => {
-        // Append new shoot to state
-        setShoots((prev) => [payload.new as any, ...prev]);
-      })
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'shoots',
+        },
+        (payload) => {
+          // Append new shoot to state
+          setShoots((prev) => [payload.new as any, ...prev]);
+        }
+      )
       .subscribe();
 
     return () => {

@@ -18,7 +18,7 @@ export interface NotificationContextType {
   showWarning: (title: string, options?: OmittedToastProps) => void;
   showInfo: (title: string, options?: OmittedToastProps) => void;
   removeToast: (id: string) => void;
-  
+
   showModal: (options: OmittedModalProps) => string;
   removeModal: (id: string) => void;
 
@@ -26,9 +26,15 @@ export interface NotificationContextType {
   removeBanner: (id: string) => void;
 }
 
-export const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+export const NotificationContext = createContext<
+  NotificationContextType | undefined
+>(undefined);
 
-export function NotificationProvider({ children }: { children: React.ReactNode }) {
+export function NotificationProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [toasts, setToasts] = useState<ToastProps[]>([]);
   const [modals, setModals] = useState<ModalProps[]>([]);
   const [banners, setBanners] = useState<BannerProps[]>([]);
@@ -38,19 +44,38 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const addToast = useCallback((props: OmittedToastProps & { variant: ToastProps['variant'] }) => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => {
-      // Keep only up to 3 toasts max
-      const updated = [...prev, { ...props, id, onClose: removeToast }];
-      return updated.slice(-3); // Get the last 3 items
-    });
-  }, [removeToast]);
+  const addToast = useCallback(
+    (props: OmittedToastProps & { variant: ToastProps['variant'] }) => {
+      const id = Math.random().toString(36).substring(2, 9);
+      setToasts((prev) => {
+        // Keep only up to 3 toasts max
+        const updated = [...prev, { ...props, id, onClose: removeToast }];
+        return updated.slice(-3); // Get the last 3 items
+      });
+    },
+    [removeToast]
+  );
 
-  const showSuccess = useCallback((title: string, options?: OmittedToastProps) => addToast({ title, variant: 'success', ...options }), [addToast]);
-  const showError = useCallback((title: string, options?: OmittedToastProps) => addToast({ title, variant: 'error', ...options }), [addToast]);
-  const showWarning = useCallback((title: string, options?: OmittedToastProps) => addToast({ title, variant: 'warning', ...options }), [addToast]);
-  const showInfo = useCallback((title: string, options?: OmittedToastProps) => addToast({ title, variant: 'info', ...options }), [addToast]);
+  const showSuccess = useCallback(
+    (title: string, options?: OmittedToastProps) =>
+      addToast({ title, variant: 'success', ...options }),
+    [addToast]
+  );
+  const showError = useCallback(
+    (title: string, options?: OmittedToastProps) =>
+      addToast({ title, variant: 'error', ...options }),
+    [addToast]
+  );
+  const showWarning = useCallback(
+    (title: string, options?: OmittedToastProps) =>
+      addToast({ title, variant: 'warning', ...options }),
+    [addToast]
+  );
+  const showInfo = useCallback(
+    (title: string, options?: OmittedToastProps) =>
+      addToast({ title, variant: 'info', ...options }),
+    [addToast]
+  );
 
   // Modals
   const removeModal = useCallback((id: string) => {
@@ -85,8 +110,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         onlineBannerId = null;
       }
       offlineBannerId = showBanner({
-        message: "No internet connection. Please check your network.",
-        type: "offline"
+        message: 'No internet connection. Please check your network.',
+        type: 'offline',
       });
     };
 
@@ -95,12 +120,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         removeBanner(offlineBannerId);
         offlineBannerId = null;
       }
-      
+
       onlineBannerId = showBanner({
         message: "You're back online!",
-        type: "online"
+        type: 'online',
       });
-      
+
       // Auto dismiss online banner
       setTimeout(() => {
         if (onlineBannerId) removeBanner(onlineBannerId);
@@ -124,19 +149,21 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   // 2. Session Expiry Alert
   useEffect(() => {
     const supabase = createClient();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       // NOTE: For true 2-minute warning, you'd need to inspect session.expires_at and set a timer.
       // This basic implementation handles the actual expiry / logout event.
       if (event === 'SIGNED_OUT') {
         showModal({
-          title: "Session expired",
-          description: "Your session has expired. Please log in again.",
-          confirmText: "Log In",
+          title: 'Session expired',
+          description: 'Your session has expired. Please log in again.',
+          confirmText: 'Log In',
           isBlocking: true,
           onConfirm: () => {
             window.location.href = '/login';
-          }
+          },
         });
       }
     });
@@ -158,7 +185,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       onAuthError: () => {
         // Handled silently by Supabase auth listener mostly, but just in case:
         // We could redirect or do nothing.
-      }
+      },
     });
 
     return () => {
@@ -167,7 +194,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   }, [showError]);
 
   return (
-    <NotificationContext.Provider value={{ showSuccess, showError, showWarning, showInfo, removeToast, showModal, removeModal, showBanner, removeBanner }}>
+    <NotificationContext.Provider
+      value={{
+        showSuccess,
+        showError,
+        showWarning,
+        showInfo,
+        removeToast,
+        showModal,
+        removeModal,
+        showBanner,
+        removeBanner,
+      }}
+    >
       {/* Banners */}
       <div className="fixed top-0 left-0 right-0 z-[200] flex flex-col pointer-events-none">
         <AnimatePresence>

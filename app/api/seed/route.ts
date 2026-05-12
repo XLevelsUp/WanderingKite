@@ -23,7 +23,7 @@ export async function GET() {
     if (!userData.user) {
       return NextResponse.json(
         { error: 'User creation failed' },
-        { status: 500 },
+        { status: 500 }
       );
     }
 
@@ -41,7 +41,7 @@ export async function GET() {
           error: updateError.message,
           user: userData.user,
         },
-        { status: 200 },
+        { status: 200 }
       ); // Return 200 as user exists now, but manual role update might be needed
     }
 
