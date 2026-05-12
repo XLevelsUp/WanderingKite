@@ -5,7 +5,6 @@ import { Testimonials } from "@/components/sections/Testimonials";
 import { ProcessTimeline } from "@/components/sections/ProcessTimeline";
 import { ServiceFAQ } from "@/components/sections/ServiceFAQ";
 import { generateWhatsAppLink } from "@/lib/whatsapp";
-import { getEquipment } from "@/actions/equipment";
 import { JsonLd } from "@/lib/schema-helpers";
 import { Camera, Clock, MapPin, Video, Monitor } from "lucide-react";
 import { PortfolioCategories } from "@/components/sections/PortfolioCategories";
@@ -216,28 +215,7 @@ const faqs = [
   },
 ];
 
-export default async function PhotographyPage() {
-  // Fetch live equipment summary
-  const equipment = await getEquipment();
-
-  // Group up to 3 names per category for the preview text
-  const getTopItems = (catMatch: string) => {
-    const matches = equipment.filter((e) => {
-      const catName = (e.categories as any)?.name?.toLowerCase() || "";
-      return catName.includes(catMatch);
-    });
-    return (
-      matches
-        .slice(0, 3)
-        .map((e) => e.name)
-        .join(", ") || `Various premium ${catMatch}s`
-    );
-  };
-
-  const previewCameras = getTopItems("camera");
-  const previewLenses = getTopItems("lens");
-  const previewLighting = getTopItems("light");
-
+export default function PhotographyPage() {
   return (
     <>
       <JsonLd data={[photographyFaqSchema, photographyBreadcrumbSchema]} />
@@ -558,14 +536,17 @@ export default async function PhotographyPage() {
                   <Monitor className="mx-auto mb-4 h-8 w-8 text-amber-500" />
                   <h3 className="mb-2 font-bold text-lg">Cameras</h3>
                   <p className="text-sm text-muted-foreground">
-                    {previewCameras}
+                    Sony A7 M5, Sony FX3, DJI Pocket 3 Creator Combo, Action
+                    Camera Insta360 One X2 Essentials Bundle
                   </p>
                 </div>
                 <div className="rounded-2xl border border-border bg-background p-8 text-center">
                   <Camera className="mx-auto mb-4 h-8 w-8 text-amber-500" />
                   <h3 className="mb-2 font-bold text-lg">Lenses</h3>
                   <p className="text-sm text-muted-foreground">
-                    {previewLenses}
+                    Sony G Master 85mm 1.4, Sony G Master 35mm 1.4, Sony G
+                    Master 50mm 1.4, Sony G Master 24mm 1.4, Sony G Master 16mm
+                    1.4, Sony G Master 90mm macro 2.8
                   </p>
                 </div>
                 <div className="rounded-2xl border border-border bg-background p-8 text-center">
@@ -574,7 +555,8 @@ export default async function PhotographyPage() {
                     Lighting &amp; Grip
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {previewLighting}
+                    SK400 V, AD600 pro2, AD200 pro2, Digitek Stripe Light, Nantu
+                    Pro, Nantu,
                   </p>
                 </div>
               </div>

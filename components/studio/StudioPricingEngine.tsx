@@ -11,9 +11,11 @@ import {
   Users,
   Plus,
   Box,
+  Loader2,
 } from "lucide-react";
 import Image from "next/image";
 import { generateWhatsAppLink } from "@/lib/whatsapp";
+import { useNotify } from "@/hooks/useNotify";
 
 const PACKAGES = [
   {
@@ -69,6 +71,8 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
   const [selectedEquipment, setSelectedEquipment] = useState<Set<string>>(
     new Set(),
   );
+  const [isLoading, setIsLoading] = useState(false);
+  const { showError, showInfo } = useNotify();
 
   const toggleAddOn = (id: string) => {
     const newSet = new Set(selectedAddOns);
@@ -128,6 +132,31 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
       .join(", ");
     const addOnString = addOnNames ? ` + [${addOnNames}]` : "";
     return `Hi! I'd like to book: [${selectedPackage.name}]${addOnString}. Total Estimate: ${formatINR(Math.round(finalTotal))} (incl. GST).`;
+  };
+
+  const handleBookingRequest = async () => {
+    setIsLoading(true);
+    let timeoutId: NodeJS.Timeout;
+
+    try {
+      timeoutId = setTimeout(() => {
+        showInfo(
+          "This is taking longer than usual. Please check your connection.",
+        );
+      }, 8000);
+
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      window.open(
+        generateWhatsAppLink("studio", generateBookingMessage()),
+        "_blank",
+        "noopener,noreferrer",
+      );
+    } catch (error) {
+      showError("Failed to initiate booking request. Please try again.");
+    } finally {
+      clearTimeout(timeoutId!);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -389,14 +418,14 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
             </div>
 
             <div className="w-full md:w-auto flex flex-col items-center md:items-end flex-shrink-0">
-              <a
-                href={generateWhatsAppLink("studio", generateBookingMessage())}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full md:w-auto rounded-full bg-warning px-8 py-4 text-center font-bold text-warning-foreground transition-all hover:opacity-90 hover:shadow-[0_0_30px_-5px_hsl(var(--color-warning)/0.5)] whitespace-nowrap"
+              <button
+                onClick={handleBookingRequest}
+                disabled={isLoading}
+                className="w-full md:w-auto flex items-center justify-center gap-2 rounded-full bg-warning px-8 py-4 text-center font-bold text-warning-foreground transition-all hover:opacity-90 hover:shadow-[0_0_30px_-5px_hsl(var(--color-warning)/0.5)] whitespace-nowrap disabled:opacity-50 disabled:pointer-events-none"
               >
-                Request Booking
-              </a>
+                {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isLoading ? "Opening..." : "Request Booking"}
+              </button>
               <p className="text-xs text-zinc-500 mt-3">
                 No payment required to request
               </p>

@@ -3,9 +3,14 @@
 import { useRentalCart } from './RentalCartContext';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { useNotify } from '@/hooks/useNotify';
+import { Loader2 } from 'lucide-react';
 
 export function RentalCartSummary() {
   const { selectedItems, subtotal, gst, finalTotal, clearCart } = useRentalCart();
+  const [isLoading, setIsLoading] = useState(false);
+  const { showError, showInfo } = useNotify();
 
   if (selectedItems.size === 0) return null;
 
@@ -14,6 +19,25 @@ export function RentalCartSummary() {
   const generateBookingMessage = () => {
     const itemNames = Array.from(selectedItems.values()).map(item => item.name).join(', ');
     return `Hi! I'd like to request a rental booking for the following equipment:\n\n[ ${itemNames} ]\n\nTotal Estimated Rate: ${formatINR(Math.round(finalTotal))} (incl. GST) / day.`;
+  };
+
+  const handleBookingRequest = async () => {
+    setIsLoading(true);
+    let timeoutId: NodeJS.Timeout;
+
+    try {
+      timeoutId = setTimeout(() => {
+        showInfo("This is taking longer than usual. Please check your connection.");
+      }, 8000);
+
+      await new Promise(resolve => setTimeout(resolve, 300));
+      window.open(generateWhatsAppLink('rentals', generateBookingMessage()), '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      showError("Failed to initiate booking request. Please try again.");
+    } finally {
+      clearTimeout(timeoutId!);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -68,14 +92,14 @@ export function RentalCartSummary() {
           </div>
           
           <div className="w-full md:w-auto flex flex-col items-center flex-shrink-0">
-            <a
-              href={generateWhatsAppLink('rentals', generateBookingMessage())}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full md:w-auto rounded-full bg-warning px-8 py-4 text-center font-bold text-warning-foreground transition-all hover:opacity-90 hover:shadow-[0_0_30px_-5px_hsl(var(--color-warning)/0.5)] whitespace-nowrap"
+            <button
+              onClick={handleBookingRequest}
+              disabled={isLoading}
+              className="w-full md:w-auto flex items-center justify-center gap-2 rounded-full bg-warning px-8 py-4 text-center font-bold text-warning-foreground transition-all hover:opacity-90 hover:shadow-[0_0_30px_-5px_hsl(var(--color-warning)/0.5)] whitespace-nowrap disabled:opacity-50 disabled:pointer-events-none"
             >
-              Request Booking
-            </a>
+              {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isLoading ? "Opening..." : "Request Booking"}
+            </button>
             <p className="text-xs text-zinc-500 mt-2">No payment required</p>
           </div>
         </div>

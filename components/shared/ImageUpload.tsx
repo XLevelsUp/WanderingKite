@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
+import { useNotify } from "@/hooks/useNotify";
 
 interface ImageUploadProps {
   /** Current image URL (from DB). Controls the visible preview on load. */
@@ -36,25 +37,36 @@ const ACCEPTED = [
 ];
 const MAX_MB = 50;
 
-async function compressImage(file: File, maxWidthPx = 1920, qualityJpeg = 0.82): Promise<File> {
+async function compressImage(
+  file: File,
+  maxWidthPx = 1920,
+  qualityJpeg = 0.82,
+): Promise<File> {
   return new Promise((resolve) => {
     const img = new window.Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
       const scale = Math.min(1, maxWidthPx / img.width);
-      const canvas = document.createElement('canvas');
-      canvas.width  = img.width  * scale;
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width * scale;
       canvas.height = img.height * scale;
-      const ctx = canvas.getContext('2d')!;
+      const ctx = canvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       canvas.toBlob(
         (blob) => {
           URL.revokeObjectURL(url);
-          if (!blob) { resolve(file); return; }
-          resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+          if (!blob) {
+            resolve(file);
+            return;
+          }
+          resolve(
+            new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
+              type: "image/jpeg",
+            }),
+          );
         },
-        'image/jpeg',
-        qualityJpeg
+        "image/jpeg",
+        qualityJpeg,
       );
     };
     img.src = url;
@@ -72,8 +84,12 @@ export function ImageUpload({
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [isDragOver, setIsDragOver] = useState(false);
-  const [compressionStats, setCompressionStats] = useState<{ before: number; after: number } | null>(null);
+  const [compressionStats, setCompressionStats] = useState<{
+    before: number;
+    after: number;
+  } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { showError, showInfo } = useNotify();
 
   // ── Upload logic ─────────────────────────────────────────────────────────────
   const uploadFile = useCallback(
@@ -108,7 +124,15 @@ export function ImageUpload({
       const objectUrl = URL.createObjectURL(fileToUpload);
       setPreview(objectUrl);
 
+      let timeoutId: NodeJS.Timeout;
+
       try {
+        timeoutId = setTimeout(() => {
+          showInfo(
+            "This is taking longer than usual. Please check your connection.",
+          );
+        }, 8000);
+
         const supabase = createClient();
         const ext = fileToUpload.name.split(".").pop() ?? "jpg";
         const timestamp = Date.now();
@@ -123,7 +147,10 @@ export function ImageUpload({
 
         const { error: uploadError } = await supabase.storage
           .from(bucket)
-          .upload(filePath, fileToUpload, { upsert: true, contentType: fileToUpload.type });
+          .upload(filePath, fileToUpload, {
+            upsert: true,
+            contentType: fileToUpload.type,
+          });
 
         if (uploadError) throw new Error(uploadError.message);
 
@@ -141,9 +168,25 @@ export function ImageUpload({
         setErrorMsg(err.message ?? "Upload failed. Please try again.");
         // Keep the previous stable preview if one existed
         setPreview(value || null);
+        showError(
+          "Upload failed. Please check your connection and try again.",
+          {
+            title: "Upload Failed",
+            action: (
+              <button
+                onClick={() => uploadFile(rawFile)}
+                className="text-sm font-semibold text-red-400 hover:text-red-300 transition-colors"
+              >
+                Retry Upload
+              </button>
+            ),
+          },
+        );
+      } finally {
+        clearTimeout(timeoutId!);
       }
     },
-    [bucket, folder, onChange, value],
+    [bucket, folder, onChange, value, showError, showInfo],
   );
 
   // ── Drag handlers ─────────────────────────────────────────────────────────
@@ -252,7 +295,8 @@ export function ImageUpload({
                 </div>
                 {compressionStats && (
                   <div className="flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-medium text-muted-foreground border border-border w-fit backdrop-blur-sm">
-                    {formatSize(compressionStats.before)} → {formatSize(compressionStats.after)}
+                    {formatSize(compressionStats.before)} →{" "}
+                    {formatSize(compressionStats.after)}
                   </div>
                 )}
               </div>
@@ -290,7 +334,7 @@ export function ImageUpload({
             <div className="text-center">
               <p className="text-sm font-medium text-foreground">Uploading…</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {compressionStats 
+                {compressionStats
                   ? `Compressed: ${formatSize(compressionStats.before)} → ${formatSize(compressionStats.after)}`
                   : "Please wait while we upload your image"}
               </p>

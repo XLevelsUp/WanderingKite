@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, ArrowLeft, X, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
@@ -39,12 +39,29 @@ export function GalleryTemplate({ category, mainCategory, subCategory, shoots = 
     const backText = mainCategory ? `Back to ${category.category}` : `Back to Portfolio`;
     const message = `Hi! I'd like to inquire about your ${category.title} services.`;
 
+    // Cleanup lingering pointer-events from Framer Motion
+    useEffect(() => {
+        // Run once on mount and also after any selectedImage state changes
+        const cleanupPointerEvents = () => {
+            if (typeof document !== 'undefined') {
+                // Framer Motion sometimes leaves pointer-events: none on the body after layoutId animations
+                document.body.style.pointerEvents = 'auto';
+            }
+        };
+        
+        cleanupPointerEvents();
+        
+        // Safety timeout to ensure it runs after any animations complete
+        const timeout = setTimeout(cleanupPointerEvents, 500);
+        return () => clearTimeout(timeout);
+    }, [selectedImage]);
+
     return (
         <main className="min-h-screen bg-background pt-20">
             {/* Sticky Glassmorphism Header */}
             <header className="sticky top-20 z-40 border-b border-border bg-background/80 backdrop-blur-md">
                 <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-                    <Link href={backUrl} className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                    <Link href={backUrl} style={{ pointerEvents: 'auto' }} className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors relative z-50">
                         <ArrowLeft className="h-4 w-4" />
                         {backText}
                     </Link>
@@ -57,7 +74,8 @@ export function GalleryTemplate({ category, mainCategory, subCategory, shoots = 
                             href={generateWhatsAppLink('photography', message)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-block rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-400"
+                            style={{ pointerEvents: 'auto' }}
+                            className="inline-block rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-400 relative z-50"
                         >
                             Book Now
                         </a>
@@ -69,6 +87,13 @@ export function GalleryTemplate({ category, mainCategory, subCategory, shoots = 
             <section className="py-12 container mx-auto px-6">
                 <motion.div
                     layoutId={`gallery-card-${category.id}`}
+                    onLayoutAnimationComplete={() => {
+                        // Force pointer events back to auto after layout animation finishes
+                        if (typeof document !== 'undefined') {
+                            document.body.style.pointerEvents = 'auto';
+                        }
+                    }}
+                    style={{ pointerEvents: 'auto' }}
                     className="relative aspect-video w-full overflow-hidden rounded-2xl border border-border bg-card mb-12"
                 >
                     {heroImage ? (
@@ -87,8 +112,8 @@ export function GalleryTemplate({ category, mainCategory, subCategory, shoots = 
                         </>
                     )}
                     
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent">
-                        <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent pointer-events-none">
+                        <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 pointer-events-auto">
                             <span className="mb-4 inline-block rounded-full bg-amber-500/10 border border-amber-500/20 px-4 py-1 text-sm font-semibold text-amber-500 backdrop-blur-sm">
                                 {category.category}
                             </span>

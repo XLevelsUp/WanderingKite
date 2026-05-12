@@ -97,7 +97,7 @@ export function StudioCarousel() {
                     alt={img.alt}
                     fill
                     priority={isActive}
-                    className="object-cover"
+                    className={img.id === 5 ? "object-contain" : "object-cover"}
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </motion.div>

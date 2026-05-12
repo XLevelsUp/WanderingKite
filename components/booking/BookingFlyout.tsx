@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X } from "lucide-react";
+import { MessageCircle, X, Loader2 } from "lucide-react";
 import { generateWhatsAppLink } from "@/lib/whatsapp";
+import { useNotify } from "@/hooks/useNotify";
 
 interface BookingFlyoutProps {
   service?: string;
@@ -12,11 +13,36 @@ interface BookingFlyoutProps {
 export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
   const [visible, setVisible] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { showError, showInfo } = useNotify();
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 2500);
     return () => clearTimeout(timer);
   }, []);
+
+  const handleWhatsAppClick = async () => {
+    setIsLoading(true);
+    let timeoutId: NodeJS.Timeout;
+
+    try {
+      // Show slow network warning if it takes > 8s
+      timeoutId = setTimeout(() => {
+        showInfo("This is taking longer than usual. Please check your connection.");
+      }, 8000);
+
+      // Simulate a small delay for the spinner (since it's just a URL open)
+      // If there were a real tracking API call, it would go here.
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      window.open(generateWhatsAppLink(service), '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      showError("Failed to open WhatsApp. Please try again.");
+    } finally {
+      clearTimeout(timeoutId!);
+      setIsLoading(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -73,10 +99,9 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
                     Tap below to open WhatsApp with your enquiry pre-filled. We
                     typically respond within 30 minutes.
                   </p>
-                  <a
-                    href={generateWhatsAppLink(service)}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={handleWhatsAppClick}
+                    disabled={isLoading}
                     className="
                       flex w-full items-center justify-center gap-2 rounded-xl py-3
                       bg-primary text-primary-foreground
@@ -84,11 +109,16 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
                       transition-all duration-200
                       hover:opacity-90 hover:shadow-[0_8px_28px_hsl(var(--primary)/0.40)]
                       hover:scale-[1.02] active:scale-[0.98]
+                      disabled:opacity-50 disabled:pointer-events-none
                     "
                   >
-                    <MessageCircle className="h-4 w-4" />
-                    Open WhatsApp
-                  </a>
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <MessageCircle className="h-4 w-4" />
+                    )}
+                    {isLoading ? "Opening..." : "Open WhatsApp"}
+                  </button>
                 </div>
               </motion.div>
             ) : (

@@ -7,6 +7,7 @@ import { BookingFlyout } from '@/components/booking/BookingFlyout';
 import { brandConfig } from '@/config/brand.config';
 import { siteConfig } from '@/config/site';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
+import { NotificationProvider } from '@/components/ui/NotificationProvider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -262,9 +263,11 @@ export default function RootLayout({
           type='application/ld+json'
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
-        <MainNav />
-        {children}
-        <BookingFlyout />
+        <NotificationProvider>
+          <MainNav />
+          {children}
+          <BookingFlyout />
+        </NotificationProvider>
       </body>
     </html>
   );

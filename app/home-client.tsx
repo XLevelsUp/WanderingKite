@@ -27,11 +27,11 @@ const services = [
     title: "Studio Space",
     tagline: "1200 sq ft",
     description:
-      "Premium studio facilities for photography and video production with cyclorama wall.",
+      "Premium studio facilities for photography and video production.",
     iconName: "studio" as const,
     href: "/studiospace",
     badge: "New",
-    features: ["Cyclorama Wall", "ProFoto Lighting", "Green Screen"],
+    features: ["Infinity Wall", "ProFoto Lighting", "Green Screen"],
     delay: 0.1,
   },
 ];
