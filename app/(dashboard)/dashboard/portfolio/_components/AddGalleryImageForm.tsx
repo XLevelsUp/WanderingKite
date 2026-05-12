@@ -36,8 +36,8 @@ export function AddGalleryImageForm({ shootId }: { shootId: string }) {
         <ImageUpload
           value={url || null}
           onChange={setUrl}
-          bucket='equipment-images'
-          folder='portfolio'
+          bucket="equipment-images"
+          folder="portfolio"
           disabled={isSubmitting}
         />
         <p className="text-xs text-muted-foreground">

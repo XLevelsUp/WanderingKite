@@ -22,6 +22,8 @@ import {
 } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { ImageUpload } from '@/components/shared/ImageUpload';
+import { useNotify } from '@/hooks/useNotify';
+import { Loader2 } from 'lucide-react';
 
 interface NewEquipmentFormProps {
   categories: Array<{ id: string; name: string }>;
@@ -43,11 +45,11 @@ function ImageUploadField({
   const [url, setUrl] = useState(defaultValue ?? '');
   return (
     <>
-      <input type='hidden' name={name} value={url} />
+      <input type="hidden" name={name} value={url} />
       <ImageUpload
         value={url || null}
         onChange={setUrl}
-        bucket='equipment-images'
+        bucket="equipment-images"
         disabled={disabled}
       />
     </>
@@ -61,26 +63,34 @@ export function NewEquipmentForm({
 }: NewEquipmentFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('');
+  const { showError, showInfo, showSuccess } = useNotify();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
+    let timeoutId: NodeJS.Timeout;
 
     try {
+      timeoutId = setTimeout(() => {
+        showInfo(
+          'This is taking longer than usual. Please check your connection.'
+        );
+      }, 8000);
+
       const formData = new FormData(e.currentTarget);
       formData.set('category_id', selectedCategory);
       formData.set('branch_id', selectedBranch);
 
       await createEquipment(formData);
+      showSuccess('Equipment created successfully');
       router.push('/dashboard/equipment');
       router.refresh();
     } catch (err: any) {
-      setError(err.message || 'Failed to create equipment');
+      showError(err.message || 'Failed to create equipment');
     } finally {
+      clearTimeout(timeoutId!);
       setIsLoading(false);
     }
   }
@@ -94,37 +104,31 @@ export function NewEquipmentForm({
             Enter the details for the new equipment item
           </CardDescription>
         </CardHeader>
-        <CardContent className='space-y-4'>
-          {error && (
-            <div className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm'>
-              {error}
-            </div>
-          )}
-
-          <div className='space-y-2'>
-            <Label htmlFor='name'>Equipment Name *</Label>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Equipment Name *</Label>
             <Input
-              id='name'
-              name='name'
-              placeholder='e.g., Canon EOS R5'
+              id="name"
+              name="name"
+              placeholder="e.g., Canon EOS R5"
               required
               disabled={isLoading}
             />
           </div>
 
-          <div className='space-y-2'>
-            <Label htmlFor='serial_number'>Serial Number *</Label>
+          <div className="space-y-2">
+            <Label htmlFor="serial_number">Serial Number *</Label>
             <Input
-              id='serial_number'
-              name='serial_number'
-              placeholder='e.g., SN123456789'
+              id="serial_number"
+              name="serial_number"
+              placeholder="e.g., SN123456789"
               required
               disabled={isLoading}
             />
           </div>
 
-          <div className='space-y-2'>
-            <Label htmlFor='category'>Category *</Label>
+          <div className="space-y-2">
+            <Label htmlFor="category">Category *</Label>
             <Select
               value={selectedCategory}
               onValueChange={setSelectedCategory}
@@ -132,7 +136,7 @@ export function NewEquipmentForm({
               disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder='Select a category' />
+                <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((category) => (
@@ -144,8 +148,8 @@ export function NewEquipmentForm({
             </Select>
           </div>
 
-          <div className='space-y-2'>
-            <Label htmlFor='branch'>Branch *</Label>
+          <div className="space-y-2">
+            <Label htmlFor="branch">Branch *</Label>
             <Select
               value={selectedBranch}
               onValueChange={setSelectedBranch}
@@ -153,7 +157,7 @@ export function NewEquipmentForm({
               disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder='Select a branch' />
+                <SelectValue placeholder="Select a branch" />
               </SelectTrigger>
               <SelectContent>
                 {branches.map((branch) => (
@@ -165,72 +169,76 @@ export function NewEquipmentForm({
             </Select>
           </div>
 
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='rental_price'>Rental Price (per day) *</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="rental_price">Rental Price (per day) *</Label>
               <Input
-                id='rental_price'
-                name='rental_price'
-                type='number'
-                step='0.01'
-                min='0'
-                placeholder='0.00'
+                id="rental_price"
+                name="rental_price"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
                 required
                 disabled={isLoading}
               />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='weekly_price'>Weekly Price</Label>
+            <div className="space-y-2">
+              <Label htmlFor="weekly_price">Weekly Price</Label>
               <Input
-                id='weekly_price'
-                name='weekly_price'
-                type='number'
-                step='0.01'
-                min='0'
-                placeholder='0.00'
+                id="weekly_price"
+                name="weekly_price"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
                 disabled={isLoading}
               />
             </div>
           </div>
 
-          <div className='space-y-2'>
+          <div className="space-y-2">
             <Label>Equipment Image</Label>
-            <p className='text-xs text-muted-foreground'>
-              Drag &amp; drop an image, or click to browse. Uploaded automatically to Supabase Storage.
+            <p className="text-xs text-muted-foreground">
+              Drag &amp; drop an image, or click to browse. Uploaded
+              automatically to Supabase Storage.
             </p>
-            <ImageUploadField name='image_url' disabled={isLoading} />
+            <ImageUploadField name="image_url" disabled={isLoading} />
           </div>
 
-          <div className='space-y-2'>
-            <Label htmlFor='specs'>Specifications</Label>
+          <div className="space-y-2">
+            <Label htmlFor="specs">Specifications</Label>
             <Input
-              id='specs'
-              name='specs'
-              placeholder='33MP Full-Frame, 4K 60fps, IBIS'
+              id="specs"
+              name="specs"
+              placeholder="33MP Full-Frame, 4K 60fps, IBIS"
               disabled={isLoading}
             />
-            <p className='text-xs text-muted-foreground'>Comma-separated list of key features.</p>
+            <p className="text-xs text-muted-foreground">
+              Comma-separated list of key features.
+            </p>
           </div>
 
-          <div className='space-y-2'>
-            <Label htmlFor='description'>Description</Label>
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
             <Textarea
-              id='description'
-              name='description'
-              placeholder='Additional details about this equipment...'
+              id="description"
+              name="description"
+              placeholder="Additional details about this equipment..."
               rows={4}
               disabled={isLoading}
             />
           </div>
 
-          <div className='flex gap-4 pt-4'>
-            <Button type='submit' disabled={isLoading}>
+          <div className="flex gap-4 pt-4">
+            <Button type="submit" disabled={isLoading} className="gap-2">
+              {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               {isLoading ? 'Creating...' : 'Create Equipment'}
             </Button>
             <Button
-              type='button'
-              variant='outline'
+              type="button"
+              variant="outline"
               onClick={() => router.back()}
               disabled={isLoading}
             >

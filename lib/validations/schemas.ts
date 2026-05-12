@@ -86,7 +86,9 @@ export type QuickReturnFormData = z.infer<typeof quickReturnSchema>;
 const projectBaseSchema = z.object({
   clientId: z.string().uuid('Select a valid client'),
   title: z.string().min(2, 'Project title must be at least 2 characters'),
-  shootDate: z.string().datetime({ message: 'Provide a valid shoot date/time' }),
+  shootDate: z
+    .string()
+    .datetime({ message: 'Provide a valid shoot date/time' }),
   notes: z.string().max(2000).optional(),
 });
 
@@ -116,7 +118,13 @@ const portraitPhotographySchema = projectBaseSchema.extend({
 
 const corporateProjectSchema = projectBaseSchema.extend({
   domain: z.literal('corporate'),
-  type: z.enum(['product', 'cinematic-video', 'social-media', 'model-shoot', 'headshot']),
+  type: z.enum([
+    'product',
+    'cinematic-video',
+    'social-media',
+    'model-shoot',
+    'headshot',
+  ]),
   deliverable: z.enum(['still', 'video', 'both']),
   platform: z.enum(['instagram', 'youtube', 'linkedin', 'other']).optional(),
   teleprompter: z.boolean().default(false),
@@ -125,42 +133,44 @@ const corporateProjectSchema = projectBaseSchema.extend({
 // ── Commercial ───────────────────────────────────────────────────────────────
 // Music Videos require HSS flash + gimbal; validated at the discriminated level.
 
-const commercialProjectSchema = projectBaseSchema.extend({
-  domain: z.literal('commercial'),
-  type: z.enum(['ads', 'music-video', 'short-film']),
-  productionDays: z.number().int().min(1),
-  postProduction: z.boolean().default(false),
-  /** HSS flash — required for music-video and ads */
-  hssFlash: z.boolean(),
-  /** Motorised gimbal — required for music-video and short-film */
-  gimbal: z.boolean(),
-  drone: z.boolean().default(false),
-  slider: z.boolean().default(false),
-}).superRefine((data, ctx) => {
-  if (data.type === 'music-video') {
-    if (!data.hssFlash) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['hssFlash'],
-        message: 'Music Videos require High-Speed Sync flash in the kit',
-      });
+const commercialProjectSchema = projectBaseSchema
+  .extend({
+    domain: z.literal('commercial'),
+    type: z.enum(['ads', 'music-video', 'short-film']),
+    productionDays: z.number().int().min(1),
+    postProduction: z.boolean().default(false),
+    /** HSS flash — required for music-video and ads */
+    hssFlash: z.boolean(),
+    /** Motorised gimbal — required for music-video and short-film */
+    gimbal: z.boolean(),
+    drone: z.boolean().default(false),
+    slider: z.boolean().default(false),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === 'music-video') {
+      if (!data.hssFlash) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['hssFlash'],
+          message: 'Music Videos require High-Speed Sync flash in the kit',
+        });
+      }
+      if (!data.gimbal) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['gimbal'],
+          message: 'Music Videos require a motorised gimbal in the kit',
+        });
+      }
     }
-    if (!data.gimbal) {
+    if (data.type === 'short-film' && !data.gimbal) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['gimbal'],
-        message: 'Music Videos require a motorised gimbal in the kit',
+        message: 'Short Films require a gimbal for cinematic movement',
       });
     }
-  }
-  if (data.type === 'short-film' && !data.gimbal) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['gimbal'],
-      message: 'Short Films require a gimbal for cinematic movement',
-    });
-  }
-});
+  });
 
 // ── Studio Facilities ─────────────────────────────────────────────────────────
 
@@ -189,7 +199,9 @@ export type ProjectFormData = z.infer<typeof projectCategorySchema>;
 
 // Convenience sub-type exports
 export type EventPhotographyFormData = z.infer<typeof eventPhotographySchema>;
-export type PortraitPhotographyFormData = z.infer<typeof portraitPhotographySchema>;
+export type PortraitPhotographyFormData = z.infer<
+  typeof portraitPhotographySchema
+>;
 export type CorporateProjectFormData = z.infer<typeof corporateProjectSchema>;
 export type CommercialProjectFormData = z.infer<typeof commercialProjectSchema>;
 export type StudioFacilitiesFormData = z.infer<typeof studioFacilitiesSchema>;

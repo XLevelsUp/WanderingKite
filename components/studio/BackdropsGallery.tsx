@@ -1,34 +1,34 @@
-"use client";
+'use client';
 
-import React from "react";
-import Image from "next/image";
-import { motion } from "framer-motion";
+import React from 'react';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
 
 const BACKDROPS = [
   {
     id: 1,
-    name: "Matte Black",
-    image: "/backdrops_images/easternblue.webp",
+    name: 'Matte Black',
+    image: '/backdrops_images/easternblue.webp',
   },
-  { id: 2, name: "Pastel Red", image: "/backdrops_images/pastel-red.webp" },
+  { id: 2, name: 'Pastel Red', image: '/backdrops_images/pastel-red.webp' },
   {
     id: 3,
-    name: "Golden Yellow",
-    image: "/backdrops_images/golden-yellow.webp",
+    name: 'Golden Yellow',
+    image: '/backdrops_images/golden-yellow.webp',
   },
-  { id: 4, name: "Asagi Blue", image: "/backdrops_images/asagi-blue.webp" },
-  { id: 5, name: "Muddy Green", image: "/backdrops_images/muddy-green.webp" },
-  { id: 6, name: "Dark Grey", image: "/backdrops_images/dark-grey.webp" },
-  { id: 7, name: "White", image: "/backdrops_images/white.webp" },
+  { id: 4, name: 'Asagi Blue', image: '/backdrops_images/asagi-blue.webp' },
+  { id: 5, name: 'Muddy Green', image: '/backdrops_images/muddy-green.webp' },
+  { id: 6, name: 'Dark Grey', image: '/backdrops_images/dark-grey.webp' },
+  { id: 7, name: 'White', image: '/backdrops_images/white.webp' },
   {
     id: 8,
-    name: "Sandy Walnut",
-    image: "/backdrops_images/sandy-walnut.webp",
+    name: 'Sandy Walnut',
+    image: '/backdrops_images/sandy-walnut.webp',
   },
   {
     id: 9,
-    name: "Pale Lavender",
-    image: "/backdrops_images/pale-lavender.webp",
+    name: 'Pale Lavender',
+    image: '/backdrops_images/pale-lavender.webp',
   },
 ];
 
@@ -49,11 +49,11 @@ export function BackdropsGallery() {
               key={backdrop.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
+              viewport={{ once: true, margin: '-50px' }}
               transition={{
                 delay: index * 0.1,
                 duration: 0.5,
-                ease: "easeOut",
+                ease: 'easeOut',
               }}
               className="group relative overflow-hidden rounded-lg border border-white/5 bg-zinc-900/50 w-64 h-44 mx-auto"
             >

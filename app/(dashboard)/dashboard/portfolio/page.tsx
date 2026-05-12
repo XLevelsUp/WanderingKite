@@ -25,15 +25,17 @@ export default async function PortfolioPage() {
   const shoots = await getShoots();
 
   return (
-    <div className='space-y-8'>
-      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Portfolio Management</h1>
-          <p className='text-foreground/40 mt-2 text-sm'>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Portfolio Management
+          </h1>
+          <p className="text-foreground/40 mt-2 text-sm">
             Manage your photography shoots and gallery images
           </p>
         </div>
-        <Link href='/dashboard/portfolio/new'>
+        <Link href="/dashboard/portfolio/new">
           <Button>Add New Shoot</Button>
         </Link>
       </div>
@@ -61,7 +63,7 @@ export default async function PortfolioPage() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className='text-center text-foreground/40 py-8'
+                    className="text-center text-foreground/40 py-8"
                   >
                     No shoots found. Add your first shoot to get started.
                   </TableCell>
@@ -69,12 +71,17 @@ export default async function PortfolioPage() {
               ) : (
                 shoots.map((shoot: any) => (
                   <TableRow key={shoot.id}>
-                    <TableCell className='font-medium flex items-center gap-3'>
-                      <div className='w-10 h-10 rounded-md bg-white/5 border border-white/10 flex items-center justify-center shrink-0'>
-                        {shoot.gallery_images && shoot.gallery_images.length > 0 ? (
-                           <img src={shoot.gallery_images[0].url} alt="" className="w-full h-full object-cover rounded-md" />
+                    <TableCell className="font-medium flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-md bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                        {shoot.gallery_images &&
+                        shoot.gallery_images.length > 0 ? (
+                          <img
+                            src={shoot.gallery_images[0].url}
+                            alt=""
+                            className="w-full h-full object-cover rounded-md"
+                          />
                         ) : (
-                          <Camera className='w-4 h-4 text-foreground/30' />
+                          <Camera className="w-4 h-4 text-foreground/30" />
                         )}
                       </div>
                       {shoot.title}
@@ -90,12 +97,12 @@ export default async function PortfolioPage() {
                         {shoot.gallery_images?.length || 0} images
                       </div>
                     </TableCell>
-                    <TableCell className='text-foreground/60 text-sm'>
+                    <TableCell className="text-foreground/60 text-sm">
                       {new Date(shoot.created_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className='space-x-2'>
+                    <TableCell className="space-x-2">
                       <Link href={`/dashboard/portfolio/${shoot.id}`}>
-                        <Button variant='outline' size='sm'>
+                        <Button variant="outline" size="sm">
                           Manage
                         </Button>
                       </Link>

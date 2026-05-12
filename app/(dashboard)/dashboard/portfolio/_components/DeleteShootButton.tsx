@@ -5,11 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { deleteShoot } from '@/actions/shoots';
 
-export function DeleteShootButton({ id, title }: { id: string; title: string }) {
+export function DeleteShootButton({
+  id,
+  title,
+}: {
+  id: string;
+  title: string;
+}) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
-    if (!confirm(`Are you sure you want to delete the shoot "${title}"? This will also remove all associated images.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete the shoot "${title}"? This will also remove all associated images.`
+      )
+    ) {
       return;
     }
 

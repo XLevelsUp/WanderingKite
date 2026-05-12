@@ -14,7 +14,8 @@ declare global {
 
 /** Fire a GA4 custom event safely (client-side only). */
 function track(eventName: string, params?: Record<string, unknown>) {
-  if (typeof window === 'undefined' || typeof window.gtag !== 'function') return;
+  if (typeof window === 'undefined' || typeof window.gtag !== 'function')
+    return;
   window.gtag('event', eventName, params ?? {});
 }
 
@@ -22,7 +23,13 @@ function track(eventName: string, params?: Record<string, unknown>) {
 
 /** User clicked a WhatsApp CTA. */
 export function trackWhatsAppClick(params: {
-  location: 'navbar' | 'flyout' | 'faq' | 'equipment_card' | 'service_page' | 'footer';
+  location:
+    | 'navbar'
+    | 'flyout'
+    | 'faq'
+    | 'equipment_card'
+    | 'service_page'
+    | 'footer';
   service?: string;
   equipment_name?: string;
 }) {
@@ -94,10 +101,7 @@ export function trackFAQOpen(params: {
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
 /** User clicked a navigation link. */
-export function trackNavClick(params: {
-  label: string;
-  href: string;
-}) {
+export function trackNavClick(params: { label: string; href: string }) {
   track('nav_click', {
     event_category: 'navigation',
     event_label: params.label,

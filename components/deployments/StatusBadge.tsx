@@ -37,7 +37,7 @@ export function StatusBadge({ status, isOverdue = false }: StatusBadgeProps) {
     <span
       className={cn(
         'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium tabular-nums tracking-wide',
-        className,
+        className
       )}
     >
       <span
@@ -46,7 +46,7 @@ export function StatusBadge({ status, isOverdue = false }: StatusBadgeProps) {
           key === 'in_field' && 'bg-blue-400',
           key === 'overdue' && 'bg-amber-400 animate-pulse',
           key === 'returned' && 'bg-emerald-400',
-          key === 'maintenance' && 'bg-red-400',
+          key === 'maintenance' && 'bg-red-400'
         )}
       />
       {label}

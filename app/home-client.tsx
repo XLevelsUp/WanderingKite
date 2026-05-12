@@ -1,37 +1,37 @@
-"use client";
+'use client';
 
-import { ServiceCard } from "@/components/services/ServiceCard";
-import { TrustSection } from "@/components/shared/TrustSection";
-import { Footer } from "@/components/shared/Footer";
-import { HowItWorks } from "@/components/sections/HowItWorks";
-import { TechSpecs } from "@/components/sections/TechSpecs";
-import { FAQ } from "@/components/sections/FAQ";
-import { FadeIn } from "@/components/animations/FadeIn";
-import { StaggerContainer } from "@/components/animations/StaggerContainer";
-import { motion } from "framer-motion";
-import { TeamSection } from "@/components/sections/TeamSection";
+import { ServiceCard } from '@/components/services/ServiceCard';
+import { TrustSection } from '@/components/shared/TrustSection';
+import { Footer } from '@/components/shared/Footer';
+import { HowItWorks } from '@/components/sections/HowItWorks';
+import { TechSpecs } from '@/components/sections/TechSpecs';
+import { FAQ } from '@/components/sections/FAQ';
+import { FadeIn } from '@/components/animations/FadeIn';
+import { StaggerContainer } from '@/components/animations/StaggerContainer';
+import { motion } from 'framer-motion';
+import { TeamSection } from '@/components/sections/TeamSection';
 
 const services = [
   {
-    title: "Photography",
-    tagline: "Event & Lifestyle",
+    title: 'Photography',
+    tagline: 'Event & Lifestyle',
     description:
-      "Event and lifestyle photography that captures authentic moments with cinematic precision.",
-    iconName: "camera" as const,
-    href: "/photography",
-    badge: "Popular",
-    features: ["Weddings & Events", "Commercial Shoots", "Portrait Sessions"],
+      'Event and lifestyle photography that captures authentic moments with cinematic precision.',
+    iconName: 'camera' as const,
+    href: '/photography',
+    badge: 'Popular',
+    features: ['Weddings & Events', 'Commercial Shoots', 'Portrait Sessions'],
     delay: 0,
   },
   {
-    title: "Studio Space",
-    tagline: "1200 sq ft",
+    title: 'Studio Space',
+    tagline: '1200 sq ft',
     description:
-      "Premium studio facilities for photography and video production with cyclorama wall.",
-    iconName: "studio" as const,
-    href: "/studiospace",
-    badge: "New",
-    features: ["Cyclorama Wall", "ProFoto Lighting", "Green Screen"],
+      'Premium studio facilities for photography and video production.',
+    iconName: 'studio' as const,
+    href: '/studiospace',
+    badge: 'New',
+    features: ['Infinity Wall', 'ProFoto Lighting', 'Green Screen'],
     delay: 0.1,
   },
 ];

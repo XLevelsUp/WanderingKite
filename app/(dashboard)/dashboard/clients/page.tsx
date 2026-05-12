@@ -21,13 +21,13 @@ export default async function ClientsPage() {
   const clients = await getClients();
 
   return (
-    <div className='space-y-8'>
-      <div className='flex justify-between items-center'>
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Clients</h1>
-          <p className='text-slate-500 mt-2'>Manage your client information</p>
+          <h1 className="text-3xl font-bold tracking-tight">Clients</h1>
+          <p className="text-slate-500 mt-2">Manage your client information</p>
         </div>
-        <Link href='/dashboard/clients/new'>
+        <Link href="/dashboard/clients/new">
           <Button>Add Client</Button>
         </Link>
       </div>
@@ -53,7 +53,7 @@ export default async function ClientsPage() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className='text-center text-slate-500 py-8'
+                    className="text-center text-slate-500 py-8"
                   >
                     No clients found. Add your first client to get started.
                   </TableCell>
@@ -61,13 +61,13 @@ export default async function ClientsPage() {
               ) : (
                 clients.map((client) => (
                   <TableRow key={client.id}>
-                    <TableCell className='font-medium'>{client.name}</TableCell>
+                    <TableCell className="font-medium">{client.name}</TableCell>
                     <TableCell>{client.email}</TableCell>
                     <TableCell>{client.phone || '-'}</TableCell>
                     <TableCell>{client.govtId || '-'}</TableCell>
                     <TableCell>
                       <Link href={`/dashboard/clients/${client.id}`}>
-                        <Button variant='outline' size='sm'>
+                        <Button variant="outline" size="sm">
                           View
                         </Button>
                       </Link>

@@ -8,10 +8,10 @@ export default async function NewEquipmentPage() {
   ]);
 
   return (
-    <div className='space-y-8'>
+    <div className="space-y-8">
       <div>
-        <h1 className='text-3xl font-bold tracking-tight'>Add Equipment</h1>
-        <p className='text-slate-500 mt-2'>
+        <h1 className="text-3xl font-bold tracking-tight">Add Equipment</h1>
+        <p className="text-slate-500 mt-2">
           Add a new item to your rental inventory
         </p>
       </div>

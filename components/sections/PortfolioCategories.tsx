@@ -1,45 +1,45 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import Image from "next/image";
-import { motion } from "framer-motion";
-import { Camera } from "lucide-react";
+import Link from 'next/link';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
+import { Camera } from 'lucide-react';
 
 const portfolioCategories = [
   {
-    id: "events",
-    title: "Event Photography",
-    category: "Events",
-    focus: "Weddings, Engagements & Birthdays",
+    id: 'events',
+    title: 'Event Photography',
+    category: 'Events',
+    focus: 'Weddings, Engagements & Birthdays',
   },
   {
-    id: "portraits",
-    title: "Portrait Sessions",
-    category: "Portraits",
-    focus: "Family, Maternity & Baby Shoots",
+    id: 'portraits',
+    title: 'Portrait Sessions',
+    category: 'Portraits',
+    focus: 'Family, Maternity & Baby Shoots',
   },
   {
-    id: "corporate",
-    title: "Corporate & Brand",
-    category: "Corporate",
-    focus: "Products, Headshots & Content",
+    id: 'corporate',
+    title: 'Corporate & Brand',
+    category: 'Corporate',
+    focus: 'Products, Headshots & Content',
   },
   {
-    id: "commercial",
-    title: "Commercial Productions",
-    category: "Commercial",
-    focus: "Ads, Music Videos & Short Films",
+    id: 'commercial',
+    title: 'Commercial Productions',
+    category: 'Commercial',
+    focus: 'Ads, Music Videos & Short Films',
   },
 ];
 
 export function PortfolioCategories() {
   const getBentoClasses = (index: number) => {
     // Create an asymmetric bento grid layout on medium/large screens
-    if (index === 0) return "md:col-span-2 md:row-span-1";
-    if (index === 1) return "md:col-span-1 md:row-span-1";
-    if (index === 2) return "md:col-span-1 md:row-span-1";
-    if (index === 3) return "md:col-span-2 md:row-span-1";
-    return "";
+    if (index === 0) return 'md:col-span-2 md:row-span-1';
+    if (index === 1) return 'md:col-span-1 md:row-span-1';
+    if (index === 2) return 'md:col-span-1 md:row-span-1';
+    if (index === 3) return 'md:col-span-2 md:row-span-1';
+    return '';
   };
 
   return (
@@ -58,8 +58,9 @@ export function PortfolioCategories() {
               src={`/images/photography/${item.id}.webp`}
               alt={item.title}
               fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className={`object-cover transition-transform duration-700 group-hover:scale-105 ${
-                item.id === "commercial" ? "object-top" : "object-center"
+                item.id === 'commercial' ? 'object-top' : 'object-center'
               }`}
             />
 

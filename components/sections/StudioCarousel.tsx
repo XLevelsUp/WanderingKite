@@ -1,44 +1,44 @@
-"use client";
+'use client';
 
-import React, { useEffect, useCallback, useState } from "react";
-import useEmblaCarousel from "embla-carousel-react";
-import Autoplay from "embla-carousel-autoplay";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import Image from "next/image";
+import React, { useEffect, useCallback, useState } from 'react';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
 
 const CAROUSEL_IMAGES = [
-  { id: 1, src: "/images/studio/placeholder1.webp", alt: "Studio Full View" },
-  { id: 2, src: "/images/studio/placeholder2.webp", alt: "Cyclorama Wall" },
-  { id: 3, src: "/images/studio/placeholder3.webp", alt: "Lighting Setup" },
+  { id: 1, src: '/images/studio/placeholder1.webp', alt: 'Studio Full View' },
+  { id: 2, src: '/images/studio/placeholder2.webp', alt: 'Cyclorama Wall' },
+  { id: 3, src: '/images/studio/placeholder3.webp', alt: 'Lighting Setup' },
   {
     id: 4,
-    src: "/images/studio/placeholder4.webp",
-    alt: "Makeup & Changing Area",
+    src: '/images/studio/placeholder4.webp',
+    alt: 'Makeup & Changing Area',
   },
-  { id: 5, src: "/images/studio/placeholder5.webp", alt: "Equipment Room" },
+  { id: 5, src: '/images/studio/placeholder5.webp', alt: 'Equipment Room' },
 ];
 
 export function StudioCarousel() {
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
       loop: true,
-      align: "center",
+      align: 'center',
       skipSnaps: false,
       containScroll: false,
     },
-    [Autoplay({ delay: 5000, stopOnInteraction: false })],
+    [Autoplay({ delay: 5000, stopOnInteraction: false })]
   );
 
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const scrollPrev = useCallback(
     () => emblaApi && emblaApi.scrollPrev(),
-    [emblaApi],
+    [emblaApi]
   );
   const scrollNext = useCallback(
     () => emblaApi && emblaApi.scrollNext(),
-    [emblaApi],
+    [emblaApi]
   );
 
   const onSelect = useCallback(() => {
@@ -49,8 +49,8 @@ export function StudioCarousel() {
   useEffect(() => {
     if (!emblaApi) return;
     onSelect();
-    emblaApi.on("select", onSelect);
-    emblaApi.on("reInit", onSelect);
+    emblaApi.on('select', onSelect);
+    emblaApi.on('reInit', onSelect);
   }, [emblaApi, onSelect]);
 
   return (
@@ -86,7 +86,7 @@ export function StudioCarousel() {
                         className="absolute inset-0 z-20 border-2 border-warning/60 pointer-events-none shadow-[inset_0_0_40px_rgba(var(--warning-rgb),0.2)]"
                         style={{
                           boxShadow:
-                            "inset 0 0 30px rgba(234, 179, 8, 0.2), 0 0 20px rgba(234, 179, 8, 0.1)",
+                            'inset 0 0 30px rgba(234, 179, 8, 0.2), 0 0 20px rgba(234, 179, 8, 0.1)',
                         }}
                       />
                     )}
@@ -97,7 +97,7 @@ export function StudioCarousel() {
                     alt={img.alt}
                     fill
                     priority={isActive}
-                    className="object-cover"
+                    className={img.id === 5 ? 'object-contain' : 'object-cover'}
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </motion.div>
@@ -116,7 +116,7 @@ export function StudioCarousel() {
               key={i}
               onClick={() => emblaApi?.scrollTo(i)}
               className={`h-1 transition-all duration-500 rounded-full ${
-                i === selectedIndex ? "w-12 bg-warning" : "w-3 bg-zinc-800"
+                i === selectedIndex ? 'w-12 bg-warning' : 'w-3 bg-zinc-800'
               }`}
               aria-label={`Go to slide ${i + 1}`}
             />

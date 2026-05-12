@@ -99,7 +99,7 @@ function FieldStatusCell({
   assignment: ActiveAssignment | null;
 }) {
   if (!assignment) {
-    return <span className='text-xs text-foreground/25 italic'>—</span>;
+    return <span className="text-xs text-foreground/25 italic">—</span>;
   }
 
   const now = Date.now();
@@ -108,9 +108,9 @@ function FieldStatusCell({
     new Date(assignment.expectedReturn).getTime() < now;
 
   return (
-    <div className='space-y-1.5'>
+    <div className="space-y-1.5">
       {/* Assignment status badge */}
-      <div className='flex items-center gap-1.5'>
+      <div className="flex items-center gap-1.5">
         <Radio
           className={`w-3 h-3 flex-shrink-0 ${isOverdue ? 'text-amber-400' : 'text-blue-400'}`}
         />
@@ -127,9 +127,9 @@ function FieldStatusCell({
 
       {/* Who has it */}
       {assignment.employee && (
-        <div className='flex items-center gap-1 text-[11px] text-foreground/50'>
-          <User className='w-3 h-3 flex-shrink-0 text-foreground/30' />
-          <span className='truncate max-w-[120px]'>
+        <div className="flex items-center gap-1 text-[11px] text-foreground/50">
+          <User className="w-3 h-3 flex-shrink-0 text-foreground/30" />
+          <span className="truncate max-w-[120px]">
             {assignment.employee.fullName ?? assignment.employee.email}
           </span>
         </div>
@@ -137,9 +137,9 @@ function FieldStatusCell({
 
       {/* Client or location */}
       {(assignment.client || assignment.location) && (
-        <div className='flex items-center gap-1 text-[11px] text-foreground/40'>
-          <MapPin className='w-3 h-3 flex-shrink-0 text-foreground/25' />
-          <span className='truncate max-w-[120px]'>
+        <div className="flex items-center gap-1 text-[11px] text-foreground/40">
+          <MapPin className="w-3 h-3 flex-shrink-0 text-foreground/25" />
+          <span className="truncate max-w-[120px]">
             {assignment.client?.name ?? assignment.location}
           </span>
         </div>
@@ -166,25 +166,25 @@ function FieldStatusCell({
 export default async function EquipmentPage() {
   const equipment = await getEquipmentWithFieldStatus();
   const inFieldCount = equipment.filter(
-    (e) => e.activeAssignment !== null,
+    (e) => e.activeAssignment !== null
   ).length;
 
   return (
-    <div className='space-y-8'>
-      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Equipment</h1>
-          <p className='text-foreground/40 mt-2 text-sm'>
+          <h1 className="text-3xl font-bold tracking-tight">Equipment</h1>
+          <p className="text-foreground/40 mt-2 text-sm">
             Manage your rental equipment inventory
             {inFieldCount > 0 && (
-              <span className='ml-2 inline-flex items-center gap-1 text-blue-400'>
-                · <Radio className='w-3 h-3' /> {inFieldCount} currently in
+              <span className="ml-2 inline-flex items-center gap-1 text-blue-400">
+                · <Radio className="w-3 h-3" /> {inFieldCount} currently in
                 field
               </span>
             )}
           </p>
         </div>
-        <Link href='/dashboard/equipment/new'>
+        <Link href="/dashboard/equipment/new">
           <Button>Add Equipment</Button>
         </Link>
       </div>
@@ -215,7 +215,7 @@ export default async function EquipmentPage() {
                 <TableRow>
                   <TableCell
                     colSpan={7}
-                    className='text-center text-foreground/40 py-8'
+                    className="text-center text-foreground/40 py-8"
                   >
                     No equipment found. Add your first item to get started.
                   </TableCell>
@@ -247,11 +247,11 @@ export default async function EquipmentPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className='font-medium'>{item.name}</TableCell>
-                    <TableCell className='font-mono text-xs text-foreground/60'>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell className="font-mono text-xs text-foreground/60">
                       {item.serialNumber}
                     </TableCell>
-                    <TableCell className='text-foreground/60'>
+                    <TableCell className="text-foreground/60">
                       {(item.categories as any)?.name || 'N/A'}
                     </TableCell>
                     <TableCell>
@@ -260,25 +260,28 @@ export default async function EquipmentPage() {
                     <TableCell>
                       <FieldStatusCell assignment={item.activeAssignment} />
                     </TableCell>
-                    <TableCell className='text-foreground/70'>
+                    <TableCell className="text-foreground/70">
                       ₹{Number(item.rentalPrice).toLocaleString('en-IN')}
                     </TableCell>
-                    <TableCell className='space-x-2'>
+                    <TableCell className="space-x-2">
                       <Link href={`/dashboard/equipment/${item.id}`}>
-                        <Button variant='outline' size='sm'>
+                        <Button variant="outline" size="sm">
                           View
                         </Button>
                       </Link>
                       <Link href={`/dashboard/equipment/${item.id}/history`}>
                         <Button
-                          variant='ghost'
-                          size='sm'
-                          className='text-foreground/40'
+                          variant="ghost"
+                          size="sm"
+                          className="text-foreground/40"
                         >
                           History
                         </Button>
                       </Link>
-                      <DeleteEquipmentButton equipmentId={item.id} equipmentName={item.name} />
+                      <DeleteEquipmentButton
+                        equipmentId={item.id}
+                        equipmentName={item.name}
+                      />
                     </TableCell>
                   </TableRow>
                 ))

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Check,
   Camera,
@@ -11,36 +11,38 @@ import {
   Users,
   Plus,
   Box,
-} from "lucide-react";
-import Image from "next/image";
-import { generateWhatsAppLink } from "@/lib/whatsapp";
+  Loader2,
+} from 'lucide-react';
+import Image from 'next/image';
+import { generateWhatsAppLink } from '@/lib/whatsapp';
+import { useNotify } from '@/hooks/useNotify';
 
 const PACKAGES = [
   {
-    id: "hourly",
-    name: "Hourly Flex",
+    id: 'hourly',
+    name: 'Hourly Flex',
     price: 999,
     originalPrice: 1499,
-    duration: "/per hr",
-    desc: "Includes Photo/Video Space, 3 Lights, 1 Tripod",
+    duration: '/per hr',
+    desc: 'Includes Photo/Video Space, 3 Lights, 1 Tripod',
     save: 500,
   },
   {
-    id: "half-day",
-    name: "Half Day",
+    id: 'half-day',
+    name: 'Half Day',
     price: 3499,
     originalPrice: 3999,
-    duration: "/4 hrs",
-    desc: "Perfect for portrait sessions or quick product shoots.",
+    duration: '/4 hrs',
+    desc: 'Perfect for portrait sessions or quick product shoots.',
     save: 500,
   },
   {
-    id: "full-day",
-    name: "Full Day",
+    id: 'full-day',
+    name: 'Full Day',
     price: 6999,
     originalPrice: 7999,
-    duration: "/8 hrs",
-    desc: "Best for elaborate setups, commercial shoots, and music videos.",
+    duration: '/8 hrs',
+    desc: 'Best for elaborate setups, commercial shoots, and music videos.',
     save: 1000,
     bestValue: true,
   },
@@ -48,17 +50,17 @@ const PACKAGES = [
 
 const ADD_ONS = [
   {
-    id: "cameraman",
-    name: "Pro Cameraman",
+    id: 'cameraman',
+    name: 'Pro Cameraman',
     price: 1000,
-    unit: "hr",
+    unit: 'hr',
     icon: User,
   },
   {
-    id: "assistant",
-    name: "Studio Assistant",
+    id: 'assistant',
+    name: 'Studio Assistant',
     price: 250,
-    unit: "hr",
+    unit: 'hr',
     icon: Users,
   },
 ];
@@ -67,8 +69,10 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
   const [selectedPackage, setSelectedPackage] = useState(PACKAGES[2]); // Default to Full Day
   const [selectedAddOns, setSelectedAddOns] = useState<Set<string>>(new Set());
   const [selectedEquipment, setSelectedEquipment] = useState<Set<string>>(
-    new Set(),
+    new Set()
   );
+  const [isLoading, setIsLoading] = useState(false);
+  const { showError, showInfo } = useNotify();
 
   const toggleAddOn = (id: string) => {
     const newSet = new Set(selectedAddOns);
@@ -88,9 +92,9 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
   };
 
   const packageHours =
-    selectedPackage.id === "hourly"
+    selectedPackage.id === 'hourly'
       ? 1
-      : selectedPackage.id === "half-day"
+      : selectedPackage.id === 'half-day'
         ? 4
         : 8;
 
@@ -120,14 +124,39 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
   const gst = subtotal * 0.18;
   const finalTotal = subtotal + gst;
 
-  const formatINR = (val: number) => `₹${val.toLocaleString("en-IN")}`;
+  const formatINR = (val: number) => `₹${val.toLocaleString('en-IN')}`;
 
   const generateBookingMessage = () => {
     const addOnNames = Array.from(selectedAddOns)
       .map((id) => ADD_ONS.find((a) => a.id === id)?.name)
-      .join(", ");
-    const addOnString = addOnNames ? ` + [${addOnNames}]` : "";
+      .join(', ');
+    const addOnString = addOnNames ? ` + [${addOnNames}]` : '';
     return `Hi! I'd like to book: [${selectedPackage.name}]${addOnString}. Total Estimate: ${formatINR(Math.round(finalTotal))} (incl. GST).`;
+  };
+
+  const handleBookingRequest = async () => {
+    setIsLoading(true);
+    let timeoutId: NodeJS.Timeout;
+
+    try {
+      timeoutId = setTimeout(() => {
+        showInfo(
+          'This is taking longer than usual. Please check your connection.'
+        );
+      }, 8000);
+
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      window.open(
+        generateWhatsAppLink('studio', generateBookingMessage()),
+        '_blank',
+        'noopener,noreferrer'
+      );
+    } catch (error) {
+      showError('Failed to initiate booking request. Please try again.');
+    } finally {
+      clearTimeout(timeoutId!);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -149,8 +178,8 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
               className={`relative cursor-pointer transition-all duration-300 rounded-2xl border p-6 flex flex-col sm:flex-row items-center justify-between gap-6
                                 ${
                                   selectedPackage.id === pkg.id
-                                    ? "border-warning bg-warning/10 shadow-[0_0_20px_-5px_hsl(var(--color-warning)/0.2)] sm:scale-[1.02]"
-                                    : "border-white/5 bg-zinc-900/50 hover:bg-zinc-900 sm:hover:scale-[1.01]"
+                                    ? 'border-warning bg-warning/10 shadow-[0_0_20px_-5px_hsl(var(--color-warning)/0.2)] sm:scale-[1.02]'
+                                    : 'border-white/5 bg-zinc-900/50 hover:bg-zinc-900 sm:hover:scale-[1.01]'
                                 }`}
             >
               {pkg.bestValue && (
@@ -167,7 +196,7 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
                 <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 mb-1">
                   <h3 className="text-xl font-bold text-white">{pkg.name}</h3>
                   <span className="rounded bg-warning/10 border border-warning/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-warning">
-                    {pkg.duration.replace("/", "")}
+                    {pkg.duration.replace('/', '')}
                   </span>
                 </div>
                 <p className="text-sm text-zinc-400 mt-1">{pkg.desc}</p>
@@ -210,7 +239,7 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
                   <label
                     key={addon.id}
                     className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors
-                                            ${isSelected ? "border-warning/50 bg-warning/5" : "border-white/5 bg-zinc-900/80 hover:border-white/10"}`}
+                                            ${isSelected ? 'border-warning/50 bg-warning/5' : 'border-white/5 bg-zinc-900/80 hover:border-white/10'}`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex items-center space-x-2">
@@ -222,10 +251,10 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
                         />
                       </div>
                       <addon.icon
-                        className={`w-4 h-4 ${isSelected ? "text-warning" : "text-zinc-500"}`}
+                        className={`w-4 h-4 ${isSelected ? 'text-warning' : 'text-zinc-500'}`}
                       />
                       <span
-                        className={`text-sm ${isSelected ? "text-white" : "text-zinc-400"}`}
+                        className={`text-sm ${isSelected ? 'text-white' : 'text-zinc-400'}`}
                       >
                         {addon.name}
                       </span>
@@ -254,14 +283,14 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
 
             <div className="space-y-8">
               {[
-                { title: "Cameras", key: "camera" },
-                { title: "Lenses", key: "lens" },
-                { title: "Lighting", key: "light" },
-                { title: "Audio/Mic", key: "audio" },
-                { title: "Others", key: "other" },
+                { title: 'Cameras', key: 'camera' },
+                { title: 'Lenses', key: 'lens' },
+                { title: 'Lighting', key: 'light' },
+                { title: 'Audio/Mic', key: 'audio' },
+                { title: 'Others', key: 'other' },
               ].map((cat) => {
                 const items = equipment.filter((e) =>
-                  (e.categories as any)?.name?.toLowerCase().includes(cat.key),
+                  (e.categories as any)?.name?.toLowerCase().includes(cat.key)
                 );
                 if (items.length === 0) return null;
                 return (
@@ -277,7 +306,7 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
                           <div
                             key={item.id}
                             className={`min-w-[240px] flex-shrink-0 rounded-2xl border p-4 flex flex-col gap-3 transition-colors cursor-pointer snap-start
-                                                            ${isSelected ? "border-warning bg-warning/10 shadow-[0_0_15px_-5px_hsl(var(--color-warning)/0.15)]" : "border-white/5 bg-zinc-900/50 hover:bg-zinc-900"}`}
+                                                            ${isSelected ? 'border-warning bg-warning/10 shadow-[0_0_15px_-5px_hsl(var(--color-warning)/0.15)]' : 'border-white/5 bg-zinc-900/50 hover:bg-zinc-900'}`}
                             onClick={() => toggleEquipment(item.id)}
                           >
                             <div className="aspect-video relative rounded-lg bg-zinc-800/50 overflow-hidden">
@@ -304,7 +333,7 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
                                 </span>
                                 <button
                                   className={`w-6 h-6 rounded-full flex items-center justify-center border transition-colors
-                                                                        ${isSelected ? "bg-warning border-warning text-warning-foreground" : "border-zinc-600 text-zinc-400"}`}
+                                                                        ${isSelected ? 'bg-warning border-warning text-warning-foreground' : 'border-zinc-600 text-zinc-400'}`}
                                 >
                                   {isSelected ? (
                                     <Check className="w-3 h-3" />
@@ -327,7 +356,7 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
               <div className="mt-4 flex justify-end">
                 <div className="rounded-xl border border-warning/30 bg-warning/5 px-6 py-3 text-sm flex items-center gap-2">
                   <span className="text-zinc-400">
-                    Studio Equipment Add-ons:{" "}
+                    Studio Equipment Add-ons:{' '}
                   </span>
                   <span className="text-warning font-mono font-bold text-lg">
                     {formatINR(
@@ -340,7 +369,7 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
                               packageHours
                             : 0)
                         );
-                      }, 0),
+                      }, 0)
                     )}
                   </span>
                 </div>
@@ -389,14 +418,14 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
             </div>
 
             <div className="w-full md:w-auto flex flex-col items-center md:items-end flex-shrink-0">
-              <a
-                href={generateWhatsAppLink("studio", generateBookingMessage())}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full md:w-auto rounded-full bg-warning px-8 py-4 text-center font-bold text-warning-foreground transition-all hover:opacity-90 hover:shadow-[0_0_30px_-5px_hsl(var(--color-warning)/0.5)] whitespace-nowrap"
+              <button
+                onClick={handleBookingRequest}
+                disabled={isLoading}
+                className="w-full md:w-auto flex items-center justify-center gap-2 rounded-full bg-warning px-8 py-4 text-center font-bold text-warning-foreground transition-all hover:opacity-90 hover:shadow-[0_0_30px_-5px_hsl(var(--color-warning)/0.5)] whitespace-nowrap disabled:opacity-50 disabled:pointer-events-none"
               >
-                Request Booking
-              </a>
+                {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isLoading ? 'Opening...' : 'Request Booking'}
+              </button>
               <p className="text-xs text-zinc-500 mt-3">
                 No payment required to request
               </p>

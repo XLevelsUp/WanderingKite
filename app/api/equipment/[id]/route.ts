@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { adminAuthClient } from "@/lib/supabase/admin";
+import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthClient } from '@/lib/supabase/admin';
 
 export async function DELETE(
   req: NextRequest,
@@ -7,7 +7,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    
+
     // Perform a soft delete as established in the project pattern
     const { error } = await adminAuthClient
       .from('equipment')

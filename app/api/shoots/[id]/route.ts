@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { adminAuthClient } from "@/lib/supabase/admin";
+import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthClient } from '@/lib/supabase/admin';
 
 export async function GET(
   req: NextRequest,
@@ -7,9 +7,9 @@ export async function GET(
 ) {
   const { id } = await params;
   const { data, error } = await adminAuthClient
-    .from("shoots")
-    .select("*, gallery_images(*)")
-    .eq("id", id)
+    .from('shoots')
+    .select('*, gallery_images(*)')
+    .eq('id', id)
     .single();
 
   if (error) {
@@ -27,9 +27,9 @@ export async function PUT(
     const { id } = await params;
     const body = await req.json();
     const { error } = await adminAuthClient
-      .from("shoots")
+      .from('shoots')
       .update(body)
-      .eq("id", id);
+      .eq('id', id);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
@@ -48,9 +48,9 @@ export async function DELETE(
   try {
     const { id } = await params;
     const { error } = await adminAuthClient
-      .from("shoots")
+      .from('shoots')
       .delete()
-      .eq("id", id);
+      .eq('id', id);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

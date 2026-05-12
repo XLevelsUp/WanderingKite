@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import Image from "next/image";
-import { Camera, Video, Building2, MessageCircle } from "lucide-react";
-import { generateWhatsAppLink } from "@/lib/whatsapp";
-import { siteConfig } from "@/config/site";
+import Link from 'next/link';
+import Image from 'next/image';
+import { Camera, Video, Building2, MessageCircle } from 'lucide-react';
+import { generateWhatsAppLink } from '@/lib/whatsapp';
+import { siteConfig } from '@/config/site';
 
 const navItems = [
-  { label: "Photography", href: "/photography", icon: Camera },
+  { label: 'Photography', href: '/photography', icon: Camera },
   // { label: 'Rentals', href: '/rentals', icon: Video },
-  { label: "The Studio Space", href: "/studiospace", icon: Building2 },
+  { label: 'The Studio Space', href: '/studiospace', icon: Building2 },
 ];
 
 export function MainNav() {

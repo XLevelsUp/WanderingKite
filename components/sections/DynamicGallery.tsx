@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useShoots } from "@/lib/hooks/useShoots";
-import { PortfolioCard } from "@/components/PortfolioCard";
-import { Camera } from "lucide-react";
+import { useShoots } from '@/lib/hooks/useShoots';
+import { PortfolioCard } from '@/components/PortfolioCard';
+import { Camera } from 'lucide-react';
 
 export function DynamicGallery() {
   const { shoots, loading, error } = useShoots();
@@ -43,14 +43,10 @@ export function DynamicGallery() {
         const coverImage =
           shoot.gallery_images && shoot.gallery_images.length > 0
             ? shoot.gallery_images[0].url
-            : "/images/photography/placeholder.webp"; // Ensure you have a placeholder image
+            : '/images/photography/placeholder.webp'; // Ensure you have a placeholder image
 
         return (
-          <PortfolioCard
-            key={shoot.id}
-            shoot={shoot}
-            coverImage={coverImage}
-          />
+          <PortfolioCard key={shoot.id} shoot={shoot} coverImage={coverImage} />
         );
       })}
     </div>

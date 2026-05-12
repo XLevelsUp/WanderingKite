@@ -31,20 +31,20 @@ export function QuickReturnButton({
       disabled={isPending}
       title={`Mark ${equipmentName} as returned`}
       aria-label={`Quick return: ${equipmentName}`}
-      className='inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
         bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
         hover:bg-emerald-500/20 hover:border-emerald-500/35 hover:text-emerald-300
         disabled:opacity-40 disabled:cursor-not-allowed
-        transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40'
+        transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
     >
       {isPending ? (
         <>
-          <Loader2 className='w-3.5 h-3.5 animate-spin' />
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
           Returning…
         </>
       ) : (
         <>
-          <CheckCircle className='w-3.5 h-3.5' />
+          <CheckCircle className="w-3.5 h-3.5" />
           Quick Return
         </>
       )}

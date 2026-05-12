@@ -28,7 +28,7 @@ export interface AuditLogParams {
 
 export async function writeAuditLog(
   supabase: SupabaseClient,
-  params: AuditLogParams,
+  params: AuditLogParams
 ): Promise<void> {
   const {
     action,
