@@ -110,16 +110,23 @@ export function StudioCarousel() {
       {/* Navigation Controls */}
       <div className="max-w-7xl mx-auto mt-12 px-6 flex items-center justify-between">
         {/* Progress Dots */}
-        <div className="flex gap-2.5">
-          {CAROUSEL_IMAGES.map((_, i) => (
+        <div className="flex items-center gap-1" role="tablist" aria-label="Carousel slides">
+          {CAROUSEL_IMAGES.map((img, i) => (
             <button
               key={i}
+              role="tab"
               onClick={() => emblaApi?.scrollTo(i)}
-              className={`h-1 transition-all duration-500 rounded-full ${
-                i === selectedIndex ? 'w-12 bg-warning' : 'w-3 bg-zinc-800'
-              }`}
-              aria-label={`Go to slide ${i + 1}`}
-            />
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center"
+              aria-label={`Go to slide ${i + 1}: ${img.alt}`}
+              aria-selected={i === selectedIndex}
+              aria-current={i === selectedIndex ? 'true' : undefined}
+            >
+              <span
+                className={`h-1 transition-all duration-500 rounded-full ${
+                  i === selectedIndex ? 'w-12 bg-warning' : 'w-3 bg-zinc-800'
+                }`}
+              />
+            </button>
           ))}
         </div>
 

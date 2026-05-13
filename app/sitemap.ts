@@ -27,6 +27,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
       'events/wedding',
       'events/engagements',
       'events/birthdays',
+      'events/house-warming',
+      'events/puberty-ceremonies',
       'portraits/family',
       'portraits/maternity',
       'portraits/baby-shoots',

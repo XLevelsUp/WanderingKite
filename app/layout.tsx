@@ -8,10 +8,21 @@ import { brandConfig } from '@/config/brand.config';
 import { siteConfig } from '@/config/site';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import { NotificationProvider } from '@/components/ui/NotificationProvider';
+import { NavigationLoader } from '@/components/shared/NavigationLoader';
+import { Suspense } from 'react';
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
+  display: 'swap',
+  preload: true,
+  fallback: [
+    'system-ui',
+    '-apple-system',
+    'BlinkMacSystemFont',
+    'Segoe UI',
+    'sans-serif',
+  ],
 });
 
 export const metadata: Metadata = {
@@ -232,16 +243,28 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <head>
         <ThemeProvider />
+        {/* Preload the Inter variable font woff2 used by the hero — breaks the
+            CSS → font blocking chain reported in the Network Dependency Tree */}
+        <link
+          rel="preload"
+          href="/_next/static/media/8e9860b6e62d6359-s.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
+        <Suspense fallback={null}>
+          <NavigationLoader />
+        </Suspense>
         {/* Google Analytics 4 – loads whenever GA_ID is available */}
         {GA_ID && (
           <>
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-              strategy="afterInteractive"
+              strategy="lazyOnload"
             />
-            <Script id="google-analytics" strategy="afterInteractive">
+            <Script id="google-analytics" strategy="lazyOnload">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}

@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import {
   Card,
@@ -16,6 +17,11 @@ import {
   Activity,
   AlertTriangle,
 } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Overview — Studio ERP',
+  description: 'Photo Studio ERP dashboard — asset management overview for equipment, clients, and rentals.',
+};
 
 export default async function DashboardPage() {
   const supabase = await createClient();

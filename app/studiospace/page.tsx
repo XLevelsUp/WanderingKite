@@ -376,7 +376,7 @@ export default async function StudioPage() {
                 href={generateWhatsAppLink('studio')}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block rounded-full bg-amber-500 px-8 py-4 font-semibold text-foreground transition-all hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/50"
+                className="inline-block rounded-full bg-amber-500 px-8 py-4 font-semibold text-zinc-950 transition-all hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/50"
               >
                 Book Your Slot
               </a>
@@ -446,7 +446,7 @@ export default async function StudioPage() {
                     }`}
                   >
                     {pkg.popular && (
-                      <span className="absolute -top-3 left-6 rounded-full bg-green-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
+                      <span className="absolute -top-3 left-6 rounded-full bg-green-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-950">
                         Most Popular
                       </span>
                     )}
@@ -477,9 +477,10 @@ export default async function StudioPage() {
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
+                      aria-label={`Book the ${pkg.name} podcast package`}
                       className={`block w-full rounded-xl py-3 text-center text-sm font-semibold transition-all ${
                         pkg.popular
-                          ? 'bg-green-500 text-foreground hover:bg-green-400'
+                          ? 'bg-green-500 text-zinc-950 hover:bg-green-400'
                           : 'border border-green-500/40 bg-green-500/10 text-green-500 hover:bg-green-500/20'
                       }`}
                     >

@@ -96,7 +96,7 @@ export function ParallaxHero({
               href={cta.href}
               target="_blank"
               rel="noopener noreferrer"
-              className={`inline-block rounded-full px-8 py-4 font-semibold transition-all ${gradientFrom.includes('amber') ? 'bg-amber-500 text-zinc-950 hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/50' : gradientFrom.includes('blue') ? 'bg-blue-500 text-foreground hover:bg-blue-400 hover:shadow-lg hover:shadow-blue-500/50' : gradientFrom.includes('purple') ? 'bg-purple-500 text-foreground hover:bg-purple-400 hover:shadow-lg hover:shadow-purple-500/50' : 'bg-green-500 text-foreground hover:bg-green-400 hover:shadow-lg hover:shadow-green-500/50'}`}
+              className={`inline-block rounded-full px-8 py-4 font-semibold transition-all ${gradientFrom.includes('amber') ? 'bg-amber-500 text-zinc-950 hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/50' : gradientFrom.includes('blue') ? 'bg-blue-500 text-zinc-950 hover:bg-blue-400 hover:shadow-lg hover:shadow-blue-500/50' : gradientFrom.includes('purple') ? 'bg-purple-500 text-zinc-950 hover:bg-purple-400 hover:shadow-lg hover:shadow-purple-500/50' : 'bg-green-500 text-zinc-950 hover:bg-green-400 hover:shadow-lg hover:shadow-green-500/50'}`}
             >
               {cta.text}
             </motion.a>

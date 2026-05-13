@@ -138,6 +138,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: `Professional ${sub.title} photography in Coimbatore. ${sub.description}.`,
       images: ['/og-photography.jpg'],
     },
+    alternates: {
+      canonical: `https://wanderingkite.in/photography/${mainCategory}/${subCategory}`,
+    },
   };
 }
 

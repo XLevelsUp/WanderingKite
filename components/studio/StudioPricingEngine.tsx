@@ -204,7 +204,10 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
 
               <div className="text-center sm:text-right flex-shrink-0 flex flex-col items-center sm:items-end mt-4 sm:mt-0">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-medium text-zinc-500 line-through">
+                  <span
+                    className="text-xl font-medium text-zinc-400 line-through"
+                    aria-label={`Original price ${formatINR(pkg.originalPrice)}`}
+                  >
                     {formatINR(pkg.originalPrice)}
                   </span>
                   <span className="text-3xl font-bold text-warning">
@@ -259,7 +262,7 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
                         {addon.name}
                       </span>
                     </div>
-                    <span className="text-sm font-mono text-zinc-500">
+                    <span className="text-sm font-mono text-zinc-400">
                       +{formatINR(addon.price)}/{addon.unit}
                     </span>
                   </label>
@@ -332,6 +335,8 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
                                   {formatINR(hourly)}/hr
                                 </span>
                                 <button
+                                  aria-label={isSelected ? `Remove ${item.name} from booking` : `Add ${item.name} to booking`}
+                                  aria-pressed={isSelected}
                                   className={`w-6 h-6 rounded-full flex items-center justify-center border transition-colors
                                                                         ${isSelected ? 'bg-warning border-warning text-warning-foreground' : 'border-zinc-600 text-zinc-400'}`}
                                 >

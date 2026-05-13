@@ -59,6 +59,7 @@ export function MainNav() {
           href={generateWhatsAppLink()}
           target="_blank"
           rel="noopener noreferrer"
+          aria-label="Contact us on WhatsApp"
           className="
             flex items-center gap-2 rounded-full
             border border-primary/35
@@ -69,7 +70,7 @@ export function MainNav() {
             hover:text-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.20)]
           "
         >
-          <MessageCircle className="h-4 w-4" />
+          <MessageCircle className="h-4 w-4" aria-hidden="true" />
           <span className="hidden sm:inline">Contact</span>
         </a>
       </div>
