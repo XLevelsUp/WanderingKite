@@ -341,7 +341,7 @@ export default function PodcastPage() {
                     rel="noopener noreferrer"
                     className={`block w-full rounded-lg py-3 text-center font-semibold transition-colors ${
                       pkg.popular
-                        ? 'bg-green-500 text-foreground hover:bg-green-400'
+                        ? 'bg-green-500 text-zinc-950 hover:bg-green-400'
                         : 'bg-white text-zinc-900 hover:bg-zinc-200'
                     }`}
                   >

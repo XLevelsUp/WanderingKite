@@ -133,6 +133,17 @@ type Props = {
   params: Promise<{ mainCategory: string }>;
 };
 
+const categoryMetaDescriptions: Record<string, string> = {
+  events:
+    'Book a professional event photographer in Coimbatore. Wandering Kite covers weddings, engagements, birthdays, house warming & puberty ceremonies with premium editing and fast delivery.',
+  portraits:
+    'Elegant portrait photography sessions in Coimbatore — family, maternity & newborn baby shoots. Professional photographer, studio & outdoor setups. Get a free quote.',
+  corporate:
+    'Corporate & brand photography in Coimbatore — product shots, cinematic brand films, social media content, model shoots & professional headshots. 500+ projects delivered.',
+  commercial:
+    'High-concept commercial photography & video in Coimbatore — advertisement productions, music videos & short films. Contact Wandering Kite for a custom quote.',
+};
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolvedParams = await params;
   const categoryId = resolvedParams.mainCategory;
@@ -141,12 +152,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!category) {
     return {
       title: 'Category Not Found | Wandering Kite Studio',
+      description: 'The photography category you are looking for does not exist.',
     };
   }
 
   return {
     title: `${category.title} in Coimbatore | Wandering Kite Studio`,
-    description: category.description,
+    description:
+      categoryMetaDescriptions[categoryId] ?? category.description,
+    openGraph: {
+      title: `${category.title} in Coimbatore | Wandering Kite Studio`,
+      description:
+        categoryMetaDescriptions[categoryId] ?? category.description,
+      url: `https://wanderingkite.in/photography/${categoryId}`,
+      images: [{ url: '/og-photography.jpg', width: 1200, height: 630 }],
+    },
+    alternates: {
+      canonical: `https://wanderingkite.in/photography/${categoryId}`,
+    },
   };
 }
 

@@ -1,6 +1,7 @@
 // app/(legal)/layout.tsx
 import React from 'react';
 import { Metadata } from 'next';
+import { siteConfig } from '@/config/site';
 
 export const metadata: Metadata = {
   title: {
@@ -20,23 +21,23 @@ export default function LegalLayout({
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
-    name: 'Wandering Kite',
-    image: 'https://wanderingkite.in/logo.png', // Ensure this path is correct
+    name: siteConfig.name,
+    image: `${siteConfig.url}/wkfulllogo.png`,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: '[Insert Your Actual Coimbatore Studio Address]',
-      addressLocality: 'Coimbatore',
-      addressRegion: 'TN',
-      postalCode: '641XXX',
-      addressCountry: 'IN',
+      streetAddress: siteConfig.contact.address.street,
+      addressLocality: siteConfig.contact.address.city,
+      addressRegion: siteConfig.contact.address.state,
+      postalCode: siteConfig.contact.address.zip,
+      addressCountry: siteConfig.contact.address.country,
     },
     geo: {
       '@type': 'GeoCoordinates',
-      latitude: 11.0168, // Replace with your exact studio coordinates
-      longitude: 76.9558,
+      latitude: siteConfig.geo.latitude,
+      longitude: siteConfig.geo.longitude,
     },
-    url: 'https://wanderingkite.in',
-    telephone: '+91[Your Number]',
+    url: siteConfig.url,
+    telephone: siteConfig.contact.phone,
     priceRange: '$$',
     openingHoursSpecification: [
       {
@@ -50,7 +51,7 @@ export default function LegalLayout({
           'Saturday',
         ],
         opens: '09:00',
-        closes: '20:00',
+        closes: '21:00',
       },
     ],
   };

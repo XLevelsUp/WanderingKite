@@ -24,6 +24,16 @@ const services = [
     delay: 0,
   },
   {
+    title: 'Camera Rentals',
+    tagline: 'Pro Gear',
+    description:
+      'Premium Sony, Canon & lighting equipment for rent at affordable daily rates.',
+    iconName: 'video' as const,
+    href: '/rentals',
+    features: ['Sony & Canon Bodies', 'GM & L-Series Lenses', 'Pro Lighting Kits'],
+    delay: 0.1,
+  },
+  {
     title: 'Studio Space',
     tagline: '1200 sq ft',
     description:
@@ -32,7 +42,17 @@ const services = [
     href: '/studiospace',
     badge: 'New',
     features: ['Infinity Wall', 'ProFoto Lighting', 'Green Screen'],
-    delay: 0.1,
+    delay: 0.2,
+  },
+  {
+    title: 'Podcast Studio',
+    tagline: 'Acoustic Treated',
+    description:
+      'Professional podcast recording with Rode & Shure mics in a treated environment.',
+    iconName: 'podcast' as const,
+    href: '/podcast',
+    features: ['Rode Procaster', 'Shure SM7B', 'Multi-cam Video'],
+    delay: 0.3,
   },
 ];
 
@@ -52,33 +72,23 @@ export function HomePageClient() {
         </div>
 
         <div className="relative z-10 text-center">
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-primary opacity-80"
-          >
+          {/* NOTE: eyebrow + h1 are NOT animated — they are the LCP elements.
+              Framer-motion entrance animations cause Chrome to report a huge
+              "Element render delay" because the node starts at opacity:0 and
+              only becomes visible after JS hydrates. Plain elements paint
+              immediately after CSS loads, cutting LCP by ~2 s. */}
+          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-primary opacity-80">
             Creative Infrastructure
-          </motion.p>
+          </p>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="mb-6 text-5xl font-bold leading-tight sm:text-6xl md:text-7xl lg:text-8xl"
-          >
+          <h1 className="mb-6 text-5xl font-bold leading-tight sm:text-6xl md:text-7xl lg:text-8xl">
             Where Vision <br />
             <span className="text-gradient-hero">Meets Craft</span>
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mx-auto mb-8 max-w-2xl text-lg text-foreground/60 md:text-xl"
-          >
+          <p className="mx-auto mb-8 max-w-2xl text-lg text-foreground/60 md:text-xl">
             Photography · Equipment Rentals · Studio Spaces · Podcast Production
-          </motion.p>
+          </p>
 
           <motion.div
             initial={{ opacity: 0 }}

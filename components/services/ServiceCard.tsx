@@ -127,9 +127,10 @@ export function ServiceCard({
           <div className="mt-auto border-t border-primary/10 pt-5">
             <Link
               href={href}
+              aria-label={`Explore ${title} services by Wandering Kite Studio`}
               className="group/btn inline-flex items-center gap-2 rounded-xl border border-primary/28 bg-primary/6 px-5 py-2.5 text-sm font-medium text-primary transition-all duration-200 hover:border-primary/55 hover:bg-primary/16 hover:text-foreground hover:shadow-[0_0_16px_hsl(var(--primary)/0.20)]"
             >
-              Explore
+              Explore {title}
               <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover/btn:translate-x-0.5" />
             </Link>
           </div>

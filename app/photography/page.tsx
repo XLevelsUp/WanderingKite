@@ -48,6 +48,23 @@ export const metadata: Metadata = {
     url: 'https://wanderingkite.in/photography',
     images: [{ url: '/og-photography.jpg', width: 1200, height: 630 }],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Photographer in Coimbatore | Wandering Kite Studio',
+    description:
+      'Professional photography for weddings, events, portraits & commercial projects in Coimbatore. 500+ projects.',
+    images: ['/og-photography.jpg'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   alternates: {
     canonical: 'https://wanderingkite.in/photography',
   },
@@ -243,6 +260,7 @@ export default function PhotographyPage() {
                 href={generateWhatsAppLink('photography')}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Book a photography session with Wandering Kite Studio in Coimbatore"
                 className="inline-block rounded-full bg-amber-500 px-8 py-4 font-semibold text-zinc-950 transition-all hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/50"
               >
                 Book a Session
@@ -358,6 +376,7 @@ export default function PhotographyPage() {
                         )}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label={`Get a quote for ${s.title} photography in Coimbatore`}
                         className="mt-5 inline-block rounded-full bg-amber-500 px-5 py-2.5 text-center text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-400"
                       >
                         Get Quote
@@ -407,6 +426,7 @@ export default function PhotographyPage() {
                         )}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label={`Get a quote for ${s.title} photography in Coimbatore`}
                         className="mt-5 inline-block rounded-full bg-amber-500 px-5 py-2.5 text-center text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-400"
                       >
                         Get Quote
@@ -463,6 +483,7 @@ export default function PhotographyPage() {
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
+                      aria-label={`Get a quote for ${s.title} in Coimbatore`}
                       className="mt-5 inline-block rounded-full border border-blue-500/40 bg-blue-500/10 px-5 py-2.5 text-center text-sm font-semibold text-blue-400 transition-colors hover:bg-blue-500/20"
                     >
                       Get Quote
@@ -510,6 +531,7 @@ export default function PhotographyPage() {
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
+                      aria-label={`Get a quote for ${s.title} production in Coimbatore`}
                       className="mt-5 inline-block rounded-full border border-purple-500/40 bg-purple-500/10 px-5 py-2.5 text-center text-sm font-semibold text-purple-400 transition-colors hover:bg-purple-500/20"
                     >
                       Get Quote
