@@ -24,16 +24,6 @@ const services = [
     delay: 0,
   },
   {
-    title: 'Camera Rentals',
-    tagline: 'Pro Gear',
-    description:
-      'Premium Sony, Canon & lighting equipment for rent at affordable daily rates.',
-    iconName: 'video' as const,
-    href: '/rentals',
-    features: ['Sony & Canon Bodies', 'GM & L-Series Lenses', 'Pro Lighting Kits'],
-    delay: 0.1,
-  },
-  {
     title: 'Studio Space',
     tagline: '1200 sq ft',
     description:
@@ -43,16 +33,6 @@ const services = [
     badge: 'New',
     features: ['Infinity Wall', 'ProFoto Lighting', 'Green Screen'],
     delay: 0.2,
-  },
-  {
-    title: 'Podcast Studio',
-    tagline: 'Acoustic Treated',
-    description:
-      'Professional podcast recording with Rode & Shure mics in a treated environment.',
-    iconName: 'podcast' as const,
-    href: '/podcast',
-    features: ['Rode Procaster', 'Shure SM7B', 'Multi-cam Video'],
-    delay: 0.3,
   },
 ];
 
