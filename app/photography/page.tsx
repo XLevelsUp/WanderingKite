@@ -6,6 +6,7 @@ import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
 import { ServiceFAQ } from '@/components/sections/ServiceFAQ';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { JsonLd } from '@/lib/schema-helpers';
+import { photographyTestimonials } from '@/lib/service-page-data';
 import { Camera, Clock, MapPin, Video, Monitor } from 'lucide-react';
 import { PortfolioCategories } from '@/components/sections/PortfolioCategories';
 import ServiceTerms from '@/components/sections/ServiceTerms';
@@ -111,7 +112,7 @@ const photographyFaqSchema = {
       name: 'What is the photography delivery timeline?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Within 7–10 days, you receive professionally edited high-resolution images via cloud link. Unlimited revisions are included.',
+        text: 'Within 7–10 days, you receive professionally edited high-resolution images via cloud link.',
       },
     },
     {
@@ -144,32 +145,6 @@ const photographyBreadcrumbSchema = {
   ],
 };
 
-const testimonials = [
-  {
-    name: 'Priya & Rahul',
-    role: 'Wedding Clients',
-    content:
-      'The team captured our wedding beautifully! Every candid moment, every emotion - perfectly preserved. The photos exceeded our expectations.',
-    rating: 5,
-    service: 'Wedding Photography',
-  },
-  {
-    name: 'Ankit Sharma',
-    role: 'Startup Founder',
-    content:
-      'Professional and creative. They understood our brand vision and delivered stunning product shots for our launch campaign.',
-    rating: 5,
-    service: 'Commercial Photography',
-  },
-  {
-    name: 'Meera Patel',
-    role: 'Content Creator',
-    content:
-      'Best lifestyle shoot experience! The photographer made me feel comfortable and the results were Instagram-perfect. Highly recommend!',
-    rating: 5,
-    service: 'Lifestyle Photography',
-  },
-];
 
 const processSteps = [
   {
@@ -200,7 +175,7 @@ const processSteps = [
     number: '5',
     title: 'Delivery',
     description:
-      'Within 7-10 days, receive professionally edited high-resolution images via cloud link. Unlimited revisions included.',
+      'Within 7-10 days, receive professionally edited high-resolution images via cloud link.',
   },
 ];
 
@@ -587,7 +562,7 @@ export default function PhotographyPage() {
         </section>
 
         {/* Testimonials */}
-        <Testimonials testimonials={testimonials} accentColor="amber" />
+        <Testimonials testimonials={photographyTestimonials} accentColor="amber" />
 
         {/* Process Timeline */}
         <ProcessTimeline steps={processSteps} accentColor="amber" />

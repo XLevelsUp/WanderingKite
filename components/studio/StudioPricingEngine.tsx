@@ -169,18 +169,17 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
       </div>
 
       <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
-        {/* Packages Selection */}
-        <div className="lg:col-span-7 flex flex-col gap-4">
+        <div className="lg:col-span-7 flex flex-col gap-4 w-full">
           {PACKAGES.map((pkg) => (
             <div
               key={pkg.id}
               onClick={() => setSelectedPackage(pkg)}
-              className={`relative cursor-pointer transition-all duration-300 rounded-2xl border p-6 flex flex-col sm:flex-row items-center justify-between gap-6
-                                ${
-                                  selectedPackage.id === pkg.id
-                                    ? 'border-warning bg-warning/10 shadow-[0_0_20px_-5px_hsl(var(--color-warning)/0.2)] sm:scale-[1.02]'
-                                    : 'border-white/5 bg-zinc-900/50 hover:bg-zinc-900 sm:hover:scale-[1.01]'
-                                }`}
+              className={`relative cursor-pointer transition-all duration-300 rounded-2xl border p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6
+                                 ${
+                                   selectedPackage.id === pkg.id
+                                     ? 'border-warning bg-warning/10 shadow-[0_0_20px_-5px_hsl(var(--color-warning)/0.2)] sm:scale-[1.02]'
+                                     : 'border-white/5 bg-zinc-900/50 hover:bg-zinc-900 sm:hover:scale-[1.01]'
+                                 }`}
             >
               {pkg.bestValue && (
                 <motion.span
@@ -192,31 +191,31 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
                 </motion.span>
               )}
 
-              <div className="text-center sm:text-left flex-1">
-                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 mb-1">
-                  <h3 className="text-xl font-bold text-white">{pkg.name}</h3>
-                  <span className="rounded bg-warning/10 border border-warning/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-warning">
+              <div className="text-left flex-1 w-full">
+                <div className="flex flex-row items-center gap-2 sm:gap-3 mb-1 flex-wrap">
+                  <h3 className="text-lg sm:text-xl font-bold text-white leading-none">{pkg.name}</h3>
+                  <span className="rounded bg-warning/10 border border-warning/20 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-warning inline-block">
                     {pkg.duration.replace('/', '')}
                   </span>
                 </div>
-                <p className="text-sm text-zinc-400 mt-1">{pkg.desc}</p>
+                <p className="text-xs sm:text-sm text-zinc-400 mt-1 leading-relaxed">{pkg.desc}</p>
               </div>
 
-              <div className="text-center sm:text-right flex-shrink-0 flex flex-col items-center sm:items-end mt-4 sm:mt-0">
+              <div className="text-left sm:text-right flex-shrink-0 flex flex-col items-start sm:items-end mt-2 sm:mt-0 w-full sm:w-auto border-t border-white/5 sm:border-0 pt-3 sm:pt-0">
                 <div className="flex items-baseline gap-2">
                   <span
-                    className="text-xl font-medium text-zinc-400 line-through"
+                    className="text-lg sm:text-xl font-medium text-zinc-500 line-through"
                     aria-label={`Original price ${formatINR(pkg.originalPrice)}`}
                   >
                     {formatINR(pkg.originalPrice)}
                   </span>
-                  <span className="text-3xl font-bold text-warning">
+                  <span className="text-2xl sm:text-3xl font-bold text-warning">
                     {formatINR(pkg.price)}
                   </span>
                 </div>
                 {pkg.save > 0 && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-emerald-500/20">
+                  <div className="flex items-center gap-2 mt-1 sm:mt-2">
+                    <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-emerald-500/20 inline-block">
                       {Math.round((pkg.save / pkg.originalPrice) * 100)}% OFF
                     </span>
                     <span className="text-xs font-semibold text-emerald-400">
@@ -274,7 +273,7 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
 
         {/* Equipment Add-ons */}
         {equipment.length > 0 && (
-          <div className="lg:col-span-12 mt-4 mb-2">
+          <div className="lg:col-span-12 mt-4 mb-2 w-full overflow-hidden">
             <div className="mb-6">
               <h3 className="text-2xl font-bold text-white">
                 In-Studio Equipment Add-ons
@@ -284,7 +283,7 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
               </p>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-8 w-full">
               {[
                 { title: 'Cameras', key: 'camera' },
                 { title: 'Lenses', key: 'lens' },
@@ -297,11 +296,11 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
                 );
                 if (items.length === 0) return null;
                 return (
-                  <div key={cat.key}>
+                  <div key={cat.key} className="w-full">
                     <h4 className="text-lg font-semibold text-white mb-4">
                       {cat.title}
                     </h4>
-                    <div className="flex gap-4 overflow-x-auto pb-4 snap-x custom-scrollbar">
+                    <div className="flex gap-4 overflow-x-auto pb-4 snap-x custom-scrollbar w-full max-w-full overflow-y-hidden">
                       {items.map((item) => {
                         const isSelected = selectedEquipment.has(item.id);
                         const hourly = Math.round((item.rentalPrice || 0) / 8);
@@ -385,7 +384,7 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
 
         {/* Summary Full Width Banner */}
         <div className="lg:col-span-12 mt-4">
-          <div className="rounded-2xl border border-warning/20 bg-gradient-to-br from-zinc-900 to-zinc-950 p-6 md:p-8 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-8 sticky bottom-6 z-10">
+          <div className="rounded-2xl border border-warning/20 bg-gradient-to-br from-zinc-900 to-zinc-950 p-6 md:p-8 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-8 relative md:sticky md:bottom-6 z-10">
             <div className="flex-1 w-full">
               <h4 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">
                 Estimated Total

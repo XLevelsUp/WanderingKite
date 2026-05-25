@@ -420,7 +420,7 @@ export default function PodcastPage() {
         <ServiceFAQ faqs={podcastFAQs} accentColor="green" />
 
         <BookingFlyout service="podcast" />
-        <Footer />
+        <Footer account="studio" />
       </main>
     </>
   );
