@@ -18,10 +18,10 @@ export function RentalCartSummary() {
   const formatINR = (val: number) => `₹${val.toLocaleString('en-IN')}`;
 
   const generateBookingMessage = () => {
-    const itemNames = Array.from(selectedItems.values())
-      .map((item) => item.name)
-      .join(', ');
-    return `Hi! I'd like to request a rental booking for the following equipment:\n\n[ ${itemNames} ]\n\nTotal Estimated Rate: ${formatINR(Math.round(finalTotal))} (incl. GST) / day.`;
+    const itemDetails = Array.from(selectedItems.values())
+      .map((item) => `${item.name} (${item.selectedPlan.name} - ${formatINR(item.selectedPlan.rate)})`)
+      .join('\n- ');
+    return `Hi! I'd like to request a rental booking for the following equipment:\n\n- ${itemDetails}\n\nTotal Estimated Quote: ${formatINR(Math.round(finalTotal))} (incl. GST).`;
   };
 
   const handleBookingRequest = async () => {
@@ -61,7 +61,7 @@ export function RentalCartSummary() {
           <div className="flex-1 w-full">
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
-                Estimated Total (Per Day)
+                Estimated Quote Summary
               </h4>
               <button
                 onClick={clearCart}

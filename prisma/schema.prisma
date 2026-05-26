@@ -43,6 +43,9 @@ model User {
   assignedOrders Order[]  @relation("AssignedEmployee")
   supervisedOrders Order[] @relation("Supervisor")
 
+  // HR contract (1:1)
+  contract      EmployeeContract?
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -118,4 +121,135 @@ model OrderItem {
   createdAt     DateTime  @default(now())
 
   @@map("order_items")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HR & PAYROLL MODELS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  HALF_DAY
+  ABSENT
+  ON_LEAVE
+}
+
+enum PayrollStatus {
+  DRAFT
+  APPROVED
+  PAID
+}
+
+/// 1:1 extension of User (profiles) — HR contract & bank details
+model EmployeeContract {
+  id                String         @id @default(uuid())
+
+  profileId         String         @unique
+  profile           User           @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  jobTitle          String         @default("Staff")
+  employmentType    EmploymentType @default(FULL_TIME)
+  baseSalary        Float          @default(0)
+  joiningDate       DateTime       @db.Date
+
+  // Bank / payment details
+  bankAccountName   String?
+  bankAccountNumber String?
+  bankIFSC          String?
+  upiId             String?
+
+  avatarUrl         String?
+  notes             String?
+  isActive          Boolean        @default(true)
+  deactivatedAt     DateTime?
+
+  // Relations
+  attendanceLogs    AttendanceLog[]
+  payrollRecords    PayrollRecord[]
+
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@map("employee_contracts")
+}
+
+/// Per-employee per-day attendance record
+model AttendanceLog {
+  id           String           @id @default(uuid())
+
+  employeeId   String
+  contract     EmployeeContract @relation(fields: [employeeId], references: [profileId], onDelete: Cascade)
+
+  date         DateTime         @db.Date
+  clockIn      DateTime?        @db.Time
+  clockOut     DateTime?        @db.Time
+  status       AttendanceStatus @default(ABSENT)
+  totalHours   Float?           // Computed by DB or server action
+  markedById   String?
+
+  notes        String?
+
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([employeeId, date])
+  @@map("attendance_logs")
+}
+
+/// Monthly payroll snapshot per employee
+model PayrollRecord {
+  id               String         @id @default(uuid())
+
+  employeeId       String
+  contract         EmployeeContract @relation(fields: [employeeId], references: [profileId], onDelete: Cascade)
+
+  month            Int
+  year             Int
+  workingDays      Int            @default(26)
+  presentDays      Float          @default(0)
+  lateDays         Int            @default(0)
+
+  // Salary components (INR)
+  baseSalary       Float
+  basePay          Float          @default(0)
+  overtimeAmount   Float          @default(0)
+  bonusAmount      Float          @default(0)
+  latePenalty      Float          @default(0)
+  unpaidLeaves     Float          @default(0)
+  taxDeduction     Float          @default(0)
+  otherDeductions  Float          @default(0)
+  netPayout        Float          @default(0)
+
+  status           PayrollStatus  @default(DRAFT)
+  approvedById     String?
+  approvedAt       DateTime?
+  paidAt           DateTime?
+  paymentRef       String?
+  notes            String?
+
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([employeeId, month, year])
+  @@map("payroll_records")
+}
+
+/// Global attendance config — always a single row
+model AttendanceSetting {
+  id                      String   @id @default(uuid())
+  studioStartTime         String   @default("09:00:00")
+  graceMinutes            Int      @default(15)
+  halfDayThresholdHours   Float    @default(4.0)
+  latePenaltyPerMinute    Float    @default(0)
+  updatedAt               DateTime @updatedAt
+
+  @@map("attendance_settings")
 }

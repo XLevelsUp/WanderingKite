@@ -11,12 +11,16 @@ import React, {
 export interface CartItem {
   id: string;
   name: string;
-  dailyRate: number;
+  selectedPlan: {
+    name: string;
+    durationHours: number;
+    rate: number;
+  };
 }
 
 interface RentalCartContextType {
   selectedItems: Map<string, CartItem>;
-  toggleItem: (item: CartItem) => void;
+  toggleItem: (item: Omit<CartItem, 'selectedPlan'>, plan: CartItem['selectedPlan']) => void;
   clearCart: () => void;
   subtotal: number;
   gst: number;
@@ -36,13 +40,18 @@ export function RentalCartProvider({
     new Map()
   );
 
-  const toggleItem = useCallback((item: CartItem) => {
+  const toggleItem = useCallback((item: Omit<CartItem, 'selectedPlan'>, plan: CartItem['selectedPlan']) => {
     setSelectedItems((prev) => {
       const newMap = new Map(prev);
       if (newMap.has(item.id)) {
-        newMap.delete(item.id);
+        const existing = newMap.get(item.id);
+        if (existing?.selectedPlan.name === plan.name) {
+          newMap.delete(item.id);
+        } else {
+          newMap.set(item.id, { ...item, selectedPlan: plan });
+        }
       } else {
-        newMap.set(item.id, item);
+        newMap.set(item.id, { ...item, selectedPlan: plan });
       }
       return newMap;
     });
@@ -55,7 +64,7 @@ export function RentalCartProvider({
   const subtotal = useMemo(() => {
     let total = 0;
     selectedItems.forEach((item) => {
-      total += item.dailyRate;
+      total += item.selectedPlan.rate;
     });
     return total;
   }, [selectedItems]);

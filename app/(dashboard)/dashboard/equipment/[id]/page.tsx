@@ -126,12 +126,9 @@ export default async function EquipmentDetailPage({
     : [];
   const imageUrl = ((equipment as any).image_url ??
     (equipment as any).imageUrl) as string | null;
-  const rentalPrice = Number(
-    (equipment as any).rental_price ?? (equipment as any).rentalPrice ?? 0
-  );
-  const weeklyPrice = Number(
-    (equipment as any).weekly_price ?? (equipment as any).weeklyPrice ?? 0
-  );
+  const pricingPlans = Array.isArray((equipment as any).pricingPlans)
+    ? ((equipment as any).pricingPlans as any[])
+    : [];
 
   // Minimal shape needed by the edit dialog
   const equipmentForEdit = {
@@ -140,8 +137,7 @@ export default async function EquipmentDetailPage({
     serialNumber: (equipment as any).serialNumber,
     categoryId: (equipment as any).categoryId ?? null,
     branchId: (equipment as any).branchId ?? null,
-    rental_price: rentalPrice,
-    weekly_price: weeklyPrice,
+    pricingPlans,
     image_url: imageUrl,
     specs,
     description: equipment.description ?? null,
@@ -206,8 +202,7 @@ export default async function EquipmentDetailPage({
             serialNumber={(equipment as any).serialNumber}
             categoryId={(equipment as any).categoryId ?? null}
             branchId={(equipment as any).branchId ?? null}
-            rentalPrice={rentalPrice}
-            weeklyPrice={weeklyPrice}
+            pricingPlans={pricingPlans}
             specs={specs}
             description={equipment.description ?? null}
           />
@@ -234,23 +229,29 @@ export default async function EquipmentDetailPage({
           </div>
 
           {/* Pricing */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <Card className="bg-muted/30">
               <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground mb-1">Daily Rate</p>
-                <p className="text-2xl font-bold text-foreground">
-                  ₹{rentalPrice.toLocaleString('en-IN')}
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="bg-muted/30">
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground mb-1">
-                  Weekly Rate
-                </p>
-                <p className="text-2xl font-bold text-foreground">
-                  ₹{weeklyPrice.toLocaleString('en-IN')}
-                </p>
+                <p className="text-xs text-muted-foreground mb-3 font-semibold uppercase tracking-wider">Pricing Plans</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {pricingPlans.map((plan: any) => (
+                    <div
+                      key={plan.name}
+                      className="rounded-xl border border-border bg-background/50 px-4 py-3 text-center transition-all hover:bg-background/80"
+                    >
+                      <p className="text-xs font-semibold text-muted-foreground">{plan.name}</p>
+                      <p className="mt-1 text-xl font-bold text-primary">
+                        ₹{Number(plan.rate).toLocaleString('en-IN')}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                        for {plan.durationHours} {plan.durationHours === 1 ? 'hour' : 'hours'}
+                      </p>
+                    </div>
+                  ))}
+                  {pricingPlans.length === 0 && (
+                    <p className="text-sm text-muted-foreground py-2">No pricing plans defined yet.</p>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>

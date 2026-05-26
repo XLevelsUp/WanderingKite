@@ -43,7 +43,7 @@ export async function getEquipmentWithFieldStatus() {
       name,
       serialNumber,
       status,
-      rentalPrice,
+      pricingPlans,
       image_url,
       description,
       deletedAt,
@@ -109,16 +109,20 @@ export async function getEquipmentById(id: string) {
 export async function createEquipment(formData: FormData) {
   const supabase = await createClient();
 
+  let pricingPlansParsed: any[] = [];
+  try {
+    pricingPlansParsed = JSON.parse((formData.get('pricing_plans') as string) || '[]');
+  } catch (err) {}
+
   const rawData = {
     name: formData.get('name') as string,
     serialNumber: formData.get('serial_number') as string,
     categoryId: formData.get('category_id') as string,
     branchId: formData.get('branch_id') as string,
-    rentalPrice: parseFloat(formData.get('rental_price') as string),
-    weeklyPrice: parseFloat((formData.get('weekly_price') as string) || '0'),
     imageUrl: (formData.get('image_url') as string) || '',
     specs: (formData.get('specs') as string) || null,
     description: (formData.get('description') as string) || null,
+    pricingPlans: pricingPlansParsed,
   };
 
   const validatedData = equipmentSchema.parse(rawData);
@@ -130,8 +134,7 @@ export async function createEquipment(formData: FormData) {
       serialNumber: validatedData.serialNumber,
       categoryId: validatedData.categoryId || null,
       branchId: validatedData.branchId || null,
-      rentalPrice: validatedData.rentalPrice,
-      weeklyPrice: validatedData.weeklyPrice,
+      pricingPlans: validatedData.pricingPlans,
       image_url: validatedData.imageUrl || null,
       specs: validatedData.specs ? JSON.stringify(validatedData.specs.split(',').map((s: string) => s.trim()).filter(Boolean)) : '[]',
       description: validatedData.description,
@@ -152,16 +155,20 @@ export async function createEquipment(formData: FormData) {
 export async function updateEquipment(id: string, formData: FormData) {
   const supabase = await createClient();
 
+  let pricingPlansParsed: any[] = [];
+  try {
+    pricingPlansParsed = JSON.parse((formData.get('pricing_plans') as string) || '[]');
+  } catch (err) {}
+
   const rawData = {
     name: formData.get('name') as string,
     serialNumber: formData.get('serial_number') as string,
     categoryId: formData.get('category_id') as string,
     branchId: formData.get('branch_id') as string,
-    rentalPrice: parseFloat(formData.get('rental_price') as string),
-    weeklyPrice: parseFloat((formData.get('weekly_price') as string) || '0'),
     imageUrl: (formData.get('image_url') as string) || '',
     specs: (formData.get('specs') as string) || null,
     description: (formData.get('description') as string) || null,
+    pricingPlans: pricingPlansParsed,
   };
 
   const validatedData = equipmentSchema.parse(rawData);
@@ -173,8 +180,7 @@ export async function updateEquipment(id: string, formData: FormData) {
       serialNumber: validatedData.serialNumber,
       categoryId: validatedData.categoryId || null,
       branchId: validatedData.branchId || null,
-      rentalPrice: validatedData.rentalPrice,
-      weeklyPrice: validatedData.weeklyPrice,
+      pricingPlans: validatedData.pricingPlans,
       image_url: validatedData.imageUrl || null,
       specs: validatedData.specs ? JSON.stringify(validatedData.specs.split(',').map((s: string) => s.trim()).filter(Boolean)) : '[]',
       description: validatedData.description,

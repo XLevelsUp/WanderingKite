@@ -1,9 +1,13 @@
-import { getBranches, getAdmins } from '@/actions/employees';
-import { EmployeeForm } from '@/components/employees/employee-form';
-import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 
-export default async function NewEmployeePage() {
+/**
+ * Redirects to the unified HR onboarding page.
+ * The old /dashboard/employees/new only created the auth profile (no contract).
+ * All employee creation now happens through /admin/employees/new which handles
+ * both profile creation and HR contract setup in a single flow.
+ */
+export default async function NewEmployeeRedirectPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -19,20 +23,11 @@ export default async function NewEmployeePage() {
     .eq('id', user.id)
     .single();
 
-  if (profile?.role !== 'SUPER_ADMIN' && profile?.role !== 'ADMIN') {
-    redirect('/dashboard/employees');
+  // Only admins can create employees; redirect to the unified HR onboarding page
+  if (profile?.role === 'SUPER_ADMIN' || profile?.role === 'ADMIN') {
+    redirect('/admin/employees/new');
   }
 
-  const [branches, admins] = await Promise.all([getBranches(), getAdmins()]);
-
-  return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Add Employee</h2>
-      </div>
-      <div className="grid gap-4 grid-cols-1 md:max-w-2xl">
-        <EmployeeForm branches={branches || []} managers={admins || []} />
-      </div>
-    </div>
-  );
+  // Non-admins get sent back to the employees list
+  redirect('/dashboard/employees');
 }

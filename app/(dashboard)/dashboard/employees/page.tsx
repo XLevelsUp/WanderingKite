@@ -49,7 +49,7 @@ export default async function EmployeesPage() {
         </div>
         <div className="flex items-center space-x-2">
           {canManage && (
-            <Link href="/dashboard/employees/new">
+            <Link href="/admin/employees/new">
               <button
                 className="
                 flex items-center gap-2 rounded-xl

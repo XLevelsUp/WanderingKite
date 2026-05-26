@@ -34,7 +34,7 @@ export interface AvailableEquipmentRow {
     name: string;
     serial_number: string;
     status: 'AVAILABLE' | 'RENTED' | 'MAINTENANCE' | 'LOST';
-    rental_price: number;
+    pricingPlans: any;
     description: string | null;
     category: { name: string } | null;
 }
@@ -94,7 +94,7 @@ export async function getEquipmentForCategory(
     // Fetch all AVAILABLE equipment from Supabase, joined with categories
     const { data, error } = await supabase
         .from('equipment')
-        .select('id, name, serial_number, status, rental_price, description, categories(name)')
+        .select('id, name, serialNumber, status, pricingPlans, description, categories(name)')
         .eq('status', 'AVAILABLE');
 
     if (error) {
@@ -107,9 +107,9 @@ export async function getEquipmentForCategory(
         return {
             id: row.id,
             name: row.name,
-            serial_number: row.serial_number,
+            serial_number: (row as any).serialNumber ?? '',
             status: row.status as AvailableEquipmentRow['status'],
-            rental_price: row.rental_price,
+            pricingPlans: (row as any).pricingPlans ?? [],
             description: row.description,
             category,
         };
@@ -144,7 +144,7 @@ export async function getAllAvailableEquipment(): Promise<AvailableEquipmentRow[
 
     const { data, error } = await supabase
         .from('equipment')
-        .select('id, name, serial_number, status, rental_price, description, categories(name)')
+        .select('id, name, serialNumber, status, pricingPlans, description, categories(name)')
         .eq('status', 'AVAILABLE')
         .order('name');
 
@@ -158,9 +158,9 @@ export async function getAllAvailableEquipment(): Promise<AvailableEquipmentRow[
         return {
             id: row.id,
             name: row.name,
-            serial_number: row.serial_number,
+            serial_number: (row as any).serialNumber ?? '',
             status: row.status as AvailableEquipmentRow['status'],
-            rental_price: row.rental_price,
+            pricingPlans: (row as any).pricingPlans ?? [],
             description: row.description,
             category,
         };

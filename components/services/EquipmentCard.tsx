@@ -1,34 +1,53 @@
 'use client';
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Camera } from 'lucide-react';
 import Image from 'next/image';
-import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { useRentalCart } from '../rentals/RentalCartContext';
 
 interface EquipmentCardProps {
   id: string;
   name: string;
   image: string;
-  dailyRate: number;
-  weeklyRate: number;
   available: boolean;
   specs: string[];
+  pricingPlans: Array<{
+    name: string;
+    durationHours: number;
+    rate: number;
+  }>;
 }
 
 export function EquipmentCard({
   id,
   name,
   image,
-  dailyRate,
-  weeklyRate,
   available,
   specs,
+  pricingPlans = [],
 }: EquipmentCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const { selectedItems, toggleItem } = useRentalCart();
-  const isSelected = selectedItems?.has(id) || false;
+
+  const cartItem = selectedItems?.get(id);
+  const isSelected = !!cartItem;
+
+  // Sort plans by duration hours so Hourly comes first, then Daily, etc.
+  const sortedPlans = useMemo(() => {
+    return [...pricingPlans].sort((a, b) => a.durationHours - b.durationHours);
+  }, [pricingPlans]);
+
+  const [selectedPlanIndex, setSelectedPlanIndex] = useState(() => {
+    // Try to default to 'Daily' plan if it exists
+    const dailyIdx = sortedPlans.findIndex(
+      (p) => p.name.toLowerCase() === 'daily'
+    );
+    return dailyIdx !== -1 ? dailyIdx : 0;
+  });
+
+  const activePlan = sortedPlans[selectedPlanIndex];
+  const currentPlan = isSelected ? cartItem.selectedPlan : activePlan;
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -74,6 +93,7 @@ export function EquipmentCard({
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover transition-transform duration-500 group-hover:scale-105 opacity-90"
+              unoptimized
             />
           ) : (
             <div className="flex h-full items-center justify-center">
@@ -109,56 +129,94 @@ export function EquipmentCard({
         </div>
 
         {/* Card body */}
-        <div className="p-5">
-          <h3 className="mb-3 text-base font-semibold text-foreground">
-            {name}
-          </h3>
+        <div className="p-5 flex flex-col justify-between h-[calc(100%-100%]">
+          <div>
+            <h3 className="mb-3 text-base font-semibold text-foreground truncate">
+              {name}
+            </h3>
 
-          {/* Specs */}
-          <ul className="mb-4 space-y-1.5">
-            {specs.slice(0, 3).map((spec, i) => (
-              <li
-                key={i}
-                className="flex items-center gap-2 text-xs text-foreground/55"
-              >
-                <span className="h-1 w-1 flex-shrink-0 rounded-full bg-primary opacity-60" />
-                {spec}
-              </li>
-            ))}
-          </ul>
-
-          {/* Pricing */}
-          <div className="mb-5 flex items-end gap-4">
-            <div>
-              <p className="text-2xl font-bold text-primary">₹{dailyRate}</p>
-              <p className="text-xs text-foreground/45">/day</p>
-            </div>
-            <div>
-              <p className="text-base font-semibold text-foreground/70">
-                ₹{weeklyRate}
-              </p>
-              <p className="text-xs text-foreground/45">/week</p>
-            </div>
+            {/* Specs */}
+            <ul className="mb-4 space-y-1.5 min-h-[4.5rem]">
+              {specs.slice(0, 3).map((spec, i) => (
+                <li
+                  key={i}
+                  className="flex items-center gap-2 text-xs text-foreground/55"
+                >
+                  <span className="h-1 w-1 flex-shrink-0 rounded-full bg-primary opacity-60" />
+                  {spec}
+                </li>
+              ))}
+            </ul>
           </div>
 
-          {/* CTA */}
-          <button
-            onClick={() => available && toggleItem({ id, name, dailyRate })}
-            disabled={!available}
-            className={`
-              block w-full rounded-xl py-3 text-center
-              text-sm font-semibold transition-all duration-200
-              ${
-                !available
-                  ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-50'
-                  : isSelected
-                    ? 'bg-warning/20 text-warning border border-warning/50 hover:bg-warning/30'
-                    : 'bg-primary text-primary-foreground hover:opacity-90 hover:shadow-[0_8px_28px_hsl(var(--primary)/0.35)] hover:scale-[1.02] active:scale-[0.98]'
+          <div>
+            {/* Pricing & Plan Switcher */}
+            <div className="mb-5 border-t border-primary/10 pt-4">
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-2xl font-bold text-primary">
+                  ₹{(currentPlan?.rate ?? 0).toLocaleString('en-IN')}
+                </p>
+                <p className="text-xs text-foreground/45">
+                  {currentPlan ? `for ${currentPlan.name} (${currentPlan.durationHours}h)` : ''}
+                </p>
+              </div>
+
+              {sortedPlans.length > 1 && (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {sortedPlans.map((plan, idx) => {
+                    const isPlanActive = isSelected
+                      ? cartItem.selectedPlan.name === plan.name
+                      : selectedPlanIndex === idx;
+                    return (
+                      <button
+                        key={plan.name}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isSelected) {
+                            toggleItem({ id, name }, plan);
+                          } else {
+                            setSelectedPlanIndex(idx);
+                          }
+                        }}
+                        className={`
+                          rounded-full px-3 py-1 text-[10px] font-semibold transition-all duration-200 border
+                          ${
+                            isPlanActive
+                              ? 'bg-warning/20 text-warning border-warning/40'
+                              : 'bg-zinc-900/60 text-zinc-400 border-primary/10 hover:border-primary/30 hover:text-white'
+                          }
+                        `}
+                      >
+                        {plan.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* CTA */}
+            <button
+              onClick={() =>
+                available && currentPlan && toggleItem({ id, name }, currentPlan)
               }
-            `}
-          >
-            {isSelected ? 'Remove from Quote' : 'Add to Quote'}
-          </button>
+              disabled={!available}
+              className={`
+                block w-full rounded-xl py-3 text-center
+                text-sm font-semibold transition-all duration-200
+                ${
+                  !available
+                    ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-50'
+                    : isSelected
+                      ? 'bg-warning/20 text-warning border border-warning/50 hover:bg-warning/30'
+                      : 'bg-primary text-primary-foreground hover:opacity-90 hover:shadow-[0_8px_28px_hsl(var(--primary)/0.35)] hover:scale-[1.02] active:scale-[0.98]'
+                }
+              `}
+            >
+              {isSelected ? 'Remove from Quote' : 'Add to Quote'}
+            </button>
+          </div>
         </div>
       </div>
     </motion.div>

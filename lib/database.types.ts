@@ -185,7 +185,7 @@ export interface Database {
           category_id: string | null;
           branch_id: string | null;
           status: 'AVAILABLE' | 'RENTED' | 'MAINTENANCE' | 'LOST';
-          rental_price: number;
+          pricingPlans: Json;
           description: string | null;
           created_at: string;
           updated_at: string;
@@ -197,7 +197,7 @@ export interface Database {
           category_id?: string | null;
           branch_id?: string | null;
           status?: 'AVAILABLE' | 'RENTED' | 'MAINTENANCE' | 'LOST';
-          rental_price: number;
+          pricingPlans?: Json;
           description?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -209,7 +209,7 @@ export interface Database {
           category_id?: string | null;
           branch_id?: string | null;
           status?: 'AVAILABLE' | 'RENTED' | 'MAINTENANCE' | 'LOST';
-          rental_price?: number;
+          pricingPlans?: Json;
           description?: string | null;
           created_at?: string;
           updated_at?: string;

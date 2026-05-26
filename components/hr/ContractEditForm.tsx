@@ -1,0 +1,177 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { contractSchema, type ContractFormData } from '@/lib/validations/hr';
+import { updateContract } from '@/actions/hr/employees';
+import { CheckCircle, Loader2, Pencil } from 'lucide-react';
+import type { EmployeeContractRow } from '@/lib/types/hr';
+
+interface ContractEditFormProps {
+  contract: EmployeeContractRow;
+}
+
+const inputClass =
+  'w-full px-3 py-2.5 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-foreground/85 placeholder-foreground/30 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all duration-150 disabled:opacity-40';
+
+const selectClass =
+  'w-full px-3 py-2.5 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all [&>option]:bg-[#1a1a24]';
+
+function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+  return (
+    <label className='block text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-1.5'>
+      {children}
+      {required && <span className='text-red-400 ml-1'>*</span>}
+    </label>
+  );
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className='mt-1 text-xs text-red-400'>{message}</p>;
+}
+
+export function ContractEditForm({ contract }: ContractEditFormProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [saved, setSaved] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isDirty },
+  } = useForm<ContractFormData>({
+    resolver: zodResolver(contractSchema),
+    defaultValues: {
+      jobTitle: contract.jobTitle,
+      employmentType: contract.employmentType,
+      baseSalary: contract.baseSalary,
+      joiningDate: contract.joiningDate,
+      bankAccountName: contract.bankAccountName ?? '',
+      bankAccountNumber: contract.bankAccountNumber ?? '',
+      bankIFSC: contract.bankIFSC ?? '',
+      upiId: contract.upiId ?? '',
+      avatarUrl: contract.avatarUrl ?? '',
+      notes: contract.notes ?? '',
+    },
+  });
+
+  function onSubmit(data: ContractFormData) {
+    setSubmitError(null);
+    startTransition(async () => {
+      const res = await updateContract(contract.id, data);
+      if (res.error) {
+        setSubmitError(res.error);
+      } else {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+        router.refresh();
+      }
+    });
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
+        <div className='sm:col-span-2'>
+          <FieldLabel required>Job Title</FieldLabel>
+          <input {...register('jobTitle')} className={inputClass} placeholder='e.g. Senior Photographer' />
+          <FieldError message={errors.jobTitle?.message} />
+        </div>
+
+        <div>
+          <FieldLabel required>Employment Type</FieldLabel>
+          <select {...register('employmentType')} className={selectClass}>
+            <option value='FULL_TIME'>Full-Time</option>
+            <option value='PART_TIME'>Part-Time</option>
+            <option value='CONTRACT'>Contract</option>
+            <option value='INTERN'>Intern</option>
+          </select>
+          <FieldError message={errors.employmentType?.message} />
+        </div>
+
+        <div>
+          <FieldLabel required>Joining Date</FieldLabel>
+          <input type='date' {...register('joiningDate')} className={inputClass} />
+          <FieldError message={errors.joiningDate?.message} />
+        </div>
+
+        <div className='sm:col-span-2'>
+          <FieldLabel required>Base Salary (₹ / month)</FieldLabel>
+          <input
+            type='number'
+            min={0}
+            step={100}
+            {...register('baseSalary', { valueAsNumber: true })}
+            className={inputClass}
+          />
+          <FieldError message={errors.baseSalary?.message} />
+        </div>
+
+        <div className='sm:col-span-2'>
+          <FieldLabel>Avatar URL</FieldLabel>
+          <input {...register('avatarUrl')} className={inputClass} placeholder='https://…' />
+          <FieldError message={errors.avatarUrl?.message} />
+        </div>
+
+        <div>
+          <FieldLabel>Account Holder Name</FieldLabel>
+          <input {...register('bankAccountName')} className={inputClass} />
+        </div>
+        <div>
+          <FieldLabel>Account Number</FieldLabel>
+          <input {...register('bankAccountNumber')} className={inputClass} />
+        </div>
+        <div>
+          <FieldLabel>IFSC Code</FieldLabel>
+          <input {...register('bankIFSC')} className={`${inputClass} uppercase`} />
+          <FieldError message={errors.bankIFSC?.message} />
+        </div>
+        <div>
+          <FieldLabel>UPI ID</FieldLabel>
+          <input {...register('upiId')} className={inputClass} />
+        </div>
+
+        <div className='sm:col-span-2'>
+          <FieldLabel>Notes</FieldLabel>
+          <textarea {...register('notes')} rows={3} className={`${inputClass} resize-none`} />
+        </div>
+      </div>
+
+      {submitError && (
+        <div className='rounded-xl bg-red-500/10 border border-red-500/25 px-4 py-3 text-sm text-red-400'>
+          {submitError}
+        </div>
+      )}
+
+      <div className='flex items-center justify-end gap-3 pt-2 border-t border-primary/12'>
+        {saved && (
+          <span className='flex items-center gap-1.5 text-xs text-emerald-400'>
+            <CheckCircle className='w-3.5 h-3.5' />
+            Saved
+          </span>
+        )}
+        <button
+          type='submit'
+          disabled={isPending || !isDirty}
+          className='flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-black text-sm font-bold hover:bg-primary/90 disabled:opacity-50 transition-all'
+        >
+          {isPending ? (
+            <>
+              <Loader2 className='h-4 w-4 animate-spin' />
+              Saving…
+            </>
+          ) : (
+            <>
+              <Pencil className='h-4 w-4' />
+              Save Changes
+            </>
+          )}
+        </button>
+      </div>
+    </form>
+  );
+}

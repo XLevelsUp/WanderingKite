@@ -87,6 +87,34 @@ export default async function DashboardLayout({
                   Audit Logs
                 </a>
               )}
+              {(profile?.role === 'ADMIN' ||
+                profile?.role === 'SUPER_ADMIN') && (
+                <>
+                  <div className="pt-3 pb-1">
+                    <p className="px-4 text-[9px] font-bold uppercase tracking-[0.2em] text-primary/40">
+                      HR &amp; Payroll
+                    </p>
+                  </div>
+                  <a
+                    href="/admin/employees"
+                    className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
+                  >
+                    Employees
+                  </a>
+                  <a
+                    href="/admin/attendance"
+                    className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
+                  >
+                    Attendance
+                  </a>
+                  <a
+                    href="/admin/payroll"
+                    className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
+                  >
+                    Payroll
+                  </a>
+                </>
+              )}
             </nav>
           </div>
           <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-primary/12 bg-[rgba(17,17,22,0.98)]">

@@ -20,7 +20,7 @@ import ServiceTerms from '@/components/sections/ServiceTerms';
 export const metadata: Metadata = {
   title: 'Camera & Lens Rental Coimbatore | Sony, Canon, Rode | Daily Rates',
   description:
-    'Rent Sony, Canon cameras, lenses, lighting & Rode audio gear in Coimbatore. Insured equipment. Daily & weekly rates. Delivery available. Book on WhatsApp.',
+    'Rent Sony, Canon cameras, lenses, lighting & Rode audio gear in Coimbatore. Insured equipment. Customizable hourly, daily & weekly pricing plans. Delivery available. Book on WhatsApp.',
   keywords: [
     // Answer the Public: "rent / hire / borrow" camera patterns
     'camera rental Coimbatore',
@@ -157,10 +157,7 @@ export default async function RentalsPage() {
       id: e.id,
       name: e.name,
       category: categoryName,
-      dailyRate: Number((e as any).rentalPrice ?? e.rental_price ?? 0),
-      weeklyRate: Number(
-        (e as any).weeklyPrice ?? (e as any).weekly_price ?? 0
-      ),
+      pricingPlans: Array.isArray((e as any).pricingPlans) ? (e as any).pricingPlans : [],
       image: e.image_url || '',
       specs: parsedSpecs,
       available: e.status === 'AVAILABLE',
@@ -204,7 +201,7 @@ export default async function RentalsPage() {
               </h1>
               <p className="mb-8 text-xl text-muted-foreground">
                 Access premium photography and video gear without the
-                commitment. Daily and weekly rates available.
+                commitment. Customizable hourly, daily, and weekly pricing plans.
               </p>
             </div>
           </div>

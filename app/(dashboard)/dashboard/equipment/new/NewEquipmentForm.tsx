@@ -23,7 +23,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { ImageUpload } from '@/components/shared/ImageUpload';
 import { useNotify } from '@/hooks/useNotify';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus, Trash2, RefreshCw } from 'lucide-react';
 
 interface NewEquipmentFormProps {
   categories: Array<{ id: string; name: string }>;
@@ -31,8 +31,6 @@ interface NewEquipmentFormProps {
 }
 
 // ── ImageUploadField ──────────────────────────────────────────────────────────
-// Keeps the public URL in state and syncs it to a hidden <input> so FormData
-// picks it up on submit — no changes needed to the server action.
 function ImageUploadField({
   name,
   defaultValue,
@@ -67,8 +65,62 @@ export function NewEquipmentForm({
   const [selectedBranch, setSelectedBranch] = useState('');
   const { showError, showInfo, showSuccess } = useNotify();
 
+  // Pricing Plans state
+  const [plans, setPlans] = useState<Array<{ name: string; durationHours: number; rate: number }>>([
+    { name: 'Hourly', durationHours: 1, rate: 150 },
+    { name: 'Daily', durationHours: 24, rate: 1500 },
+    { name: 'Weekly', durationHours: 168, rate: 8500 },
+  ]);
+
+  const [newPlanName, setNewPlanName] = useState('');
+  const [newPlanDuration, setNewPlanDuration] = useState('');
+  const [newPlanRate, setNewPlanRate] = useState('');
+
+  const handleAddPlan = () => {
+    if (!newPlanName || !newPlanDuration || !newPlanRate) {
+      showInfo('Please fill out all pricing plan fields');
+      return;
+    }
+    const duration = parseInt(newPlanDuration, 10);
+    const rate = parseFloat(newPlanRate);
+
+    if (isNaN(duration) || duration <= 0) {
+      showError('Duration must be a positive number of hours');
+      return;
+    }
+    if (isNaN(rate) || rate <= 0) {
+      showError('Rate must be a positive number');
+      return;
+    }
+    if (plans.some((p) => p.name.toLowerCase() === newPlanName.toLowerCase())) {
+      showError('A plan with this name already exists');
+      return;
+    }
+
+    setPlans((prev) => [...prev, { name: newPlanName, durationHours: duration, rate }]);
+    setNewPlanName('');
+    setNewPlanDuration('');
+    setNewPlanRate('');
+  };
+
+  const handleRemovePlan = (nameToRemove: string) => {
+    setPlans((prev) => prev.filter((p) => p.name !== nameToRemove));
+  };
+
+  const handleLoadDefaults = () => {
+    setPlans([
+      { name: 'Hourly', durationHours: 1, rate: 150 },
+      { name: 'Daily', durationHours: 24, rate: 1500 },
+      { name: 'Weekly', durationHours: 168, rate: 8500 },
+    ]);
+  };
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (plans.length === 0) {
+      showError('Please configure at least one pricing plan');
+      return;
+    }
     setIsLoading(true);
     let timeoutId: NodeJS.Timeout;
 
@@ -82,6 +134,7 @@ export function NewEquipmentForm({
       const formData = new FormData(e.currentTarget);
       formData.set('category_id', selectedCategory);
       formData.set('branch_id', selectedBranch);
+      formData.set('pricing_plans', JSON.stringify(plans));
 
       await createEquipment(formData);
       showSuccess('Equipment created successfully');
@@ -97,6 +150,7 @@ export function NewEquipmentForm({
 
   return (
     <form onSubmit={handleSubmit}>
+      <input type="hidden" name="pricing_plans" value={JSON.stringify(plans)} />
       <Card>
         <CardHeader>
           <CardTitle>Equipment Details</CardTitle>
@@ -169,32 +223,100 @@ export function NewEquipmentForm({
             </Select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="rental_price">Rental Price (per day) *</Label>
-              <Input
-                id="rental_price"
-                name="rental_price"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                required
+          {/* Pricing Plans Manager */}
+          <div className="space-y-3 rounded-2xl border border-border bg-muted/20 p-4">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Pricing Plans *</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleLoadDefaults}
+                className="gap-1.5 text-xs"
                 disabled={isLoading}
-              />
+              >
+                <RefreshCw className="h-3 w-3" /> Reset to Defaults
+              </Button>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="weekly_price">Weekly Price</Label>
-              <Input
-                id="weekly_price"
-                name="weekly_price"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                disabled={isLoading}
-              />
+            {/* List of active plans */}
+            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+              {plans.map((p) => (
+                <div
+                  key={p.name}
+                  className="flex items-center justify-between rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="font-semibold text-foreground min-w-[80px]">{p.name}</span>
+                    <span className="text-xs text-muted-foreground">Duration: {p.durationHours}h</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="font-mono font-bold text-primary">₹{p.rate}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemovePlan(p.name)}
+                      className="h-7 w-7 p-0 text-red-400 hover:bg-red-500/10 hover:text-red-500"
+                      disabled={isLoading}
+                    >
+                      <Trash2 className="h-4.5 w-4.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {plans.length === 0 && (
+                <p className="text-xs text-muted-foreground italic py-2">No pricing plans defined. Create one below.</p>
+              )}
+            </div>
+
+            {/* Dynamic plan creator */}
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/60">
+              <div className="space-y-1">
+                <Label htmlFor="plan-name" className="text-[10px] text-muted-foreground">Plan Name</Label>
+                <Input
+                  id="plan-name"
+                  placeholder="e.g. Weekend"
+                  value={newPlanName}
+                  onChange={(e) => setNewPlanName(e.target.value)}
+                  disabled={isLoading}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="plan-duration" className="text-[10px] text-muted-foreground">Duration (Hours)</Label>
+                <Input
+                  id="plan-duration"
+                  type="number"
+                  placeholder="e.g. 48"
+                  value={newPlanDuration}
+                  onChange={(e) => setNewPlanDuration(e.target.value)}
+                  disabled={isLoading}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="plan-rate" className="text-[10px] text-muted-foreground">Rate (₹)</Label>
+                <div className="flex items-center gap-1.5">
+                  <Input
+                    id="plan-rate"
+                    type="number"
+                    placeholder="4000"
+                    value={newPlanRate}
+                    onChange={(e) => setNewPlanRate(e.target.value)}
+                    disabled={isLoading}
+                    className="h-8 text-xs flex-1"
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleAddPlan}
+                    className="h-8 w-8 p-0"
+                    disabled={isLoading}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
 
