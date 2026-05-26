@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { addGalleryImage } from '@/actions/shoots';
 import { ImageUpload } from '@/components/shared/ImageUpload';
+import { logger } from '@/lib/logger';
 
 export function AddGalleryImageForm({ shootId }: { shootId: string }) {
   const [url, setUrl] = useState('');
@@ -22,7 +23,7 @@ export function AddGalleryImageForm({ shootId }: { shootId: string }) {
       setUrl('');
       setAltText('');
     } catch (error) {
-      console.error(error);
+      logger.error('[AddGalleryImage]', error);
       alert('Failed to add image.');
     } finally {
       setIsSubmitting(false);

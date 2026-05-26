@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from 'react';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
+import { logger } from '@/lib/logger';
 import {
   Upload,
   X,
@@ -117,7 +118,7 @@ export function ImageUpload({
           setCompressionStats({ before: rawFile.size, after: compressed.size });
         }
       } catch (err) {
-        console.error('Compression failed:', err);
+        logger.error('[ImageUpload] Compression failed:', err);
       }
 
       // Show local preview immediately for snappy UX

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export const revalidate = 3600; // Cache this route handler for 1 hour
 
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (!token) {
-    console.warn(`Warning: Instagram access token for account "${account}" is not configured in .env.local.`);
+    logger.warn(`Warning: Instagram access token for account "${account}" is not configured in .env.local.`);
     return NextResponse.json(
       { success: false, error: `Instagram access token for account "${account}" is not configured.` },
       { status: 200 }
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.warn('Instagram API returned an error (handled gracefully):', response.status, errorData);
+      logger.warn('Instagram API returned an error (handled gracefully):', response.status, errorData);
       return NextResponse.json(
         { success: false, error: 'Failed to fetch media from Instagram API.', details: errorData },
         { status: 200 }
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     const data = await response.json();
 
     if (!data.data || !Array.isArray(data.data)) {
-      console.warn('Unexpected Instagram API response structure (handled gracefully):', data);
+      logger.warn('Unexpected Instagram API response structure (handled gracefully):', data);
       return NextResponse.json(
         { success: false, error: 'Unexpected response from Instagram API.' },
         { status: 200 }
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
       data: formattedResult,
     });
   } catch (err: any) {
-    console.warn('Exception in Instagram route handler (handled gracefully):', err.message);
+    logger.warn('Exception in Instagram route handler (handled gracefully):', err.message);
     return NextResponse.json(
       { success: false, error: 'Internal server error while fetching Instagram feed.', details: err.message },
       { status: 200 }

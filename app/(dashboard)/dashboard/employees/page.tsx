@@ -25,11 +25,7 @@ export default async function EmployeesPage() {
     .eq('id', user.id)
     .single();
 
-  console.log('--- Auth Debug ---');
-  console.log('User ID:', user.id);
-  console.log('Email:', profile?.email);
-  console.log('Current Role:', profile?.role);
-  console.log('------------------');
+
 
   const employees = await getEmployees();
 

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Instagram, Play, Film, AlertCircle } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface InstagramMediaItem {
   id: string;
@@ -81,7 +82,7 @@ export function InstagramFeed({ account = 'wanderingkite' }: InstagramFeedProps)
           throw new Error(json.error || 'Invalid API response format.');
         }
       } catch (err: any) {
-        console.warn('Error loading live Instagram feed (gracefully hiding feed section):', err);
+        logger.warn('Error loading live Instagram feed (gracefully hiding feed section):', err);
         setError('Failed to load feed');
         setMedia([]);
         setIsFallbackActive(false);
@@ -98,7 +99,7 @@ export function InstagramFeed({ account = 'wanderingkite' }: InstagramFeedProps)
     if (media.length > 0 && item.id === media[0].id) return; // The first video autoplays, ignore
     const video = desktopVideoRefs.current[visualIdx];
     if (video) {
-      video.play().catch((err) => console.log('Hover playback error:', err));
+      video.play().catch((err) => logger.debug('Hover playback error:', err));
     }
   };
 
