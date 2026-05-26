@@ -64,6 +64,27 @@ const ADD_ONS = [
     icon: Users,
   },
 ];
+const getEquipmentHourlyRate = (item: any): number => {
+  if (!item) return 0;
+  const plans = Array.isArray(item.pricingPlans) ? item.pricingPlans : [];
+  
+  // 1. Try to find an "Hourly" plan
+  const hourlyPlan = plans.find((p: any) => p.name?.toLowerCase() === 'hourly');
+  if (hourlyPlan) return Number(hourlyPlan.rate) || 0;
+  
+  // 2. Fallback to "Daily" plan divided by 10 (as in the migration 11 default mapping)
+  const dailyPlan = plans.find((p: any) => p.name?.toLowerCase() === 'daily');
+  if (dailyPlan) return Math.round((Number(dailyPlan.rate) || 0) / 10);
+  
+  // 3. Fallback to any first plan in the list normalized by hours
+  if (plans.length > 0) {
+    const first = plans[0];
+    const duration = Number(first.durationHours) || 1;
+    return Math.round((Number(first.rate) || 0) / duration);
+  }
+  
+  return 0;
+};
 
 export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
   const [selectedPackage, setSelectedPackage] = useState(PACKAGES[2]); // Default to Full Day
@@ -108,8 +129,8 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
     });
     selectedEquipment.forEach((id) => {
       const eq = equipment.find((e) => e.id === id);
-      if (eq && eq.rentalPrice) {
-        total += Math.round(eq.rentalPrice / 8) * packageHours;
+      if (eq) {
+        total += getEquipmentHourlyRate(eq) * packageHours;
       }
     });
     return total;
@@ -303,7 +324,7 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
                     <div className="flex gap-4 overflow-x-auto pb-4 snap-x custom-scrollbar w-full max-w-full overflow-y-hidden">
                       {items.map((item) => {
                         const isSelected = selectedEquipment.has(item.id);
-                        const hourly = Math.round((item.rentalPrice || 0) / 8);
+                        const hourly = getEquipmentHourlyRate(item);
                         return (
                           <div
                             key={item.id}
@@ -369,8 +390,7 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
                         return (
                           acc +
                           (eq
-                            ? Math.round((eq.rentalPrice || 0) / 8) *
-                              packageHours
+                            ? getEquipmentHourlyRate(eq) * packageHours
                             : 0)
                         );
                       }, 0)
