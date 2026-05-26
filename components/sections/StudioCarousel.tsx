@@ -108,7 +108,7 @@ export function StudioCarousel() {
       </div>
 
       {/* Navigation Controls */}
-      <div className="max-w-7xl mx-auto mt-12 px-6 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto mt-12 px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
         {/* Progress Dots */}
         <div className="flex items-center gap-1" role="tablist" aria-label="Carousel slides">
           {CAROUSEL_IMAGES.map((img, i) => (

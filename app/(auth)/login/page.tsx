@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
+import { logger } from '@/lib/logger';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -46,7 +47,7 @@ export default function LoginPage() {
       }
     } catch (err) {
       setError('An unexpected error occurred');
-      console.error(err);
+      logger.error('[Login]', err);
     } finally {
       setIsLoading(false);
     }

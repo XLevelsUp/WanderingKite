@@ -10,6 +10,7 @@
  */
 
 import { SupabaseClient } from '@supabase/supabase-js';
+import { logger } from './logger';
 
 export type AuditSeverity = 'INFO' | 'WARN' | 'CRITICAL';
 
@@ -59,7 +60,7 @@ export async function writeAuditLog(
   if (error) {
     // Never let audit log failure break user-facing operations.
     // Log to server console only — do not throw.
-    console.error('[AUDIT] Failed to write audit log:', error.message, {
+    logger.error('[AUDIT] Failed to write audit log', error, {
       action,
       table_name,
       record_id,

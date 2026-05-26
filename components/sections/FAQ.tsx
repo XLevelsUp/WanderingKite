@@ -10,31 +10,31 @@ const faqs = [
     answer:
       'We offer optional technical support for an additional fee. Our experienced technicians can assist with setup, operation, and troubleshooting. For studio and podcast bookings, basic technical guidance is included.',
   },
-  {
-    question: "What's the security deposit for equipment rentals?",
-    answer:
-      'Security deposits vary by equipment value: ₹5,000-₹10,000 for cameras/lenses, ₹2,000-₹5,000 for lighting/audio. Deposits are fully refundable upon safe return of equipment. We accept cash, UPI, or bank transfer.',
-  },
+  // {
+  //   question: "What's the security deposit for equipment rentals?",
+  //   answer:
+  //     'Security deposits vary by equipment value: ₹5,000-₹10,000 for cameras/lenses, ₹2,000-₹5,000 for lighting/audio. Deposits are fully refundable upon safe return of equipment. We accept cash, UPI, or bank transfer.',
+  // },
   {
     question: 'Is parking available at your studio location?',
     answer:
-      'Yes! We offer free parking for up to 3 vehicles. Our studio is located in a secure compound with 24/7 security. Additional street parking is available nearby for larger crews.',
+      'Yes! Parking space for 1 car and 2 bikes is available at our studio location. The studio is situated in a secure area, and additional parking options may also be available nearby when needed.',
   },
   {
     question: 'Do you have power backup for studio sessions?',
     answer:
-      'Absolutely. Our studio has a 10KVA generator backup that kicks in within 3 seconds of power failure. We also have UPS backup for all sensitive equipment to ensure zero downtime during your shoot.',
+      'Absolutely. Our studio provides UPS power backup for shoots and sensitive equipment to help ensure smooth and uninterrupted operations during your session.',
   },
   {
     question: 'Can I extend my rental period if needed?',
     answer:
       'Yes, extensions are subject to availability. Contact us via WhatsApp at least 2 hours before your rental ends. Extension rates are prorated based on our standard hourly/daily rates.',
   },
-  {
-    question: 'What happens if equipment gets damaged during my rental?',
-    answer:
-      'Minor wear and tear is expected and covered. For accidental damage, repair costs are deducted from your security deposit. We recommend purchasing our optional damage waiver (10% of rental cost) for complete peace of mind.',
-  },
+  // {
+  //   question: 'What happens if equipment gets damaged during my rental?',
+  //   answer:
+  //     'Minor wear and tear is expected and covered. For accidental damage, repair costs are deducted from your security deposit. We recommend purchasing our optional damage waiver (10% of rental cost) for complete peace of mind.',
+  // },
 ];
 
 export function FAQ() {
@@ -69,16 +69,14 @@ export function FAQ() {
                     {faq.question}
                   </span>
                   <ChevronDown
-                    className={`h-5 w-5 flex-shrink-0 text-muted-foreground transition-transform ${
-                      openIndex === index ? 'rotate-180' : ''
-                    }`}
+                    className={`h-5 w-5 flex-shrink-0 text-muted-foreground transition-transform ${openIndex === index ? 'rotate-180' : ''
+                      }`}
                   />
                 </button>
 
                 <div
-                  className={`overflow-hidden transition-all duration-300 ${
-                    openIndex === index ? 'max-h-96' : 'max-h-0'
-                  }`}
+                  className={`overflow-hidden transition-all duration-300 ${openIndex === index ? 'max-h-96' : 'max-h-0'
+                    }`}
                 >
                   <div className="border-t border-border p-6 pt-4 text-muted-foreground">
                     {faq.answer}

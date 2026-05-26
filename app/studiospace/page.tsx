@@ -24,6 +24,10 @@ import {
   Mic,
   Headphones,
   Radio,
+  Clock,
+  Layers,
+  Sparkles,
+  ArrowRight,
 } from 'lucide-react';
 import { StudioCarousel } from '@/components/sections/StudioCarousel';
 import { StudioPricingEngine } from '@/components/studio/StudioPricingEngine';
@@ -57,37 +61,37 @@ const podcastEquipment = [
 
 const podcastPackages = [
   {
-    name: 'Solo Creator',
-    price: '1,200',
+    name: 'Single Cameraman',
+    price: '1,998',
     duration: '/hour',
     features: [
-      '1 host setup',
-      'Single mic & headphones',
-      'Basic editing included',
-      'WAV file delivery',
+      'Studio space rent included (₹999)',
+      '1 Cameraman (₹999)',
+      '1 Camera',
+      '3 Lights & 1 Mic',
     ],
   },
   {
-    name: 'Interview Setup',
-    price: '1,800',
+    name: 'Double Cameraman',
+    price: '2,997',
     duration: '/hour',
     features: [
-      '2-3 person setup',
-      'Multiple mics',
-      'Video recording option',
-      'Multi-track files',
+      'Studio space rent included (₹999)',
+      '2 Cameramen (₹999 each)',
+      '2 Cameras',
+      '3 Lights & 1 Mic',
     ],
     popular: true,
   },
   {
-    name: 'Full Production',
-    price: '5,000',
-    duration: '/4 hours',
+    name: 'Triple Cameraman',
+    price: '3,996',
+    duration: '/hour',
     features: [
-      'Up to 4 guests',
-      'Video + audio',
-      'Professional editing',
-      'Same-day delivery',
+      'Studio space rent included (₹999)',
+      '3 Cameramen (₹999 each)',
+      '3 Cameras',
+      '3 Lights & 1 Mic',
     ],
   },
 ];
@@ -142,34 +146,10 @@ const studioFaqSchema = {
   mainEntity: [
     {
       '@type': 'Question',
-      name: 'What equipment is included in the photography studio rental in Coimbatore?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'All packages include continuous LED lights (3×), strobe lights (2×), light stands, modifiers, reflectors, diffusers, and multiple backdrops (white, black, and colored seamless paper). Additional cameras and lenses can be rented separately.',
-      },
-    },
-    {
-      '@type': 'Question',
       name: 'How much does it cost to rent the photography studio in Coimbatore?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Hourly rate starts at ₹1,500 (minimum 1 hour). Half-day (4 hours) is ₹6,000, and a full day (8 hours) is ₹10,000. All packages include lighting equipment and WiFi.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Is parking available at the Coimbatore studio?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Yes, free parking is available for up to 3 vehicles. The studio is located in RS Puram, Coimbatore with additional street parking nearby for larger crews.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Can I cancel or reschedule my studio booking?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Cancellations 72+ hours in advance receive a 100% refund. 48–72 hours: 75% refund. 24–48 hours: 50% refund. Less than 24 hours: no refund. One free reschedule is allowed if done 48+ hours in advance.',
+        text: 'Hourly rate starts at ₹999 (minimum 1 hour). Half-day (4 hours) is ₹3,500, and a full day (8 hours) is ₹6,999 (included gst). All packages include lighting equipment and WiFi.',
       },
     },
     {
@@ -182,10 +162,34 @@ const studioFaqSchema = {
     },
     {
       '@type': 'Question',
-      name: 'Does the studio have a green screen and cyclorama wall?',
+      name: 'Is parking available at the Coimbatore studio?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes, the 1200 sq ft studio features a cyclorama wall, green screen, and multiple seamless paper backdrops. The 14ft ceilings allow for a wide range of lighting setups.',
+        text: 'Yes! Parking space for 1 car and 2 bikes is available at our studio location. The studio is situated in a secure area, and additional parking options may also be available nearby when needed.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Can I cancel or reschedule my studio booking?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Cancellations 72+ hours in advance receive a 100% refund. 48–72 hours: 75% refund. 24–48 hours: 50% refund. Less than 24 hours: no refund. One free reschedule is allowed if done 48+ hours in advance.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Does the studio have a green screen and infinity wall?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Yes, the 1200 sq ft studio features a infinity wall, green screen, and multiple seamless paper backdrops. The 14ft ceilings allow for a wide range of lighting setups.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Do you allow food and drinks in the studio?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Yes, but only in the designated lounge area. No food or drinks near equipment or shooting area to prevent damage.',
       },
     },
   ],
@@ -274,7 +278,7 @@ const facilities = [
   {
     icon: Zap,
     title: 'Power Backup',
-    description: 'Uninterrupted power supply for shoots',
+    description: 'UPS power backup available for shoots',
   },
   {
     icon: Box,
@@ -328,24 +332,11 @@ export default async function StudioPage() {
   // Fetch live equipment summary
   const equipment = await getEquipment();
 
-  // Group up to 3 names per category for the preview text
-  const getTopItems = (catMatch: string) => {
-    const matches = equipment.filter((e) => {
-      const catName = (e.categories as any)?.name?.toLowerCase() || '';
-      return catName.includes(catMatch);
-    });
-    return (
-      matches
-        .slice(0, 3)
-        .map((e) => e.name)
-        .join(', ') || `Various ${catMatch}s available`
-    );
-  };
-
-  const previewCameras = getTopItems('camera');
-  const previewLenses = getTopItems('lens');
-  const previewLighting = getTopItems('light');
-  const previewAudio = getTopItems('audio');
+  // Hardcoded equipment previews for the rental section below
+  const previewCameras = 'Sony A7 IV, Canon EOS R5, Lumix S5 IIX ,Sony Alpha M7 V,Sony Alpha FX3 , Sony Alpha FX 30';
+  const previewLenses = 'Sony 24-70mm f/2.8, Canon 50mm f/1.2, Sigma 35mm Art';
+  const previewLighting = 'Godox AD600 Pro, Aputure 300d II, Profoto B10X';
+  const previewAudio = 'Rode NTG4+, DJI Mic 2, Zoom H6 Essential';
 
   return (
     <>
@@ -412,6 +403,7 @@ export default async function StudioPage() {
                 premium microphones, and expert support.
               </p>
 
+              {/* Studio Equipment - Commented out as requested
               <div className="mb-12">
                 <h3 className="mb-6 text-2xl font-bold">Studio Equipment</h3>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -433,17 +425,17 @@ export default async function StudioPage() {
                   ))}
                 </div>
               </div>
+              */}
 
-              <h3 className="mb-6 text-2xl font-bold">Recording Packages</h3>
+              <h3 className="mb-6 text-2xl font-bold">Packages with Cameraman</h3>
               <div className="grid gap-6 md:grid-cols-3">
                 {podcastPackages.map((pkg) => (
                   <div
                     key={pkg.name}
-                    className={`relative rounded-2xl border p-6 flex flex-col ${
-                      pkg.popular
-                        ? 'border-green-500/50 bg-green-500/5 shadow-[0_0_15px_-5px_hsl(var(--color-green)/0.15)]'
-                        : 'border-border bg-muted/50'
-                    }`}
+                    className={`relative rounded-2xl border p-6 flex flex-col ${pkg.popular
+                      ? 'border-green-500/50 bg-green-500/5 shadow-[0_0_15px_-5px_hsl(var(--color-green)/0.15)]'
+                      : 'border-border bg-muted/50'
+                      }`}
                   >
                     {pkg.popular && (
                       <span className="absolute -top-3 left-6 rounded-full bg-green-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-950">
@@ -478,16 +470,83 @@ export default async function StudioPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`Book the ${pkg.name} podcast package`}
-                      className={`block w-full rounded-xl py-3 text-center text-sm font-semibold transition-all ${
-                        pkg.popular
-                          ? 'bg-green-500 text-zinc-950 hover:bg-green-400'
-                          : 'border border-green-500/40 bg-green-500/10 text-green-500 hover:bg-green-500/20'
-                      }`}
+                      className={`block w-full rounded-xl py-3 text-center text-sm font-semibold transition-all ${pkg.popular
+                        ? 'bg-green-500 text-zinc-950 hover:bg-green-400'
+                        : 'border border-green-500/40 bg-green-500/10 text-green-500 hover:bg-green-500/20'
+                        }`}
                     >
                       Book Session
                     </a>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Editing Services */}
+            <div className="mb-16">
+              <div className="mb-6 flex items-center gap-3">
+                <span className="rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1 text-sm font-semibold text-purple-400">
+                  Post-Production
+                </span>
+                <div className="h-px flex-1 bg-secondary" />
+              </div>
+
+              <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="max-w-2xl">
+                  <h3 className="mb-4 text-3xl font-bold tracking-tight">Premium Editing Services</h3>
+                  <p className="mb-4 text-muted-foreground text-lg leading-relaxed">
+                    Professional video and photo post-production tailored to your specific requirements.
+                  </p>
+                  <div className="inline-flex items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-500/10 px-4 py-2.5 text-sm font-semibold text-purple-400">
+                    <Sparkles className="h-4 w-4" />
+                    Pricing is customized entirely based on your workload and deliverables.
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  <a
+                    href={generateWhatsAppLink(
+                      'studio',
+                      `Hi! I'd like to get a customized quote for editing services.`
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-purple-500/20 transition-all hover:scale-105 hover:bg-purple-400"
+                  >
+                    Request a Quote <ArrowRight className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-3">
+                <div className="group relative overflow-hidden rounded-3xl border border-border bg-card p-8 transition-all hover:border-purple-500/30 hover:bg-purple-500/5 hover:shadow-lg hover:shadow-purple-500/5">
+                  <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-500 transition-transform group-hover:scale-110 group-hover:bg-purple-500/20">
+                    <Clock className="h-6 w-6" />
+                  </div>
+                  <h4 className="mb-3 text-xl font-bold">Hourly Basis</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Flexible editing designed for minor tweaks, short-form content, and quick turnarounds.
+                  </p>
+                </div>
+
+                <div className="group relative overflow-hidden rounded-3xl border border-border bg-card p-8 transition-all hover:border-purple-500/30 hover:bg-purple-500/5 hover:shadow-lg hover:shadow-purple-500/5">
+                  <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-500 transition-transform group-hover:scale-110 group-hover:bg-purple-500/20">
+                    <Layers className="h-6 w-6" />
+                  </div>
+                  <h4 className="mb-3 text-xl font-bold">Project Basis</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    End-to-end post-production with a fixed scope and clear professional deliverables.
+                  </p>
+                </div>
+
+                <div className="group relative overflow-hidden rounded-3xl border border-border bg-card p-8 transition-all hover:border-purple-500/30 hover:bg-purple-500/5 hover:shadow-lg hover:shadow-purple-500/5">
+                  <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-500 transition-transform group-hover:scale-110 group-hover:bg-purple-500/20">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+                  <h4 className="mb-3 text-xl font-bold">Customized</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Tailored workflows designed exclusively for heavy workloads and retainer models.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -538,7 +597,7 @@ export default async function StudioPage() {
             <h2 className="mb-12 text-center text-4xl font-bold">
               Studio Facilities
             </h2>
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
               {facilities.map((facility, index) => (
                 <div
                   key={index}
@@ -571,7 +630,7 @@ export default async function StudioPage() {
         <ServiceFAQ faqs={studioFAQs} accentColor="amber" />
         <ServiceTerms type="studio" />
         <BookingFlyout service="studio" />
-        <Footer />
+        <Footer account="studio" />
       </main>
     </>
   );

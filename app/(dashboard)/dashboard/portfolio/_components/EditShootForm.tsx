@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { logger } from '@/lib/logger';
 import {
   Card,
   CardContent,
@@ -29,7 +30,7 @@ export function EditShootForm({ shoot }: { shoot: Shoot }) {
       await updateShoot(shoot.id, formData);
       window.alert('Shoot details updated successfully!');
     } catch (error: any) {
-      console.error(error);
+      logger.error('[EditShoot]', error);
       window.alert(`Error: ${error.message || 'Failed to update shoot'}`);
     } finally {
       setIsSubmitting(false);

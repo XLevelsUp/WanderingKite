@@ -7,27 +7,27 @@ import { motion } from 'framer-motion';
 const BACKDROPS = [
   {
     id: 1,
-    name: 'Matte Black',
+    name: 'Black',
     image: '/backdrops_images/easternblue.webp',
   },
-  { id: 2, name: 'Pastel Red', image: '/backdrops_images/pastel-red.webp' },
+  { id: 2, name: 'Ruby Red', image: '/backdrops_images/pastel-red.webp' },
   {
     id: 3,
-    name: 'Golden Yellow',
+    name: 'Daffodil',
     image: '/backdrops_images/golden-yellow.webp',
   },
-  { id: 4, name: 'Asagi Blue', image: '/backdrops_images/asagi-blue.webp' },
-  { id: 5, name: 'Muddy Green', image: '/backdrops_images/muddy-green.webp' },
-  { id: 6, name: 'Dark Grey', image: '/backdrops_images/dark-grey.webp' },
-  { id: 7, name: 'White', image: '/backdrops_images/white.webp' },
+  { id: 4, name: 'Teal Blue', image: '/backdrops_images/asagi-blue.webp' },
+  { id: 5, name: 'Olive Green', image: '/backdrops_images/muddy-green.webp' },
+  { id: 6, name: 'Neutral Green', image: '/backdrops_images/dark-grey.webp' },
+  { id: 7, name: 'Pure White', image: '/backdrops_images/white.webp' },
   {
     id: 8,
-    name: 'Sandy Walnut',
+    name: 'Dark Brown',
     image: '/backdrops_images/sandy-walnut.webp',
   },
   {
     id: 9,
-    name: 'Pale Lavender',
+    name: 'Lavender',
     image: '/backdrops_images/pale-lavender.webp',
   },
 ];
@@ -43,7 +43,7 @@ export function BackdropsGallery() {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-3 gap-4 md:gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-8 max-w-4xl mx-auto">
           {BACKDROPS.map((backdrop, index) => (
             <motion.div
               key={backdrop.id}
@@ -55,7 +55,7 @@ export function BackdropsGallery() {
                 duration: 0.5,
                 ease: 'easeOut',
               }}
-              className="group relative overflow-hidden rounded-lg border border-white/5 bg-zinc-900/50 w-64 h-44 mx-auto"
+              className="group relative overflow-hidden rounded-2xl border border-white/5 bg-zinc-900/50 aspect-[4/3] sm:aspect-[3/2] w-full mx-auto"
             >
               {backdrop.image ? (
                 <Image

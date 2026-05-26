@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { logger } from '@/lib/logger';
 
 export function DeleteEquipmentButton({
   equipmentId,
@@ -36,7 +37,7 @@ export function DeleteEquipmentButton({
 
       router.refresh(); // Refresh the page to show updated list
     } catch (error) {
-      console.error(error);
+      logger.error('[DeleteEquipment]', error);
       alert('Failed to delete equipment.');
     } finally {
       setIsDeleting(false);

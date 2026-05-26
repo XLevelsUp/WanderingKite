@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { logger } from '@/lib/logger';
 import {
   Card,
   CardContent,
@@ -35,7 +36,7 @@ export default function NewShootPage() {
       );
       router.push(`/dashboard/portfolio/${newShoot.id}`);
     } catch (error: any) {
-      console.error(error);
+      logger.error('[NewShoot]', error);
       window.alert(`Error: ${error.message || 'Failed to create shoot'}`);
     } finally {
       setIsSubmitting(false);
