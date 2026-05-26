@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { deleteShoot } from '@/actions/shoots';
+import { logger } from '@/lib/logger';
 
 export function DeleteShootButton({
   id,
@@ -27,7 +28,7 @@ export function DeleteShootButton({
     try {
       await deleteShoot(id);
     } catch (error) {
-      console.error(error);
+      logger.error('[DeleteShoot]', error);
       alert('Failed to delete shoot.');
     } finally {
       setIsDeleting(false);

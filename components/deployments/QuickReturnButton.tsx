@@ -3,6 +3,7 @@
 import { useTransition } from 'react';
 import { quickReturnAction } from '@/actions/deployments';
 import { CheckCircle, Loader2 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface QuickReturnButtonProps {
   assignmentId: string;
@@ -20,7 +21,7 @@ export function QuickReturnButton({
       const result = await quickReturnAction(assignmentId);
       if (!result.success) {
         // Non-blocking — toast/alert could be added here
-        console.error('[QuickReturn] Failed:', result.error);
+        logger.error('[QuickReturn] Failed:', result.error);
       }
     });
   }

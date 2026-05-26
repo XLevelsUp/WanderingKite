@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { siteConfig } from '@/config/site';
+import { InstagramFeed } from './InstagramFeed';
 
 const services = [
   { name: 'Photography', href: '/photography' },
@@ -26,7 +27,11 @@ const legal = [
   { name: 'Rental Terms', href: '/terms' },
 ];
 
-export function Footer() {
+interface FooterProps {
+  account?: 'wanderingkite' | 'studio';
+}
+
+export function Footer({ account = 'wanderingkite' }: FooterProps) {
   return (
     <footer className="border-t border-border bg-background">
       {/* Instagram Follow CTA */}
@@ -43,14 +48,22 @@ export function Footer() {
               Follow us on Instagram for exclusive deals, behind-the-scenes
               content, and creative inspiration
             </p>
+          </div>
+
+          {/* Premium Instagram Reels / Video Feed */}
+          <div className="my-10 mx-auto max-w-6xl">
+            <InstagramFeed account={account} />
+          </div>
+
+          <div className="mx-auto max-w-2xl text-center">
             <a
-              href={siteConfig.links.instagram}
+              href={account === 'studio' ? 'https://instagram.com/wanderingkitestudio' : 'https://instagram.com/wanderingkite'}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-4 font-semibold text-foreground transition-all hover:from-purple-500 hover:to-pink-500 hover:shadow-lg hover:shadow-pink-500/50"
             >
               <Instagram className="h-5 w-5" />
-              Follow @{siteConfig.name.toLowerCase().replace(/\s+/g, '')}
+              Follow @{account === 'studio' ? 'wanderingkitestudio' : 'wanderingkite'}
             </a>
             <p className="mt-4 text-xs text-muted-foreground">
               DM us "FIRST10" after following to claim your discount

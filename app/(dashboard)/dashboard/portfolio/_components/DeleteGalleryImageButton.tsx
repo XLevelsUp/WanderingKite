@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { deleteGalleryImage } from '@/actions/shoots';
+import { logger } from '@/lib/logger';
 
 export function DeleteGalleryImageButton({
   id,
@@ -23,7 +24,7 @@ export function DeleteGalleryImageButton({
     try {
       await deleteGalleryImage(id, shootId);
     } catch (error) {
-      console.error(error);
+      logger.error('[DeleteGalleryImage]', error);
       alert('Failed to delete image.');
     } finally {
       setIsDeleting(false);

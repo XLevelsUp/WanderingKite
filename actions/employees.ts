@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { adminAuthClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
+import { logger } from '@/lib/logger';
 import {
   createEmployeeSchema,
   updateEmployeeSchema,
@@ -115,7 +116,7 @@ export async function createEmployee(data: CreateEmployeeFormData) {
     });
 
   if (authError || !authUser.user) {
-    console.error('Error creating auth user:', authError);
+    logger.error('Error creating auth user', authError);
     return { error: authError?.message || 'Failed to create user' };
   }
 
@@ -132,7 +133,7 @@ export async function createEmployee(data: CreateEmployeeFormData) {
     .eq('id', authUser.user.id);
 
   if (profileError) {
-    console.error('Error updating profile:', profileError);
+    logger.error('Error updating profile', profileError);
     return { error: 'User created but failed to update profile details.' };
   }
 
@@ -202,7 +203,7 @@ export async function updateEmployee(id: string, data: UpdateEmployeeFormData) {
     .eq('id', id);
 
   if (error) {
-    console.error('Error updating employee:', error);
+    logger.error('Error updating employee', error);
     return { error: 'Failed to update employee' };
   }
 
@@ -234,7 +235,7 @@ export async function deleteEmployee(id: string) {
   const { error } = await adminAuthClient.auth.admin.deleteUser(id);
 
   if (error) {
-    console.error('Error deleting user:', error);
+    logger.error('Error deleting user', error);
     return { error: 'Failed to delete user' };
   }
 

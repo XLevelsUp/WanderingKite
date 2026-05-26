@@ -14,7 +14,7 @@ const gear = [
     specs: ['f/1.4-2.8', 'Full-Frame', 'OSS'],
   },
   {
-    name: 'Rode NTG & Procaster',
+    name: 'Hollyland Lark2 Mic ',
     category: 'Audio',
     badge: 'Broadcast Quality',
     icon: Mic,

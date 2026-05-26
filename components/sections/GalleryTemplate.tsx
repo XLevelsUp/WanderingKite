@@ -50,19 +50,50 @@ export function GalleryTemplate({
 
   // Cleanup lingering pointer-events from Framer Motion
   useEffect(() => {
-    // Run once on mount and also after any selectedImage state changes
+    if (selectedImage) return;
+
     const cleanupPointerEvents = () => {
       if (typeof document !== 'undefined') {
-        // Framer Motion sometimes leaves pointer-events: none on the body after layoutId animations
-        document.body.style.pointerEvents = 'auto';
+        // Framer Motion drag leaves pointer-events: none and user-select: none on the body 
+        // if a dragged element is unmounted abruptly (like closing a zoomed image).
+        if (document.body.style.pointerEvents === 'none') {
+          document.body.style.pointerEvents = '';
+          document.body.style.removeProperty('pointer-events');
+        }
+        if (document.body.style.userSelect === 'none') {
+          document.body.style.userSelect = '';
+          document.body.style.removeProperty('user-select');
+        }
+        if (document.documentElement.style.pointerEvents === 'none') {
+          document.documentElement.style.pointerEvents = '';
+          document.documentElement.style.removeProperty('pointer-events');
+        }
       }
     };
 
     cleanupPointerEvents();
 
-    // Safety timeout to ensure it runs after any animations complete
-    const timeout = setTimeout(cleanupPointerEvents, 500);
-    return () => clearTimeout(timeout);
+    // Set up a MutationObserver to actively strip lingering pointer-events from body and html
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+          cleanupPointerEvents();
+        }
+      });
+    });
+
+    observer.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+
+    // Safety timeouts to ensure it triggers after exit animations/gestures settle
+    const timeouts = [100, 300, 500, 1000].map((delay) =>
+      setTimeout(cleanupPointerEvents, delay)
+    );
+
+    return () => {
+      observer.disconnect();
+      timeouts.forEach(clearTimeout);
+    };
   }, [selectedImage]);
 
   return (
@@ -107,7 +138,7 @@ export function GalleryTemplate({
             }
           }}
           style={{ pointerEvents: 'auto' }}
-          className="relative aspect-video w-full overflow-hidden rounded-2xl border border-border bg-card mb-12"
+          className="relative aspect-[4/5] sm:aspect-video w-full overflow-hidden rounded-2xl border border-border bg-card mb-12"
         >
           {heroImage ? (
             <Image
@@ -126,14 +157,14 @@ export function GalleryTemplate({
           )}
 
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent pointer-events-none">
-            <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 pointer-events-auto">
-              <span className="mb-4 inline-block rounded-full bg-amber-500/10 border border-amber-500/20 px-4 py-1 text-sm font-semibold text-amber-500 backdrop-blur-sm">
+            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-12 pointer-events-auto">
+              <span className="mb-2 sm:mb-4 inline-block rounded-full bg-amber-500/10 border border-amber-500/20 px-3 sm:px-4 py-1 text-xs sm:text-sm font-semibold text-amber-500 backdrop-blur-sm">
                 {category.category}
               </span>
-              <h1 className="text-4xl md:text-6xl font-bold text-foreground">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-foreground leading-tight">
                 {category.title}
               </h1>
-              <p className="mt-4 max-w-2xl text-lg text-zinc-400">
+              <p className="mt-2 sm:mt-4 max-w-2xl text-xs sm:text-lg text-zinc-400">
                 Premium {category.title.toLowerCase()} tailored for{' '}
                 {category.focus.toLowerCase()}.
                 {!heroImage && ' Images will be uploaded later.'}

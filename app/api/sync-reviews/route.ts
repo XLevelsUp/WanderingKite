@@ -28,7 +28,6 @@ export async function GET(request: Request) {
 
     // Check if we actually got reviews
     if (!data.reviews || data.reviews.length === 0) {
-      console.log('Google Data Received:', data); // Check your terminal logs
       return NextResponse.json({
         message: 'No reviews found from Google',
         debug: data,
