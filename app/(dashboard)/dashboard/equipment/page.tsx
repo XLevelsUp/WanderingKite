@@ -260,8 +260,30 @@ export default async function EquipmentPage() {
                     <TableCell>
                       <FieldStatusCell assignment={item.activeAssignment} />
                     </TableCell>
-                    <TableCell className="text-foreground/70">
-                      ₹{Number(item.rentalPrice).toLocaleString('en-IN')}
+                    <TableCell className="text-foreground/70 text-xs">
+                      {(() => {
+                        const plans = Array.isArray(item.pricingPlans) ? (item.pricingPlans as any[]) : [];
+                        if (plans.length === 0) return '—';
+                        
+                        const hourly = plans.find((p: any) => p.name?.toLowerCase() === 'hourly');
+                        const daily = plans.find((p: any) => p.name?.toLowerCase() === 'daily');
+                        
+                        const parts = [];
+                        if (hourly) {
+                          parts.push(`₹${Number(hourly.rate).toLocaleString('en-IN')}/hr`);
+                        }
+                        if (daily) {
+                          parts.push(`₹${Number(daily.rate).toLocaleString('en-IN')}/day`);
+                        }
+                        
+                        if (parts.length > 0) {
+                          return parts.join(' · ');
+                        }
+                        
+                        // Fallback to first plan in list
+                        const first = plans[0];
+                        return `₹${Number(first.rate).toLocaleString('en-IN')} (${first.name})`;
+                      })()}
                     </TableCell>
                     <TableCell className="space-x-2">
                       <Link href={`/dashboard/equipment/${item.id}`}>

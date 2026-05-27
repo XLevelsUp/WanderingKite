@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS public.attendance_logs (
       ELSE 0
     END
   ) STORED,
-  "markedBy"   UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  "markedById"   UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   notes        TEXT,
   "createdAt"  TIMESTAMPTZ NOT NULL DEFAULT now(),
   "updatedAt"  TIMESTAMPTZ NOT NULL DEFAULT now(),

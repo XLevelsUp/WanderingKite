@@ -57,13 +57,13 @@ export function Footer({ account = 'wanderingkite' }: FooterProps) {
 
           <div className="mx-auto max-w-2xl text-center">
             <a
-              href={account === 'studio' ? 'https://instagram.com/wanderingkitestudio' : 'https://instagram.com/wanderingkite'}
+              href={account === 'studio' ? 'https://instagram.com/studiospacecbe' : 'https://instagram.com/wanderingkitestudio'}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-4 font-semibold text-foreground transition-all hover:from-purple-500 hover:to-pink-500 hover:shadow-lg hover:shadow-pink-500/50"
             >
               <Instagram className="h-5 w-5" />
-              Follow @{account === 'studio' ? 'wanderingkitestudio' : 'wanderingkite'}
+              Follow @{account === 'studio' ? 'studiospacecbe' : 'wanderingkitestudio'}
             </a>
             <p className="mt-4 text-xs text-muted-foreground">
               DM us "FIRST10" after following to claim your discount
