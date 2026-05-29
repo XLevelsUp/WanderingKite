@@ -213,6 +213,7 @@ export async function createHREmployee(formData: HROnboardingFormData) {
     upiId: contractData.upiId || null,
     avatarUrl: contractData.avatarUrl || null,
     notes: contractData.notes || null,
+    incentive: contractData.incentive || 0,
   });
 
   if (error) {
@@ -256,6 +257,7 @@ export async function createAndOnboardEmployee(formData: UnifiedOnboardingFormDa
     jobTitle,
     employmentType,
     baseSalary,
+    incentive,
     joiningDate,
     bankAccountName,
     bankAccountNumber,
@@ -316,6 +318,7 @@ export async function createAndOnboardEmployee(formData: UnifiedOnboardingFormDa
       upiId: upiId || null,
       avatarUrl: avatarUrl || null,
       notes: notes || null,
+      incentive: incentive || 0,
     });
 
   if (contractError) {
@@ -383,6 +386,7 @@ export async function updateContract(contractId: string, data: ContractFormData)
       upiId: result.data.upiId || null,
       avatarUrl: result.data.avatarUrl || null,
       notes: result.data.notes || null,
+      incentive: result.data.incentive || 0,
     })
     .eq('id', contractId);
 

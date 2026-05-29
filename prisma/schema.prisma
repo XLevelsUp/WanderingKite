@@ -146,6 +146,7 @@ enum PayrollStatus {
   DRAFT
   APPROVED
   PAID
+  REJECTED
 }
 
 /// 1:1 extension of User (profiles) — HR contract & bank details
@@ -158,6 +159,7 @@ model EmployeeContract {
   jobTitle          String         @default("Staff")
   employmentType    EmploymentType @default(FULL_TIME)
   baseSalary        Float          @default(0)
+  incentive         Float          @default(0)
   joiningDate       DateTime       @db.Date
 
   // Bank / payment details
@@ -227,9 +229,10 @@ model PayrollRecord {
   taxDeduction     Float          @default(0)
   otherDeductions  Float          @default(0)
   netPayout        Float          @default(0)
+  incentive        Float          @default(0)
 
   status           PayrollStatus  @default(DRAFT)
-  approvedById     String?
+  approvedById     String?        @map("approvedBy")
   approvedAt       DateTime?
   paidAt           DateTime?
   paymentRef       String?
@@ -244,12 +247,13 @@ model PayrollRecord {
 
 /// Global attendance config — always a single row
 model AttendanceSetting {
-  id                      String   @id @default(uuid())
-  studioStartTime         String   @default("09:00:00")
-  graceMinutes            Int      @default(15)
-  halfDayThresholdHours   Float    @default(4.0)
-  latePenaltyPerMinute    Float    @default(0)
-  updatedAt               DateTime @updatedAt
+  id                        String   @id @default(uuid())
+  studioStartTime           String   @default("09:00:00")
+  graceMinutes              Int      @default(15)
+  halfDayThresholdHours     Float    @default(4.0)
+  latePenaltyPerMinute      Float    @default(0)
+  allowedPaidLeavesPerMonth Int      @default(0)
+  updatedAt                 DateTime @updatedAt
 
   @@map("attendance_settings")
 }

@@ -61,7 +61,10 @@ export async function getPayrollForMonth(
       *,
       employee:employeeId(
         id, fullName, email,
-        contract:employee_contracts(jobTitle, avatarUrl)
+        contract:employee_contracts(
+          jobTitle, avatarUrl,
+          bankAccountName, bankAccountNumber, bankIFSC, upiId
+        )
       )
     `,
     )
@@ -105,7 +108,7 @@ export async function getPayslip(recordId: string): Promise<PayrollRecordWithEmp
         branches(name),
         contract:employee_contracts(
           jobTitle, employmentType, joiningDate, avatarUrl,
-          bankAccountName, upiId
+          bankAccountName, bankAccountNumber, bankIFSC, upiId
         )
       )
     `,
@@ -171,10 +174,14 @@ export async function getPayrollMonths(): Promise<{ month: number; year: number;
 // GENERATE DRAFT
 // ─────────────────────────────────────────────────────────────────────────────
 
+const MONTH_NAMES = [
+  '', 'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
 /**
  * Generate payroll drafts for all active employees for the given month/year.
- * Skips employees that already have a record for this period.
- * Reads attendance_logs + attendance_settings to compute the breakdown.
+ * Prevents duplicates. Reads attendance_logs + attendance_settings to compute the breakdown.
  */
 export async function generatePayrollDraft(formData: PayrollGenerateData) {
   const { supabase } = await requireAdmin();
@@ -184,45 +191,53 @@ export async function generatePayrollDraft(formData: PayrollGenerateData) {
     return { error: 'Validation failed', details: result.error.flatten() };
   }
 
-  const { month, year, workingDays } = result.data;
+  const { month, year } = result.data;
 
-  // Build date range
-  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-  const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+  // 1. Prevent duplicate payroll generation: check if any records exist for this month/year
+  const { data: existingRecords, error: checkError } = await supabase
+    .from('payroll_records')
+    .select('id')
+    .eq('month', month)
+    .eq('year', year)
+    .limit(1);
+
+  if (checkError) {
+    return { error: 'Failed to verify existing payroll records: ' + checkError.message };
+  }
+
+  if (existingRecords && existingRecords.length > 0) {
+    return {
+      error: `Payroll records already exist for ${MONTH_NAMES[month]} ${year}. You cannot generate duplicate payrolls. If you need to recreate them, please delete the existing records first.`,
+    };
+  }
 
   // Fetch all active employee contracts
   const { data: contracts, error: contractError } = await supabase
     .from('employee_contracts')
-    .select('profileId, baseSalary')
+    .select('profileId, baseSalary, incentive')
     .eq('isActive', true);
 
   if (contractError) return { error: contractError.message };
   if (!contracts?.length) return { error: 'No active employees found' };
 
-  // Fetch settings for late penalty
+  // Fetch settings for paid leave quota and late penalty
   const settings = await getAttendanceSettings();
   const latePenaltyPerMinute = settings?.latePenaltyPerMinute ?? 0;
+  const allowedPaidLeaves = settings?.allowedPaidLeavesPerMonth ?? 0;
 
   let created = 0;
-  let skipped = 0;
   const errors: string[] = [];
 
+  // Determine working days dynamically from the calendar month
+  const calendarWorkingDays = new Date(year, month, 0).getDate();
+
   for (const contract of contracts) {
-    const { profileId, baseSalary } = contract;
+    const { profileId, baseSalary, incentive } = contract;
 
-    // Skip if record already exists
-    const { data: existing } = await supabase
-      .from('payroll_records')
-      .select('id')
-      .eq('employeeId', profileId)
-      .eq('month', month)
-      .eq('year', year)
-      .single();
-
-    if (existing) {
-      skipped++;
-      continue;
-    }
+    // Build date range
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
 
     // Fetch attendance for this employee in the month
     const { data: logs } = await supabase
@@ -232,14 +247,24 @@ export async function generatePayrollDraft(formData: PayrollGenerateData) {
       .gte('date', startDate)
       .lte('date', endDate);
 
-    const { presentDays, lateDays } = computePresentDaysForMonth(month, year, logs ?? []);
+    // Compute present days with paid leave quota rule
+    const {
+      presentDays,
+      lateDays,
+      absentDays,
+      leaveDays,
+      paidLeavesUsed,
+      halfDays,
+      onAidLeaveDays,
+      deductionDays,
+    } = computePresentDaysForMonth(month, year, logs ?? [], allowedPaidLeaves);
 
-    // Estimate average late minutes (15 min if late — can be refined with actual clock data)
+    // Estimate average late minutes (15 min if late)
     const avgLateMinutes = lateDays > 0 ? 15 : 0;
 
     const breakdown = calculatePayout({
       baseSalary: baseSalary ?? 0,
-      workingDays,
+      workingDays: calendarWorkingDays,
       presentDays,
       lateDays,
       overtimeHours: 0,
@@ -247,7 +272,17 @@ export async function generatePayrollDraft(formData: PayrollGenerateData) {
       otherDeductions: 0,
       latePenaltyPerMinute,
       avgLateMinutes,
+
+      absentDays,
+      leaveDays,
+      paidLeavesUsed,
+      halfDays,
+      onAidLeaveDays,
+      deductionDays,
+      incentiveHours: 0,
     });
+
+    const finalNetPayout = Math.max(0, breakdown.netPayout + (incentive ?? 0));
 
     const { error: insertError } = await supabase
       .from('payroll_records')
@@ -255,7 +290,7 @@ export async function generatePayrollDraft(formData: PayrollGenerateData) {
         employeeId: profileId,
         month,
         year,
-        workingDays,
+        workingDays: calendarWorkingDays,
         presentDays: breakdown.presentDays,
         lateDays: breakdown.lateDays,
         baseSalary: baseSalary ?? 0,
@@ -266,8 +301,21 @@ export async function generatePayrollDraft(formData: PayrollGenerateData) {
         unpaidLeaves: breakdown.unpaidLeaves,
         taxDeduction: breakdown.taxDeduction,
         otherDeductions: breakdown.otherDeductions,
-        netPayout: breakdown.netPayout,
+        netPayout: Math.round(finalNetPayout * 100) / 100,
+        incentive: breakdown.incentiveAmount, // Saves calculated incentive
         status: 'DRAFT',
+
+        // Granular columns from migration v10
+        absentDays: breakdown.absentDays,
+        leaveDays: breakdown.leaveDays,
+        paidLeavesUsed: breakdown.paidLeavesUsed,
+        halfDays: breakdown.halfDays,
+        onAidLeaveDays: breakdown.onAidLeaveDays,
+        deductionDays: breakdown.deductionDays,
+        perDaySalary: breakdown.perDaySalary,
+        deductionsTotal: breakdown.deductionsTotal,
+        incentiveHours: breakdown.incentiveHours,
+        overtimeHours: breakdown.overtimeHours,
       });
 
     if (insertError) {
@@ -277,8 +325,12 @@ export async function generatePayrollDraft(formData: PayrollGenerateData) {
     }
   }
 
+  if (errors.length > 0) {
+    return { error: `Generated ${created} drafts with failures: ` + errors.join(', ') };
+  }
+
   revalidatePath('/admin/payroll');
-  return { success: true, created, skipped, errors };
+  return { success: true, created };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -296,40 +348,59 @@ export async function updatePayrollOverride(
     return { error: 'Validation failed', details: result.error.flatten() };
   }
 
-  // Fetch current record to re-compute netPayout
+  // Fetch full current record to re-compute calculations
   const { data: record } = await supabase
     .from('payroll_records')
-    .select('basePay, baseSalary, workingDays, presentDays, lateDays, latePenalty')
+    .select('*')
     .eq('id', recordId)
     .single();
 
   if (!record) return { error: 'Payroll record not found' };
 
   // Block modifications on approved/paid records
-  const { data: statusRow } = await supabase
-    .from('payroll_records')
-    .select('status')
-    .eq('id', recordId)
-    .single();
-
-  if (statusRow?.status !== 'DRAFT') {
+  if (record.status !== 'DRAFT') {
     return { error: 'Only DRAFT records can be modified' };
   }
 
-  const { overtimeAmount, bonusAmount, taxDeduction, otherDeductions, notes } = result.data;
-  const grossEarnings = (record.basePay ?? 0) + overtimeAmount + bonusAmount;
-  const netPayout = Math.max(
-    0,
-    grossEarnings - (record.latePenalty ?? 0) - taxDeduction - otherDeductions,
-  );
+  const { bonusAmount, taxDeduction, otherDeductions, incentiveHours, overtimeHours, notes } = result.data;
+
+  // Re-calculate using the payroll-engine
+  const breakdown = calculatePayout({
+    baseSalary: record.baseSalary ?? 0,
+    workingDays: record.workingDays ?? 30,
+    presentDays: record.presentDays ?? 30,
+    lateDays: record.lateDays ?? 0,
+    overtimeHours,
+    bonusAmount,
+    otherDeductions,
+    latePenaltyPerMinute: 0, // Carry over existing computed late penalty
+    avgLateMinutes: 0,
+
+    absentDays: record.absentDays ?? 0,
+    leaveDays: record.leaveDays ?? 0,
+    paidLeavesUsed: record.paidLeavesUsed ?? 0,
+    halfDays: record.halfDays ?? 0,
+    onAidLeaveDays: record.onAidLeaveDays ?? 0,
+    deductionDays: record.deductionDays ?? 0,
+    incentiveHours,
+  });
+
+  const finalLatePenalty = record.latePenalty ?? 0;
+  const finalTaxDeduction = taxDeduction;
+
+  const grossEarnings = breakdown.basePay + breakdown.overtimeAmount + breakdown.incentiveAmount + bonusAmount;
+  const netPayout = Math.max(0, grossEarnings - finalLatePenalty - finalTaxDeduction - otherDeductions);
 
   const { error } = await supabase
     .from('payroll_records')
     .update({
-      overtimeAmount,
       bonusAmount,
-      taxDeduction,
+      taxDeduction: finalTaxDeduction,
       otherDeductions,
+      incentiveHours,
+      overtimeHours,
+      incentive: breakdown.incentiveAmount, // Saved directly alongside
+      overtimeAmount: breakdown.overtimeAmount, // Saved directly alongside
       netPayout: Math.round(netPayout * 100) / 100,
       notes: notes || null,
     })
@@ -338,6 +409,7 @@ export async function updatePayrollOverride(
   if (error) return { error: error.message };
 
   revalidatePath('/admin/payroll');
+  revalidatePath(`/admin/payroll/${record.year}-${String(record.month).padStart(2, '0')}`);
   return { success: true };
 }
 
@@ -359,7 +431,7 @@ export async function approvePayroll(recordId: string) {
 
   const { error } = await supabase
     .from('payroll_records')
-    .update({ status: 'APPROVED', approvedById: userId, approvedAt: new Date().toISOString() })
+    .update({ status: 'APPROVED', approvedBy: userId, approvedAt: new Date().toISOString() })
     .eq('id', recordId);
 
   if (error) return { error: error.message };
@@ -373,7 +445,7 @@ export async function approveBatchPayroll(month: number, year: number) {
 
   const { error } = await supabase
     .from('payroll_records')
-    .update({ status: 'APPROVED', approvedById: userId, approvedAt: new Date().toISOString() })
+    .update({ status: 'APPROVED', approvedBy: userId, approvedAt: new Date().toISOString() })
     .eq('month', month)
     .eq('year', year)
     .eq('status', 'DRAFT');
@@ -383,6 +455,46 @@ export async function approveBatchPayroll(month: number, year: number) {
   revalidatePath('/admin/payroll');
   return { success: true };
 }
+
+export async function rejectBatchPayroll(month: number, year: number) {
+  const { supabase } = await requireAdmin();
+
+  const { error } = await supabase
+    .from('payroll_records')
+    .update({ status: 'REJECTED' })
+    .eq('month', month)
+    .eq('year', year)
+    .eq('status', 'DRAFT');
+
+  if (error) return { error: error.message };
+
+  revalidatePath('/admin/payroll');
+  return { success: true };
+}
+
+export async function rejectPayroll(recordId: string) {
+  const { supabase } = await requireAdmin();
+
+  const { data: record } = await supabase
+    .from('payroll_records')
+    .select('status')
+    .eq('id', recordId)
+    .single();
+
+  if (!record) return { error: 'Record not found' };
+  if (record.status !== 'DRAFT') return { error: 'Only DRAFT records can be rejected' };
+
+  const { error } = await supabase
+    .from('payroll_records')
+    .update({ status: 'REJECTED' })
+    .eq('id', recordId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath('/admin/payroll');
+  return { success: true };
+}
+
 
 export async function markPayrollPaid(recordId: string, paymentRef?: string) {
   const { supabase } = await requireAdmin();
@@ -424,5 +536,48 @@ export async function markBatchPaid(month: number, year: number) {
   if (error) return { error: error.message };
 
   revalidatePath('/admin/payroll');
+  return { success: true };
+}
+
+export async function deletePayrollRecord(recordId: string) {
+  const { supabase } = await requireAdmin();
+
+  const { data: record } = await supabase
+    .from('payroll_records')
+    .select('status, month, year')
+    .eq('id', recordId)
+    .single();
+
+  if (!record) return { error: 'Record not found' };
+  if (record.status === 'PAID') {
+    return { error: 'Paid payroll records cannot be deleted' };
+  }
+
+  const { error } = await supabase
+    .from('payroll_records')
+    .delete()
+    .eq('id', recordId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath('/admin/payroll');
+  revalidatePath(`/admin/payroll/${record.year}-${String(record.month).padStart(2, '0')}`);
+  return { success: true };
+}
+
+export async function deleteBatchPayroll(month: number, year: number) {
+  const { supabase } = await requireAdmin();
+
+  const { error } = await supabase
+    .from('payroll_records')
+    .delete()
+    .eq('month', month)
+    .eq('year', year)
+    .neq('status', 'PAID');
+
+  if (error) return { error: error.message };
+
+  revalidatePath('/admin/payroll');
+  revalidatePath(`/admin/payroll/${year}-${String(month).padStart(2, '0')}`);
   return { success: true };
 }

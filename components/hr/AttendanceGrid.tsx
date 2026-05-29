@@ -1,7 +1,10 @@
 'use client';
 
-import React, { useMemo } from 'react';
-import type { AttendanceLogWithEmployee, AttendanceStatus } from '@/lib/types/hr';
+import React, { useMemo, useState, useTransition, useEffect } from 'react';
+import type { AttendanceLogWithEmployee, AttendanceStatus, AttendanceSettingRow } from '@/lib/types/hr';
+import { X, Loader2, CheckCircle, Clock, FileText, Settings, Sliders } from 'lucide-react';
+import { upsertAttendanceLog, deleteAttendanceLog, updateAttendanceSettings } from '@/actions/hr/attendance';
+import { useRouter } from 'next/navigation';
 
 interface AttendanceGridProps {
   month: number;
@@ -14,6 +17,7 @@ interface AttendanceGridProps {
     avatarUrl: string | null;
   }[];
   logs: AttendanceLogWithEmployee[];
+  settings?: AttendanceSettingRow | null;
 }
 
 // ── Status styling ─────────────────────────────────────────────────────────
@@ -47,10 +51,22 @@ const STATUS_CONFIG: Record<
     dot: 'bg-red-400',
   },
   ON_LEAVE: {
-    label: 'On Leave',
-    short: 'OL',
-    cell: 'bg-blue-500/12 text-blue-400 border-blue-500/20 ring-blue-500/10',
-    dot: 'bg-blue-400',
+    label: 'Leave',
+    short: 'LV',
+    cell: 'bg-pink-500/12 text-pink-400 border-pink-500/20 ring-pink-500/10',
+    dot: 'bg-pink-400',
+  },
+  ON_AID_LEAVE: {
+    label: 'On-Aid Leave',
+    short: 'OAL',
+    cell: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/25 ring-indigo-500/15',
+    dot: 'bg-indigo-400',
+  },
+  LEAVE: {
+    label: 'Leave',
+    short: 'LV',
+    cell: 'bg-pink-500/12 text-pink-400 border-pink-500/20 ring-pink-500/10',
+    dot: 'bg-pink-400',
   },
   UNMARKED: {
     label: 'Unmarked',
@@ -153,10 +169,62 @@ export function AttendanceGrid({
   year,
   employees,
   logs,
+  settings,
 }: AttendanceGridProps) {
+  const router = useRouter();
   const totalDays = getDaysInMonth(month, year);
   const days = Array.from({ length: totalDays }, (_, i) => i + 1);
   const logIndex = useMemo(() => buildLogIndex(logs), [logs]);
+
+  const [showSettings, setShowSettings] = useState(false);
+  const [settingsPending, startSettingsTransition] = useTransition();
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [settingsSuccess, setSettingsSuccess] = useState(false);
+  const [settingsForm, setSettingsForm] = useState({
+    studioStartTime: settings?.studioStartTime ?? '09:00',
+    graceMinutes: settings?.graceMinutes ?? 15,
+    halfDayThresholdHours: settings?.halfDayThresholdHours ?? 4.0,
+    latePenaltyPerMinute: settings?.latePenaltyPerMinute ?? 0,
+    allowedPaidLeavesPerMonth: settings?.allowedPaidLeavesPerMonth ?? 0,
+  });
+
+  const [editingCell, setEditingCell] = useState<{
+    employeeId: string;
+    fullName: string;
+    avatarUrl: string | null;
+    jobTitle: string | null;
+    date: string;
+    status: AttendanceStatus | 'UNMARKED';
+    clockIn: string;
+    clockOut: string;
+    notes: string;
+  } | null>(null);
+
+  const [isPending, startTransition] = useTransition();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!editingCell) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isPending) {
+        setEditingCell(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editingCell, isPending]);
+
+  const STATUS_OPTIONS: { value: AttendanceStatus | 'UNMARKED'; label: string; cls: string; dot: string }[] = [
+    { value: 'PRESENT', label: 'Present', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30', dot: 'bg-emerald-400' },
+    { value: 'LATE', label: 'Late', cls: 'bg-amber-500/15 text-amber-300 border-amber-500/25', dot: 'bg-amber-400' },
+    { value: 'HALF_DAY', label: 'Half Day', cls: 'bg-orange-500/15 text-orange-300 border-orange-500/25', dot: 'bg-orange-400' },
+    { value: 'ABSENT', label: 'Absent', cls: 'bg-red-500/12 text-red-400 border-red-500/20', dot: 'bg-red-400' },
+    { value: 'ON_LEAVE', label: 'Leave', cls: 'bg-pink-500/12 text-pink-400 border-pink-500/20', dot: 'bg-pink-400' },
+    { value: 'ON_AID_LEAVE', label: 'On-Aid Leave', cls: 'bg-indigo-500/12 text-indigo-400 border-indigo-500/20', dot: 'bg-indigo-400' },
+    { value: 'UNMARKED', label: 'Unmarked', cls: 'bg-white/[0.04] text-foreground/45 border-white/10', dot: 'bg-white/20' },
+  ];
+
 
   const MONTH_NAME = new Date(year, month - 1, 1).toLocaleString('en-IN', {
     month: 'long',
@@ -172,7 +240,18 @@ export function AttendanceGrid({
 
   return (
     <div className='space-y-4'>
-      <Legend />
+      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/[0.01] border border-white/5 rounded-2xl p-4'>
+        <Legend />
+        
+        <button
+          type='button'
+          onClick={() => setShowSettings(true)}
+          className='flex items-center gap-2 px-4 py-2 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/15 text-xs font-bold text-primary hover:border-primary/50 transition-all'
+        >
+          <Settings className='w-3.5 h-3.5' />
+          Company Leave & Late Policy
+        </button>
+      </div>
 
       {/* Scrollable grid wrapper */}
       <div className='overflow-x-auto rounded-xl border border-primary/15 bg-[rgba(17,17,22,0.85)] backdrop-blur-md'>
@@ -238,16 +317,32 @@ export function AttendanceGrid({
 
                     return (
                       <td key={day} className='px-1 py-2'>
-                        <div
-                          title={`${emp.fullName} — ${dateStr}: ${cfg.label}`}
-                          className={`w-9 h-9 rounded-lg flex items-center justify-center text-[11px] font-semibold border transition-all mx-auto ${
+                        <button
+                          type='button'
+                          onClick={() => {
+                            setSubmitError(null);
+                            setSuccess(false);
+                            setEditingCell({
+                              employeeId: emp.id,
+                              fullName: emp.fullName ?? emp.email,
+                              avatarUrl: emp.avatarUrl,
+                              jobTitle: emp.jobTitle,
+                              date: dateStr,
+                              status: log?.status ?? 'UNMARKED',
+                              clockIn: log?.clockIn ? log.clockIn.slice(0, 5) : '',
+                              clockOut: log?.clockOut ? log.clockOut.slice(0, 5) : '',
+                              notes: log?.notes ?? '',
+                            });
+                          }}
+                          title={`${emp.fullName} — ${dateStr}: ${cfg.label} (Click to edit)`}
+                          className={`w-9 h-9 rounded-lg flex items-center justify-center text-[11px] font-semibold border transition-all mx-auto cursor-pointer hover:scale-[1.08] hover:ring-2 hover:ring-primary/45 focus:outline-none focus:ring-2 focus:ring-primary/60 ${
                             weekend && !log
-                              ? 'bg-white/[0.015] border-white/5 text-foreground/15'
-                              : cfg.cell
+                              ? 'bg-white/[0.015] border-white/5 text-foreground/15 hover:bg-white/[0.06] hover:border-white/15'
+                              : `${cfg.cell} hover:brightness-110`
                           }`}
                         >
                           {weekend && !log ? '—' : cfg.short}
-                        </div>
+                        </button>
                       </td>
                     );
                   })}
@@ -265,6 +360,413 @@ export function AttendanceGrid({
           </tbody>
         </table>
       </div>
+
+      {/* ── Individual Attendance Edit Modal ────────────────────────────────── */}
+      {editingCell && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200'>
+          {/* Backdrop */}
+          <div
+            className='absolute inset-0 bg-black/75 backdrop-blur-sm'
+            onClick={() => !isPending && setEditingCell(null)}
+          />
+
+          {/* Panel */}
+          <div className='relative z-10 w-full max-w-md bg-[rgba(17,17,22,0.98)] border border-primary/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200'>
+            {/* Header */}
+            <div className='px-6 py-5 border-b border-primary/12 flex items-start justify-between flex-shrink-0'>
+              <div className='flex items-center gap-3 min-w-0'>
+                {editingCell.avatarUrl ? (
+                  <img
+                    src={editingCell.avatarUrl}
+                    alt={editingCell.fullName}
+                    className='w-10 h-10 rounded-full object-cover ring-2 ring-primary/20 flex-shrink-0'
+                  />
+                ) : (
+                  <div className='w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-sm font-bold text-primary ring-2 ring-primary/20 flex-shrink-0'>
+                    {editingCell.fullName.split(' ').slice(0, 2).map((n) => n[0]?.toUpperCase() ?? '').join('')}
+                  </div>
+                )}
+                <div className='min-w-0'>
+                  <h2 className='text-base font-bold text-foreground truncate leading-tight'>
+                    {editingCell.fullName}
+                  </h2>
+                  <p className='text-xs text-foreground/45 truncate mt-0.5'>
+                    {editingCell.jobTitle || 'Staff'} • {new Date(editingCell.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </p>
+                </div>
+              </div>
+              <button
+                type='button'
+                onClick={() => !isPending && setEditingCell(null)}
+                className='text-foreground/40 hover:text-foreground/70 p-1.5 rounded-lg hover:bg-white/5 transition-colors mt-0.5'
+              >
+                <X className='w-4 h-4' />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className='flex-1 overflow-y-auto p-6 space-y-6'>
+              {/* Status Section */}
+              <div className='space-y-2'>
+                <label className='block text-xs font-semibold text-foreground/50 uppercase tracking-wider'>
+                  Attendance Status
+                </label>
+                <div className='grid grid-cols-2 gap-2'>
+                  {STATUS_OPTIONS.map((opt) => {
+                    const isSelected = editingCell.status === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type='button'
+                        onClick={() =>
+                          setEditingCell((prev) => prev ? { ...prev, status: opt.value } : null)
+                        }
+                        className={`px-3 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all hover:bg-white/[0.02] ${
+                          isSelected
+                            ? `${opt.cls} ring-2 ring-primary/25 scale-[1.02] shadow-[0_0_12px_rgba(255,255,255,0.03)]`
+                            : 'border-white/8 text-foreground/50 bg-transparent'
+                        }`}
+                      >
+                        <span className={`w-2 h-2 rounded-full ${opt.dot}`} />
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Time Inputs (Only shown if marked as Present, Late, or Half Day) */}
+              {editingCell.status !== 'UNMARKED' && editingCell.status !== 'ABSENT' && editingCell.status !== 'ON_LEAVE' && (
+                <div className='grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-150'>
+                  <div>
+                    <label className='block text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-1.5 flex items-center gap-1.5'>
+                      <Clock className='w-3.5 h-3.5 text-primary/70' />
+                      Clock In
+                    </label>
+                    <input
+                      type='time'
+                      value={editingCell.clockIn}
+                      onChange={(e) =>
+                        setEditingCell((prev) => prev ? { ...prev, clockIn: e.target.value } : null)
+                      }
+                      className='w-full px-3 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-sm text-foreground/85 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all [color-scheme:dark]'
+                    />
+                  </div>
+
+                  <div>
+                    <label className='block text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-1.5 flex items-center gap-1.5'>
+                      <Clock className='w-3.5 h-3.5 text-primary/70' />
+                      Clock Out
+                    </label>
+                    <input
+                      type='time'
+                      value={editingCell.clockOut}
+                      onChange={(e) =>
+                        setEditingCell((prev) => prev ? { ...prev, clockOut: e.target.value } : null)
+                      }
+                      className='w-full px-3 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-sm text-foreground/85 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all [color-scheme:dark]'
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              <div className='space-y-1.5'>
+                <label className='block text-xs font-semibold text-foreground/50 uppercase tracking-wider flex items-center gap-1.5'>
+                  <FileText className='w-3.5 h-3.5 text-primary/70' />
+                  Remarks / Notes
+                </label>
+                <textarea
+                  value={editingCell.notes}
+                  rows={3}
+                  onChange={(e) =>
+                    setEditingCell((prev) => prev ? { ...prev, notes: e.target.value } : null)
+                  }
+                  placeholder='Optional notes regarding delay, leave approval, etc...'
+                  className='w-full px-3 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-sm text-foreground/80 placeholder-foreground/25 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all resize-none'
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className='px-6 py-4 border-t border-primary/12 flex-shrink-0 bg-white/[0.01]'>
+              {submitError && (
+                <p className='text-xs text-red-400 mb-3'>{submitError}</p>
+              )}
+              {success && (
+                <p className='text-xs text-emerald-400 mb-3 flex items-center gap-1.5'>
+                  <CheckCircle className='w-3.5 h-3.5' />
+                  Attendance updated successfully
+                </p>
+              )}
+
+              <div className='flex justify-end gap-3'>
+                <button
+                  type='button'
+                  onClick={() => !isPending && setEditingCell(null)}
+                  disabled={isPending}
+                  className='px-5 py-2.5 rounded-xl border border-white/12 text-sm font-medium text-foreground/60 hover:text-foreground hover:bg-white/5 transition-all'
+                >
+                  Cancel
+                </button>
+                <button
+                  type='button'
+                  onClick={() => {
+                    setSubmitError(null);
+                    setSuccess(false);
+                    startTransition(async () => {
+                      if (editingCell.status === 'UNMARKED') {
+                        // Delete
+                        const res = await deleteAttendanceLog(editingCell.employeeId, editingCell.date);
+                        if (res.error) {
+                          setSubmitError(res.error);
+                        } else {
+                          setSuccess(true);
+                          setTimeout(() => {
+                            setEditingCell(null);
+                            setSuccess(false);
+                          }, 1200);
+                        }
+                      } else {
+                        // Upsert
+                        const payload = {
+                          employeeId: editingCell.employeeId,
+                          date: editingCell.date,
+                          status: editingCell.status,
+                          clockIn: editingCell.clockIn || undefined,
+                          clockOut: editingCell.clockOut || undefined,
+                          notes: editingCell.notes || undefined,
+                        };
+                        const res = await upsertAttendanceLog(payload);
+                        if (res.error) {
+                          setSubmitError(res.error);
+                        } else {
+                          setSuccess(true);
+                          setTimeout(() => {
+                            setEditingCell(null);
+                            setSuccess(false);
+                          }, 1200);
+                        }
+                      }
+                    });
+                  }}
+                  disabled={isPending}
+                  className='flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-black text-sm font-bold hover:bg-primary/90 disabled:opacity-50 transition-all shadow-[0_0_20px_rgba(255,255,255,0.02)]'
+                >
+                  {isPending ? (
+                    <>
+                      <Loader2 className='h-4 w-4 animate-spin' />
+                      Saving…
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className='h-4 w-4' />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Company Policy / Attendance Settings Modal ───────────────────────── */}
+      {showSettings && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200'>
+          {/* Backdrop */}
+          <div
+            className='absolute inset-0 bg-black/75 backdrop-blur-sm'
+            onClick={() => !settingsPending && setShowSettings(false)}
+          />
+
+          {/* Panel */}
+          <div className='relative z-10 w-full max-w-sm bg-[rgba(17,17,22,0.98)] border border-primary/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200'>
+            {/* Header */}
+            <div className='px-6 py-5 border-b border-primary/12 flex items-start justify-between flex-shrink-0'>
+              <div>
+                <p className='text-[10px] font-semibold uppercase tracking-[0.22em] text-primary opacity-70 mb-0.5'>
+                  Configuration
+                </p>
+                <h2 className='text-base font-bold text-foreground'>
+                  Company Policy Settings
+                </h2>
+              </div>
+              <button
+                type='button'
+                onClick={() => !settingsPending && setShowSettings(false)}
+                className='text-foreground/40 hover:text-foreground/70 p-1.5 rounded-lg hover:bg-white/5 transition-colors'
+              >
+                <X className='w-4 h-4' />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className='flex-1 overflow-y-auto p-6 space-y-4 text-xs'>
+              <div>
+                <label className='block text-[10px] font-semibold text-primary uppercase tracking-widest mb-1.5'>
+                  Monthly Paid Leave Quota
+                </label>
+                <input
+                  type='number'
+                  min={0}
+                  max={31}
+                  value={settingsForm.allowedPaidLeavesPerMonth}
+                  onChange={(e) =>
+                    setSettingsForm((prev) => ({
+                      ...prev,
+                      allowedPaidLeavesPerMonth: parseInt(e.target.value) || 0,
+                    }))
+                  }
+                  className='w-full px-3 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-sm text-foreground/80 focus:ring-2 focus:ring-primary/30 transition-all focus:outline-none'
+                />
+                <span className='text-[10px] text-foreground/35 mt-1 block leading-normal'>
+                  Uniform allowed paid leaves per employee per month. Leave days within quota reclassify automatically without salary deduction.
+                </span>
+              </div>
+
+              <div>
+                <label className='block text-[10px] font-semibold text-foreground/50 uppercase tracking-wider mb-1.5'>
+                  Studio Work Start Time
+                </label>
+                <input
+                  type='text'
+                  placeholder='HH:MM'
+                  value={settingsForm.studioStartTime}
+                  onChange={(e) =>
+                    setSettingsForm((prev) => ({
+                      ...prev,
+                      studioStartTime: e.target.value,
+                    }))
+                  }
+                  className='w-full px-3 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-sm text-foreground/80 focus:ring-2 focus:ring-primary/30 transition-all focus:outline-none'
+                />
+              </div>
+
+              <div className='grid grid-cols-2 gap-3'>
+                <div>
+                  <label className='block text-[10px] font-semibold text-foreground/50 uppercase tracking-wider mb-1.5'>
+                    Grace (Mins)
+                  </label>
+                  <input
+                    type='number'
+                    min={0}
+                    value={settingsForm.graceMinutes}
+                    onChange={(e) =>
+                      setSettingsForm((prev) => ({
+                        ...prev,
+                        graceMinutes: parseInt(e.target.value) || 0,
+                      }))
+                    }
+                    className='w-full px-3 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-sm text-foreground/80 focus:ring-2 focus:ring-primary/30 transition-all focus:outline-none'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-[10px] font-semibold text-foreground/50 uppercase tracking-wider mb-1.5'>
+                    Half-Day (Hrs)
+                  </label>
+                  <input
+                    type='number'
+                    min={1}
+                    value={settingsForm.halfDayThresholdHours}
+                    onChange={(e) =>
+                      setSettingsForm((prev) => ({
+                        ...prev,
+                        halfDayThresholdHours: parseFloat(e.target.value) || 4.0,
+                      }))
+                    }
+                    className='w-full px-3 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-sm text-foreground/80 focus:ring-2 focus:ring-primary/30 transition-all focus:outline-none'
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className='block text-[10px] font-semibold text-foreground/50 uppercase tracking-wider mb-1.5'>
+                  Late Penalty / Min (₹)
+                </label>
+                <input
+                  type='number'
+                  min={0}
+                  step={0.5}
+                  value={settingsForm.latePenaltyPerMinute}
+                  onChange={(e) =>
+                    setSettingsForm((prev) => ({
+                      ...prev,
+                      latePenaltyPerMinute: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  className='w-full px-3 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-sm text-foreground/80 focus:ring-2 focus:ring-primary/30 transition-all focus:outline-none'
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className='px-6 py-4 border-t border-primary/12 flex-shrink-0 bg-white/[0.01]'>
+              {settingsError && (
+                <p className='text-[10px] text-red-400 mb-3 leading-normal'>{settingsError}</p>
+              )}
+              {settingsSuccess && (
+                <p className='text-[10px] text-emerald-400 mb-3 flex items-center gap-1.5'>
+                  <CheckCircle className='w-3.5 h-3.5' />
+                  Settings updated successfully!
+                </p>
+              )}
+
+              <div className='flex justify-end gap-3'>
+                <button
+                  type='button'
+                  onClick={() => !settingsPending && setShowSettings(false)}
+                  disabled={settingsPending}
+                  className='px-4 py-2.5 rounded-xl border border-white/12 text-xs font-semibold text-foreground/60 hover:text-foreground hover:bg-white/5 transition-all'
+                >
+                  Close
+                </button>
+                <button
+                  type='button'
+                  onClick={() => {
+                    setSettingsError(null);
+                    setSettingsSuccess(false);
+                    startSettingsTransition(async () => {
+                      const res = await updateAttendanceSettings({
+                        studioStartTime: settingsForm.studioStartTime.slice(0, 5),
+                        graceMinutes: settingsForm.graceMinutes,
+                        halfDayThresholdHours: settingsForm.halfDayThresholdHours,
+                        latePenaltyPerMinute: settingsForm.latePenaltyPerMinute,
+                        allowedPaidLeavesPerMonth: settingsForm.allowedPaidLeavesPerMonth,
+                      });
+                      if (res.error) {
+                        setSettingsError(res.error);
+                      } else {
+                        setSettingsSuccess(true);
+                        router.refresh();
+                        setTimeout(() => {
+                          setShowSettings(false);
+                          setSettingsSuccess(false);
+                        }, 1200);
+                      }
+                    });
+                  }}
+                  disabled={settingsPending}
+                  className='flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-black text-xs font-bold hover:bg-primary/90 disabled:opacity-50 transition-all shadow-[0_0_12px_rgba(255,255,255,0.02)]'
+                >
+                  {settingsPending ? (
+                    <>
+                      <Loader2 className='h-3.5 w-3.5 animate-spin' />
+                      Saving…
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className='h-3.5 w-3.5' />
+                      Save Settings
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

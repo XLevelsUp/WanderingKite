@@ -8,6 +8,9 @@ export const contractSchema = z.object({
   baseSalary: z
     .number()
     .min(0, 'Salary must be non-negative'),
+  incentive: z
+    .number()
+    .min(0, 'Incentive must be non-negative'),
   joiningDate: z.string().min(1, 'Joining date is required'), // ISO date
   bankAccountName: z.string().max(200).optional().or(z.literal('')),
   bankAccountNumber: z.string().max(50).optional().or(z.literal('')),
@@ -122,7 +125,7 @@ export const attendanceLogSchema = z.object({
     .regex(/^\d{2}:\d{2}$/, 'Time must be HH:MM')
     .optional()
     .or(z.literal('')),
-  status: z.enum(['PRESENT', 'LATE', 'HALF_DAY', 'ABSENT', 'ON_LEAVE']),
+  status: z.enum(['PRESENT', 'LATE', 'HALF_DAY', 'ABSENT', 'ON_LEAVE', 'ON_AID_LEAVE', 'LEAVE']),
   notes: z.string().max(500).optional().or(z.literal('')),
 });
 
@@ -132,7 +135,7 @@ export type AttendanceLogFormData = z.infer<typeof attendanceLogSchema>;
 
 export const bulkAttendanceEntrySchema = z.object({
   employeeId: z.string().uuid(),
-  status: z.enum(['PRESENT', 'LATE', 'HALF_DAY', 'ABSENT', 'ON_LEAVE']),
+  status: z.enum(['PRESENT', 'LATE', 'HALF_DAY', 'ABSENT', 'ON_LEAVE', 'ON_AID_LEAVE', 'LEAVE']),
   clockIn: z.string().optional().or(z.literal('')),
   clockOut: z.string().optional().or(z.literal('')),
 });
@@ -157,10 +160,11 @@ export type PayrollGenerateData = z.infer<typeof payrollGenerateSchema>;
 // ── Payroll Override (manual adjustments per employee) ─────────────────────
 
 export const payrollOverrideSchema = z.object({
-  overtimeAmount: z.number().min(0).default(0),
   bonusAmount: z.number().min(0).default(0),
   taxDeduction: z.number().min(0).default(0),
   otherDeductions: z.number().min(0).default(0),
+  incentiveHours: z.number().min(0).default(0),
+  overtimeHours: z.number().min(0).default(0),
   notes: z.string().max(500).optional().or(z.literal('')),
 });
 
@@ -184,6 +188,7 @@ export const attendanceSettingsSchema = z.object({
   graceMinutes: z.number().int().min(0).max(60),
   halfDayThresholdHours: z.number().min(1).max(12),
   latePenaltyPerMinute: z.number().min(0),
+  allowedPaidLeavesPerMonth: z.number().int().min(0).max(31).default(0),
 });
 
 export type AttendanceSettingsData = z.infer<typeof attendanceSettingsSchema>;
