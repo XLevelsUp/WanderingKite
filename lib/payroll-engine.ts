@@ -46,30 +46,39 @@ export function calculatePayout(input: PayrollInput): PayrollBreakdown {
     otherDeductions,
     latePenaltyPerMinute,
     avgLateMinutes,
+
+    absentDays = 0,
+    leaveDays = 0,
+    paidLeavesUsed = 0,
+    halfDays = 0,
+    onAidLeaveDays = 0,
+    deductionDays = 0,
+    incentiveHours = 0,
   } = input;
 
   // Guard against division by zero
   const safeDays = workingDays > 0 ? workingDays : 1;
 
-  // Daily rate
-  const dailyRate = baseSalary / safeDays;
+  // Per-day salary and deductions total
+  const perDaySalary = round2(baseSalary / safeDays);
+  const deductionsTotal = round2(deductionDays * perDaySalary);
 
-  // Base pay: proportional to days present (half-day = 0.5)
-  const basePay = round2(dailyRate * presentDays);
+  // Base Pay = Base Salary - Deductions Total
+  const basePay = round2(baseSalary - deductionsTotal);
 
-  // Unpaid leave deduction: absent days beyond presentDays (already factored in basePay)
-  // baseSalary - basePay = total unpaid portion; expose for transparency
-  const unpaidLeaves = round2(Math.max(0, baseSalary - basePay));
+  // Total working hours based on calendar days in month (8 hours per day)
+  const totalWorkingHours = safeDays * 8;
+  const hourlyRate = baseSalary / totalWorkingHours;
 
-  // Overtime: calculated at 1.5× hourly rate
-  const hourlyRate = dailyRate / 8; // 8-hour workday
-  const overtimeAmount = round2(overtimeHours * hourlyRate * OVERTIME_MULTIPLIER);
+  // Incentive and Overtime amounts
+  const incentiveAmount = round2(incentiveHours * hourlyRate);
+  const overtimeAmount = round2(overtimeHours * hourlyRate);
 
   // Late penalty: flat deduction per late-minute
   const latePenalty = round2(lateDays * avgLateMinutes * latePenaltyPerMinute);
 
-  // Gross earnings (before tax, after late penalty)
-  const grossEarnings = basePay + overtimeAmount + bonusAmount;
+  // Gross earnings (before tax, after late penalty and adjustments)
+  const grossEarnings = basePay + overtimeAmount + incentiveAmount + bonusAmount;
 
   // TDS: 10% on gross > ₹50,000/month
   const taxDeduction =
@@ -83,15 +92,28 @@ export function calculatePayout(input: PayrollInput): PayrollBreakdown {
   return {
     basePay,
     overtimeAmount,
+    incentiveAmount,
     bonusAmount: round2(bonusAmount),
     latePenalty,
-    unpaidLeaves,
+    unpaidLeaves: deductionsTotal, // unpaid leaves exposed as deductionsTotal
     taxDeduction,
     otherDeductions: round2(otherDeductions),
     netPayout: Math.max(0, netPayout), // Never negative
     presentDays,
     lateDays,
     workingDays: safeDays,
+
+    // New breakdown fields
+    absentDays,
+    leaveDays,
+    paidLeavesUsed,
+    halfDays,
+    onAidLeaveDays,
+    deductionDays,
+    perDaySalary,
+    deductionsTotal,
+    incentiveHours,
+    overtimeHours,
   };
 }
 
@@ -126,20 +148,34 @@ export interface AttendanceLogMin {
 }
 
 /**
- * Compute present and late days normalized to a standard 30-day period.
+ * Compute present and late days normalized to the calendar month days.
  * Sundays are holidays and default marked as PRESENT (no unpaid leave contribution).
- * Working days (non-Sundays) without logs or marked ABSENT/ON_LEAVE contribute to unpaid leaves.
+ * Working days (non-Sundays) without logs or marked ABSENT/LEAVE/ON_LEAVE contribute to unpaid leaves.
  */
 export function computePresentDaysForMonth(
   month: number,
   year: number,
   logs: AttendanceLogMin[],
-): { presentDays: number; lateDays: number } {
+  allowedPaidLeaves: number = 0,
+): {
+  presentDays: number;
+  lateDays: number;
+  absentDays: number;
+  leaveDays: number;
+  paidLeavesUsed: number;
+  halfDays: number;
+  onAidLeaveDays: number;
+  deductionDays: number;
+} {
   // Get total days in month
   const totalDays = new Date(year, month, 0).getDate();
   
-  let unpaidDays = 0;
+  let absentDays = 0;
+  let leaveDays = 0;
+  let halfDays = 0;
+  let onAidLeaveDays = 0;
   let lateDays = 0;
+  let presentDaysCount = 0;
 
   // Create a map of date string (YYYY-MM-DD) to status
   const logMap = new Map<string, string>();
@@ -156,31 +192,52 @@ export function computePresentDaysForMonth(
     const isSunday = date.getDay() === 0;
 
     if (isSunday) {
-      // Sundays are holidays: they are paid (present by default), so they never add to unpaid leaves.
+      // Sundays are holidays: paid by default (so they never add to unpaid leaves).
       continue;
     }
 
     // Working day: check attendance log
     const status = logMap.get(dateStr);
     if (status) {
-      if (status === 'ABSENT' || status === 'ON_LEAVE') {
-        unpaidDays += 1.0;
+      if (status === 'ABSENT') {
+        absentDays += 1.0;
+      } else if (status === 'LEAVE' || status === 'ON_LEAVE') {
+        leaveDays += 1.0;
       } else if (status === 'HALF_DAY') {
-        unpaidDays += 0.5;
+        halfDays += 1.0;
+      } else if (status === 'ON_AID_LEAVE') {
+        onAidLeaveDays += 1.0;
       } else if (status === 'LATE') {
         lateDays += 1;
+      } else if (status === 'PRESENT') {
+        presentDaysCount += 1.0;
       }
-      // PRESENT -> 0 unpaid leaves
     } else {
-      // Missing log on a working day defaults to ABSENT (1.0 unpaid leave day)
-      unpaidDays += 1.0;
+      // Missing log on a working day defaults to ABSENT
+      absentDays += 1.0;
     }
   }
 
-  // Base pay is calculated on a 30-day basis
-  const presentDays = Math.max(0, 30 - unpaidDays);
+  // Quota paid leaves logic: if taken leave and still has quota remaining, reclassify as paid
+  const paidLeavesUsed = Math.min(leaveDays, allowedPaidLeaves);
+  const unpaidLeaveDays = Math.max(0, leaveDays - paidLeavesUsed);
 
-  return { presentDays, lateDays };
+  // Deduction days (absent, half days, unpaid leaves)
+  const deductionDays = absentDays + (halfDays * 0.5) + unpaidLeaveDays;
+
+  // Net present days
+  const presentDays = Math.max(0, totalDays - deductionDays);
+
+  return {
+    presentDays,
+    lateDays,
+    absentDays,
+    leaveDays,
+    paidLeavesUsed,
+    halfDays,
+    onAidLeaveDays,
+    deductionDays,
+  };
 }
 
 /**

@@ -65,6 +65,7 @@ export function HROnboardingForm({ availableProfiles }: HROnboardingFormProps) {
       jobTitle: '',
       employmentType: 'FULL_TIME',
       baseSalary: 0,
+      incentive: 0,
       joiningDate: new Date().toISOString().split('T')[0],
       bankAccountName: '',
       bankAccountNumber: '',
@@ -77,7 +78,7 @@ export function HROnboardingForm({ availableProfiles }: HROnboardingFormProps) {
 
   const STEP_FIELDS: Record<number, (keyof HROnboardingFormData)[]> = {
     1: ['profileId'],
-    2: ['jobTitle', 'employmentType', 'baseSalary', 'joiningDate'],
+    2: ['jobTitle', 'employmentType', 'baseSalary', 'joiningDate', 'incentive'],
     3: [],
   };
 
@@ -231,7 +232,7 @@ export function HROnboardingForm({ availableProfiles }: HROnboardingFormProps) {
                 <FieldError message={errors.joiningDate?.message} />
               </div>
 
-              <div className='sm:col-span-2'>
+              <div>
                 <FieldLabel required>Base Salary (₹ / month)</FieldLabel>
                 <input
                   type='number'
@@ -242,6 +243,19 @@ export function HROnboardingForm({ availableProfiles }: HROnboardingFormProps) {
                   className={inputClass}
                 />
                 <FieldError message={errors.baseSalary?.message} />
+              </div>
+
+              <div>
+                <FieldLabel>Monthly Incentive (₹ / month)</FieldLabel>
+                <input
+                  type='number'
+                  min={0}
+                  step={100}
+                  {...register('incentive', { valueAsNumber: true })}
+                  placeholder='e.g. 2000'
+                  className={inputClass}
+                />
+                <FieldError message={errors.incentive?.message} />
               </div>
 
               <div className='sm:col-span-2'>

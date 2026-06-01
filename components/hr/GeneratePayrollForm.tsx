@@ -17,7 +17,7 @@ export function GeneratePayrollForm() {
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
-  const [workingDays, setWorkingDays] = useState(30);
+  const workingDays = new Date(year, month, 0).getDate();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,7 +49,7 @@ export function GeneratePayrollForm() {
         </p>
       </div>
 
-      <div className='grid grid-cols-3 gap-4 mb-5'>
+      <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5'>
         <div>
           <label className='block text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-1.5'>
             Month
@@ -75,29 +75,24 @@ export function GeneratePayrollForm() {
             type='number'
             min={2020}
             max={2050}
-            value={year}
-            onChange={(e) => setYear(parseInt(e.target.value))}
+            value={isNaN(year) ? '' : year}
+            onChange={(e) => setYear(parseInt(e.target.value) || 0)}
             className={inputClass}
           />
         </div>
 
         <div>
           <label className='block text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-1.5'>
-            Working Days
+            Working Days (Auto-derived)
           </label>
-          <input
-            type='number'
-            min={1}
-            max={31}
-            value={workingDays}
-            onChange={(e) => setWorkingDays(parseInt(e.target.value))}
-            className={inputClass}
-          />
+          <div className='w-full px-3 py-2.5 rounded-lg bg-primary/10 border border-primary/20 text-sm font-bold text-primary flex items-center justify-center h-[42px]'>
+            {workingDays} Days
+          </div>
         </div>
       </div>
 
       {error && (
-        <p className='text-xs text-red-400 mb-4'>{error}</p>
+        <p className='text-xs text-red-400 mb-4 leading-normal'>{error}</p>
       )}
       {success && (
         <p className='text-xs text-emerald-400 mb-4 flex items-center gap-1.5'>

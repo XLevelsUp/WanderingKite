@@ -12,7 +12,7 @@ import {
   type AttendanceSettingsData,
 } from '@/lib/validations/hr';
 import { deriveAttendanceStatus } from '@/lib/payroll-engine';
-import type { AttendanceLogRow, AttendanceLogWithEmployee, AttendanceSettingRow } from '@/lib/types/hr';
+import type { AttendanceLogRow, AttendanceLogWithEmployee, AttendanceSettingRow, AttendanceStatus } from '@/lib/types/hr';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GUARDS
@@ -99,11 +99,11 @@ export async function getMonthlyAttendance(
 ): Promise<AttendanceLogWithEmployee[]> {
   const { supabase } = await requireAdmin();
 
-  // Build date range for the month
   const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-  const endDate = new Date(year, month, 0)
-    .toISOString()
-    .split('T')[0]; // last day of month
+  const lastDay = new Date(year, month, 0).getDate();
+  const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+
 
   const { data, error } = await supabase
     .from('attendance_logs')
@@ -146,7 +146,10 @@ export async function getEmployeeMonthlyAttendance(
   const supabase = await createClient();
 
   const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-  const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+  const lastDay = new Date(year, month, 0).getDate();
+  const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+
 
   const { data, error } = await supabase
     .from('attendance_logs')
@@ -208,6 +211,23 @@ export async function upsertAttendanceLog(formData: AttendanceLogFormData) {
   revalidatePath('/admin/attendance');
   return { success: true };
 }
+
+/** Delete a single attendance log (unmark) */
+export async function deleteAttendanceLog(employeeId: string, date: string) {
+  const { supabase } = await requireAdmin();
+
+  const { error } = await supabase
+    .from('attendance_logs')
+    .delete()
+    .eq('employeeId', employeeId)
+    .eq('date', date);
+
+  if (error) return { error: error.message };
+
+  revalidatePath('/admin/attendance');
+  return { success: true };
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WRITE: Bulk mark attendance for a date
@@ -347,3 +367,94 @@ export async function logClockOut() {
   revalidatePath('/admin/attendance');
   return { success: true, clockOut: now };
 }
+
+/** Bulk mark attendance for a date range for all active employees */
+export async function bulkMarkRangeAttendance(
+  startDateStr: string,
+  endDateStr: string,
+  status: AttendanceStatus,
+) {
+  const { supabase, userId } = await requireAdmin();
+
+  const start = new Date(startDateStr);
+  const end = new Date(endDateStr);
+
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    return { error: 'Invalid start or end date' };
+  }
+
+  if (start > end) {
+    return { error: 'Start date must be before or equal to end date' };
+  }
+
+  // Get active employees
+  const { data: employees, error: empError } = await supabase
+    .from('employee_contracts')
+    .select('profileId')
+    .eq('isActive', true);
+
+  if (empError) return { error: empError.message };
+  if (!employees || employees.length === 0) {
+    return { error: 'No active employees found to mark' };
+  }
+
+  // Generate date range
+  const dates: string[] = [];
+  let current = new Date(start);
+  while (current <= end) {
+    dates.push(current.toISOString().split('T')[0]);
+    current.setDate(current.getDate() + 1);
+  }
+
+  // Limit to prevent huge payloads (e.g. max 62 days at once)
+  if (dates.length > 62) {
+    return { error: 'Date range cannot exceed 62 days' };
+  }
+
+  const settings = await getAttendanceSettings();
+  const rows: any[] = [];
+
+  for (const date of dates) {
+    for (const emp of employees) {
+      let clockIn: string | null = null;
+      let clockOut: string | null = null;
+
+      // If status is PRESENT/LATE/HALF_DAY, set a standard clock-in based on settings
+      if (['PRESENT', 'LATE', 'HALF_DAY'].includes(status)) {
+        clockIn = settings?.studioStartTime ? settings.studioStartTime.slice(0, 5) : '09:00';
+        if (status === 'PRESENT') {
+          clockOut = '18:00';
+        } else if (status === 'HALF_DAY') {
+          clockOut = '13:00';
+        } else if (status === 'LATE') {
+          const grace = settings?.graceMinutes ?? 15;
+          const [h, m] = clockIn.split(':').map(Number);
+          const totalMins = h * 60 + m + grace + 5;
+          const lateH = String(Math.floor(totalMins / 60)).padStart(2, '0');
+          const lateM = String(totalMins % 60).padStart(2, '0');
+          clockIn = `${lateH}:${lateM}`;
+          clockOut = '18:00';
+        }
+      }
+
+      rows.push({
+        employeeId: emp.profileId,
+        date,
+        clockIn: clockIn ? `${clockIn}:00` : null,
+        clockOut: clockOut ? `${clockOut}:00` : null,
+        status,
+        markedById: userId,
+      });
+    }
+  }
+
+  const { error } = await supabase
+    .from('attendance_logs')
+    .upsert(rows, { onConflict: 'employeeId,date' });
+
+  if (error) return { error: error.message };
+
+  revalidatePath('/admin/attendance');
+  return { success: true, count: employees.length * dates.length };
+}
+

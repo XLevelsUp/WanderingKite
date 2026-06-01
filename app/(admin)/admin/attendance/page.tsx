@@ -1,4 +1,4 @@
-import { getMonthlyAttendance } from '@/actions/hr/attendance';
+import { getMonthlyAttendance, getAttendanceSettings } from '@/actions/hr/attendance';
 import { getHREmployees } from '@/actions/hr/employees';
 import { AttendanceGrid } from '@/components/hr/AttendanceGrid';
 import { BulkAttendanceModal } from '@/components/hr/BulkAttendanceModal';
@@ -29,9 +29,10 @@ export default async function AttendancePage({
     year: 'numeric',
   });
 
-  const [logs, allEmployees] = await Promise.all([
+  const [logs, allEmployees, settings] = await Promise.all([
     getMonthlyAttendance(month, year),
     getHREmployees(),
+    getAttendanceSettings(),
   ]);
 
   // Only active employees for the grid
@@ -105,6 +106,7 @@ export default async function AttendancePage({
         year={year}
         employees={activeEmployees}
         logs={logs}
+        settings={settings}
       />
     </div>
   );

@@ -99,6 +99,7 @@ export function UnifiedOnboardingForm({ branches, managers }: UnifiedOnboardingF
       jobTitle: '',
       employmentType: 'FULL_TIME',
       baseSalary: 0,
+      incentive: 0,
       joiningDate: new Date().toISOString().split('T')[0],
       bankAccountName: '',
       bankAccountNumber: '',
@@ -116,7 +117,7 @@ export function UnifiedOnboardingForm({ branches, managers }: UnifiedOnboardingF
     1: ['fullName', 'email', 'password'],
     2: ['dateOfBirth', 'phone', 'gender', 'bloodGroup', 'panNumber'],
     3: ['role'],
-    4: ['jobTitle', 'employmentType', 'baseSalary', 'joiningDate'],
+    4: ['jobTitle', 'employmentType', 'baseSalary', 'joiningDate', 'incentive'],
     5: [],
   };
 
@@ -419,7 +420,7 @@ export function UnifiedOnboardingForm({ branches, managers }: UnifiedOnboardingF
                 <FieldError message={errors.joiningDate?.message} />
               </div>
 
-              <div className='sm:col-span-2'>
+              <div>
                 <FieldLabel required>Base Salary (₹ / month)</FieldLabel>
                 <input
                   type='number'
@@ -430,6 +431,19 @@ export function UnifiedOnboardingForm({ branches, managers }: UnifiedOnboardingF
                   className={inputClass}
                 />
                 <FieldError message={errors.baseSalary?.message} />
+              </div>
+
+              <div>
+                <FieldLabel>Monthly Incentive (₹ / month)</FieldLabel>
+                <input
+                  type='number'
+                  min={0}
+                  step={100}
+                  {...register('incentive', { valueAsNumber: true })}
+                  placeholder='e.g. 2000'
+                  className={inputClass}
+                />
+                <FieldError message={errors.incentive?.message} />
               </div>
 
               <div className='sm:col-span-2'>
@@ -473,6 +487,14 @@ export function UnifiedOnboardingForm({ branches, managers }: UnifiedOnboardingF
                 <span className='text-foreground/80 font-medium font-mono'>
                   ₹{Number(getValues('baseSalary')).toLocaleString('en-IN')} / mo
                 </span>
+                {Number(getValues('incentive')) > 0 && (
+                  <>
+                    <span className='text-foreground/40'>Incentive</span>
+                    <span className='text-foreground/80 font-medium font-mono'>
+                      ₹{Number(getValues('incentive')).toLocaleString('en-IN')} / mo
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 

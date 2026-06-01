@@ -7,9 +7,9 @@
 
 export type EmploymentType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN';
 
-export type AttendanceStatus = 'PRESENT' | 'LATE' | 'HALF_DAY' | 'ABSENT' | 'ON_LEAVE';
+export type AttendanceStatus = 'PRESENT' | 'LATE' | 'HALF_DAY' | 'ABSENT' | 'ON_LEAVE' | 'ON_AID_LEAVE' | 'LEAVE';
 
-export type PayrollStatus = 'DRAFT' | 'APPROVED' | 'PAID';
+export type PayrollStatus = 'DRAFT' | 'APPROVED' | 'PAID' | 'REJECTED';
 
 // ── Raw DB Rows ────────────────────────────────────────────────────────────
 
@@ -19,6 +19,7 @@ export interface EmployeeContractRow {
   jobTitle: string;
   employmentType: EmploymentType;
   baseSalary: number;
+  incentive: number;
   joiningDate: string; // ISO date string
   bankAccountName: string | null;
   bankAccountNumber: string | null;
@@ -63,14 +64,27 @@ export interface PayrollRecordRow {
   taxDeduction: number;
   otherDeductions: number;
   netPayout: number;
+  incentive: number;
   status: PayrollStatus;
-  approvedById: string | null;
+  approvedBy: string | null;
   approvedAt: string | null;
   paidAt: string | null;
   paymentRef: string | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+
+  // New columns from migration v10
+  absentDays: number;
+  leaveDays: number;
+  paidLeavesUsed: number;
+  halfDays: number;
+  onAidLeaveDays: number;
+  deductionDays: number;
+  perDaySalary: number;
+  deductionsTotal: number;
+  incentiveHours: number;
+  overtimeHours: number;
 }
 
 export interface AttendanceSettingRow {
@@ -79,6 +93,7 @@ export interface AttendanceSettingRow {
   graceMinutes: number;
   halfDayThresholdHours: number;
   latePenaltyPerMinute: number;
+  allowedPaidLeavesPerMonth: number; // New field from migration v10
   updatedAt: string;
 }
 
@@ -118,7 +133,14 @@ export interface PayrollRecordWithEmployee extends PayrollRecordRow {
     id: string;
     fullName: string | null;
     email: string;
-    contract: { jobTitle: string; avatarUrl: string | null } | null;
+    contract: {
+      jobTitle: string;
+      avatarUrl: string | null;
+      bankAccountName?: string | null;
+      bankAccountNumber?: string | null;
+      bankIFSC?: string | null;
+      upiId?: string | null;
+    } | null;
   };
 }
 
@@ -134,11 +156,21 @@ export interface PayrollInput {
   otherDeductions: number;
   latePenaltyPerMinute: number;
   avgLateMinutes: number; // Average late minutes for those days
+
+  // New inputs from migration v10
+  absentDays?: number;
+  leaveDays?: number;
+  paidLeavesUsed?: number;
+  halfDays?: number;
+  onAidLeaveDays?: number;
+  deductionDays?: number;
+  incentiveHours?: number;
 }
 
 export interface PayrollBreakdown {
   basePay: number;
   overtimeAmount: number;
+  incentiveAmount: number;
   bonusAmount: number;
   latePenalty: number;
   unpaidLeaves: number;
@@ -148,4 +180,16 @@ export interface PayrollBreakdown {
   presentDays: number;
   lateDays: number;
   workingDays: number;
+
+  // New breakdown fields
+  absentDays: number;
+  leaveDays: number;
+  paidLeavesUsed: number;
+  halfDays: number;
+  onAidLeaveDays: number;
+  deductionDays: number;
+  perDaySalary: number;
+  deductionsTotal: number;
+  incentiveHours: number;
+  overtimeHours: number;
 }

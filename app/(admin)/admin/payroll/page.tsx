@@ -1,5 +1,6 @@
 import { getPayrollMonths } from '@/actions/hr/payroll';
 import { GeneratePayrollForm } from '@/components/hr/GeneratePayrollForm';
+import { ClearBatchButton } from '@/components/hr/ClearBatchButton';
 import { DollarSign, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -65,17 +66,19 @@ export default async function PayrollPage() {
               const approved = batch.statuses.filter((s) => s === 'APPROVED').length;
 
               return (
-                <Link
+                <div
                   key={`${batch.year}-${batch.month}`}
-                  href={`/admin/payroll/${batch.year}-${String(batch.month).padStart(2, '0')}`}
-                  className='flex items-center justify-between px-5 py-4 rounded-xl border border-primary/12 bg-[rgba(17,17,22,0.7)] hover:bg-[rgba(17,17,22,0.92)] hover:border-primary/25 transition-all group'
+                  className='flex items-center justify-between px-5 py-4 rounded-xl border border-primary/12 bg-[rgba(17,17,22,0.7)] hover:border-primary/25 transition-all flex-row'
                 >
-                  <div className='flex items-center gap-4'>
-                    <div className='w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center'>
+                  <Link
+                    href={`/admin/payroll/${batch.year}-${String(batch.month).padStart(2, '0')}`}
+                    className='flex items-center gap-4 flex-1 min-w-0 group'
+                  >
+                    <div className='w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-all'>
                       <DollarSign className='w-5 h-5 text-primary opacity-70' />
                     </div>
-                    <div>
-                      <p className='font-semibold text-foreground text-sm'>
+                    <div className='min-w-0'>
+                      <p className='font-semibold text-foreground text-sm group-hover:text-primary transition-colors truncate'>
                         {MONTH_NAMES[batch.month]} {batch.year}
                       </p>
                       <p className='text-xs text-foreground/40 mt-0.5'>
@@ -83,15 +86,29 @@ export default async function PayrollPage() {
                         {approved > 0 && `, ${approved} approved`}
                       </p>
                     </div>
-                  </div>
+                  </Link>
 
-                  <div className='flex items-center gap-3'>
+                  <div className='flex items-center gap-3.5 flex-shrink-0 ml-4'>
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeCls}`}>
                       {batchStatus}
                     </span>
-                    <ArrowRight className='w-4 h-4 text-foreground/30 group-hover:text-foreground/60 transition-colors' />
+
+                    {batchStatus !== 'PAID' && (
+                      <ClearBatchButton
+                        month={batch.month}
+                        year={batch.year}
+                        monthName={MONTH_NAMES[batch.month]}
+                      />
+                    )}
+
+                    <Link
+                      href={`/admin/payroll/${batch.year}-${String(batch.month).padStart(2, '0')}`}
+                      className='p-1.5 hover:bg-white/5 rounded-lg transition-colors group'
+                    >
+                      <ArrowRight className='w-4 h-4 text-foreground/30 group-hover:text-foreground/60 transition-colors' />
+                    </Link>
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>

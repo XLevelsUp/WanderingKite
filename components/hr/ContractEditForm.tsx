@@ -49,6 +49,7 @@ export function ContractEditForm({ contract }: ContractEditFormProps) {
       jobTitle: contract.jobTitle,
       employmentType: contract.employmentType,
       baseSalary: contract.baseSalary,
+      incentive: contract.incentive ?? 0,
       joiningDate: contract.joiningDate,
       bankAccountName: contract.bankAccountName ?? '',
       bankAccountNumber: contract.bankAccountNumber ?? '',
@@ -99,7 +100,7 @@ export function ContractEditForm({ contract }: ContractEditFormProps) {
           <FieldError message={errors.joiningDate?.message} />
         </div>
 
-        <div className='sm:col-span-2'>
+        <div>
           <FieldLabel required>Base Salary (₹ / month)</FieldLabel>
           <input
             type='number'
@@ -109,6 +110,18 @@ export function ContractEditForm({ contract }: ContractEditFormProps) {
             className={inputClass}
           />
           <FieldError message={errors.baseSalary?.message} />
+        </div>
+
+        <div>
+          <FieldLabel>Monthly Incentive (₹ / month)</FieldLabel>
+          <input
+            type='number'
+            min={0}
+            step={100}
+            {...register('incentive', { valueAsNumber: true })}
+            className={inputClass}
+          />
+          <FieldError message={errors.incentive?.message} />
         </div>
 
         <div className='sm:col-span-2'>
