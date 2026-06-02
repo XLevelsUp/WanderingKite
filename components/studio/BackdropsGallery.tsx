@@ -60,7 +60,7 @@ export function BackdropsGallery() {
               {backdrop.image ? (
                 <Image
                   src={backdrop.image}
-                  alt={backdrop.name}
+                  alt={`Studio backdrop: ${backdrop.name} background for photography studio rental in RS Puram Coimbatore`}
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-110"
                 />

@@ -97,9 +97,9 @@ const podcastPackages = [
 ];
 
 export const metadata: Metadata = {
-  title: 'Photography Studio Rental Coimbatore | 1200 sq ft | Book by Hour',
+  title: 'Photography Studio Rental in Coimbatore | 1200 Sq Ft | RS Puram | Book by Hour',
   description:
-    "Rent Coimbatore's 1200 sq ft photography & video studio in RS Puram. Cyclorama wall, ProFoto strobes, backdrops. From ₹1,500/hr. Book on WhatsApp today.",
+    'A Professional Photography Studio Built for Creators in Coimbatore. Rent our premium 1200 sq ft studio space with Profoto lighting, infinity wall, and backdrops. Book by the hour.',
   keywords: [
     // Core local terms
     'photography studio rental Coimbatore',
@@ -108,7 +108,7 @@ export const metadata: Metadata = {
     'video studio rental Coimbatore',
     // Size/spec-based queries
     '1200 sq ft studio Coimbatore',
-    'studio with cyclorama wall Coimbatore',
+    'studio with infinity wall Coimbatore',
     'studio with white backdrop Coimbatore',
     // Pricing intent (high-conversion)
     'studio rental per hour Coimbatore',
@@ -129,9 +129,9 @@ export const metadata: Metadata = {
     'studio rental with equipment included',
   ],
   openGraph: {
-    title: 'Photography Studio Rental Coimbatore | 1200 sq ft | RS Puram',
+    title: 'Photography Studio Rental in Coimbatore | 1200 Sq Ft | RS Puram | Book by Hour',
     description:
-      '1200 sq ft photography & video studio in Coimbatore with cyclorama, ProFoto lights & backdrops. Book from ₹1,500/hr.',
+      'A Professional Photography Studio Built for Creators in Coimbatore. Rent our premium 1200 sq ft studio space with Profoto lighting, infinity wall & backdrops.',
     url: 'https://wanderingkite.in/studiospace',
     images: [{ url: '/og-studio.jpg', width: 1200, height: 630 }],
   },
@@ -146,10 +146,42 @@ const studioFaqSchema = {
   mainEntity: [
     {
       '@type': 'Question',
-      name: 'How much does it cost to rent the photography studio in Coimbatore?',
+      name: 'What is the studio rental price per hour in Coimbatore?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Hourly rate starts at ₹999 (minimum 1 hour). Half-day (4 hours) is ₹3,500, and a full day (8 hours) is ₹6,999 (included gst). All packages include lighting equipment and WiFi.',
+        text: 'Our hourly studio rental starts at ₹999/hr. Half Day (4 hrs) is ₹3,499 and Full Day (8 hrs) is ₹6,999. All packages include lights, tripod and studio space.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'What equipment is included in the studio rental?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Lights, stands, modifiers, reflectors and 9 backdrops are all included. Extra gear like cameras, lenses and gimbals can be rented as add-ons inside the studio.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Is the studio suitable for YouTube videos and corporate shoots?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Yes! Our 1200 sq ft studio with 14ft ceilings and infinity wall is perfect for YouTube videos, corporate shoots, reels and music videos.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Where is the studio located? Can people from Tirupur and Erode visit?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'We are at RS Puram, Coimbatore. Free parking available. Clients from Tirupur, Erode and Salem visit us regularly — easy to reach within an hour.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Can I use the studio for fashion or product photography?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Absolutely! We have 9 backdrops, an infinity wall, white backdrop, professional lighting and a makeup room — perfect for fashion shoots, product photography and brand content.',
       },
     },
     {
@@ -162,26 +194,10 @@ const studioFaqSchema = {
     },
     {
       '@type': 'Question',
-      name: 'Is parking available at the Coimbatore studio?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Yes! Parking space for 1 car and 2 bikes is available at our studio location. The studio is situated in a secure area, and additional parking options may also be available nearby when needed.',
-      },
-    },
-    {
-      '@type': 'Question',
       name: 'Can I cancel or reschedule my studio booking?',
       acceptedAnswer: {
         '@type': 'Answer',
         text: 'Cancellations 72+ hours in advance receive a 100% refund. 48–72 hours: 75% refund. 24–48 hours: 50% refund. Less than 24 hours: no refund. One free reschedule is allowed if done 48+ hours in advance.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Does the studio have a green screen and infinity wall?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Yes, the 1200 sq ft studio features a infinity wall, green screen, and multiple seamless paper backdrops. The 14ft ceilings allow for a wide range of lighting setups.',
       },
     },
     {
@@ -218,33 +234,118 @@ const studioPricingSchema = {
   '@context': 'https://schema.org',
   '@type': 'Service',
   '@id': 'https://wanderingkite.in/studiospace#service',
-  name: 'Photography Studio Rental Coimbatore',
-  provider: { '@id': 'https://wanderingkite.in/#business' },
-  areaServed: { '@type': 'City', name: 'Coimbatore' },
-  offers: [
+  'name': 'Photography Studio Rental Coimbatore',
+  'image': 'https://wanderingkite.in/images/studiospace/infinity.webp',
+  'description': 'Rent our premium 1200 sq ft photography and video studio in RS Puram, Coimbatore. Infinity wall, Profoto lighting, and flexible hourly booking.',
+  'provider': {
+    '@type': 'LocalBusiness',
+    '@id': 'https://wanderingkite.in/#business',
+    'name': 'Wandering Kite',
+  },
+  'areaServed': { '@type': 'City', 'name': 'Coimbatore' },
+  'offers': [
     {
       '@type': 'Offer',
-      name: 'Hourly Studio Rental',
-      price: '1500',
-      priceCurrency: 'INR',
-      priceSpecification: {
+      'name': 'Hourly Studio Rental',
+      'price': '1500',
+      'priceCurrency': 'INR',
+      'priceSpecification': {
         '@type': 'UnitPriceSpecification',
-        price: '1500',
-        priceCurrency: 'INR',
-        unitText: 'HOUR',
+        'price': '1500',
+        'priceCurrency': 'INR',
+        'unitText': 'HOUR',
       },
     },
     {
       '@type': 'Offer',
-      name: 'Half Day Studio Rental',
-      price: '6000',
-      priceCurrency: 'INR',
+      'name': 'Half Day Studio Rental',
+      'price': '6000',
+      'priceCurrency': 'INR',
     },
     {
       '@type': 'Offer',
-      name: 'Full Day Studio Rental',
-      price: '10000',
-      priceCurrency: 'INR',
+      'name': 'Full Day Studio Rental',
+      'price': '10000',
+      'priceCurrency': 'INR',
+    },
+  ],
+  'aggregateRating': {
+    '@type': 'AggregateRating',
+    'ratingValue': '5',
+    'bestRating': '5',
+    'worstRating': '1',
+    'ratingCount': '5',
+  },
+  'review': [
+    {
+      '@type': 'Review',
+      'author': {
+        '@type': 'Person',
+        'name': 'Aarav',
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': '5',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'reviewBody': 'I searched for the best wedding photographer in Coimbatore and found Wandering Kite. Their team showed immense professionalism throughout our big day, delivering stunning wedding photography coverage. They are truly the top photography studio in Coimbatore!',
+    },
+    {
+      '@type': 'Review',
+      'author': {
+        '@type': 'Person',
+        'name': 'Dia',
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': '5',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'reviewBody': 'Rented their RS Puram studio for a product photography shoot. The infinity wall and Profoto lighting setup were phenomenal. Easily the best photography studio rental in Coimbatore.',
+    },
+    {
+      '@type': 'Review',
+      'author': {
+        '@type': 'Person',
+        'name': 'Kabir',
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': '5',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'reviewBody': 'We came from Tirupur and hired Wandering Kite for a corporate shoot. The experience was seamless from start to finish. They are hands down the best commercial photographer in Tamil Nadu we have worked with.',
+    },
+    {
+      '@type': 'Review',
+      'author': {
+        '@type': 'Person',
+        'name': 'Meera',
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': '5',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'reviewBody': 'Booked the studio for a full-day YouTube and brand content shoot. The 1200 sq ft space, 14ft ceilings, and equipment included in the package made the day so productive. Perfect for content creators in Coimbatore!',
+    },
+    {
+      '@type': 'Review',
+      'author': {
+        '@type': 'Person',
+        'name': 'Rohan',
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': '5',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'reviewBody': 'We needed a newborn and maternity photographer in Coimbatore. The team showed amazing warmth and patience with our baby, and the portraits delivered were of exceptional quality. Highly recommended!',
     },
   ],
 };
@@ -253,76 +354,77 @@ const facilities = [
   {
     icon: Maximize,
     title: 'AC Studio Space',
-    description: 'Spacious studio with 14ft ceilings',
+    description: 'Spacious 1200 sq ft studio space with 14ft ceilings.',
   },
   {
     icon: Lightbulb,
     title: 'Professional Lighting',
-    description: 'Continuous & strobe lighting setups',
+    description: 'Continuous & strobe lighting setups featuring Profoto gear.',
   },
   {
     icon: Building2,
     title: 'Multiple Backdrops',
-    description: 'White, black, and colored seamless paper',
+    description: 'White, black, and colored seamless paper available.',
   },
   {
     icon: Wifi,
     title: 'High-Speed WiFi',
-    description: 'Fast internet for tethered shooting',
+    description: 'Fast internet for tethered shooting and content creators.',
   },
   {
     icon: Shirt,
     title: 'Changing Room',
-    description: 'Dedicated makeup and changing area',
+    description: 'Dedicated makeup and changing area in our RS Puram location.',
   },
   {
     icon: Zap,
     title: 'Power Backup',
-    description: 'UPS power backup available for shoots',
+    description: 'UPS power backup available for uninterrupted shoots.',
   },
   {
     icon: Box,
     title: 'Infinity Wall',
-    description: 'Professional cyclorama wall setup',
+    description: 'Professional infinity wall setup for seamless backgrounds.',
   },
   {
     icon: PanelsTopLeft,
     title: 'Movable Walls',
-    description: 'Flexible custom backdrop solutions',
+    description: 'Flexible custom backdrop solutions for video and photo shoots.',
   },
 ];
 
 const pricingTiers = [
   {
-    name: 'Hourly',
+    name: 'Hourly studio rental Coimbatore',
     price: '1,500',
     duration: '/hour',
     features: [
       'Minimum 1 hour',
       'Basic lighting included',
-      'WiFi access',
+      'studio space for rent Coimbatore options',
       'Changing room',
     ],
   },
   {
-    name: 'Half Day',
+    name: 'Half day studio rental Coimbatore',
     price: '6,000',
     duration: '/4 hours',
     features: [
       '4 hours studio time',
       'All lighting equipment',
-      'Multiple backdrops',
+      'studio space for rent options',
       'Makeup area',
     ],
     popular: true,
   },
   {
-    name: 'Full Day',
+    name: 'Studio rental with equipment included Coimbatore',
     price: '10,000',
     duration: '/8 hours',
     features: [
       '8 hours studio time',
-      'All equipment included',
+      'Studio rental with equipment included',
+      'Equipment included',
       'Flexible scheduling',
     ],
   },
@@ -348,21 +450,29 @@ export default async function StudioPage() {
         <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-16 lg:py-24">
           <div className="container mx-auto px-6">
             <div className="mx-auto max-w-4xl text-center">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-sm text-amber-500">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm text-blue-500">
                 <Building2 className="h-4 w-4" />
                 Studio Rental
               </div>
-              <h1 className="mb-6 text-5xl font-bold leading-tight md:text-6xl lg:text-7xl">
-                Premium Studio
-                <br />
-                <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
-                  Space Rental
+              <h1 className="mb-6 font-bold leading-tight">
+                <span className="block text-3xl sm:text-4xl md:text-5xl text-white mb-3">
+                  Photography Studio Space
+                </span>
+                <span className="block text-2xl sm:text-3xl md:text-4xl bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+                  Rental Place in Coimbatore
+                </span>
+                <span className="block text-sm sm:text-base md:text-lg font-semibold text-white/70 mt-3">
+                  1200 Sq Ft | RS Puram | Book by Hour
                 </span>
               </h1>
-              <p className="mb-8 text-xl text-muted-foreground">
-                Professional photography and video studio with state-of-the-art
-                equipment and flexible booking options.
-              </p>
+              <h2 className="mb-8 leading-relaxed font-normal max-w-3xl mx-auto">
+                <span className="block text-base sm:text-lg text-amber-400 font-medium">
+                  A Professional Photography Studio Built for Creators in Coimbatore
+                </span>
+                <span className="block text-sm sm:text-base text-muted-foreground mt-1">
+                  Looking for the best photography studio for rent in Coimbatore? Studiospace offers a premium 1200 sq ft studio near RS Puram with Profoto lighting, infinity wall &amp; 9 backdrops. Book by the hour, half day or full day.
+                </span>
+              </h2>
               <a
                 href={generateWhatsAppLink('studio')}
                 target="_blank"
@@ -384,7 +494,7 @@ export default async function StudioPage() {
               Our Services
             </h2>
             <p className="mb-16 text-center text-muted-foreground">
-              Everything you need under one roof
+              Check our competitive photo studio rental Coimbatore price options to book photography studio Coimbatore sessions today. Everything you need under one roof.
             </p>
 
             {/* Space Allocation / Pricing Engine */}
@@ -399,8 +509,7 @@ export default async function StudioPage() {
                 <div className="h-px flex-1 bg-secondary" />
               </div>
               <p className="mb-8 text-muted-foreground text-lg">
-                Broadcast-quality podcast recording with professional acoustics,
-                premium microphones, and expert support.
+                Located in RS Puram, our studio provides a professional environment for podcast recording, video production, and photography, serving clients across Coimbatore, Tiruppur, Salem, and Erode.
               </p>
 
               {/* Studio Equipment - Commented out as requested

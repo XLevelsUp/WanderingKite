@@ -95,7 +95,7 @@ export function Footer({ account = 'wanderingkite' }: FooterProps) {
                 href={siteConfig.links.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-border hover:text-foreground"
+                className="flex h-12 w-12 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-border hover:text-foreground"
                 aria-label="Instagram"
               >
                 <Instagram className="h-5 w-5" />
@@ -104,7 +104,7 @@ export function Footer({ account = 'wanderingkite' }: FooterProps) {
                 href={siteConfig.links.youtube}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-border hover:text-foreground"
+                className="flex h-12 w-12 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-border hover:text-foreground"
                 aria-label="YouTube"
               >
                 <Youtube className="h-5 w-5" />
@@ -113,7 +113,7 @@ export function Footer({ account = 'wanderingkite' }: FooterProps) {
                 href={siteConfig.links.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-border hover:text-foreground"
+                className="flex h-12 w-12 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-border hover:text-foreground"
                 aria-label="LinkedIn"
               >
                 <Linkedin className="h-5 w-5" />
@@ -129,7 +129,7 @@ export function Footer({ account = 'wanderingkite' }: FooterProps) {
                 <li key={service.name}>
                   <Link
                     href={service.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground inline-block py-1"
                   >
                     {service.name}
                   </Link>
@@ -199,7 +199,7 @@ export function Footer({ account = 'wanderingkite' }: FooterProps) {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground inline-block py-1"
                   >
                     {item.name}
                   </Link>

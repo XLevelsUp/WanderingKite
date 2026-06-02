@@ -10,6 +10,8 @@ import { FadeIn } from '@/components/animations/FadeIn';
 import { StaggerContainer } from '@/components/animations/StaggerContainer';
 import { motion } from 'framer-motion';
 import { TeamSection } from '@/components/sections/TeamSection';
+import { Testimonials } from '@/components/sections/Testimonials';
+import { homepageTestimonials } from '@/lib/service-page-data';
 
 const services = [
   {
@@ -62,13 +64,16 @@ export function HomePageClient() {
           </p>
 
           <h1 className="mb-6 text-5xl font-bold leading-tight sm:text-6xl md:text-7xl lg:text-8xl">
-            Where Vision <br />
-            <span className="text-gradient-hero">Meets Craft</span>
+            Where Vision
+            <br />
+            <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+              Meets Craft
+            </span>
           </h1>
 
-          <p className="mx-auto mb-8 max-w-2xl text-lg text-foreground/60 md:text-xl">
+          <h2 className="mx-auto mb-8 max-w-3xl text-lg text-foreground/60 md:text-xl leading-relaxed font-normal">
             Photography · Equipment Rentals · Studio Spaces · Podcast Production
-          </p>
+          </h2>
 
           <motion.div
             initial={{ opacity: 0 }}
@@ -141,6 +146,11 @@ export function HomePageClient() {
       {/* ── Trust Section ───────────────────────────────── */}
       <FadeIn>
         <TrustSection />
+      </FadeIn>
+
+      {/* ── Testimonials ────────────────────────────────── */}
+      <FadeIn>
+        <Testimonials testimonials={homepageTestimonials} accentColor="amber" />
       </FadeIn>
 
       {/* ── FAQ ─────────────────────────────────────────── */}

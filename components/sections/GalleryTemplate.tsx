@@ -143,8 +143,10 @@ export function GalleryTemplate({
           {heroImage ? (
             <Image
               src={heroImage}
-              alt={category.title}
+              alt={`${category.title} photography services in RS Puram Coimbatore - Wandering Kite`}
               fill
+              priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 100vw"
               className="object-cover"
             />
           ) : (
@@ -196,7 +198,7 @@ export function GalleryTemplate({
                 >
                   <img
                     src={img.url}
-                    alt={img.alt_text || 'Gallery Image'}
+                    alt={img.alt_text || `${category.title} photography in Coimbatore - Wandering Kite`}
                     className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"
                   />

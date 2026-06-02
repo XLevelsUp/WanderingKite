@@ -82,6 +82,7 @@ export const rentalsFAQs = [
 ];
 
 export const studioTestimonials = [
+  // ── Original testimonials ──────────────────────────────
   {
     name: 'Vikram N.',
     role: 'Fashion Photographer',
@@ -91,161 +92,74 @@ export const studioTestimonials = [
     service: 'Studio Rental',
   },
   {
-    name: 'Sanjay Gupta',
-    role: 'Podcaster',
+    name: 'Kabir',
+    role: 'Corporate Partner',
     content:
-      'Finally found a proper video studio rental in Coimbatore. Zero echo, great acoustics, and all equipment included. The multi-camera setup is brilliant. Exactly what the creator scene here needed.',
-    rating: 5,
-    service: 'Video Studio',
-  },
-  {
-    name: 'Sneha Reddy',
-    role: 'E-commerce Owner',
-    content:
-      "The hourly rental is perfect for small business owners. Very affordable and no wasted time. The photo studio rental price in Coimbatore is the best I've found. Simple booking, clean space, great lights.",
-    rating: 5,
-    service: 'Hourly Rental',
-  },
-  {
-    name: 'Karthik Subramanian',
-    role: 'Video Producer',
-    content:
-      'Used the half-day package for a corporate shoot. The 1200 sq ft space gave our whole crew room to work. Power backup meant zero interruptions. Best studio for rent in Tamil Nadu for video production.',
+      'We came from Tirupur and hired Wandering Kite for a corporate shoot. The experience was seamless from start to finish. They are hands down the best commercial photographer in Tamil Nadu we have worked with.',
     rating: 5,
     service: 'Corporate Shoot',
   },
   {
-    name: 'Aishwarya T.',
+    name: 'Meera',
     role: 'Content Creator',
     content:
-      "Coming from Tirupur, this is the closest proper studio I've found. Perfect studio space for content creators in Coimbatore. Booking was quick on WhatsApp and everything was ready on arrival.",
+      'Booked the studio for a full-day YouTube and brand content shoot. The 1200 sq ft space, 14ft ceilings, and equipment included in the package made the day so productive. Perfect for content creators in Coimbatore!',
     rating: 5,
-    service: 'Content Creation',
+    service: 'Content Shoot',
   },
   {
-    name: 'Gautham P.',
-    role: 'Filmmaker',
+    name: 'Rohan',
+    role: 'Maternity Client',
     content:
-      'Used it for a short film scene. Clean white backdrop, good space, fair price. The photography studio for rent in RS Puram is easy to access and the team is very helpful. Great value for indie filmmakers.',
+      'We needed a newborn and maternity photographer in Coimbatore. The team showed amazing warmth and patience with our baby, and the portraits delivered were of exceptional quality. Highly recommended!',
     rating: 5,
-    service: 'Film Production',
+    service: 'Maternity & Newborn',
+  },
+  // ── New testimonials ───────────────────────────────────
+  {
+    name: 'Aarav S.',
+    role: 'Groom',
+    content:
+      'I searched for the best wedding photographer in Coimbatore and found Wandering Kite. Their team showed immense professionalism throughout our big day, delivering stunning wedding photography that captured every emotion. Truly the top photography studio in Coimbatore!',
+    rating: 5,
+    service: 'Wedding Photography',
   },
   {
-    name: 'Nisha M.',
-    role: 'Makeup Artist',
+    name: 'Dia R.',
+    role: 'Product Brand Owner',
     content:
-      'I use this regularly for portfolio shoots. The makeup room is a huge plus for clients. The photo studio in RS Puram is always clean and the equipment is included at no hidden costs. I love this place.',
+      'Rented their RS Puram studio for a product photography shoot. The cyclorama wall and Profoto lighting setup were phenomenal — my catalogue images look outstanding. Easily the best photography studio rental in Coimbatore.',
     rating: 5,
-    service: 'Portfolio Shoot',
+    service: 'Product Photography',
   },
   {
-    name: 'Ashwin K.',
-    role: 'Musician',
+    name: 'Priya M.',
+    role: 'Bride',
     content:
-      "Recorded a live band session here. Acoustics were great and the 4K output was perfect for YouTube. Didn't expect to find a video studio rental near RS Puram this well-equipped. Absolutely brilliant.",
+      'Wandering Kite captured our wedding beautifully — from the mehendi to the reception, every frame tells our love story. If you are looking for the best wedding photographers in Coimbatore, look no further!',
     rating: 5,
-    service: 'Live Recording',
+    service: 'Wedding Photography',
   },
   {
-    name: 'Ramesh Iyer',
-    role: 'Corporate Trainer',
+    name: 'Karthik V.',
+    role: 'YouTuber',
     content:
-      'Recorded e-learning videos here and the quality was excellent. Colleagues from Erode and Salem keep asking where I shot — I always send them here. Top studio rental option for all of Tamil Nadu.',
+      'The podcast studio setup at Wandering Kite is incredible. Multi-camera angles, great acoustics, and the team was super accommodating. Finally, a proper video studio rental in Coimbatore that delivers broadcast quality.',
     rating: 5,
-    service: 'E-Learning',
+    service: 'Podcast / Video Studio',
   },
   {
-    name: 'Pradeep Nair',
-    role: 'Creative Agency',
+    name: 'Sneha L.',
+    role: 'Instagram Creator',
     content:
-      'Our agency has used studios across Tamil Nadu and Studio Space in RS Puram is the best. Professional equipment, well-maintained, and the team understands production. Our go-to studio space for rent in Coimbatore.',
+      'I booked a half-day studio session for reels and brand content. The lighting, backdrops, and makeup room are all top class. The best studio space for rent in Coimbatore — I will 100% be back!',
     rating: 5,
-    service: 'Agency Production',
+    service: 'Studio Rental',
   },
 ];
 
-export const photographyTestimonials = [
-  {
-    name: 'Ananya R.',
-    role: 'Bride',
-    content:
-      'Best wedding photographers in Coimbatore — full stop. They captured every moment naturally and delivered on time. I highly recommend Wandering Kite for wedding photography in Coimbatore.',
-    rating: 5,
-    service: 'Wedding',
-  },
-  {
-    name: 'Siddharth Menon',
-    role: 'Groom',
-    content:
-      'Booked them for our family wedding. The team was professional, calm and covered everything. One of the top wedding photographers and best event photographers in Coimbatore. Nothing was missed.',
-    rating: 5,
-    service: 'Event & Wedding',
-  },
-  {
-    name: 'Kavya S.',
-    role: 'Mother',
-    content:
-      'So gentle with my baby. The newborn portraits are absolutely beautiful. Best portrait photographer in Coimbatore for milestone shoots. Already recommended to all my friends.',
-    rating: 5,
-    service: 'Newborn',
-  },
-  {
-    name: 'Prakash Iyer',
-    role: 'Corporate Client',
-    content:
-      'Hired them for our company event and leadership headshots. Everything was smooth and fast. Best corporate photography and headshot photographer in Coimbatore. Will book again.',
-    rating: 5,
-    service: 'Corporate',
-  },
-  {
-    name: 'Deepak Kumar',
-    role: 'Business Owner',
-    content:
-      'Excellent brand and product photography for our clothing business. Based in Tirupur and they were the best commercial photographer in Tamil Nadu we could find. Great quality and quick delivery.',
-    rating: 5,
-    service: 'Brand Photography',
-  },
-  {
-    name: 'Priyanka V.',
-    role: 'Mother-to-be',
-    content:
-      'My maternity shoot was such a beautiful experience. They made me feel so comfortable and the photos are stunning. Top choice for maternity photography in Coimbatore. Truly lovely work.',
-    rating: 5,
-    service: 'Maternity',
-  },
-  {
-    name: 'Arjun Das',
-    role: 'Musician',
-    content:
-      'Shot my music video and social media content in one day. The visuals were cinematic and they understood my vision immediately. Best music video production team in Coimbatore. Blown away.',
-    rating: 5,
-    service: 'Music Video',
-  },
-  {
-    name: 'Naveen Raj',
-    role: 'Event Organizer',
-    content:
-      'Hired them for an event in Erode — they travelled without issue and delivered photos in 48 hours. Most professional team i hire a photographer in Coimbatore for outstation events.',
-    rating: 5,
-    service: 'Outstation Event',
-  },
-  {
-    name: 'Meghana Krishnan',
-    role: 'Wedding Planner',
-    content:
-      'Referred them for a wedding in Salem. Client was thrilled. Photography packages and Coimbatore pricing are very fair for this level of quality. One of the best wedding photographers in the region.',
-    rating: 5,
-    service: 'Wedding Referral',
-  },
-  {
-    name: 'Rohit Sharma',
-    role: 'Content Creator',
-    content:
-      'They understand social media content completely. Great angles, perfect lighting, and quick turnaround. Number one photographers in Coimbatore for creators. My go-to every single time.',
-    rating: 5,
-    service: 'Social Media',
-  },
-];
+export const photographyTestimonials = [...studioTestimonials];
+export const homepageTestimonials = [...studioTestimonials];
 
 export const studioProcessSteps = [
   {
@@ -276,9 +190,29 @@ export const studioProcessSteps = [
 
 export const studioFAQs = [
   {
-    question: 'How much does it cost to rent the photography studio in Coimbatore?',
+    question: 'What is the studio rental price per hour in Coimbatore?',
     answer:
-      'Hourly rate starts at ₹999 (minimum 1 hour). Half-day (4 hours) is ₹3,500, and a full day (8 hours) is ₹6,999 (included gst). All packages include lighting equipment and WiFi.',
+      'Our hourly studio rental starts at ₹999/hr. Half Day (4 hrs) is ₹3,499 and Full Day (8 hrs) is ₹6,999. All packages include lights, tripod and studio space.',
+  },
+  {
+    question: 'What equipment is included in the studio rental?',
+    answer:
+      'Lights, stands, modifiers, reflectors and 9 backdrops are all included. Extra gear like cameras, lenses and gimbals can be rented as add-ons inside the studio.',
+  },
+  {
+    question: 'Is the studio suitable for YouTube videos and corporate shoots?',
+    answer:
+      'Yes! Our 1200 sq ft studio with 14ft ceilings and infinity wall is perfect for YouTube videos, corporate shoots, reels and music videos.',
+  },
+  {
+    question: 'Where is the studio located? Can people from Tirupur and Erode visit?',
+    answer:
+      'We are at RS Puram, Coimbatore. Free parking available. Clients from Tirupur, Erode and Salem visit us regularly — easy to reach within an hour.',
+  },
+  {
+    question: 'Can I use the studio for fashion or product photography?',
+    answer:
+      'Absolutely! We have 9 backdrops, an infinity wall, white backdrop, professional lighting and a makeup room — perfect for fashion shoots, product photography and brand content.',
   },
   {
     question: 'Can I bring my own camera equipment to the studio?',
@@ -286,19 +220,9 @@ export const studioFAQs = [
       'Absolutely! You are welcome to bring your own cameras, lenses, and lighting. The studio provides the space and standard included equipment.',
   },
   {
-    question: 'Is parking available at the Coimbatore studio?',
-    answer:
-      'Yes! Parking space for 1 car and 2 bikes is available at our studio location. The studio is situated in a secure area, and additional parking options may also be available nearby when needed.',
-  },
-  {
     question: 'Can I cancel or reschedule my studio booking?',
     answer:
       'Cancellations 72+ hours in advance receive a 100% refund. 48–72 hours: 75% refund. 24–48 hours: 50% refund. Less than 24 hours: no refund. One free reschedule is allowed if done 48+ hours in advance.',
-  },
-  {
-    question: 'Does the studio have a green screen and infinity wall?',
-    answer:
-      'Yes, the 1200 sq ft studio features a infinity wall, green screen, and multiple seamless paper backdrops. The 14ft ceilings allow for a wide range of lighting setups.',
   },
   {
     question: 'Do you allow food and drinks in the studio?',

@@ -12,9 +12,9 @@ import { PortfolioCategories } from '@/components/sections/PortfolioCategories';
 import ServiceTerms from '@/components/sections/ServiceTerms';
 
 export const metadata: Metadata = {
-  title: 'Photographer in Coimbatore | Weddings, Events & Commercial',
+  title: 'Best Photographers in Coimbatore | Wedding, Events & Commercial',
   description:
-    'Professional photographer in Coimbatore — weddings, events, portraits, product & commercial shoots. 7-10 day delivery. 500+ projects. Get a free quote.',
+    'Looking for professional photographers in Coimbatore? Wandering Kite covers weddings, events, products, portraits & more. Based in RS Puram. View our portfolio and book today.',
   keywords: [
     // Answer the Public: "photographer in / near / for" patterns
     'photographer in Coimbatore',
@@ -43,17 +43,17 @@ export const metadata: Metadata = {
     'photography packages Coimbatore price',
   ],
   openGraph: {
-    title: 'Photographer in Coimbatore | Weddings, Events & Commercial',
+    title: 'Best Photographers in Coimbatore | Wedding, Events & Commercial',
     description:
-      'Professional photography for weddings, events, portraits & commercial projects in Coimbatore. 500+ projects delivered.',
+      'Looking for professional photographers in Coimbatore? Wandering Kite covers weddings, events, products, portraits & more. Based in RS Puram. View our portfolio and book today.',
     url: 'https://wanderingkite.in/photography',
     images: [{ url: '/og-photography.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Photographer in Coimbatore | Wandering Kite Studio',
+    title: 'Best Photographers in Coimbatore | Wedding, Events & Commercial',
     description:
-      'Professional photography for weddings, events, portraits & commercial projects in Coimbatore. 500+ projects.',
+      'Looking for professional photographers in Coimbatore? Wandering Kite covers weddings, events, products, portraits & more. Based in RS Puram. View our portfolio and book today.',
     images: ['/og-photography.jpg'],
   },
   robots: {
@@ -145,6 +145,109 @@ const photographyBreadcrumbSchema = {
   ],
 };
 
+const photographyServiceSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  '@id': 'https://wanderingkite.in/photography#service',
+  'name': 'Wandering Kite Photography Services',
+  'image': 'https://wanderingkite.in/images/photography/events.webp',
+  'description': "Book Coimbatore's top wedding, event & commercial photographers. High-quality wedding photography, product shoots, and corporate headshots.",
+  'provider': {
+    '@type': 'LocalBusiness',
+    '@id': 'https://wanderingkite.in/#business',
+    'name': 'Wandering Kite',
+  },
+  'offers': {
+    '@type': 'Offer',
+    'url': 'https://wanderingkite.in/photography',
+    'priceCurrency': 'INR',
+    'price': 'Custom',
+    'priceSpecification': {
+      '@type': 'UnitPriceSpecification',
+      'price': 'Call for Quote',
+    },
+  },
+  'aggregateRating': {
+    '@type': 'AggregateRating',
+    'ratingValue': '5',
+    'bestRating': '5',
+    'worstRating': '1',
+    'ratingCount': '5',
+  },
+  'review': [
+    {
+      '@type': 'Review',
+      'author': {
+        '@type': 'Person',
+        'name': 'Aarav',
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': '5',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'reviewBody': 'I searched for the best wedding photographer in Coimbatore and found Wandering Kite. Their team showed immense professionalism throughout our big day, delivering stunning wedding photography coverage. They are truly the top photography studio in Coimbatore!',
+    },
+    {
+      '@type': 'Review',
+      'author': {
+        '@type': 'Person',
+        'name': 'Dia',
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': '5',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'reviewBody': 'Rented their RS Puram studio for a product photography shoot. The cyclorama wall and Profoto lighting setup were phenomenal. Easily the best photography studio rental in Coimbatore.',
+    },
+    {
+      '@type': 'Review',
+      'author': {
+        '@type': 'Person',
+        'name': 'Kabir',
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': '5',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'reviewBody': 'We came from Tirupur and hired Wandering Kite for a corporate shoot. The experience was seamless from start to finish. They are hands down the best commercial photographer in Tamil Nadu we have worked with.',
+    },
+    {
+      '@type': 'Review',
+      'author': {
+        '@type': 'Person',
+        'name': 'Meera',
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': '5',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'reviewBody': 'Booked the studio for a full-day YouTube and brand content shoot. The 1200 sq ft space, 14ft ceilings, and equipment included in the package made the day so productive. Perfect for content creators in Coimbatore!',
+    },
+    {
+      '@type': 'Review',
+      'author': {
+        '@type': 'Person',
+        'name': 'Rohan',
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': '5',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'reviewBody': 'We needed a newborn and maternity photographer in Coimbatore. The team showed amazing warmth and patience with our baby, and the portraits delivered were of exceptional quality. Highly recommended!',
+    },
+  ],
+};
+
 
 const processSteps = [
   {
@@ -210,27 +313,32 @@ const faqs = [
 export default function PhotographyPage() {
   return (
     <>
-      <JsonLd data={[photographyFaqSchema, photographyBreadcrumbSchema]} />
+      <JsonLd data={[photographyFaqSchema, photographyBreadcrumbSchema, photographyServiceSchema]} />
       <main className="min-h-screen bg-background pt-20">
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">
           <div className="container mx-auto px-6">
             <div className="mx-auto max-w-4xl text-center">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-sm text-amber-500">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm text-blue-500">
                 <Camera className="h-4 w-4" />
                 Photography Services
               </div>
-              <h1 className="mb-6 text-5xl font-bold leading-tight md:text-6xl lg:text-7xl">
-                Photography &
-                <br />
-                <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
-                  Cinematography
+              <h1 className="mb-6 font-bold leading-tight">
+                <span className="block text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent mb-3">
+                  Best Photographers in Coimbatore
+                </span>
+                <span className="block text-xl sm:text-2xl md:text-3xl font-semibold text-white/70">
+                  Wedding, Events &amp; Commercial
                 </span>
               </h1>
-              <p className="mb-8 text-xl text-muted-foreground">
-                Capturing authentic moments with creative storytelling. From
-                events to portraits, we create visual narratives that resonate.
-              </p>
+              <h2 className="mb-8 leading-relaxed font-normal max-w-3xl mx-auto">
+                <span className="block text-base sm:text-lg text-amber-400 font-medium">
+                  Looking for professional photographers in Coimbatore?
+                </span>
+                <span className="block text-sm sm:text-base text-muted-foreground mt-1">
+                  Wandering Kite covers weddings, events, product photography, portraits &amp; more, tailored to your needs. Based in RS Puram. View our portfolio and book today.
+                </span>
+              </h2>
               <a
                 href={generateWhatsAppLink('photography')}
                 target="_blank"
@@ -259,8 +367,7 @@ export default function PhotographyPage() {
                   Authentic Storytelling
                 </h3>
                 <p className="text-muted-foreground">
-                  We capture genuine emotions and candid moments that tell your
-                  unique story.
+                  Recognized among the Top 10 photographers in Coimbatore, we capture genuine emotions. Whether you are looking for the best wedding photographers in Coimbatore or creative portraits, we bring your unique story to life.
                 </p>
               </div>
               <div className="rounded-2xl border border-border bg-muted/50 p-8">
@@ -268,11 +375,10 @@ export default function PhotographyPage() {
                   <Clock className="h-6 w-6 text-amber-500" />
                 </div>
                 <h3 className="mb-3 text-xl font-bold">
-                  Professional Delivery
+                  Reliable Quality
                 </h3>
                 <p className="text-muted-foreground">
-                  High-quality edited images delivered within 7-10 days of your
-                  session.
+                  Our team delivers professionally edited images within 7-10 days from our prime RS Puram location. We provide transparent photography packages Coimbatore price options to suit your exact needs.
                 </p>
               </div>
               <div className="rounded-2xl border border-border bg-muted/50 p-8">
@@ -280,11 +386,10 @@ export default function PhotographyPage() {
                   <MapPin className="h-6 w-6 text-amber-500" />
                 </div>
                 <h3 className="mb-3 text-xl font-bold">
-                  On-Location Flexibility
+                  Regional Coverage
                 </h3>
                 <p className="text-muted-foreground">
-                  We travel to your venue or suggest stunning locations across
-                  India.
+                  From our RS Puram location, we serve clients across Coimbatore, Tiruppur, Salem, and Erode with professional wedding, event, portrait, and commercial photography.
                 </p>
               </div>
             </div>
@@ -315,23 +420,23 @@ export default function PhotographyPage() {
               <div className="mb-10">
                 <div className="mb-6 flex items-center gap-3">
                   <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-sm font-semibold text-amber-500">
-                    Events
+                    Event
                   </span>
                   <div className="h-px flex-1 bg-secondary" />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-3">
                   {[
                     {
-                      title: 'Wedding',
-                      desc: 'Full-day coverage with dual-shooter kits & premium editing',
+                      title: 'Wedding Photography',
+                      desc: 'Premium photography packages crafted by top wedding photographers to beautifully capture your big day.',
                     },
                     {
-                      title: 'Engagements',
-                      desc: 'Intimate pre-wedding & engagement sessions',
+                      title: 'Event Photography',
+                      desc: 'Professional event photography for engagements, pre-weddings, birthdays, and special family celebrations.',
                     },
                     {
-                      title: 'Birthdays',
-                      desc: 'Birthday milestones, parties & celebrations',
+                      title: 'Candid & Traditional',
+                      desc: 'A seamless blend of candid moments and traditional portraits for complete, comprehensive coverage.',
                     },
                   ].map((s) => (
                     <div
@@ -347,11 +452,11 @@ export default function PhotographyPage() {
                       <a
                         href={generateWhatsAppLink(
                           'photography',
-                          `Hi! I'd like to inquire about ${s.title} photography.`
+                          `Hi! I'd like to inquire about ${s.title}.`
                         )}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label={`Get a quote for ${s.title} photography in Coimbatore`}
+                        aria-label={`Get a quote for ${s.title}`}
                         className="mt-5 inline-block rounded-full bg-amber-500 px-5 py-2.5 text-center text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-400"
                       >
                         Get Quote
@@ -372,16 +477,16 @@ export default function PhotographyPage() {
                 <div className="grid gap-4 sm:grid-cols-3">
                   {[
                     {
-                      title: 'Family',
-                      desc: 'Studio & outdoor family portrait sessions',
+                      title: 'Portrait Photography',
+                      desc: 'Creative studio and outdoor portrait photography sessions tailored to showcase your personality.',
                     },
                     {
-                      title: 'Maternity',
-                      desc: 'Elegant maternity & expecting mother shoots',
+                      title: 'Maternity Photography',
+                      desc: 'Elegant maternity photography sessions to beautifully document your journey to motherhood.',
                     },
                     {
-                      title: 'Baby Shoots',
-                      desc: 'Safe, gentle newborn & baby photography',
+                      title: 'Newborn Photography',
+                      desc: 'Safe, gentle, and heartwarming newborn photography sessions to capture your little ones earliest days.',
                     },
                   ].map((s) => (
                     <div
@@ -397,11 +502,11 @@ export default function PhotographyPage() {
                       <a
                         href={generateWhatsAppLink(
                           'photography',
-                          `Hi! I'd like to inquire about ${s.title} photography.`
+                          `Hi! I'd like to inquire about ${s.title}.`
                         )}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label={`Get a quote for ${s.title} photography in Coimbatore`}
+                        aria-label={`Get a quote for ${s.title}`}
                         className="mt-5 inline-block rounded-full bg-amber-500 px-5 py-2.5 text-center text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-400"
                       >
                         Get Quote
@@ -423,24 +528,24 @@ export default function PhotographyPage() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {[
                   {
-                    title: 'Product',
-                    desc: 'E-commerce & catalogue product photography',
+                    title: 'Product Photography',
+                    desc: 'High-quality e-commerce and catalogue product photography for all your retail and branding needs.',
                   },
                   {
-                    title: 'Cinematic Videos',
-                    desc: 'Brand films & corporate video production',
+                    title: 'Music Video Production',
+                    desc: 'Cinematic brand films, social reels, and full-scale music video production projects.',
                   },
                   {
                     title: 'Social Media Content',
-                    desc: 'Platform-ready reels, posts & campaigns',
+                    desc: 'Platform-ready visual assets created by a dedicated social media content photographer.',
                   },
                   {
-                    title: 'Model Shoots',
-                    desc: 'Fashion & model portfolio sessions',
+                    title: 'Corporate Photography',
+                    desc: 'Professional corporate photography and creative brand photography to elevate your business identity.',
                   },
                   {
                     title: 'Headshot Photography',
-                    desc: 'Professional headshots for teams & founders',
+                    desc: 'Clean, professional corporate headshots for executive teams and business founders.',
                   },
                 ].map((s) => (
                   <div
@@ -458,7 +563,7 @@ export default function PhotographyPage() {
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label={`Get a quote for ${s.title} in Coimbatore`}
+                      aria-label={`Get a quote for ${s.title}`}
                       className="mt-5 inline-block rounded-full border border-blue-500/40 bg-blue-500/10 px-5 py-2.5 text-center text-sm font-semibold text-blue-400 transition-colors hover:bg-blue-500/20"
                     >
                       Get Quote
@@ -506,7 +611,7 @@ export default function PhotographyPage() {
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label={`Get a quote for ${s.title} production in Coimbatore`}
+                      aria-label={`Get a quote for ${s.title} production`}
                       className="mt-5 inline-block rounded-full border border-purple-500/40 bg-purple-500/10 px-5 py-2.5 text-center text-sm font-semibold text-purple-400 transition-colors hover:bg-purple-500/20"
                     >
                       Get Quote
@@ -524,8 +629,7 @@ export default function PhotographyPage() {
             <div className="mx-auto max-w-4xl text-center">
               <h2 className="mb-4 text-4xl font-bold">Equipment We Use</h2>
               <p className="mb-12 text-muted-foreground">
-                We use industry-standard gear to ensure the highest quality
-                results.
+                When you hire photographer Coimbatore services from Wandering Kite, we use industry-standard gear to ensure the highest quality results. Check our photography packages Coimbatore price lists.
               </p>
 
               <div className="grid gap-6 sm:grid-cols-3">

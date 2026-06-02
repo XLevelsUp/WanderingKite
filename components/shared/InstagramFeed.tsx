@@ -241,7 +241,9 @@ export function InstagramFeed({ account = 'wanderingkite' }: InstagramFeedProps)
                     loop
                     playsInline
                     className="w-full h-full object-contain bg-black absolute inset-0 z-[1]"
-                  />
+                  >
+                    <track kind="captions" src="data:text/vtt," srcLang="en" label="No captions" />
+                  </video>
                   {/* Centre play overlay for non-autoplaying videos */}
                   {!isFirstVideo && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/35 z-[2] transition-opacity duration-300 group-hover:opacity-0">
@@ -342,7 +344,9 @@ export function InstagramFeed({ account = 'wanderingkite' }: InstagramFeedProps)
                         loop
                         playsInline
                         className="w-full h-full object-contain bg-black absolute inset-0 z-0"
-                      />
+                      >
+                        <track kind="captions" src="data:text/vtt," srcLang="en" label="No captions" />
+                      </video>
                       {!isActive && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/35 z-10">
                           <div className="rounded-full p-3 shadow-md"
@@ -394,18 +398,22 @@ export function InstagramFeed({ account = 'wanderingkite' }: InstagramFeedProps)
         </div>
 
         {/* Carousel Pagination Dots */}
-        <div className="flex gap-2.5 mt-5 items-center justify-center">
+        <div className="flex gap-1 mt-3 items-center justify-center">
           {media.map((_, idx) => (
             <button
               key={idx}
               onClick={() => scrollToSlide(idx)}
-              className={`rounded-full transition-all duration-300 ${
-                activeIndex === idx
-                  ? 'h-2.5 w-6 bg-white/50'
-                  : 'h-2.5 w-2.5 bg-muted-foreground/30 hover:bg-muted-foreground/50'
-              }`}
+              className="h-12 w-12 flex items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label={`Go to Instagram slide ${idx + 1}`}
-            />
+            >
+              <span
+                className={`rounded-full transition-all duration-300 ${
+                  activeIndex === idx
+                    ? 'h-2.5 w-6 bg-white/50'
+                    : 'h-2.5 w-2.5 bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                }`}
+              />
+            </button>
           ))}
         </div>
       </div>

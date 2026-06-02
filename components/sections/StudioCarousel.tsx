@@ -8,15 +8,15 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 
 const CAROUSEL_IMAGES = [
-  { id: 1, src: '/images/studio/placeholder1.webp', alt: 'Studio Full View' },
-  { id: 2, src: '/images/studio/placeholder2.webp', alt: 'Cyclorama Wall' },
-  { id: 3, src: '/images/studio/placeholder3.webp', alt: 'Lighting Setup' },
+  { id: 1, src: '/images/studio/placeholder1.webp', alt: 'Photography studio rental in Coimbatore - 1200 sq ft space' },
+  { id: 2, src: '/images/studio/placeholder2.webp', alt: 'Studio with cyclorama wall Coimbatore for video shoot' },
+  { id: 3, src: '/images/studio/placeholder3.webp', alt: 'Studio with Profoto lighting Coimbatore setup' },
   {
     id: 4,
     src: '/images/studio/placeholder4.webp',
-    alt: 'Makeup & Changing Area',
+    alt: 'Studio space for rent Coimbatore with dedicated makeup room',
   },
-  { id: 5, src: '/images/studio/placeholder5.webp', alt: 'Equipment Room' },
+  { id: 5, src: '/images/studio/placeholder5.webp', alt: 'Studio rental with equipment included Coimbatore' },
 ];
 
 export function StudioCarousel() {

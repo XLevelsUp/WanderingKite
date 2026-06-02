@@ -61,10 +61,10 @@ export function MainNav() {
           rel="noopener noreferrer"
           aria-label="Contact us on WhatsApp"
           className="
-            flex items-center gap-2 rounded-full
+            flex h-11 items-center gap-2 rounded-full
             border border-primary/35
             bg-primary/8
-            px-5 py-2.5 text-sm font-semibold text-primary
+            px-5 text-sm font-semibold text-primary
             transition-all duration-200
             hover:bg-primary/18 hover:border-primary/60
             hover:text-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.20)]

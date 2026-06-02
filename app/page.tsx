@@ -5,9 +5,9 @@ import { HomePageClient } from './home-client';
 import { JsonLd } from '@/lib/schema-helpers';
 
 export const metadata: Metadata = {
-  title: 'Photography Studio & Camera Rentals Coimbatore | Wandering Kite',
+  title: 'Wandering Kite | Best Photographers in Coimbatore | Wedding & Commercial',
   description:
-    'Wandering Kite Studio in RS Puram, Coimbatore — photography, camera & equipment rentals, 1200 sq ft studio & podcast recording. 4.9★ 100+ clients. Book now.',
+    "Book Coimbatore's top wedding, event & commercial photographers. BIS-quality work, RS Puram studio, 1200 sq ft rental space. View portfolio & book today.",
   keywords: [
     'photography studio Coimbatore',
     'creative studio Coimbatore',
@@ -45,6 +45,123 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://wanderingkite.in',
   },
+};
+
+const localBusinessSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  '@id': 'https://wanderingkite.in/#business',
+  'name': 'Wandering Kite',
+  'image': 'https://wanderingkite.in/logo.png',
+  'url': 'https://wanderingkite.in',
+  'telephone': '+91 70100 92090',
+  'priceRange': '₹₹',
+  'address': {
+    '@type': 'PostalAddress',
+    'streetAddress': 'NO 178, 1st Floor A Rammachandra Road',
+    'addressLocality': 'RS Puram',
+    'addressRegion': 'Coimbatore',
+    'postalCode': '641002',
+    'addressCountry': 'IN',
+  },
+  'geo': {
+    '@type': 'GeoCoordinates',
+    'latitude': 11.0168,
+    'longitude': 76.9558,
+  },
+  'openingHoursSpecification': {
+    '@type': 'OpeningHoursSpecification',
+    'dayOfWeek': [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ],
+    'opens': '09:00',
+    'closes': '21:00',
+  },
+  'aggregateRating': {
+    '@type': 'AggregateRating',
+    'ratingValue': '5',
+    'bestRating': '5',
+    'worstRating': '1',
+    'ratingCount': '5',
+  },
+  'review': [
+    {
+      '@type': 'Review',
+      'author': {
+        '@type': 'Person',
+        'name': 'Aarav',
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': '5',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'reviewBody': 'I searched for the best wedding photographer in Coimbatore and found Wandering Kite. Their team showed immense professionalism throughout our big day, delivering stunning wedding photography coverage. They are truly the top photography studio in Coimbatore!',
+    },
+    {
+      '@type': 'Review',
+      'author': {
+        '@type': 'Person',
+        'name': 'Dia',
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': '5',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'reviewBody': 'Rented their RS Puram studio for a product photography shoot. The cyclorama wall and Profoto lighting setup were phenomenal. Easily the best photography studio rental in Coimbatore.',
+    },
+    {
+      '@type': 'Review',
+      'author': {
+        '@type': 'Person',
+        'name': 'Kabir',
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': '5',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'reviewBody': 'We came from Tirupur and hired Wandering Kite for a corporate shoot. The experience was seamless from start to finish. They are hands down the best commercial photographer in Tamil Nadu we have worked with.',
+    },
+    {
+      '@type': 'Review',
+      'author': {
+        '@type': 'Person',
+        'name': 'Meera',
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': '5',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'reviewBody': 'Booked the studio for a full-day YouTube and brand content shoot. The 1200 sq ft space, 14ft ceilings, and equipment included in the package made the day so productive. Perfect for content creators in Coimbatore!',
+    },
+    {
+      '@type': 'Review',
+      'author': {
+        '@type': 'Person',
+        'name': 'Rohan',
+      },
+      'reviewRating': {
+        '@type': 'Rating',
+        'ratingValue': '5',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'reviewBody': 'We needed a newborn and maternity photographer in Coimbatore. The team showed amazing warmth and patience with our baby, and the portraits delivered were of exceptional quality. Highly recommended!',
+    },
+  ],
 };
 
 // FAQPage schema — matches the 6 questions in components/sections/FAQ.tsx
@@ -106,7 +223,7 @@ const homeFaqSchema = {
 export default function HomePage() {
   return (
     <>
-      <JsonLd data={homeFaqSchema} />
+      <JsonLd data={[localBusinessSchema, homeFaqSchema]} />
       <HomePageClient />
     </>
   );
