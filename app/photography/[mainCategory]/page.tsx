@@ -7,9 +7,9 @@ import { Footer } from '@/components/shared/Footer';
 
 const categoryData = {
   events: {
-    title: 'Event Photography',
+    title: 'Professional Event & Wedding Photography',
     description:
-      'Professional event photography in Coimbatore. We capture your special moments.',
+      'Recognized among the top wedding photographers in Coimbatore, we provide professional event photography to capture your special moments.',
     subCategories: [
       {
         id: 'wedding',
@@ -44,8 +44,8 @@ const categoryData = {
     ],
   },
   portraits: {
-    title: 'Portrait Sessions',
-    description: 'Elegant portrait photography tailored for you.',
+    title: 'Portrait Photography',
+    description: 'Elegant maternity photography, gentle newborn photography, and family portrait sessions tailored for you.',
     subCategories: [
       {
         id: 'family',
@@ -68,8 +68,8 @@ const categoryData = {
     ],
   },
   corporate: {
-    title: 'Corporate & Brand',
-    description: 'High-quality corporate and brand photography services.',
+    title: 'Corporate & Brand Photography',
+    description: 'High-quality corporate photography, product photography, and dynamic brand photography to elevate your business.',
     subCategories: [
       {
         id: 'product',
@@ -104,8 +104,8 @@ const categoryData = {
     ],
   },
   commercial: {
-    title: 'Commercial Productions',
-    description: 'High-concept commercial photography and video productions.',
+    title: 'Commercial Photography & Video',
+    description: 'High-concept commercial photographer Tamil Nadu services, delivering top-tier ads and music video production.',
     subCategories: [
       {
         id: 'ads',
@@ -202,7 +202,7 @@ export default async function MainCategoryPage({ params }: Props) {
 
       <section className="container mx-auto px-6 py-12">
         <div className="mb-12 text-center">
-          <h1 className="mb-4 text-4xl font-bold md:text-5xl">
+          <h1 className="mb-4 text-3xl font-bold md:text-4xl bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
             {category.title}
           </h1>
           <p className="text-lg text-muted-foreground">
@@ -212,7 +212,7 @@ export default async function MainCategoryPage({ params }: Props) {
 
         {/* Masonry/Bento Grid */}
         <div className="grid auto-rows-[250px] grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {category.subCategories.map((sub) => (
+          {category.subCategories.map((sub, idx) => (
             <Link
               key={sub.id}
               href={`/photography/${categoryId}/${sub.id}`}
@@ -223,6 +223,8 @@ export default async function MainCategoryPage({ params }: Props) {
                 src={`/images/photography/${categoryId}/${sub.id}.webp`}
                 alt={sub.title}
                 fill
+                priority={idx < 2}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
 

@@ -56,8 +56,19 @@ export function PortfolioCategories() {
           >
             <Image
               src={`/images/photography/${item.id}.webp`}
-              alt={item.title}
+              alt={
+                item.id === 'events'
+                  ? 'Best wedding photography in Coimbatore - Wandering Kite'
+                  : item.id === 'portraits'
+                  ? 'Portrait photographer and maternity shoot in RS Puram Coimbatore'
+                  : item.id === 'corporate'
+                  ? 'Product photography and corporate headshots in Coimbatore'
+                  : item.id === 'commercial'
+                  ? 'Commercial photographer and music video production in Tamil Nadu'
+                  : 'Professional photographer in Coimbatore'
+              }
               fill
+              priority={index < 2}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className={`object-cover transition-transform duration-700 group-hover:scale-105 ${
                 item.id === 'commercial' ? 'object-top' : 'object-center'

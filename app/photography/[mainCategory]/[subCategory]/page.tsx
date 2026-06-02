@@ -120,6 +120,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!category || !sub) {
     return {
       title: 'Category Not Found | Wandering Kite Studio',
+      description: 'The photography category you are looking for does not exist.',
     };
   }
 

@@ -60,9 +60,12 @@ export function FAQ() {
             <FadeIn key={index} delay={index * 0.1}>
               <div className="mb-4 overflow-hidden rounded-xl border border-border bg-muted/50">
                 <button
+                  id={`faq-button-${index}`}
                   onClick={() =>
                     setOpenIndex(openIndex === index ? null : index)
                   }
+                  aria-expanded={openIndex === index}
+                  aria-controls={`faq-content-${index}`}
                   className="flex w-full items-center justify-between p-6 text-left transition-colors hover:bg-secondary/50"
                 >
                   <span className="pr-8 font-semibold text-foreground">
@@ -75,6 +78,9 @@ export function FAQ() {
                 </button>
 
                 <div
+                  id={`faq-content-${index}`}
+                  role="region"
+                  aria-labelledby={`faq-button-${index}`}
                   className={`overflow-hidden transition-all duration-300 ${openIndex === index ? 'max-h-96' : 'max-h-0'
                     }`}
                 >
