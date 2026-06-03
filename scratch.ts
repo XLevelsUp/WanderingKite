@@ -98,6 +98,7 @@ async function runTests() {
 
   const payoutFull = calculatePayout({
     baseSalary: 30000,
+    month: 5,
     workingDays: 30,
     presentDays: resFull.presentDays,
     lateDays: resFull.lateDays,
@@ -127,6 +128,7 @@ async function runTests() {
 
   const payoutAbsent = calculatePayout({
     baseSalary: 30000,
+    month: 5,
     workingDays: 30,
     presentDays: resAbsent.presentDays,
     lateDays: resAbsent.lateDays,
@@ -156,6 +158,7 @@ async function runTests() {
 
   const payoutHalf = calculatePayout({
     baseSalary: 30000,
+    month: 5,
     workingDays: 30,
     presentDays: resHalf.presentDays,
     lateDays: resHalf.lateDays,
@@ -180,6 +183,7 @@ async function runTests() {
 
   const payoutMissing = calculatePayout({
     baseSalary: 30000,
+    month: 5,
     workingDays: 30,
     presentDays: resMissing.presentDays,
     lateDays: resMissing.lateDays,
@@ -205,6 +209,7 @@ async function runTests() {
   // netPayout = 29500 (basePay) + 1500 (overtime) - 60 (late) - 440 (other) = 30500.
   const payoutComplex = calculatePayout({
     baseSalary: 30000,
+    month: 5,
     workingDays: 30,
     presentDays: 29.5,
     lateDays: 2,

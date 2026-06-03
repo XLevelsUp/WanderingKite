@@ -76,6 +76,16 @@ export function GeneratePayrollForm() {
             min={2020}
             max={2050}
             value={isNaN(year) ? '' : year}
+            onFocus={() => {
+              if (year === 0) {
+                setYear(NaN);
+              }
+            }}
+            onBlur={(e) => {
+              if (e.target.value === '' || isNaN(parseInt(e.target.value))) {
+                setYear(0);
+              }
+            }}
             onChange={(e) => setYear(parseInt(e.target.value) || 0)}
             className={inputClass}
           />

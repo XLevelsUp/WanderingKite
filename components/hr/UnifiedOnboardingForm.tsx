@@ -107,6 +107,13 @@ export function UnifiedOnboardingForm({ branches, managers }: UnifiedOnboardingF
       upiId: '',
       avatarUrl: '',
       notes: '',
+      employeeNumber: '',
+      department: '',
+      pfEnrolled: false,
+      pfContinued: false,
+      ptExempt: false,
+      tdsExempt: false,
+      exemptionReason: '',
     },
   });
 
@@ -404,6 +411,18 @@ export function UnifiedOnboardingForm({ branches, managers }: UnifiedOnboardingF
               </div>
 
               <div>
+                <FieldLabel>Employee Number</FieldLabel>
+                <input {...register('employeeNumber')} className={inputClass} placeholder='e.g. EMP-001' />
+                <FieldError message={errors.employeeNumber?.message} />
+              </div>
+
+              <div>
+                <FieldLabel>Department</FieldLabel>
+                <input {...register('department')} className={inputClass} placeholder='e.g. Design' />
+                <FieldError message={errors.department?.message} />
+              </div>
+
+              <div>
                 <FieldLabel required>Employment Type</FieldLabel>
                 <select {...register('employmentType')} className={selectClass}>
                   <option value='FULL_TIME'>Full-Time</option>
@@ -427,6 +446,17 @@ export function UnifiedOnboardingForm({ branches, managers }: UnifiedOnboardingF
                   min={0}
                   step={100}
                   {...register('baseSalary', { valueAsNumber: true })}
+                  onFocus={(e) => {
+                    if (e.target.value === '0') {
+                      e.target.value = '';
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      e.target.value = '0';
+                      e.target.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                  }}
                   placeholder='e.g. 25000'
                   className={inputClass}
                 />
@@ -440,10 +470,51 @@ export function UnifiedOnboardingForm({ branches, managers }: UnifiedOnboardingF
                   min={0}
                   step={100}
                   {...register('incentive', { valueAsNumber: true })}
+                  onFocus={(e) => {
+                    if (e.target.value === '0') {
+                      e.target.value = '';
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      e.target.value = '0';
+                      e.target.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                  }}
                   placeholder='e.g. 2000'
                   className={inputClass}
                 />
                 <FieldError message={errors.incentive?.message} />
+              </div>
+
+              <div className='sm:col-span-2 pt-4 border-t border-primary/12'>
+                <h3 className="text-sm font-bold text-primary uppercase tracking-widest mb-4">Statutory Compliance</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="flex items-center gap-3">
+                    <input type="checkbox" id="pfEnrolled" {...register('pfEnrolled')} className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50" />
+                    <label htmlFor="pfEnrolled" className="text-sm font-semibold text-foreground/80">Enrolled in PF</label>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <input type="checkbox" id="pfContinued" {...register('pfContinued')} className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50" />
+                    <label htmlFor="pfContinued" className="text-sm font-semibold text-foreground/80">PF Continued {'>'} 15k</label>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <input type="checkbox" id="ptExempt" {...register('ptExempt')} className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50" />
+                    <label htmlFor="ptExempt" className="text-sm font-semibold text-foreground/80">Exempt from PT</label>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <input type="checkbox" id="tdsExempt" {...register('tdsExempt')} className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50" />
+                    <label htmlFor="tdsExempt" className="text-sm font-semibold text-foreground/80">Exempt from TDS</label>
+                  </div>
+
+                  <div className='sm:col-span-2'>
+                    <FieldLabel>Exemption Reason</FieldLabel>
+                    <input {...register('exemptionReason')} className={inputClass} placeholder='Required if exempt...' />
+                  </div>
+                </div>
               </div>
 
               <div className='sm:col-span-2'>

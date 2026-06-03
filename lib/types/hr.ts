@@ -31,6 +31,15 @@ export interface EmployeeContractRow {
   deactivatedAt: string | null;
   createdAt: string;
   updatedAt: string;
+
+  // Statutory Compliance & Config
+  employeeNumber: string | null;
+  department: string | null;
+  pfEnrolled: boolean;
+  pfContinued: boolean;
+  ptExempt: boolean;
+  tdsExempt: boolean;
+  exemptionReason: string | null;
 }
 
 export interface AttendanceLogRow {
@@ -85,6 +94,12 @@ export interface PayrollRecordRow {
   deductionsTotal: number;
   incentiveHours: number;
   overtimeHours: number;
+
+  // Statutory Deductions
+  pfAmount: number;
+  ptAmount: number;
+  tdsAmount: number;
+  grossEarnings: number;
 }
 
 export interface AttendanceSettingRow {
@@ -95,6 +110,18 @@ export interface AttendanceSettingRow {
   latePenaltyPerMinute: number;
   allowedPaidLeavesPerMonth: number; // New field from migration v10
   updatedAt: string;
+
+  // Statutory Settings
+  pfWageCeiling: number;
+  pfContributionPercent: number;
+  pfAutoEnrollAboveCeiling: boolean;
+  ptState: string;
+  ptDeductionFrequency: 'MONTHLY' | 'HALF_YEARLY' | 'YEARLY';
+  tdsRegime: string;
+  enablePF: boolean;
+  enablePT: boolean;
+  enableTDS: boolean;
+  ptSlabs: any;
 }
 
 export type GenderType = 'MALE' | 'FEMALE' | 'OTHER' | 'PREFER_NOT_TO_SAY';
@@ -135,6 +162,10 @@ export interface PayrollRecordWithEmployee extends PayrollRecordRow {
     email: string;
     contract: {
       jobTitle: string;
+      employmentType?: EmploymentType;
+      department?: string | null;
+      employeeNumber?: string | null;
+      joiningDate?: string;
       avatarUrl: string | null;
       bankAccountName?: string | null;
       bankAccountNumber?: string | null;
@@ -148,6 +179,7 @@ export interface PayrollRecordWithEmployee extends PayrollRecordRow {
 
 export interface PayrollInput {
   baseSalary: number;
+  month: number;
   workingDays: number;
   presentDays: number;    // Half-Day = 0.5
   lateDays: number;
@@ -164,7 +196,26 @@ export interface PayrollInput {
   halfDays?: number;
   onAidLeaveDays?: number;
   deductionDays?: number;
-  incentiveHours?: number;
+  incentiveAmount?: number;
+
+  // Compliance Flags
+  employmentType?: EmploymentType;
+  pfEnrolled?: boolean;
+  pfContinued?: boolean;
+  ptExempt?: boolean;
+  tdsExempt?: boolean;
+  
+  // Tax override
+  taxDeduction?: number;
+  
+  // Compliance Settings
+  pfWageCeiling?: number;
+  pfContributionPercent?: number;
+  ptSlabs?: any[];
+  ptDeductionFrequency?: 'MONTHLY' | 'HALF_YEARLY' | 'YEARLY';
+  enablePF?: boolean;
+  enablePT?: boolean;
+  enableTDS?: boolean;
 }
 
 export interface PayrollBreakdown {
@@ -190,6 +241,11 @@ export interface PayrollBreakdown {
   deductionDays: number;
   perDaySalary: number;
   deductionsTotal: number;
-  incentiveHours: number;
   overtimeHours: number;
+
+  // Compliance Breakdown
+  grossEarnings: number;
+  pfAmount: number;
+  ptAmount: number;
+  tdsAmount: number;
 }

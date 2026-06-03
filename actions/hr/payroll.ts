@@ -62,7 +62,7 @@ export async function getPayrollForMonth(
       employee:employeeId(
         id, fullName, email,
         contract:employee_contracts(
-          jobTitle, avatarUrl,
+          jobTitle, department, employeeNumber, avatarUrl,
           bankAccountName, bankAccountNumber, bankIFSC, upiId
         )
       )
@@ -107,7 +107,7 @@ export async function getPayslip(recordId: string): Promise<PayrollRecordWithEmp
         id, fullName, email,
         branches(name),
         contract:employee_contracts(
-          jobTitle, employmentType, joiningDate, avatarUrl,
+          jobTitle, department, employeeNumber, employmentType, joiningDate, avatarUrl,
           bankAccountName, bankAccountNumber, bankIFSC, upiId
         )
       )
@@ -211,17 +211,18 @@ export async function generatePayrollDraft(formData: PayrollGenerateData) {
     };
   }
 
-  // Fetch all active employee contracts
+  // Fetch all active employee contracts with compliance flags
   const { data: contracts, error: contractError } = await supabase
     .from('employee_contracts')
-    .select('profileId, baseSalary, incentive')
+    .select('profileId, baseSalary, incentive, employmentType, pfEnrolled, pfContinued, ptExempt, tdsExempt, joiningDate')
     .eq('isActive', true);
 
   if (contractError) return { error: contractError.message };
   if (!contracts?.length) return { error: 'No active employees found' };
 
-  // Fetch settings for paid leave quota and late penalty
-  const settings = await getAttendanceSettings();
+  // Fetch settings for paid leave quota and late penalty based on the month
+  const queryDate = `${year}-${String(month).padStart(2, '0')}-01`;
+  const settings = await getAttendanceSettings(queryDate);
   const latePenaltyPerMinute = settings?.latePenaltyPerMinute ?? 0;
   const allowedPaidLeaves = settings?.allowedPaidLeavesPerMonth ?? 0;
 
@@ -232,12 +233,17 @@ export async function generatePayrollDraft(formData: PayrollGenerateData) {
   const calendarWorkingDays = new Date(year, month, 0).getDate();
 
   for (const contract of contracts) {
-    const { profileId, baseSalary, incentive } = contract;
+    const { profileId, baseSalary, incentive, employmentType, pfEnrolled, pfContinued, ptExempt, tdsExempt, joiningDate } = contract;
 
     // Build date range
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
     const lastDay = new Date(year, month, 0).getDate();
     const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+    // Skip employees who joined after this month
+    if (joiningDate && joiningDate > endDate) {
+      continue;
+    }
 
     // Fetch attendance for this employee in the month
     const { data: logs } = await supabase
@@ -263,6 +269,7 @@ export async function generatePayrollDraft(formData: PayrollGenerateData) {
     const avgLateMinutes = lateDays > 0 ? 15 : 0;
 
     const breakdown = calculatePayout({
+      month,
       baseSalary: baseSalary ?? 0,
       workingDays: calendarWorkingDays,
       presentDays,
@@ -279,10 +286,26 @@ export async function generatePayrollDraft(formData: PayrollGenerateData) {
       halfDays,
       onAidLeaveDays,
       deductionDays,
-      incentiveHours: 0,
+      incentiveAmount: incentive ?? 0,
+
+      // Compliance Flags
+      employmentType,
+      pfEnrolled,
+      pfContinued,
+      ptExempt,
+      tdsExempt,
+
+      // Compliance Settings
+      pfWageCeiling: settings?.pfWageCeiling,
+      pfContributionPercent: settings?.pfContributionPercent,
+      ptSlabs: settings?.ptSlabs,
+      ptDeductionFrequency: settings?.ptDeductionFrequency,
+      enablePF: settings?.enablePF,
+      enablePT: settings?.enablePT,
+      enableTDS: settings?.enableTDS,
     });
 
-    const finalNetPayout = Math.max(0, breakdown.netPayout + (incentive ?? 0));
+    const finalNetPayout = breakdown.netPayout;
 
     const { error: insertError } = await supabase
       .from('payroll_records')
@@ -314,8 +337,14 @@ export async function generatePayrollDraft(formData: PayrollGenerateData) {
         deductionDays: breakdown.deductionDays,
         perDaySalary: breakdown.perDaySalary,
         deductionsTotal: breakdown.deductionsTotal,
-        incentiveHours: breakdown.incentiveHours,
+        incentiveHours: 0,
         overtimeHours: breakdown.overtimeHours,
+
+        // Statutory Deductions
+        grossEarnings: breakdown.grossEarnings,
+        pfAmount: breakdown.pfAmount,
+        ptAmount: breakdown.ptAmount,
+        tdsAmount: breakdown.tdsAmount,
       });
 
     if (insertError) {
@@ -348,10 +377,17 @@ export async function updatePayrollOverride(
     return { error: 'Validation failed', details: result.error.flatten() };
   }
 
-  // Fetch full current record to re-compute calculations
+  // Fetch full current record to re-compute calculations, including employee contract
   const { data: record } = await supabase
     .from('payroll_records')
-    .select('*')
+    .select(`
+      *,
+      employee:employeeId(
+        contract:employee_contracts(
+          employmentType, pfEnrolled, pfContinued, ptExempt, tdsExempt
+        )
+      )
+    `)
     .eq('id', recordId)
     .single();
 
@@ -362,10 +398,20 @@ export async function updatePayrollOverride(
     return { error: 'Only DRAFT records can be modified' };
   }
 
-  const { bonusAmount, taxDeduction, otherDeductions, incentiveHours, overtimeHours, notes } = result.data;
+  const { bonusAmount, taxDeduction, otherDeductions, incentive: incentiveAmount, overtimeHours, notes } = result.data;
+
+  // Extract nested contract safely
+  const contract = Array.isArray(record.employee?.contract)
+    ? record.employee.contract[0]
+    : record.employee?.contract;
+
+  // Fetch settings for compliance calculations
+  const queryDate = `${record.year}-${String(record.month).padStart(2, '0')}-01`;
+  const settings = await getAttendanceSettings(queryDate);
 
   // Re-calculate using the payroll-engine
   const breakdown = calculatePayout({
+    month: record.month,
     baseSalary: record.baseSalary ?? 0,
     workingDays: record.workingDays ?? 30,
     presentDays: record.presentDays ?? 30,
@@ -382,7 +428,26 @@ export async function updatePayrollOverride(
     halfDays: record.halfDays ?? 0,
     onAidLeaveDays: record.onAidLeaveDays ?? 0,
     deductionDays: record.deductionDays ?? 0,
-    incentiveHours,
+    incentiveAmount,
+    
+    // Pass explicitly requested tax deduction via override
+    taxDeduction,
+
+    // Compliance Flags
+    employmentType: contract?.employmentType,
+    pfEnrolled: contract?.pfEnrolled,
+    pfContinued: contract?.pfContinued,
+    ptExempt: contract?.ptExempt,
+    tdsExempt: contract?.tdsExempt,
+
+    // Compliance Settings
+    pfWageCeiling: settings?.pfWageCeiling,
+    pfContributionPercent: settings?.pfContributionPercent,
+    ptSlabs: settings?.ptSlabs,
+    ptDeductionFrequency: settings?.ptDeductionFrequency,
+    enablePF: settings?.enablePF,
+    enablePT: settings?.enablePT,
+    enableTDS: settings?.enableTDS,
   });
 
   const finalLatePenalty = record.latePenalty ?? 0;
@@ -395,14 +460,20 @@ export async function updatePayrollOverride(
     .from('payroll_records')
     .update({
       bonusAmount,
-      taxDeduction: finalTaxDeduction,
+      taxDeduction: breakdown.taxDeduction,
       otherDeductions,
-      incentiveHours,
+      incentiveHours: 0,
       overtimeHours,
-      incentive: breakdown.incentiveAmount, // Saved directly alongside
-      overtimeAmount: breakdown.overtimeAmount, // Saved directly alongside
-      netPayout: Math.round(netPayout * 100) / 100,
+      incentive: breakdown.incentiveAmount,
+      overtimeAmount: breakdown.overtimeAmount,
+      netPayout: Math.round(breakdown.netPayout * 100) / 100,
       notes: notes || null,
+      
+      // Statutory
+      grossEarnings: breakdown.grossEarnings,
+      pfAmount: breakdown.pfAmount,
+      ptAmount: breakdown.ptAmount,
+      tdsAmount: breakdown.tdsAmount,
     })
     .eq('id', recordId);
 

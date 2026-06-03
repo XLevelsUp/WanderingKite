@@ -177,6 +177,7 @@ export function AttendanceGrid({
   const logIndex = useMemo(() => buildLogIndex(logs), [logs]);
 
   const [showSettings, setShowSettings] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<'ATTENDANCE' | 'COMPLIANCE'>('ATTENDANCE');
   const [settingsPending, startSettingsTransition] = useTransition();
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsSuccess, setSettingsSuccess] = useState(false);
@@ -186,6 +187,15 @@ export function AttendanceGrid({
     halfDayThresholdHours: settings?.halfDayThresholdHours ?? 4.0,
     latePenaltyPerMinute: settings?.latePenaltyPerMinute ?? 0,
     allowedPaidLeavesPerMonth: settings?.allowedPaidLeavesPerMonth ?? 0,
+    pfWageCeiling: settings?.pfWageCeiling ?? 15000,
+    pfContributionPercent: settings?.pfContributionPercent ?? 12,
+    pfAutoEnrollAboveCeiling: settings?.pfAutoEnrollAboveCeiling ?? false,
+    ptState: settings?.ptState ?? 'Tamil Nadu',
+    ptDeductionFrequency: settings?.ptDeductionFrequency ?? 'MONTHLY',
+    tdsRegime: settings?.tdsRegime ?? 'New Regime FY 2025-26',
+    enablePF: settings?.enablePF ?? true,
+    enablePT: settings?.enablePT ?? true,
+    enableTDS: settings?.enableTDS ?? true,
   });
 
   const [editingCell, setEditingCell] = useState<{
@@ -522,6 +532,7 @@ export function AttendanceGrid({
                           setSubmitError(res.error);
                         } else {
                           setSuccess(true);
+                          router.refresh();
                           setTimeout(() => {
                             setEditingCell(null);
                             setSuccess(false);
@@ -542,6 +553,7 @@ export function AttendanceGrid({
                           setSubmitError(res.error);
                         } else {
                           setSuccess(true);
+                          router.refresh();
                           setTimeout(() => {
                             setEditingCell(null);
                             setSuccess(false);
@@ -601,8 +613,28 @@ export function AttendanceGrid({
               </button>
             </div>
 
+            {/* Tabs */}
+            <div className='flex border-b border-primary/12'>
+              <button 
+                type='button' 
+                onClick={() => setSettingsTab('ATTENDANCE')}
+                className={`flex-1 py-3 text-xs font-semibold border-b-2 transition-colors ${settingsTab === 'ATTENDANCE' ? 'border-primary text-primary' : 'border-transparent text-foreground/50 hover:text-foreground/80'}`}
+              >
+                Attendance Policy
+              </button>
+              <button 
+                type='button' 
+                onClick={() => setSettingsTab('COMPLIANCE')}
+                className={`flex-1 py-3 text-xs font-semibold border-b-2 transition-colors ${settingsTab === 'COMPLIANCE' ? 'border-primary text-primary' : 'border-transparent text-foreground/50 hover:text-foreground/80'}`}
+              >
+                Statutory Compliance
+              </button>
+            </div>
+
             {/* Content */}
             <div className='flex-1 overflow-y-auto p-6 space-y-4 text-xs'>
+              {settingsTab === 'ATTENDANCE' ? (
+                <div className="space-y-4">
               <div>
                 <label className='block text-[10px] font-semibold text-primary uppercase tracking-widest mb-1.5'>
                   Monthly Paid Leave Quota
@@ -612,6 +644,16 @@ export function AttendanceGrid({
                   min={0}
                   max={31}
                   value={settingsForm.allowedPaidLeavesPerMonth}
+                  onFocus={() => {
+                    if (settingsForm.allowedPaidLeavesPerMonth === 0) {
+                      setSettingsForm((prev) => ({ ...prev, allowedPaidLeavesPerMonth: '' as any }));
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '' || isNaN(parseInt(e.target.value))) {
+                      setSettingsForm((prev) => ({ ...prev, allowedPaidLeavesPerMonth: 0 }));
+                    }
+                  }}
                   onChange={(e) =>
                     setSettingsForm((prev) => ({
                       ...prev,
@@ -652,6 +694,16 @@ export function AttendanceGrid({
                     type='number'
                     min={0}
                     value={settingsForm.graceMinutes}
+                    onFocus={() => {
+                      if (settingsForm.graceMinutes === 0) {
+                        setSettingsForm((prev) => ({ ...prev, graceMinutes: '' as any }));
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (e.target.value === '' || isNaN(parseInt(e.target.value))) {
+                        setSettingsForm((prev) => ({ ...prev, graceMinutes: 0 }));
+                      }
+                    }}
                     onChange={(e) =>
                       setSettingsForm((prev) => ({
                         ...prev,
@@ -670,6 +722,16 @@ export function AttendanceGrid({
                     type='number'
                     min={1}
                     value={settingsForm.halfDayThresholdHours}
+                    onFocus={() => {
+                      if (settingsForm.halfDayThresholdHours === 0) {
+                        setSettingsForm((prev) => ({ ...prev, halfDayThresholdHours: '' as any }));
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (e.target.value === '' || isNaN(parseFloat(e.target.value))) {
+                        setSettingsForm((prev) => ({ ...prev, halfDayThresholdHours: 4.0 }));
+                      }
+                    }}
                     onChange={(e) =>
                       setSettingsForm((prev) => ({
                         ...prev,
@@ -690,6 +752,16 @@ export function AttendanceGrid({
                   min={0}
                   step={0.5}
                   value={settingsForm.latePenaltyPerMinute}
+                  onFocus={() => {
+                    if (settingsForm.latePenaltyPerMinute === 0) {
+                      setSettingsForm((prev) => ({ ...prev, latePenaltyPerMinute: '' as any }));
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '' || isNaN(parseFloat(e.target.value))) {
+                      setSettingsForm((prev) => ({ ...prev, latePenaltyPerMinute: 0 }));
+                    }
+                  }}
                   onChange={(e) =>
                     setSettingsForm((prev) => ({
                       ...prev,
@@ -699,6 +771,82 @@ export function AttendanceGrid({
                   className='w-full px-3 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-sm text-foreground/80 focus:ring-2 focus:ring-primary/30 transition-all focus:outline-none'
                 />
               </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-white/10 bg-white/[0.02]">
+                    <div>
+                      <h4 className="font-semibold text-foreground/90">Enable Provident Fund (PF)</h4>
+                      <p className="text-[10px] text-foreground/45 mt-0.5">Deduct 12% for eligible employees</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" checked={settingsForm.enablePF} onChange={(e) => setSettingsForm(prev => ({ ...prev, enablePF: e.target.checked }))} />
+                      <div className="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                  </div>
+
+                  {settingsForm.enablePF && (
+                    <div className="grid grid-cols-2 gap-3 p-3 rounded-xl border border-white/5 bg-black/20">
+                      <div>
+                        <label className='block text-[10px] font-semibold text-foreground/50 uppercase tracking-wider mb-1.5'>Wage Ceiling (₹)</label>
+                        <input
+                          type='number'
+                          value={settingsForm.pfWageCeiling}
+                          onChange={(e) => setSettingsForm((prev) => ({ ...prev, pfWageCeiling: parseFloat(e.target.value) || 0 }))}
+                          className='w-full px-3 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-sm text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary/30'
+                        />
+                      </div>
+                      <div>
+                        <label className='block text-[10px] font-semibold text-foreground/50 uppercase tracking-wider mb-1.5'>Contribution (%)</label>
+                        <input
+                          type='number'
+                          value={settingsForm.pfContributionPercent}
+                          onChange={(e) => setSettingsForm((prev) => ({ ...prev, pfContributionPercent: parseFloat(e.target.value) || 0 }))}
+                          className='w-full px-3 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-sm text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary/30'
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col p-3 rounded-xl border border-white/10 bg-white/[0.02]">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-foreground/90">Enable Professional Tax (PT)</h4>
+                        <p className="text-[10px] text-foreground/45 mt-0.5">{settingsForm.ptState} Slab Structure</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" checked={settingsForm.enablePT} onChange={(e) => setSettingsForm(prev => ({ ...prev, enablePT: e.target.checked }))} />
+                        <div className="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+                    {settingsForm.enablePT && (
+                      <div className="mt-4 pt-3 border-t border-white/5">
+                        <label className='block text-[10px] font-semibold text-foreground/50 uppercase tracking-wider mb-1.5'>Deduction Cycle</label>
+                        <select
+                          value={settingsForm.ptDeductionFrequency || 'MONTHLY'}
+                          onChange={(e) => setSettingsForm(prev => ({ ...prev, ptDeductionFrequency: e.target.value as any }))}
+                          className='w-full px-3 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-sm text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none'
+                        >
+                          <option value="MONTHLY" className="bg-background text-foreground">Monthly</option>
+                          <option value="HALF_YEARLY" className="bg-background text-foreground">Half-Yearly (Feb & Aug)</option>
+                          <option value="YEARLY" className="bg-background text-foreground">Yearly (March)</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-white/10 bg-white/[0.02]">
+                    <div>
+                      <h4 className="font-semibold text-foreground/90">Enable Income Tax (TDS)</h4>
+                      <p className="text-[10px] text-foreground/45 mt-0.5">{settingsForm.tdsRegime}</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" checked={settingsForm.enableTDS} onChange={(e) => setSettingsForm(prev => ({ ...prev, enableTDS: e.target.checked }))} />
+                      <div className="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Footer */}
@@ -734,6 +882,15 @@ export function AttendanceGrid({
                         halfDayThresholdHours: settingsForm.halfDayThresholdHours,
                         latePenaltyPerMinute: settingsForm.latePenaltyPerMinute,
                         allowedPaidLeavesPerMonth: settingsForm.allowedPaidLeavesPerMonth,
+                        pfWageCeiling: settingsForm.pfWageCeiling,
+                        pfContributionPercent: settingsForm.pfContributionPercent,
+                        pfAutoEnrollAboveCeiling: settingsForm.pfAutoEnrollAboveCeiling,
+                        ptState: settingsForm.ptState,
+                        ptDeductionFrequency: settingsForm.ptDeductionFrequency,
+                        tdsRegime: settingsForm.tdsRegime,
+                        enablePF: settingsForm.enablePF,
+                        enablePT: settingsForm.enablePT,
+                        enableTDS: settingsForm.enableTDS,
                       });
                       if (res.error) {
                         setSettingsError(res.error);

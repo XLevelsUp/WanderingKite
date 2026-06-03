@@ -239,6 +239,17 @@ export function HROnboardingForm({ availableProfiles }: HROnboardingFormProps) {
                   min={0}
                   step={100}
                   {...register('baseSalary', { valueAsNumber: true })}
+                  onFocus={(e) => {
+                    if (e.target.value === '0') {
+                      e.target.value = '';
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      e.target.value = '0';
+                      e.target.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                  }}
                   placeholder='e.g. 25000'
                   className={inputClass}
                 />
@@ -252,6 +263,17 @@ export function HROnboardingForm({ availableProfiles }: HROnboardingFormProps) {
                   min={0}
                   step={100}
                   {...register('incentive', { valueAsNumber: true })}
+                  onFocus={(e) => {
+                    if (e.target.value === '0') {
+                      e.target.value = '';
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      e.target.value = '0';
+                      e.target.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                  }}
                   placeholder='e.g. 2000'
                   className={inputClass}
                 />

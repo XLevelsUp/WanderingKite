@@ -71,7 +71,7 @@ function OverrideModal({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [values, setValues] = useState({
-    incentiveHours: record.incentiveHours ?? 0,
+    incentiveAmount: record.incentive ?? 0,
     overtimeHours: record.overtimeHours ?? 0,
     bonusAmount: record.bonusAmount,
     taxDeduction: record.taxDeduction,
@@ -89,7 +89,7 @@ function OverrideModal({
         bonusAmount: values.bonusAmount,
         taxDeduction: values.taxDeduction,
         otherDeductions: values.otherDeductions,
-        incentiveHours: values.incentiveHours,
+        incentive: values.incentiveAmount,
         overtimeHours: values.overtimeHours,
         notes: values.notes,
       });
@@ -107,7 +107,7 @@ function OverrideModal({
   const perDaySalary = record.baseSalary / safeDays;
   const totalWorkingHours = safeDays * 8;
   const hourlyRate = record.baseSalary / totalWorkingHours;
-  const previewIncentive = values.incentiveHours * hourlyRate;
+  const previewIncentive = values.incentiveAmount;
   const previewOvertime = values.overtimeHours * hourlyRate;
   const previewGross = (record.baseSalary - (record.deductionsTotal ?? 0)) + previewIncentive + previewOvertime + values.bonusAmount;
   const previewNet = Math.max(0, previewGross - (record.latePenalty ?? 0) - values.taxDeduction - values.otherDeductions);
@@ -159,26 +159,32 @@ function OverrideModal({
             {/* Compensation logs */}
             <div>
               <label className='block text-[10px] font-semibold text-primary uppercase tracking-widest mb-1.5 flex items-center gap-1'>
-                <Clock className='w-3 h-3 text-primary/70' />
-                Incentive Hours
+                Incentive Amount (₹)
               </label>
               <input
                 type='number'
                 min={0}
-                step={0.5}
-                value={values.incentiveHours}
+                step={100}
+                value={values.incentiveAmount}
+                onFocus={() => {
+                  if (values.incentiveAmount === 0) {
+                    setValues((v) => ({ ...v, incentiveAmount: '' as any }));
+                  }
+                }}
+                onBlur={(e) => {
+                  if (e.target.value === '' || isNaN(parseFloat(e.target.value))) {
+                    setValues((v) => ({ ...v, incentiveAmount: 0 }));
+                  }
+                }}
                 onChange={(e) =>
                   setValues((v) => ({
                     ...v,
-                    incentiveHours: parseFloat(e.target.value) || 0,
+                    incentiveAmount: parseFloat(e.target.value) || 0,
                   }))
                 }
                 className={inputClass}
-                placeholder='Enter hours logged'
+                placeholder='Enter flat incentive'
               />
-              <span className='text-[10px] text-foreground/40 mt-1 block'>
-                Calculated Payout: {fmt(previewIncentive)}
-              </span>
             </div>
 
             <div>
@@ -191,6 +197,16 @@ function OverrideModal({
                 min={0}
                 step={0.5}
                 value={values.overtimeHours}
+                onFocus={() => {
+                  if (values.overtimeHours === 0) {
+                    setValues((v) => ({ ...v, overtimeHours: '' as any }));
+                  }
+                }}
+                onBlur={(e) => {
+                  if (e.target.value === '' || isNaN(parseFloat(e.target.value))) {
+                    setValues((v) => ({ ...v, overtimeHours: 0 }));
+                  }
+                }}
                 onChange={(e) =>
                   setValues((v) => ({
                     ...v,
@@ -214,6 +230,16 @@ function OverrideModal({
                 min={0}
                 step={100}
                 value={values.bonusAmount}
+                onFocus={() => {
+                  if (values.bonusAmount === 0) {
+                    setValues((v) => ({ ...v, bonusAmount: '' as any }));
+                  }
+                }}
+                onBlur={(e) => {
+                  if (e.target.value === '' || isNaN(parseFloat(e.target.value))) {
+                    setValues((v) => ({ ...v, bonusAmount: 0 }));
+                  }
+                }}
                 onChange={(e) =>
                   setValues((v) => ({
                     ...v,
@@ -233,6 +259,16 @@ function OverrideModal({
                 min={0}
                 step={100}
                 value={values.taxDeduction}
+                onFocus={() => {
+                  if (values.taxDeduction === 0) {
+                    setValues((v) => ({ ...v, taxDeduction: '' as any }));
+                  }
+                }}
+                onBlur={(e) => {
+                  if (e.target.value === '' || isNaN(parseFloat(e.target.value))) {
+                    setValues((v) => ({ ...v, taxDeduction: 0 }));
+                  }
+                }}
                 onChange={(e) =>
                   setValues((v) => ({
                     ...v,
@@ -252,6 +288,16 @@ function OverrideModal({
                 min={0}
                 step={100}
                 value={values.otherDeductions}
+                onFocus={() => {
+                  if (values.otherDeductions === 0) {
+                    setValues((v) => ({ ...v, otherDeductions: '' as any }));
+                  }
+                }}
+                onBlur={(e) => {
+                  if (e.target.value === '' || isNaN(parseFloat(e.target.value))) {
+                    setValues((v) => ({ ...v, otherDeductions: 0 }));
+                  }
+                }}
                 onChange={(e) =>
                   setValues((v) => ({
                     ...v,
@@ -488,7 +534,6 @@ export function PayrollSummaryCard({ record }: PayrollSummaryCardProps) {
               <DetailedItem label='Deduction Days' value={`${record.deductionDays ?? 0} days`} />
               <DetailedItem label='Per-Day Salary' value={fmt(record.perDaySalary ?? (record.baseSalary / (record.workingDays || 30)))} />
               <DetailedItem label='Deductions Total' value={fmt(record.deductionsTotal ?? record.unpaidLeaves ?? 0)} highlightRed />
-              <DetailedItem label='Incentive Hours' value={`${record.incentiveHours ?? 0} hrs`} />
               <DetailedItem label='Incentive Amount' value={fmt(record.incentive ?? 0)} highlightGreen />
               <DetailedItem label='Overtime Hours' value={`${record.overtimeHours ?? 0} hrs`} />
               <DetailedItem label='Overtime Amount' value={fmt(record.overtimeAmount ?? 0)} highlightGreen />

@@ -25,6 +25,13 @@ export const contractSchema = z.object({
   upiId: z.string().max(100).optional().or(z.literal('')),
   avatarUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
   notes: z.string().max(1000).optional().or(z.literal('')),
+  employeeNumber: z.string().max(50).optional().or(z.literal('')),
+  department: z.string().max(100).optional().or(z.literal('')),
+  pfEnrolled: z.boolean().optional(),
+  pfContinued: z.boolean().optional(),
+  ptExempt: z.boolean().optional(),
+  tdsExempt: z.boolean().optional(),
+  exemptionReason: z.string().max(1000).optional().or(z.literal('')),
 });
 
 export type ContractFormData = z.infer<typeof contractSchema>;
@@ -163,7 +170,7 @@ export const payrollOverrideSchema = z.object({
   bonusAmount: z.number().min(0).default(0),
   taxDeduction: z.number().min(0).default(0),
   otherDeductions: z.number().min(0).default(0),
-  incentiveHours: z.number().min(0).default(0),
+  incentive: z.number().min(0).default(0),
   overtimeHours: z.number().min(0).default(0),
   notes: z.string().max(500).optional().or(z.literal('')),
 });
@@ -189,6 +196,16 @@ export const attendanceSettingsSchema = z.object({
   halfDayThresholdHours: z.number().min(1).max(12),
   latePenaltyPerMinute: z.number().min(0),
   allowedPaidLeavesPerMonth: z.number().int().min(0).max(31).default(0),
+  
+  pfWageCeiling: z.number().min(0).default(15000),
+  pfContributionPercent: z.number().min(0).max(100).default(12),
+  pfAutoEnrollAboveCeiling: z.boolean().default(false),
+  ptState: z.string().default('Tamil Nadu'),
+  ptDeductionFrequency: z.enum(['MONTHLY', 'HALF_YEARLY', 'YEARLY']).default('MONTHLY'),
+  tdsRegime: z.string().default('New Regime FY 2025-26'),
+  enablePF: z.boolean().default(true),
+  enablePT: z.boolean().default(true),
+  enableTDS: z.boolean().default(true),
 });
 
 export type AttendanceSettingsData = z.infer<typeof attendanceSettingsSchema>;

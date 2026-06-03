@@ -32,7 +32,7 @@ export default async function AttendancePage({
   const [logs, allEmployees, settings] = await Promise.all([
     getMonthlyAttendance(month, year),
     getHREmployees(),
-    getAttendanceSettings(),
+    getAttendanceSettings(`${year}-${String(month).padStart(2, '0')}-01`),
   ]);
 
   // Only active employees for the grid
