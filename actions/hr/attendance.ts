@@ -43,14 +43,29 @@ async function requireAdmin() {
 // READ: Settings
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function getAttendanceSettings(): Promise<AttendanceSettingRow | null> {
+export async function getAttendanceSettings(dateStr?: string): Promise<AttendanceSettingRow | null> {
   const supabase = await createClient();
+  const queryDate = dateStr || new Date().toISOString().split('T')[0];
+
   const { data } = await supabase
     .from('attendance_settings')
     .select('*')
+    .lte('effectiveDate', queryDate)
+    .order('effectiveDate', { ascending: false })
+    .order('createdAt', { ascending: false })
     .limit(1)
     .single();
-  return (data as AttendanceSettingRow) ?? null;
+
+  if (data) return (data as AttendanceSettingRow);
+
+  const { data: fallback } = await supabase
+    .from('attendance_settings')
+    .select('*')
+    .order('effectiveDate', { ascending: true })
+    .limit(1)
+    .single();
+
+  return (fallback as AttendanceSettingRow) ?? null;
 }
 
 export async function updateAttendanceSettings(data: AttendanceSettingsData) {
@@ -61,10 +76,20 @@ export async function updateAttendanceSettings(data: AttendanceSettingsData) {
     return { error: 'Validation failed', details: result.error.flatten() };
   }
 
-  // Upsert the single settings row
+  const now = new Date();
+  let nextMonth = now.getMonth() + 2; // +1 for 0-indexed, +1 for next month
+  let year = now.getFullYear();
+  if (nextMonth > 12) {
+    nextMonth = 1;
+    year += 1;
+  }
+  const effectiveDate = `${year}-${String(nextMonth).padStart(2, '0')}-01`;
+
+  // Upsert the settings row for the effectiveDate
   const { data: existing } = await supabase
     .from('attendance_settings')
     .select('id')
+    .eq('effectiveDate', effectiveDate)
     .limit(1)
     .single();
 
@@ -77,7 +102,7 @@ export async function updateAttendanceSettings(data: AttendanceSettingsData) {
   } else {
     const { error } = await supabase
       .from('attendance_settings')
-      .insert(result.data);
+      .insert({ ...result.data, effectiveDate });
     if (error) return { error: error.message };
   }
 
@@ -181,7 +206,7 @@ export async function upsertAttendanceLog(formData: AttendanceLogFormData) {
   // Auto-derive status from clock times if both are provided and status not explicitly set
   let finalStatus = status;
   if (clockIn && finalStatus === 'ABSENT') {
-    const settings = await getAttendanceSettings();
+    const settings = await getAttendanceSettings(date);
     if (settings) {
       finalStatus = deriveAttendanceStatus(
         clockIn,
@@ -242,7 +267,7 @@ export async function bulkMarkAttendance(formData: BulkAttendanceFormData) {
   }
 
   const { date, entries } = result.data;
-  const settings = await getAttendanceSettings();
+  const settings = await getAttendanceSettings(date);
 
   const rows = entries.map((entry) => {
     let status = entry.status;
@@ -411,7 +436,7 @@ export async function bulkMarkRangeAttendance(
     return { error: 'Date range cannot exceed 62 days' };
   }
 
-  const settings = await getAttendanceSettings();
+  const settings = await getAttendanceSettings(startDateStr);
   const rows: any[] = [];
 
   for (const date of dates) {

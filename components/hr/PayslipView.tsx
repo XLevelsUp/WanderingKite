@@ -20,8 +20,8 @@ function fmt(n: number) {
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <tr className={bold ? 'bg-gray-50 font-bold' : ''}>
-      <td className='py-2.5 px-4 text-xs text-gray-700 border-b border-gray-100'>{label}</td>
-      <td className='py-2.5 px-4 text-xs text-gray-900 text-right border-b border-gray-100 font-semibold tabular-nums'>
+      <td className='py-1.5 px-4 text-[11px] text-gray-700 border-b border-gray-100'>{label}</td>
+      <td className='py-1.5 px-4 text-[11px] text-gray-900 text-right border-b border-gray-100 font-semibold tabular-nums'>
         {value}
       </td>
     </tr>
@@ -31,20 +31,39 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
 export function PayslipView({ record }: PayslipViewProps) {
   const { employee } = record;
   const payPeriod = `${MONTH_NAMES[record.month]} ${record.year}`;
-  const grossEarnings = record.basePay + record.overtimeAmount + record.bonusAmount + (record.incentive ?? 0);
-  const totalDeductions =
-    record.latePenalty + record.taxDeduction + record.otherDeductions;
+  
+  const grossEarnings = record.grossEarnings ?? (record.basePay + record.overtimeAmount + record.bonusAmount + (record.incentive ?? 0));
+  const totalDeductions = record.latePenalty + record.otherDeductions + (record.pfAmount ?? 0) + (record.ptAmount ?? 0) + (record.tdsAmount ?? 0);
 
   return (
     <div className='p-4 md:p-8 space-y-6 max-w-3xl mx-auto'>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #payslip, #payslip * {
+            visibility: visible;
+          }
+          #payslip {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+          }
+        }
+      `}} />
+      
       {/* Screen-only controls */}
       <div className='print:hidden flex items-center justify-between'>
         <Link
-          href={`/admin/payroll`}
+          href={`/admin/payroll/${record.year}-${record.month}`}
           className='flex items-center gap-2 text-xs font-semibold text-foreground/50 hover:text-foreground transition-colors'
         >
           <ArrowLeft className='w-4 h-4' />
-          Back to Payroll Dashboard
+          Back to Monthly Payroll
         </Link>
         <button
           onClick={() => window.print()}
@@ -55,187 +74,142 @@ export function PayslipView({ record }: PayslipViewProps) {
         </button>
       </div>
 
-      {/* Payslip card */}
+      {/* Payslip A5 half-page wrapper */}
       <div
         id='payslip'
-        className='bg-white text-gray-900 rounded-2xl overflow-hidden shadow-2xl print:shadow-none print:rounded-none border border-gray-100'
+        className='bg-white text-gray-900 rounded-2xl overflow-hidden shadow-2xl print:shadow-none print:rounded-none border border-gray-100 print:w-full print:h-[148mm] print:overflow-hidden print:border-0 print:m-0'
       >
-        {/* Studio header */}
-        <div className='bg-gray-950 px-8 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-800 text-white'>
+        {/* Header */}
+        <div className='bg-gray-950 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-800 text-white print:px-4 print:py-3 print:bg-white print:text-black print:border-b-2 print:border-gray-300'>
           <div>
-            <p className='text-[10px] font-bold uppercase tracking-[0.25em] text-primary opacity-80 mb-1.5 flex items-center gap-1.5'>
-              <Shield className='w-3 h-3' />
+            <p className='text-[9px] font-bold uppercase tracking-[0.25em] text-primary opacity-80 mb-1 print:text-gray-500'>
               STUDIO PAY SLIP
             </p>
-            <h1 className='text-2xl font-bold tracking-tight'>Wandering Kite Studio</h1>
-            <p className='text-xs text-gray-400 mt-1'>Corporate HR & Payroll Ledger</p>
+            <h1 className='text-lg font-bold tracking-tight'>Wandering Kite Studio</h1>
           </div>
           <div className='sm:text-right'>
-            <p className='text-base font-bold text-white'>{payPeriod}</p>
-            <p className='text-xs text-gray-500 mt-1'>
-              Ledger Status:{' '}
-              <span
-                className={`font-semibold ${
-                  record.status === 'PAID'
-                    ? 'text-emerald-400'
-                    : record.status === 'APPROVED'
-                      ? 'text-blue-400'
-                      : record.status === 'REJECTED'
-                        ? 'text-red-500'
-                        : 'text-yellow-400'
-                }`}
-              >
-                {record.status}
-              </span>
+            <p className='text-sm font-bold text-white print:text-black'>{payPeriod}</p>
+            <p className='text-[10px] text-gray-500 mt-0.5 print:text-gray-600'>
+              Status: <span className='font-semibold'>{record.status}</span>
             </p>
-            {record.paymentRef && (
-              <p className='text-[11px] text-gray-400 mt-1.5 bg-white/5 px-2 py-0.5 rounded inline-block'>Ref: {record.paymentRef}</p>
-            )}
           </div>
         </div>
 
-        {/* Employee info */}
-        <div className='px-8 py-6 border-b border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-6 bg-gray-50/50'>
-          <div>
-            <p className='text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2'>
-              Employee Profile
-            </p>
-            <p className='font-bold text-gray-900 text-base'>{employee.fullName ?? '—'}</p>
-            <p className='text-xs text-gray-500 mt-0.5'>{employee.email}</p>
-            {employee.contract?.jobTitle && (
-              <p className='text-xs text-gray-400 mt-1 font-medium bg-gray-200/50 inline-block px-2 py-0.5 rounded'>{employee.contract.jobTitle}</p>
-            )}
-          </div>
-          <div>
-            <p className='text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2'>
-              Payment Mode
-            </p>
-            {employee.contract?.bankAccountNumber ? (
-              <div className='text-xs text-gray-700 space-y-0.5'>
-                <p><span className='text-gray-400'>A/C Name:</span> {employee.contract.bankAccountName || '—'}</p>
-                <p><span className='text-gray-400'>A/C No:</span> {employee.contract.bankAccountNumber}</p>
-                <p><span className='text-gray-400'>IFSC:</span> {employee.contract.bankIFSC || '—'}</p>
+        <div className='grid grid-cols-2 text-[10px]'>
+          {/* Left Column: Employee & Bank Info */}
+          <div className='p-4 border-r border-gray-100 space-y-4 print:p-3'>
+            <div>
+              <p className='font-bold uppercase tracking-wider text-gray-400 mb-1 text-[9px]'>Employee Details</p>
+              <div className='grid grid-cols-[80px_1fr] gap-x-2 gap-y-1'>
+                <span className='text-gray-500'>Name:</span>
+                <span className='font-bold text-gray-900'>{employee.fullName ?? '—'}</span>
+                
+                <span className='text-gray-500'>Employee No:</span>
+                <span className='font-medium'>{employee.contract?.employeeNumber || '—'}</span>
+
+                <span className='text-gray-500'>Designation:</span>
+                <span className='font-medium'>{employee.contract?.jobTitle || '—'}</span>
+                
+                <span className='text-gray-500'>Department:</span>
+                <span className='font-medium'>{employee.contract?.department || '—'}</span>
+
+                <span className='text-gray-500'>Email:</span>
+                <span className='font-medium truncate'>{employee.email}</span>
+                
+                <span className='text-gray-500'>Joining Date:</span>
+                <span className='font-medium'>{employee.contract?.joiningDate ? new Date(employee.contract.joiningDate).toLocaleDateString('en-IN') : '—'}</span>
               </div>
-            ) : employee.contract?.upiId ? (
-              <p className='text-xs text-gray-700'><span className='text-gray-400'>UPI ID:</span> {employee.contract.upiId}</p>
-            ) : (
-              <p className='text-xs text-gray-400 italic'>No bank details configured</p>
-            )}
+            </div>
+
+            <div>
+              <p className='font-bold uppercase tracking-wider text-gray-400 mb-1 text-[9px]'>Bank Details</p>
+              {employee.contract?.bankAccountNumber ? (
+                <div className='grid grid-cols-[80px_1fr] gap-x-2 gap-y-1'>
+                  <span className='text-gray-500'>A/C Name:</span>
+                  <span className='font-medium'>{employee.contract.bankAccountName || '—'}</span>
+                  <span className='text-gray-500'>A/C No:</span>
+                  <span className='font-medium'>{employee.contract.bankAccountNumber}</span>
+                  <span className='text-gray-500'>IFSC:</span>
+                  <span className='font-medium uppercase'>{employee.contract.bankIFSC || '—'}</span>
+                </div>
+              ) : employee.contract?.upiId ? (
+                <div className='grid grid-cols-[80px_1fr] gap-x-2 gap-y-1'>
+                  <span className='text-gray-500'>UPI ID:</span>
+                  <span className='font-medium'>{employee.contract.upiId}</span>
+                </div>
+              ) : (
+                <p className='text-gray-400 italic'>No bank details configured</p>
+              )}
+            </div>
+            
+            <div>
+              <p className='font-bold uppercase tracking-wider text-gray-400 mb-1 text-[9px]'>Attendance summary</p>
+              <div className='grid grid-cols-[80px_1fr] gap-x-2 gap-y-1'>
+                <span className='text-gray-500'>Working Days:</span>
+                <span className='font-medium'>{record.workingDays}</span>
+                <span className='text-gray-500'>Absent / LOP:</span>
+                <span className='font-medium text-red-600'>{record.deductionDays ?? 0}</span>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Attendance Breakdown & Base Calculations (10 Items) */}
-        <div className='px-8 py-6 border-b border-gray-100'>
-          <p className='text-xs font-bold uppercase tracking-wider text-gray-400 mb-4 flex items-center gap-1.5'>
-            <Calendar className='w-3.5 h-3.5 text-gray-400' />
-            Attendance & Base Salary Calculations
-          </p>
-          <table className='w-full'>
-            <tbody>
-              <Row label='Calendar Month Working Days' value={`${record.workingDays} days`} />
-              <Row label='Present Days' value={`${record.presentDays} days`} />
-              <Row label='Absent Days (Deducted)' value={`${record.absentDays ?? 0} days`} />
-              <Row label='Leave Days (Total Taken)' value={`${record.leaveDays ?? 0} days`} />
-              <Row label='Paid Leaves Used (Quota Covered)' value={`${record.paidLeavesUsed ?? 0} days`} />
-              <Row label='Half Days (0.5 Payout Rate)' value={`${record.halfDays ?? 0} days`} />
-              <Row label='Late Arrival Days' value={`${record.lateDays ?? 0} days`} />
-              <Row label='On-Aid Leave Days (Fully Paid)' value={`${record.onAidLeaveDays ?? 0} days`} />
-              <Row label='Total Deduction Days' value={`${record.deductionDays ?? 0} days`} />
-              <Row label='Calculated Per-Day Salary' value={fmt(record.perDaySalary ?? (record.baseSalary / (record.workingDays || 30)))} />
-            </tbody>
-          </table>
-        </div>
+          {/* Right Column: Earnings & Deductions */}
+          <div className='p-0 flex flex-col'>
+            <div className='flex-1'>
+              <table className='w-full'>
+                <thead>
+                  <tr className='bg-gray-50 print:bg-gray-100'>
+                    <th className='py-1.5 px-4 text-left text-[9px] font-bold uppercase tracking-wider text-gray-500'>Earnings</th>
+                    <th className='py-1.5 px-4 text-right text-[9px] font-bold uppercase tracking-wider text-gray-500'>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <Row label='Basic Salary Earned' value={fmt(record.basePay)} />
+                  {(record.incentive ?? 0) > 0 && <Row label='Incentives' value={fmt(record.incentive)} />}
+                  {record.overtimeAmount > 0 && <Row label='Overtime' value={fmt(record.overtimeAmount)} />}
+                  {record.bonusAmount > 0 && <Row label='Bonus' value={fmt(record.bonusAmount)} />}
+                  <Row label='Gross Earnings' value={fmt(grossEarnings)} bold />
+                </tbody>
+              </table>
 
-        {/* Earnings table (6 Items) */}
-        <div className='px-8 py-6 border-b border-gray-100'>
-          <p className='text-xs font-bold uppercase tracking-wider text-gray-400 mb-4 flex items-center gap-1.5'>
-            <TrendingUp className='w-3.5 h-3.5 text-emerald-500' />
-            Earnings
-          </p>
-          <table className='w-full'>
-            <tbody>
-              <Row label='Base Salary (Uniform Contract Base)' value={fmt(record.baseSalary)} />
-              <Row label='Attendance Deductions (Leaves / Absences)' value={`− ${fmt(record.deductionsTotal ?? 0)}`} />
-              <Row label='Base Pay (Net Base Salary Earned)' value={fmt(record.basePay)} bold />
-              {(record.incentive ?? 0) > 0 && (
-                <Row label={`Monthly Incentives (${record.incentiveHours ?? 0} hrs)`} value={fmt(record.incentive)} />
-              )}
-              {record.overtimeAmount > 0 && (
-                <Row label={`Overtime Pay (${record.overtimeHours ?? 0} hrs)`} value={fmt(record.overtimeAmount)} />
-              )}
-              {record.bonusAmount > 0 && (
-                <Row label='Performance Bonus' value={fmt(record.bonusAmount)} />
-              )}
-              <Row label='Gross Earnings' value={fmt(grossEarnings)} bold />
-            </tbody>
-          </table>
-        </div>
+              <table className='w-full mt-2'>
+                <thead>
+                  <tr className='bg-gray-50 print:bg-gray-100'>
+                    <th className='py-1.5 px-4 text-left text-[9px] font-bold uppercase tracking-wider text-gray-500'>Deductions</th>
+                    <th className='py-1.5 px-4 text-right text-[9px] font-bold uppercase tracking-wider text-gray-500'>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(record.pfAmount ?? 0) > 0 && <Row label='Provident Fund (PF)' value={`− ${fmt(record.pfAmount)}`} />}
+                  {(record.ptAmount ?? 0) > 0 && <Row label='Professional Tax (PT)' value={`− ${fmt(record.ptAmount)}`} />}
+                  {(record.tdsAmount ?? 0) > 0 && <Row label='Income Tax (TDS)' value={`− ${fmt(record.tdsAmount)}`} />}
+                  {record.taxDeduction > 0 && (record.tdsAmount ?? 0) === 0 && <Row label='TDS / Tax Override' value={`− ${fmt(record.taxDeduction)}`} />}
+                  {record.latePenalty > 0 && <Row label='Late Penalty' value={`− ${fmt(record.latePenalty)}`} />}
+                  {record.otherDeductions > 0 && <Row label='Other Deductions' value={`− ${fmt(record.otherDeductions)}`} />}
+                  <Row label='Total Deductions' value={`− ${fmt(totalDeductions)}`} bold />
+                </tbody>
+              </table>
+            </div>
 
-        {/* Deductions table */}
-        <div className='px-8 py-6 border-b border-gray-100'>
-          <p className='text-xs font-bold uppercase tracking-wider text-gray-400 mb-4 flex items-center gap-1.5'>
-            <TrendingDown className='w-3.5 h-3.5 text-red-500' />
-            Statutory & Policy Deductions
-          </p>
-          <table className='w-full'>
-            <tbody>
-              {record.latePenalty > 0 && (
-                <Row label='Late Arrival Deductions' value={`− ${fmt(record.latePenalty)}`} />
-              )}
-              {record.taxDeduction > 0 && (
-                <Row label='TDS (Tax Deducted at Source)' value={`− ${fmt(record.taxDeduction)}`} />
-              )}
-              {record.otherDeductions > 0 && (
-                <Row label='Other Deductions / Overrides' value={`− ${fmt(record.otherDeductions)}`} />
-              )}
-              {totalDeductions === 0 && (
-                <Row label='No Statutory Deductions' value='₹0.00' />
-              )}
-              <Row label='Total Statutory Deductions' value={`− ${fmt(totalDeductions)}`} bold />
-            </tbody>
-          </table>
-        </div>
-
-        {/* Net payout */}
-        <div className='px-8 py-6 bg-gray-950 flex items-center justify-between text-white'>
-          <div>
-            <p className='text-xs font-bold uppercase tracking-wider text-gray-400'>
-              Net Salary Payout
-            </p>
-            <p className='text-[10px] text-gray-500 mt-1'>{payPeriod}</p>
+            {/* Net Payout Box */}
+            <div className='bg-gray-950 text-white p-4 mt-auto print:bg-gray-200 print:text-black'>
+              <div className='flex items-center justify-between'>
+                <p className='text-[10px] font-bold uppercase tracking-wider text-gray-400 print:text-gray-600'>
+                  Net Salary
+                </p>
+                <p className='text-lg font-extrabold tracking-tight'>{fmt(record.netPayout)}</p>
+              </div>
+            </div>
           </div>
-          <p className='text-3xl font-extrabold text-white tracking-tight'>{fmt(record.netPayout)}</p>
         </div>
 
         {/* Footer */}
-        <div className='px-8 py-5 bg-gray-50 border-t border-gray-100 text-center text-gray-400'>
-          <p className='text-[10px]'>
+        <div className='px-4 py-2 bg-gray-50 border-t border-gray-100 text-center text-gray-400 print:border-t-0'>
+          <p className='text-[8px]'>
             This is a computer-generated payslip. No physical signature is required.
-          </p>
-          <p className='text-[9px] mt-1 text-gray-300'>
-            Transaction/Record Token: {record.id}
           </p>
         </div>
       </div>
     </div>
-  );
-}
-
-function Shield({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns='http://www.w3.org/2000/svg'
-      width='24'
-      height='24'
-      viewBox='0 0 24 24'
-      fill='none'
-      stroke='currentColor'
-      strokeWidth='2'
-      strokeLinecap='round'
-      strokeLinejoin='round'
-      className={className}
-    >
-      <path d='M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8-2a1 1 0 0 1 .48 0l8 2A1 1 0 0 1 20 6z' />
-    </svg>
   );
 }

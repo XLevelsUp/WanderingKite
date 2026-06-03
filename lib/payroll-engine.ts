@@ -38,6 +38,7 @@ function round2(n: number): number {
 export function calculatePayout(input: PayrollInput): PayrollBreakdown {
   const {
     baseSalary,
+    month,
     workingDays,
     presentDays,
     lateDays,
@@ -53,7 +54,30 @@ export function calculatePayout(input: PayrollInput): PayrollBreakdown {
     halfDays = 0,
     onAidLeaveDays = 0,
     deductionDays = 0,
-    incentiveHours = 0,
+    incentiveAmount = 0,
+
+    // Compliance Flags
+    employmentType = 'FULL_TIME',
+    pfEnrolled = false,
+    pfContinued = false,
+    ptExempt = false,
+    tdsExempt = false,
+
+    // Compliance Settings
+    pfWageCeiling = 15000,
+    pfContributionPercent = 12,
+    ptSlabs = [
+      { min: 0, max: 3500, amount: 0 },
+      { min: 3501, max: 5000, amount: 22.50 },
+      { min: 5001, max: 7500, amount: 52.50 },
+      { min: 7501, max: 10000, amount: 115.00 },
+      { min: 10001, max: 12500, amount: 171.00 },
+      { min: 12501, max: 999999999, amount: 208.33 }
+    ],
+    ptDeductionFrequency = 'MONTHLY',
+    enablePF = true,
+    enablePT = true,
+    enableTDS = true,
   } = input;
 
   // Guard against division by zero
@@ -71,32 +95,113 @@ export function calculatePayout(input: PayrollInput): PayrollBreakdown {
   const hourlyRate = baseSalary / totalWorkingHours;
 
   // Incentive and Overtime amounts
-  const incentiveAmount = round2(incentiveHours * hourlyRate);
+  const finalIncentiveAmount = round2(incentiveAmount);
   const overtimeAmount = round2(overtimeHours * hourlyRate);
 
   // Late penalty: flat deduction per late-minute
   const latePenalty = round2(lateDays * avgLateMinutes * latePenaltyPerMinute);
 
   // Gross earnings (before tax, after late penalty and adjustments)
-  const grossEarnings = basePay + overtimeAmount + incentiveAmount + bonusAmount;
+  const grossEarnings = round2(basePay + overtimeAmount + finalIncentiveAmount + bonusAmount - latePenalty);
 
-  // TDS: 10% on gross > ₹50,000/month
-  const taxDeduction =
-    grossEarnings > TAX_SLAB ? round2(grossEarnings * TAX_RATE) : 0;
+  // --- STATUTORY COMPLIANCE (PF, PT, TDS) ---
+  let pfAmount = 0;
+  let ptAmount = 0;
+  let tdsAmount = 0;
+
+  const isExemptType = employmentType === 'INTERN';
+
+  // 1. Provident Fund (PF)
+  if (enablePF && !isExemptType) {
+    // Apply PF if enrolled, continued, or base salary is below or equal to ceiling
+    if (pfEnrolled || pfContinued || baseSalary <= pfWageCeiling) {
+      // PF is calculated on earned basePay, capped at the wage ceiling
+      const pfBasis = Math.min(basePay, pfWageCeiling);
+      pfAmount = round2(pfBasis * (pfContributionPercent / 100));
+    }
+  }
+
+  // 2. Professional Tax (PT)
+  if (enablePT && !isExemptType && !ptExempt) {
+    let monthlySlabAmount = 0;
+    // Find the matching slab for the gross earnings
+    for (const slab of ptSlabs) {
+      const min = slab.min || 0;
+      const max = slab.max || Infinity;
+      if (grossEarnings >= min && grossEarnings <= max) {
+        monthlySlabAmount = slab.amount;
+        break;
+      }
+    }
+
+    if (ptDeductionFrequency === 'HALF_YEARLY') {
+      if (month === 2 || month === 8) {
+        ptAmount = monthlySlabAmount * 6;
+      }
+    } else if (ptDeductionFrequency === 'YEARLY') {
+      if (month === 3) {
+        ptAmount = monthlySlabAmount * 12;
+      }
+    } else {
+      ptAmount = monthlySlabAmount;
+    }
+  }
+
+  // 3. Tax Deducted at Source (TDS) - New Regime FY 2025-26
+  if (enableTDS && !isExemptType && !tdsExempt) {
+    const projectedAnnual = grossEarnings * 12;
+
+    // Apply Section 87A rebate (Nil tax if <= 12,00,000)
+    if (projectedAnnual > 1200000) {
+      let annualTax = 0;
+      let remaining = projectedAnnual;
+
+      // Slab calculations
+      if (remaining > 2400000) {
+        annualTax += (remaining - 2400000) * 0.30;
+        remaining = 2400000;
+      }
+      if (remaining > 2000000) {
+        annualTax += (remaining - 2000000) * 0.25;
+        remaining = 2000000;
+      }
+      if (remaining > 1600000) {
+        annualTax += (remaining - 1600000) * 0.20;
+        remaining = 1600000;
+      }
+      if (remaining > 1200000) {
+        annualTax += (remaining - 1200000) * 0.15;
+        remaining = 1200000;
+      }
+      if (remaining > 800000) {
+        annualTax += (remaining - 800000) * 0.10;
+        remaining = 800000;
+      }
+      if (remaining > 400000) {
+        annualTax += (remaining - 400000) * 0.05;
+        remaining = 400000;
+      }
+
+      tdsAmount = round2(annualTax / 12);
+    }
+  }
+
+  // Backwards compatibility for arbitrary taxDeduction passed in via override
+  const finalTaxDeduction = input.taxDeduction !== undefined ? input.taxDeduction : tdsAmount;
 
   // Net payout
   const netPayout = round2(
-    grossEarnings - latePenalty - taxDeduction - otherDeductions,
+    grossEarnings - pfAmount - ptAmount - finalTaxDeduction - otherDeductions,
   );
 
   return {
     basePay,
     overtimeAmount,
-    incentiveAmount,
+    incentiveAmount: finalIncentiveAmount,
     bonusAmount: round2(bonusAmount),
     latePenalty,
     unpaidLeaves: deductionsTotal, // unpaid leaves exposed as deductionsTotal
-    taxDeduction,
+    taxDeduction: finalTaxDeduction,
     otherDeductions: round2(otherDeductions),
     netPayout: Math.max(0, netPayout), // Never negative
     presentDays,
@@ -112,8 +217,13 @@ export function calculatePayout(input: PayrollInput): PayrollBreakdown {
     deductionDays,
     perDaySalary,
     deductionsTotal,
-    incentiveHours,
     overtimeHours,
+
+    // Statutory Breakdown
+    grossEarnings,
+    pfAmount,
+    ptAmount,
+    tdsAmount: finalTaxDeduction,
   };
 }
 
@@ -218,12 +328,13 @@ export function computePresentDaysForMonth(
     }
   }
 
-  // Quota paid leaves logic: if taken leave and still has quota remaining, reclassify as paid
-  const paidLeavesUsed = Math.min(leaveDays, allowedPaidLeaves);
-  const unpaidLeaveDays = Math.max(0, leaveDays - paidLeavesUsed);
+  // Quota paid leaves logic applies to both absent days and leave days
+  const totalAbsences = leaveDays + absentDays;
+  const paidLeavesUsed = Math.min(totalAbsences, allowedPaidLeaves);
+  const unpaidLeaveDays = Math.max(0, totalAbsences - paidLeavesUsed);
 
-  // Deduction days (absent, half days, unpaid leaves)
-  const deductionDays = absentDays + (halfDays * 0.5) + unpaidLeaveDays;
+  // Deduction days (half days, and whatever unpaid absences are left)
+  const deductionDays = (halfDays * 0.5) + unpaidLeaveDays;
 
   // Net present days
   const presentDays = Math.max(0, totalDays - deductionDays);

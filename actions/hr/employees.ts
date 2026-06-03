@@ -62,7 +62,8 @@ export async function getHREmployees(query?: string): Promise<HREmployee[]> {
       employee_contracts(
         id, profileId, jobTitle, employmentType, baseSalary,
         joiningDate, bankAccountName, bankAccountNumber, bankIFSC, upiId,
-        avatarUrl, notes, isActive, deactivatedAt, createdAt, updatedAt
+        avatarUrl, notes, isActive, deactivatedAt, createdAt, updatedAt,
+        employeeNumber, department, pfEnrolled, pfContinued, ptExempt, tdsExempt, exemptionReason
       )
     `,
     )
@@ -107,7 +108,8 @@ export async function getHREmployee(profileId: string): Promise<HREmployee | nul
       employee_contracts(
         id, profileId, jobTitle, employmentType, baseSalary,
         joiningDate, bankAccountName, bankAccountNumber, bankIFSC, upiId,
-        avatarUrl, notes, isActive, deactivatedAt, createdAt, updatedAt
+        avatarUrl, notes, isActive, deactivatedAt, createdAt, updatedAt,
+        employeeNumber, department, pfEnrolled, pfContinued, ptExempt, tdsExempt, exemptionReason
       )
     `,
     )
@@ -214,6 +216,13 @@ export async function createHREmployee(formData: HROnboardingFormData) {
     avatarUrl: contractData.avatarUrl || null,
     notes: contractData.notes || null,
     incentive: contractData.incentive || 0,
+    employeeNumber: contractData.employeeNumber || null,
+    department: contractData.department || null,
+    pfEnrolled: contractData.pfEnrolled || false,
+    pfContinued: contractData.pfContinued || false,
+    ptExempt: contractData.ptExempt || false,
+    tdsExempt: contractData.tdsExempt || false,
+    exemptionReason: contractData.exemptionReason || null,
   });
 
   if (error) {
@@ -319,6 +328,13 @@ export async function createAndOnboardEmployee(formData: UnifiedOnboardingFormDa
       avatarUrl: avatarUrl || null,
       notes: notes || null,
       incentive: incentive || 0,
+      employeeNumber: formData.employeeNumber || null,
+      department: formData.department || null,
+      pfEnrolled: formData.pfEnrolled || false,
+      pfContinued: formData.pfContinued || false,
+      ptExempt: formData.ptExempt || false,
+      tdsExempt: formData.tdsExempt || false,
+      exemptionReason: formData.exemptionReason || null,
     });
 
   if (contractError) {
@@ -387,12 +403,20 @@ export async function updateContract(contractId: string, data: ContractFormData)
       avatarUrl: result.data.avatarUrl || null,
       notes: result.data.notes || null,
       incentive: result.data.incentive || 0,
+      employeeNumber: result.data.employeeNumber || null,
+      department: result.data.department || null,
+      pfEnrolled: result.data.pfEnrolled || false,
+      pfContinued: result.data.pfContinued || false,
+      ptExempt: result.data.ptExempt || false,
+      tdsExempt: result.data.tdsExempt || false,
+      exemptionReason: result.data.exemptionReason || null,
     })
     .eq('id', contractId);
 
   if (error) return { error: error.message };
 
   revalidatePath('/admin/employees');
+  revalidatePath('/admin/payroll', 'layout');
   return { success: true };
 }
 

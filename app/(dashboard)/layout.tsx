@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { SidebarNav } from '@/components/dashboard/SidebarNav';
 
 export const metadata: Metadata = {
   title: 'Dashboard - Rental Management',
@@ -39,83 +40,7 @@ export default async function DashboardLayout({
             <h1 className="text-xl font-bold mb-8 text-gradient-brand">
               Rental System
             </h1>
-            <nav className="space-y-1">
-              {[
-                { href: '/dashboard', label: 'Dashboard' },
-                { href: '/dashboard/portfolio', label: 'Portfolio' },
-                { href: '/dashboard/equipment', label: 'Equipment' },
-                { href: '/dashboard/clients', label: 'Clients' },
-                { href: '/dashboard/rentals', label: 'Rentals' },
-                { href: '/dashboard/employees', label: 'Employees' },
-              ].map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
-                >
-                  {item.label}
-                </a>
-              ))}
-              {(profile?.role === 'ADMIN' ||
-                profile?.role === 'SUPER_ADMIN') && (
-                <>
-                  <a
-                    href="/dashboard/deployments"
-                    className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
-                  >
-                    Field Ops
-                  </a>
-                  <a
-                    href="/dashboard/categories"
-                    className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
-                  >
-                    Categories
-                  </a>
-                  <a
-                    href="/dashboard/branches"
-                    className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
-                  >
-                    Branches
-                  </a>
-                </>
-              )}
-              {profile?.role === 'SUPER_ADMIN' && (
-                <a
-                  href="/dashboard/audit-logs"
-                  className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
-                >
-                  Audit Logs
-                </a>
-              )}
-              {(profile?.role === 'ADMIN' ||
-                profile?.role === 'SUPER_ADMIN') && (
-                <>
-                  <div className="pt-3 pb-1">
-                    <p className="px-4 text-[9px] font-bold uppercase tracking-[0.2em] text-primary/40">
-                      HR &amp; Payroll
-                    </p>
-                  </div>
-                  <a
-                    href="/admin/employees"
-                    className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
-                  >
-                    Employees
-                  </a>
-                  <a
-                    href="/admin/attendance"
-                    className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
-                  >
-                    Attendance
-                  </a>
-                  <a
-                    href="/admin/payroll"
-                    className="block px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150"
-                  >
-                    Payroll
-                  </a>
-                </>
-              )}
-            </nav>
+            <SidebarNav profile={profile} email={user.email || ''} />
           </div>
           <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-primary/12 bg-[rgba(17,17,22,0.98)]">
             <div className="flex items-center justify-between">
