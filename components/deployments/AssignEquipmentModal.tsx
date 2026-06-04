@@ -12,6 +12,7 @@ import {
   Loader2,
   CheckCircle,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 // ─── Types matching what getAssignmentFormData() returns ────────────────────
 interface EmployeeOption {
@@ -120,14 +121,18 @@ export function AssignEquipmentModal({
     setFieldErrors({});
 
     startTransition(async () => {
+      const toastId = toast.loading('Assigning equipment...');
       const res = await createAssignmentAction(raw);
       setResult(res);
       if (res.success) {
+        toast.success('Equipment assigned successfully!', { id: toastId });
         formRef.current?.reset();
         setTimeout(() => {
           setOpen(false);
           setResult(null);
         }, 1400);
+      } else {
+        toast.error(res.error || 'Failed to assign equipment', { id: toastId });
       }
     });
   }
@@ -149,7 +154,7 @@ export function AssignEquipmentModal({
           transition-all duration-150 shadow-lg shadow-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
       >
         <PlusCircle className="w-4 h-4" />
-        Assign Equipment
+        Assign Project
       </button>
 
       {/* Backdrop */}
@@ -172,7 +177,7 @@ export function AssignEquipmentModal({
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
               <div>
                 <h2 className="text-base font-semibold text-foreground/90">
-                  Assign Equipment
+                  Assign Project
                 </h2>
                 <p className="text-xs text-foreground/40 mt-0.5">
                   Deploy gear to a photographer for a shoot

@@ -15,6 +15,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { useNotifications } from '@/components/ui/useNotifications';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -23,11 +25,13 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
+  const { hideLoader, showError } = useNotifications();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    const toastId = toast.loading('Signing in to your account...');
 
     try {
       const { data, error: signInError } =
@@ -38,18 +42,25 @@ export default function LoginPage() {
 
       if (signInError) {
         setError(signInError.message);
+        toast.error(signInError.message, { id: toastId });
+        hideLoader();
         return;
       }
 
       if (data.user) {
+        toast.success('Successfully signed in!', { id: toastId });
         router.push('/dashboard');
         router.refresh();
       }
     } catch (err) {
       setError('An unexpected error occurred');
+      toast.error('An unexpected error occurred', { id: toastId });
       logger.error('[Login]', err);
+      hideLoader();
     } finally {
       setIsLoading(false);
+      // NOTE: We don't hideLoader() here on success because the redirect will handle tearing down the client state,
+      // and we want the loader to persist through the Next.js page transition.
     }
   };
 
@@ -61,7 +72,7 @@ export default function LoginPage() {
             Rental Management
           </CardTitle>
           <CardDescription>
-            Enter your credentials to access the dashboard
+            Enter your credentials to access the main menu
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useState, useCallback, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Toast, ToastProps } from './Toast';
 import { Banner, BannerProps } from './Banner';
 import { Modal, ModalProps } from './Modal';
@@ -24,6 +24,9 @@ export interface NotificationContextType {
 
   showBanner: (options: OmittedBannerProps) => string;
   removeBanner: (id: string) => void;
+
+  showLoader: (message?: string) => void;
+  hideLoader: () => void;
 }
 
 export const NotificationContext = createContext<
@@ -38,6 +41,7 @@ export function NotificationProvider({
   const [toasts, setToasts] = useState<ToastProps[]>([]);
   const [modals, setModals] = useState<ModalProps[]>([]);
   const [banners, setBanners] = useState<BannerProps[]>([]);
+  const [loaderMessage, setLoaderMessage] = useState<string | null>(null);
 
   // Toasts
   const removeToast = useCallback((id: string) => {
@@ -97,6 +101,15 @@ export function NotificationProvider({
     const id = Math.random().toString(36).substring(2, 9);
     setBanners((prev) => [...prev, { ...options, id }]);
     return id;
+  }, []);
+
+  // Loader
+  const showLoader = useCallback((message = 'Processing...') => {
+    setLoaderMessage(message);
+  }, []);
+
+  const hideLoader = useCallback(() => {
+    setLoaderMessage(null);
   }, []);
 
   // 1. Offline Detector
@@ -205,6 +218,8 @@ export function NotificationProvider({
         removeModal,
         showBanner,
         removeBanner,
+        showLoader,
+        hideLoader,
       }}
     >
       {/* Banners */}
@@ -215,6 +230,28 @@ export function NotificationProvider({
           ))}
         </AnimatePresence>
       </div>
+
+      {/* Global Loader Overlay */}
+      <AnimatePresence>
+        {loaderMessage !== null && (
+          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm pointer-events-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="flex flex-col items-center justify-center gap-4 p-8 bg-[rgba(17,17,22,0.96)] border border-white/10 shadow-2xl rounded-2xl"
+            >
+              <div className="relative flex items-center justify-center w-12 h-12">
+                <div className="absolute inset-0 border-4 border-white/10 rounded-full" />
+                <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin" />
+              </div>
+              <p className="text-sm font-semibold tracking-wider text-primary uppercase">
+                {loaderMessage}
+              </p>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {children}
 

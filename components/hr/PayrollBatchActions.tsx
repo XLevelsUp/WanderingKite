@@ -5,17 +5,20 @@ import { useRouter } from 'next/navigation';
 import { approveBatchPayroll, rejectBatchPayroll, markBatchPaid, deleteBatchPayroll } from '@/actions/hr/payroll';
 import { CheckCircle, CreditCard, Loader2, XCircle, Trash2 } from 'lucide-react';
 import type { PayrollStatus } from '@/lib/types/hr';
+import { useNotifications } from '@/components/ui/useNotifications';
 
 interface BatchActionsProps {
   month: number;
   year: number;
   allStatuses: PayrollStatus[];
+  isSuperAdmin?: boolean;
 }
 
-export function PayrollBatchActions({ month, year, allStatuses }: BatchActionsProps) {
+export function PayrollBatchActions({ month, year, allStatuses, isSuperAdmin = false }: BatchActionsProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const { showModal, removeModal } = useNotifications();
 
   const anyDraft = allStatuses.some((s) => s === 'DRAFT');
   const allApproved = allStatuses.every((s) => s === 'APPROVED');
@@ -42,12 +45,20 @@ export function PayrollBatchActions({ month, year, allStatuses }: BatchActionsPr
   }
 
   function handleDeleteAll() {
-    if (!window.confirm('Are you sure you want to delete all draft payroll records for this month? This cannot be undone.')) return;
-    setError(null);
-    startTransition(async () => {
-      const res = await deleteBatchPayroll(month, year);
-      if (res.error) setError(res.error);
-      else router.refresh();
+    const modalId = showModal({
+      title: 'Delete Draft Batch',
+      description: 'Are you sure you want to delete all draft payroll records for this month? This cannot be undone.',
+      confirmText: 'Delete All',
+      cancelText: 'Cancel',
+      onCancel: () => removeModal(modalId),
+      onConfirm: () => {
+        setError(null);
+        startTransition(async () => {
+          const res = await deleteBatchPayroll(month, year);
+          if (res.error) setError(res.error);
+          else router.refresh();
+        });
+      }
     });
   }
 
@@ -75,23 +86,27 @@ export function PayrollBatchActions({ month, year, allStatuses }: BatchActionsPr
             Approve All
           </button>
 
-          <button
-            onClick={handleRejectAll}
-            disabled={isPending}
-            className='flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500/12 border border-amber-500/25 text-sm font-semibold text-amber-300 hover:bg-amber-500/22 disabled:opacity-50 transition-all'
-          >
-            {isPending ? <Loader2 className='h-4 w-4 animate-spin' /> : <XCircle className='h-4 w-4' />}
-            Reject All
-          </button>
+          {isSuperAdmin && (
+            <>
+              <button
+                onClick={handleRejectAll}
+                disabled={isPending}
+                className='flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500/12 border border-amber-500/25 text-sm font-semibold text-amber-300 hover:bg-amber-500/22 disabled:opacity-50 transition-all'
+              >
+                {isPending ? <Loader2 className='h-4 w-4 animate-spin' /> : <XCircle className='h-4 w-4' />}
+                Reject All
+              </button>
 
-          <button
-            onClick={handleDeleteAll}
-            disabled={isPending}
-            className='flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-500/12 border border-red-500/25 text-sm font-semibold text-red-300 hover:bg-red-500/22 disabled:opacity-50 transition-all'
-          >
-            {isPending ? <Loader2 className='h-4 w-4 animate-spin' /> : <Trash2 className='h-4 w-4' />}
-            Delete Draft Batch
-          </button>
+              <button
+                onClick={handleDeleteAll}
+                disabled={isPending}
+                className='flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-500/12 border border-red-500/25 text-sm font-semibold text-red-300 hover:bg-red-500/22 disabled:opacity-50 transition-all'
+              >
+                {isPending ? <Loader2 className='h-4 w-4 animate-spin' /> : <Trash2 className='h-4 w-4' />}
+                Delete Draft Batch
+              </button>
+            </>
+          )}
         </>
       )}
 

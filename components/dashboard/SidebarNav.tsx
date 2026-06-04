@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Briefcase,
@@ -14,6 +16,7 @@ import {
   GitBranch,
   ArrowLeftCircle,
 } from 'lucide-react';
+import { getNavAccess } from '@/lib/access';
 
 interface SidebarNavProps {
   profile: {
@@ -25,25 +28,9 @@ interface SidebarNavProps {
 
 export function SidebarNav({ profile, email }: SidebarNavProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const router = useRouter();
 
-  const isAdmin = profile?.role === 'ADMIN' || profile?.role === 'SUPER_ADMIN';
-  const isSuperAdmin = profile?.role === 'SUPER_ADMIN';
-
-  // Standard main dashboard items
-  const mainNavItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/dashboard/portfolio', label: 'Portfolio', icon: FolderKanban },
-    { href: '/dashboard/equipment', label: 'Equipment', icon: Briefcase },
-    { href: '/dashboard/clients', label: 'Clients', icon: Users },
-    { href: '/dashboard/rentals', label: 'Rentals', icon: Wallet },
-    { href: '/dashboard/employees', label: 'Employees', icon: Users },
-  ];
-
-  const adminNavItems = [
-    { href: '/dashboard/deployments', label: 'Field Ops', icon: Activity },
-    { href: '/dashboard/categories', label: 'Categories', icon: Layers },
-    { href: '/dashboard/branches', label: 'Branches', icon: GitBranch },
-  ];
+  const access = getNavAccess(profile?.role ?? 'EMPLOYEE');
 
   // The 3 sub-categories of HR and Payroll
   const subCategories = [
@@ -60,7 +47,7 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
           className='w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-xl text-xs font-bold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 hover:bg-primary/18 transition-all duration-150 group'
         >
           <ArrowLeftCircle className='w-4 h-4 text-primary group-hover:-translate-x-0.5 transition-transform' />
-          Return to Dashboard
+          Return to Main Menu
         </button>
 
         <div className='space-y-1 mt-2'>
@@ -70,14 +57,14 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
           {subCategories.map((sub) => {
             const SubIcon = sub.icon;
             return (
-              <a
+              <Link
                 key={sub.href}
                 href={sub.href}
                 className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/70 hover:text-primary hover:bg-primary/8 transition-all duration-150'
               >
                 <SubIcon className='w-4 h-4 opacity-75' />
                 {sub.label}
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -87,56 +74,113 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
 
   return (
     <nav className='space-y-1.5 animate-in fade-in duration-200'>
-      {/* Render Main Navigation Links */}
-      {mainNavItems.map((item) => {
-        const Icon = item.icon;
-        return (
-          <a
-            key={item.href}
-            href={item.href}
-            className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
-          >
-            <Icon className='w-4 h-4 opacity-75' />
-            {item.label}
-          </a>
-        );
-      })}
+      <h1 className='text-xl font-bold mb-8 text-gradient-brand'>Main Menu</h1>
+      {/* Always visible: Overview */}
+      <Link
+        href='/dashboard'
+        className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
+      >
+        <LayoutDashboard className='w-4 h-4 opacity-75' />
+        Dashboard
+      </Link>
 
-      {/* Admin Specific Links */}
-      {isAdmin &&
-        adminNavItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <a
-              key={item.href}
-              href={item.href}
-              className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
-            >
-              <Icon className='w-4 h-4 opacity-75' />
-              {item.label}
-            </a>
-          );
-        })}
-
-      {/* Super Admin Audit Logs */}
-      {isSuperAdmin && (
-        <a
-          href='/dashboard/audit-logs'
+      {/* Employee-visible: Own profile */}
+      {access.canViewEmployees && (
+        <Link
+          href='/dashboard/employees'
           className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
         >
+          <Users className='w-4 h-4 opacity-75' />
+          Employees
+        </Link>
+      )}
+
+      {/* Employee-visible: Personal HR */}
+      {access.canViewOwnAttendance && (
+        <Link
+          href='/dashboard/attendance'
+          className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
+        >
+          <Calendar className='w-4 h-4 opacity-75' />
+          My Attendance
+        </Link>
+      )}
+      {access.canViewOwnPayslips && (
+        <Link
+          href='/dashboard/payslips'
+          className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
+        >
+          <Wallet className='w-4 h-4 opacity-75' />
+          My Payslips
+        </Link>
+      )}
+
+      {/* Admin-only operational pages */}
+      {access.canViewPortfolio && (
+        <Link href='/dashboard/portfolio' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+          <FolderKanban className='w-4 h-4 opacity-75' />
+          Portfolio
+        </Link>
+      )}
+      {access.canViewEquipment && (
+        <Link href='/dashboard/equipment' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+          <Briefcase className='w-4 h-4 opacity-75' />
+          Equipment
+        </Link>
+      )}
+      {access.canViewClients && (
+        <Link href='/dashboard/clients' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+          <Users className='w-4 h-4 opacity-75' />
+          Clients
+        </Link>
+      )}
+      {/* Rentals — hidden from UI
+      {access.canViewRentals && (
+        <a href='/dashboard/rentals' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+          <Wallet className='w-4 h-4 opacity-75' />
+          Rentals
+        </a>
+      )}
+      */}
+      {access.canViewDeployments && (
+        <Link href='/dashboard/deployments' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+          <Activity className='w-4 h-4 opacity-75' />
+          Field Ops
+        </Link>
+      )}
+
+      {/* Admin extras: Categories, Branches — hidden from UI
+      {access.canViewAdminExtras && (
+        <>
+          <a href='/dashboard/categories' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+            <Layers className='w-4 h-4 opacity-75' />
+            Categories
+          </a>
+          <a href='/dashboard/branches' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+            <GitBranch className='w-4 h-4 opacity-75' />
+            Branches
+          </a>
+        </>
+      )}
+      */}
+
+      {/* Super Admin: Audit Logs — hidden from UI
+      {access.canViewAuditLogs && (
+        <a href='/dashboard/audit-logs' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
           <ShieldCheck className='w-4 h-4 opacity-75' />
           Audit Logs
         </a>
       )}
+      */}
 
-      {/* HR & Payroll Section Button */}
-      {isAdmin && (
+      {/* HR & Payroll module button (admin only) */}
+      {access.canAccessHR && (
         <div className='pt-3 pb-1 border-t border-primary/10 mt-3 space-y-1'>
           <p className='px-4 text-[9px] font-bold uppercase tracking-[0.2em] text-primary/45 mb-2'>
             Modules
           </p>
-
-          <button
+          <Link
+            href="/admin/employees"
             onClick={() => setIsExpanded(true)}
             className='w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
           >
@@ -144,7 +188,7 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
               <Users className='w-4 h-4 opacity-75' />
               HR & Payroll
             </span>
-          </button>
+          </Link>
         </div>
       )}
     </nav>

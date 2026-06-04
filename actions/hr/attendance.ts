@@ -188,6 +188,33 @@ export async function getEmployeeMonthlyAttendance(
   return (data ?? []) as AttendanceLogRow[];
 }
 
+/**
+ * Get attendance logs for the logged-in employee over a month.
+ */
+export async function getOwnAttendance(
+  month: number,
+  year: number,
+): Promise<AttendanceLogRow[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+  const lastDay = new Date(year, month, 0).getDate();
+  const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+  const { data, error } = await supabase
+    .from('attendance_logs')
+    .select('*')
+    .eq('employeeId', user.id)
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('date', { ascending: true });
+
+  if (error) return [];
+  return (data ?? []) as AttendanceLogRow[];
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // WRITE: Single log
 // ─────────────────────────────────────────────────────────────────────────────

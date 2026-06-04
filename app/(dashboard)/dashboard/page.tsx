@@ -17,6 +17,7 @@ import {
   Activity,
   AlertTriangle,
 } from 'lucide-react';
+import { EmployeeDashboard } from './EmployeeDashboard';
 
 export const metadata: Metadata = {
   title: 'Overview — Studio ERP',
@@ -25,6 +26,17 @@ export const metadata: Metadata = {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return null;
+  }
+
+  const { data: profile } = await supabase.from('profiles').select('role, fullName').eq('id', user.id).single();
+  const isEmployee = profile?.role === 'EMPLOYEE';
+
+  if (isEmployee) {
+    return <EmployeeDashboard user={user} profile={profile} />;
+  }
 
   // Core counts
   const [equipmentCount, clientsCount, activeRentalsCount] = await Promise.all([
@@ -114,7 +126,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
         {statCards.map((card) => (
           <Link key={card.title} href={card.href} className="block">
             <Card className="hover:shadow-md transition-shadow cursor-pointer">

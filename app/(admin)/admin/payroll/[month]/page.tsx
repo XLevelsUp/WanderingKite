@@ -1,4 +1,5 @@
 import { getPayrollForMonth } from '@/actions/hr/payroll';
+import { createClient } from '@/lib/supabase/server';
 import { PayrollSummaryCard } from '@/components/hr/PayrollSummaryCard';
 import { PayrollBatchActions } from '@/components/hr/PayrollBatchActions';
 import { ArrowLeft, DollarSign } from 'lucide-react';
@@ -33,6 +34,14 @@ export default async function PayrollBatchPage({
 
   if (isNaN(year) || isNaN(month) || month < 1 || month > 12) notFound();
 
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  let isSuperAdmin = false;
+  if (user) {
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role === 'SUPER_ADMIN') isSuperAdmin = true;
+  }
+
   const records = await getPayrollForMonth(month, year);
 
   if (records.length === 0) {
@@ -60,9 +69,9 @@ export default async function PayrollBatchPage({
     );
   }
 
-  const allStatuses = records.map((r) => r.status) as PayrollStatus[];
-  const totalNet = records.reduce((sum, r) => sum + r.netPayout, 0);
-  const totalPaid = records.filter((r) => r.status === 'PAID').length;
+  const allStatuses = records.map((r: any) => r.status) as PayrollStatus[];
+  const totalNet = records.reduce((sum: number, r: any) => sum + r.netPayout, 0);
+  const totalPaid = records.filter((r: any) => r.status === 'PAID').length;
 
   return (
     <div className='p-6 md:p-8 max-w-5xl mx-auto space-y-8'>
@@ -92,13 +101,13 @@ export default async function PayrollBatchPage({
           </p>
         </div>
 
-        <PayrollBatchActions month={month} year={year} allStatuses={allStatuses} />
+        <PayrollBatchActions month={month} year={year} allStatuses={allStatuses} isSuperAdmin={isSuperAdmin} />
       </div>
 
       {/* Cards grid */}
       <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5'>
         {records.map((record) => (
-          <PayrollSummaryCard key={record.id} record={record} />
+          <PayrollSummaryCard key={record.id} record={record} isSuperAdmin={isSuperAdmin} />
         ))}
       </div>
     </div>

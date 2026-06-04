@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import type { PayrollRecordWithEmployee, PayrollStatus } from '@/lib/types/hr';
 import Link from 'next/link';
+import { useNotifications } from '@/components/ui/useNotifications';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -380,14 +381,16 @@ function OverrideModal({
 
 interface PayrollSummaryCardProps {
   record: PayrollRecordWithEmployee;
+  isSuperAdmin?: boolean;
 }
 
-export function PayrollSummaryCard({ record }: PayrollSummaryCardProps) {
+export function PayrollSummaryCard({ record, isSuperAdmin = false }: PayrollSummaryCardProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showOverride, setShowOverride] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const { showModal, removeModal } = useNotifications();
 
   const { employee, status } = record;
   const statusCfg = STATUS_CFG[status] ?? STATUS_CFG.DRAFT;
@@ -413,22 +416,38 @@ export function PayrollSummaryCard({ record }: PayrollSummaryCardProps) {
   }
 
   function handleReject() {
-    if (!window.confirm('Are you sure you want to reject this payroll record?')) return;
-    setActionError(null);
-    startTransition(async () => {
-      const res = await rejectPayroll(record.id);
-      if (res.error) setActionError(res.error);
-      else router.refresh();
+    const modalId = showModal({
+      title: 'Reject Payroll',
+      description: 'Are you sure you want to reject this payroll record?',
+      confirmText: 'Reject',
+      cancelText: 'Cancel',
+      onCancel: () => removeModal(modalId),
+      onConfirm: () => {
+        setActionError(null);
+        startTransition(async () => {
+          const res = await rejectPayroll(record.id);
+          if (res.error) setActionError(res.error);
+          else router.refresh();
+        });
+      }
     });
   }
 
   function handleDelete() {
-    if (!window.confirm('Are you sure you want to delete this payroll record? This action cannot be undone.')) return;
-    setActionError(null);
-    startTransition(async () => {
-      const res = await deletePayrollRecord(record.id);
-      if (res.error) setActionError(res.error);
-      else router.refresh();
+    const modalId = showModal({
+      title: 'Delete Payroll',
+      description: 'Are you sure you want to delete this payroll record? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onCancel: () => removeModal(modalId),
+      onConfirm: () => {
+        setActionError(null);
+        startTransition(async () => {
+          const res = await deletePayrollRecord(record.id);
+          if (res.error) setActionError(res.error);
+          else router.refresh();
+        });
+      }
     });
   }
 
@@ -576,15 +595,17 @@ export function PayrollSummaryCard({ record }: PayrollSummaryCardProps) {
                 {isPending ? <Loader2 className='h-3.5 w-3.5 animate-spin' /> : <CheckCircle className='h-3.5 w-3.5' />}
                 Approve
               </button>
-              <button
-                onClick={handleDelete}
-                disabled={isPending}
-                className='flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/25 text-[10px] font-bold text-red-300 hover:bg-red-500/20 disabled:opacity-50 transition-all ml-auto'
-                title="Delete generated payroll record"
-              >
-                {isPending ? <Loader2 className='h-3.5 w-3.5 animate-spin' /> : <Trash2 className='h-3.5 w-3.5' />}
-                Delete
-              </button>
+              {isSuperAdmin && (
+                <button
+                  onClick={handleDelete}
+                  disabled={isPending}
+                  className='flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/25 text-[10px] font-bold text-red-300 hover:bg-red-500/20 disabled:opacity-50 transition-all ml-auto'
+                  title="Delete generated payroll record"
+                >
+                  {isPending ? <Loader2 className='h-3.5 w-3.5 animate-spin' /> : <Trash2 className='h-3.5 w-3.5' />}
+                  Delete
+                </button>
+              )}
             </>
           )}
 

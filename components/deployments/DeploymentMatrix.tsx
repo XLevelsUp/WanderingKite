@@ -177,7 +177,7 @@ function AssignmentRow({
             status={assignment.status}
             isOverdue={assignment.isOverdue}
           />
-          {isAdmin && assignment.status !== 'returned' && (
+          {assignment.status !== 'returned' && (
             <QuickReturnButton
               assignmentId={assignment.id}
               equipmentName={assignment.equipment.name}

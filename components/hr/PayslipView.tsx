@@ -1,11 +1,12 @@
 'use client';
 
-import { Printer, ArrowLeft, Calendar, FileText, TrendingUp, TrendingDown } from 'lucide-react';
+import { Printer, Download, ArrowLeft, Calendar, FileText, TrendingUp, TrendingDown } from 'lucide-react';
 import type { PayrollRecordWithEmployee } from '@/lib/types/hr';
 import Link from 'next/link';
 
 interface PayslipViewProps {
   record: PayrollRecordWithEmployee;
+  isEmployee?: boolean;
 }
 
 const MONTH_NAMES = [
@@ -28,7 +29,7 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
   );
 }
 
-export function PayslipView({ record }: PayslipViewProps) {
+export function PayslipView({ record, isEmployee = false }: PayslipViewProps) {
   const { employee } = record;
   const payPeriod = `${MONTH_NAMES[record.month]} ${record.year}`;
   
@@ -59,18 +60,18 @@ export function PayslipView({ record }: PayslipViewProps) {
       {/* Screen-only controls */}
       <div className='print:hidden flex items-center justify-between'>
         <Link
-          href={`/admin/payroll/${record.year}-${record.month}`}
+          href={isEmployee ? '/dashboard/payslips' : `/admin/payroll/${record.year}-${record.month}`}
           className='flex items-center gap-2 text-xs font-semibold text-foreground/50 hover:text-foreground transition-colors'
         >
           <ArrowLeft className='w-4 h-4' />
-          Back to Monthly Payroll
+          {isEmployee ? 'Back to My Payslips' : 'Back to Monthly Payroll'}
         </Link>
         <button
           onClick={() => window.print()}
           className='flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/35 bg-primary/8 text-xs font-bold text-primary hover:bg-primary/18 hover:border-primary/60 transition-all'
         >
-          <Printer className='h-4 w-4' />
-          Print Payslip
+          <Download className='h-4 w-4' />
+          Download / Print
         </button>
       </div>
 

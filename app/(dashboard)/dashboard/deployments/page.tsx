@@ -7,7 +7,8 @@ import {
 } from '@/actions/deployments';
 import { DeploymentMatrix } from '@/components/deployments/DeploymentMatrix';
 import { AssignEquipmentModal } from '@/components/deployments/AssignEquipmentModal';
-import { Radio, Camera, Users, AlertTriangle, Package } from 'lucide-react';
+import { Radio, Camera, Users, AlertTriangle, Package, Loader2 } from 'lucide-react';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'Field Operations — Studio ERP',
@@ -61,6 +62,82 @@ function StatCard({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Data Component (Wrapped in Suspense)
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function DeploymentsData({ isAdmin }: { isAdmin: boolean }) {
+  // Fetch active deployments + form data in parallel
+  const [groups, formData] = await Promise.all([
+    getActiveDeployments(),
+    getAssignmentFormData(),
+  ]);
+
+  // Aggregate stats from groups (zero extra DB round-trips)
+  const totalDeployments = groups.reduce((acc, g) => acc + g.totalItems, 0);
+  const activeEmployees = groups.length;
+  const overdueCount = groups.reduce(
+    (acc, g) => acc + g.assignments.filter((a) => a.isOverdue).length,
+    0
+  );
+
+  return (
+    <>
+      <div className="flex items-center gap-3 flex-shrink-0 mt-1 absolute right-0 top-0">
+        <AssignEquipmentModal
+          employees={formData.employees as any}
+          equipment={formData.equipment as any}
+          clients={formData.clients as any}
+        />
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/8">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-xs text-foreground/40 font-medium">Live</span>
+        </div>
+      </div>
+
+      {/* ── Stats Row ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
+        <StatCard
+          icon={Package}
+          label="Active Deployments"
+          value={totalDeployments}
+        />
+        <StatCard
+          icon={Users}
+          label="Photographers in Field"
+          value={activeEmployees}
+        />
+        <StatCard
+          icon={AlertTriangle}
+          label="Overdue Returns"
+          value={overdueCount}
+          accent={overdueCount > 0}
+        />
+      </div>
+
+      {/* ── Section Label ── */}
+      <div className="flex items-center gap-3 mt-8">
+        <div className="flex items-center gap-2">
+          <Camera className="w-4 h-4 text-foreground/30" />
+          <span className="text-xs font-semibold text-foreground/35 uppercase tracking-widest">
+            Deployment Matrix
+          </span>
+        </div>
+        <div className="flex-1 h-px bg-white/6" />
+        <span className="text-xs text-foreground/25 tabular-nums">
+          {totalDeployments} item{totalDeployments !== 1 ? 's' : ''} across{' '}
+          {activeEmployees} employee{activeEmployees !== 1 ? 's' : ''}
+        </span>
+      </div>
+
+      {/* ── Deployment Matrix ── */}
+      <div className="mt-8">
+        <DeploymentMatrix groups={groups} isAdmin={isAdmin} />
+      </div>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Page
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -82,24 +159,8 @@ export default async function DeploymentsPage() {
 
   const isAdmin = profile?.role === 'ADMIN' || profile?.role === 'SUPER_ADMIN';
 
-  // Fetch active deployments + form data in parallel (no waterfall)
-  const [groups, formData] = await Promise.all([
-    getActiveDeployments(),
-    isAdmin
-      ? getAssignmentFormData()
-      : Promise.resolve({ employees: [], equipment: [], clients: [] }),
-  ]);
-
-  // Aggregate stats from groups (zero extra DB round-trips)
-  const totalDeployments = groups.reduce((acc, g) => acc + g.totalItems, 0);
-  const activeEmployees = groups.length;
-  const overdueCount = groups.reduce(
-    (acc, g) => acc + g.assignments.filter((a) => a.isOverdue).length,
-    0
-  );
-
   return (
-    <div className="space-y-8">
+    <div className="relative space-y-8 min-h-[500px]">
       {/* ── Page Header ── */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -115,60 +176,18 @@ export default async function DeploymentsPage() {
             Live deployment matrix — equipment currently in the field
           </p>
         </div>
+      </div>
 
-        {/* Right side: Live indicator + Assign button */}
-        <div className="flex items-center gap-3 flex-shrink-0 mt-1">
-          {isAdmin && (
-            <AssignEquipmentModal
-              employees={formData.employees as any}
-              equipment={formData.equipment as any}
-              clients={formData.clients as any}
-            />
-          )}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/8">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs text-foreground/40 font-medium">Live</span>
+      <Suspense 
+        fallback={
+          <div className="flex flex-col items-center justify-center py-20 text-foreground/40 gap-4">
+            <Loader2 className="w-8 h-8 animate-spin text-primary/50" />
+            <p className="text-sm font-medium animate-pulse">Loading field operations...</p>
           </div>
-        </div>
-      </div>
-
-      {/* ── Stats Row ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          icon={Package}
-          label="Active Deployments"
-          value={totalDeployments}
-        />
-        <StatCard
-          icon={Users}
-          label="Photographers in Field"
-          value={activeEmployees}
-        />
-        <StatCard
-          icon={AlertTriangle}
-          label="Overdue Returns"
-          value={overdueCount}
-          accent={overdueCount > 0}
-        />
-      </div>
-
-      {/* ── Section Label ── */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <Camera className="w-4 h-4 text-foreground/30" />
-          <span className="text-xs font-semibold text-foreground/35 uppercase tracking-widest">
-            Deployment Matrix
-          </span>
-        </div>
-        <div className="flex-1 h-px bg-white/6" />
-        <span className="text-xs text-foreground/25 tabular-nums">
-          {totalDeployments} item{totalDeployments !== 1 ? 's' : ''} across{' '}
-          {activeEmployees} employee{activeEmployees !== 1 ? 's' : ''}
-        </span>
-      </div>
-
-      {/* ── Deployment Matrix ── */}
-      <DeploymentMatrix groups={groups} isAdmin={isAdmin} />
+        }
+      >
+        <DeploymentsData isAdmin={isAdmin} />
+      </Suspense>
     </div>
   );
 }

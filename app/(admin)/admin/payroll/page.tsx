@@ -3,6 +3,7 @@ import { GeneratePayrollForm } from '@/components/hr/GeneratePayrollForm';
 import { ClearBatchButton } from '@/components/hr/ClearBatchButton';
 import { DollarSign, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
 
 export const metadata = { title: 'Payroll — Admin' };
 
@@ -31,6 +32,14 @@ const BATCH_BADGE: Record<string, string> = {
 
 export default async function PayrollPage() {
   const batches = await getPayrollMonths();
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  let isSuperAdmin = false;
+  if (user) {
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role === 'SUPER_ADMIN') isSuperAdmin = true;
+  }
 
   return (
     <div className='p-6 md:p-8 space-y-8 max-w-5xl mx-auto'>
@@ -98,6 +107,7 @@ export default async function PayrollPage() {
                         month={batch.month}
                         year={batch.year}
                         monthName={MONTH_NAMES[batch.month]}
+                        isSuperAdmin={isSuperAdmin}
                       />
                     )}
 
