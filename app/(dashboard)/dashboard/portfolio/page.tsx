@@ -18,10 +18,27 @@ import {
 import Link from 'next/link';
 import { Image as ImageIcon, Camera } from 'lucide-react';
 import { DeleteShootButton } from './_components/DeleteShootButton';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { hasAccess } from '@/lib/access';
 
 export const dynamic = 'force-dynamic';
 
 export default async function PortfolioPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (!hasAccess(profile?.role ?? 'EMPLOYEE', '/dashboard/portfolio')) {
+    redirect('/dashboard');
+  }
+
   const shoots = await getShoots();
 
   return (

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { SignOutButton } from '@/components/dashboard/SignOutButton';
 
 export const metadata: Metadata = {
   title: 'HR Admin — Studio ERP',
@@ -102,6 +103,9 @@ export default async function AdminLayout({
                   {profile.role.replace('_', ' ')}
                 </p>
               </div>
+            </div>
+            <div className='mt-4 flex justify-end'>
+              <SignOutButton />
             </div>
           </div>
         </aside>

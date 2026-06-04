@@ -1,4 +1,5 @@
 import { getBranches, getAdmins } from '@/actions/employees';
+import { getNextEmployeeNumber } from '@/actions/hr/employees';
 import { UnifiedOnboardingForm } from '@/components/hr/UnifiedOnboardingForm';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 import Link from 'next/link';
@@ -6,7 +7,7 @@ import Link from 'next/link';
 export const metadata = { title: 'Add Employee — Admin' };
 
 export default async function NewEmployeePage() {
-  const [branches, admins] = await Promise.all([getBranches(), getAdmins()]);
+  const [branches, admins, nextEmpNum] = await Promise.all([getBranches(), getAdmins(), getNextEmployeeNumber()]);
 
   return (
     <div className='p-6 md:p-8 max-w-3xl mx-auto'>
@@ -36,6 +37,7 @@ export default async function NewEmployeePage() {
       <UnifiedOnboardingForm
         branches={branches ?? []}
         managers={(admins ?? []).map((a: any) => ({ id: a.id, fullName: a.fullName }))}
+        nextEmployeeNumber={nextEmpNum}
       />
     </div>
   );

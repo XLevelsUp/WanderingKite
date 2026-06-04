@@ -4,6 +4,24 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { equipmentSchema } from '@/lib/validations/schemas';
 import type { Database } from '@/lib/database.types';
+import { redirect } from 'next/navigation';
+
+async function requireAdmin() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile || !['ADMIN', 'SUPER_ADMIN'].includes(profile.role)) {
+    throw new Error('Unauthorized');
+  }
+  return { supabase, user };
+}
 
 type Equipment = Database['public']['Tables']['equipment']['Row'];
 
@@ -107,7 +125,7 @@ export async function getEquipmentById(id: string) {
 
 // Create equipment
 export async function createEquipment(formData: FormData) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
 
   let pricingPlansParsed: any[] = [];
   try {
@@ -153,7 +171,7 @@ export async function createEquipment(formData: FormData) {
 
 // Update equipment
 export async function updateEquipment(id: string, formData: FormData) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
 
   let pricingPlansParsed: any[] = [];
   try {
@@ -207,7 +225,7 @@ export async function updateEquipmentStatus(
     | 'LOST'
     | 'RENTED',
 ) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
 
   const { data, error } = await supabase
     .from('equipment')
@@ -227,7 +245,7 @@ export async function updateEquipmentStatus(
 
 // Soft-delete equipment — sets deletedAt, does NOT remove the row
 export async function deleteEquipment(id: string) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
 
   const { error } = await supabase
     .from('equipment')

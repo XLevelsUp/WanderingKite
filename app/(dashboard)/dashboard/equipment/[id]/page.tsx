@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 import {
   ArrowLeft,
   Tag,
@@ -110,6 +111,12 @@ export default async function EquipmentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  const isEmployee = profile?.role === 'EMPLOYEE';
+
   const [equipment, categoriesRaw, branchesRaw] = await Promise.all([
     getEquipmentById(id).catch(() => null),
     getCategories().catch(() => []),
@@ -157,11 +164,13 @@ export default async function EquipmentDetailPage({
             Equipment
           </Button>
         </Link>
-        <EditEquipmentDialog
-          equipment={equipmentForEdit}
-          categories={categoriesRaw as { id: string; name: string }[]}
-          branches={branchesRaw as { id: string; name: string }[]}
-        />
+        {!isEmployee && (
+          <EditEquipmentDialog
+            equipment={equipmentForEdit}
+            categories={categoriesRaw as { id: string; name: string }[]}
+            branches={branchesRaw as { id: string; name: string }[]}
+          />
+        )}
       </div>
 
       {/* Hero card */}
@@ -195,17 +204,19 @@ export default async function EquipmentDetailPage({
           </Card>
 
           {/* Quick image upload panel */}
-          <QuickImageUpload
-            equipmentId={equipment.id}
-            currentImageUrl={imageUrl}
-            equipmentName={equipment.name}
-            serialNumber={(equipment as any).serialNumber}
-            categoryId={(equipment as any).categoryId ?? null}
-            branchId={(equipment as any).branchId ?? null}
-            pricingPlans={pricingPlans}
-            specs={specs}
-            description={equipment.description ?? null}
-          />
+          {!isEmployee && (
+            <QuickImageUpload
+              equipmentId={equipment.id}
+              currentImageUrl={imageUrl}
+              equipmentName={equipment.name}
+              serialNumber={(equipment as any).serialNumber}
+              categoryId={(equipment as any).categoryId ?? null}
+              branchId={(equipment as any).branchId ?? null}
+              pricingPlans={pricingPlans}
+              specs={specs}
+              description={equipment.description ?? null}
+            />
+          )}
         </div>
 
         {/* Details panel */}

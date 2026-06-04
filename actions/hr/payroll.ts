@@ -41,6 +41,27 @@ async function requireAdmin() {
   return { supabase, userId: user.id };
 }
 
+async function requireSuperAdmin() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect('/login');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile || profile.role !== 'SUPER_ADMIN') {
+    redirect('/dashboard');
+  }
+
+  return { supabase, userId: user.id };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // READ
 // ─────────────────────────────────────────────────────────────────────────────
@@ -141,6 +162,44 @@ export async function getPayslip(recordId: string): Promise<PayrollRecordWithEmp
         : (row.employee?.contract ?? null),
     },
   };
+}
+
+/**
+ * Get all payslips for the currently logged in employee.
+ */
+export async function getOwnPayslips(): Promise<PayrollRecordWithEmployee[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { data, error } = await supabase
+    .from('payroll_records')
+    .select(`
+      *,
+      employee:employeeId(
+        id, fullName, email,
+        contract:employee_contracts(
+          jobTitle, department, employeeNumber, avatarUrl
+        )
+      )
+    `)
+    .eq('employeeId', user.id)
+    .order('year', { ascending: false })
+    .order('month', { ascending: false });
+
+  if (error) return [];
+
+  return (data ?? []).map((row: any) => ({
+    ...row,
+    employee: {
+      id: row.employee?.id ?? row.employeeId,
+      fullName: row.employee?.fullName ?? null,
+      email: row.employee?.email ?? '',
+      contract: Array.isArray(row.employee?.contract)
+        ? (row.employee.contract[0] ?? null)
+        : (row.employee?.contract ?? null),
+    },
+  }));
 }
 
 /**
@@ -528,7 +587,7 @@ export async function approveBatchPayroll(month: number, year: number) {
 }
 
 export async function rejectBatchPayroll(month: number, year: number) {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSuperAdmin();
 
   const { error } = await supabase
     .from('payroll_records')
@@ -544,7 +603,7 @@ export async function rejectBatchPayroll(month: number, year: number) {
 }
 
 export async function rejectPayroll(recordId: string) {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSuperAdmin();
 
   const { data: record } = await supabase
     .from('payroll_records')
@@ -611,7 +670,7 @@ export async function markBatchPaid(month: number, year: number) {
 }
 
 export async function deletePayrollRecord(recordId: string) {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSuperAdmin();
 
   const { data: record } = await supabase
     .from('payroll_records')
@@ -637,7 +696,7 @@ export async function deletePayrollRecord(recordId: string) {
 }
 
 export async function deleteBatchPayroll(month: number, year: number) {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSuperAdmin();
 
   const { error } = await supabase
     .from('payroll_records')

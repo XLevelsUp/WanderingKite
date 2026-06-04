@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { deactivateEmployee, reactivateEmployee } from '@/actions/hr/employees';
 import type { HREmployee } from '@/lib/types/hr';
+import { useNotifications } from '@/components/ui/useNotifications';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -100,6 +101,7 @@ export function HREmployeeTable({
   const [globalFilter, setGlobalFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ACTIVE');
+  const { showModal, removeModal, showLoader, hideLoader, showError, showSuccess } = useNotifications();
 
   const canManage = currentUserRole === 'ADMIN' || currentUserRole === 'SUPER_ADMIN';
 
@@ -123,14 +125,35 @@ export function HREmployeeTable({
 
   function handleToggleStatus(employee: HREmployee) {
     const isActive = employee.contract?.isActive ?? true;
-    startTransition(async () => {
-      if (isActive) {
-        await deactivateEmployee(employee.id);
-      } else {
-        await reactivateEmployee(employee.id);
-      }
-      router.refresh();
-    });
+
+    if (isActive) {
+      const modalId = showModal({
+        title: 'Deactivate Employee',
+        description: `Are you sure you want to deactivate ${employee.fullName || 'this employee'}? They will be signed out and lose access to the system immediately.`,
+        confirmText: 'Deactivate',
+        cancelText: 'Cancel',
+        onCancel: () => removeModal(modalId),
+        onConfirm: () => {
+          startTransition(async () => {
+            showLoader('Deactivating...');
+            const res = await deactivateEmployee(employee.id);
+            if (res?.error) showError(res.error);
+            else showSuccess('Employee deactivated');
+            hideLoader();
+            router.refresh();
+          });
+        },
+      });
+    } else {
+      startTransition(async () => {
+        showLoader('Reactivating...');
+        const res = await reactivateEmployee(employee.id);
+        if (res?.error) showError(res.error);
+        else showSuccess('Employee reactivated');
+        hideLoader();
+        router.refresh();
+      });
+    }
   }
 
   const columns: ColumnDef<HREmployee>[] = [
@@ -283,7 +306,7 @@ export function HREmployeeTable({
                   className='text-foreground hover:text-foreground focus:text-foreground hover:bg-primary/10 focus:bg-primary/10 cursor-pointer'
                 >
                   <Pencil className='mr-2 h-4 w-4 text-primary' />
-                  Edit Contract
+                  Edit Employee
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => router.push(`/admin/payroll?employee=${e.id}`)}

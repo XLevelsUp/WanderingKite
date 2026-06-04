@@ -8,8 +8,9 @@ import { brandConfig } from '@/config/brand.config';
 import { siteConfig } from '@/config/site';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import { NotificationProvider } from '@/components/ui/NotificationProvider';
-import { NavigationLoader } from '@/components/shared/NavigationLoader';
+import NextTopLoader from 'nextjs-toploader';
 import { Suspense } from 'react';
+import { Toaster } from 'sonner';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -247,9 +248,17 @@ export default function RootLayout({
         <link rel="preconnect" href="https://scontent.cdninstagram.com" crossOrigin="anonymous" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <Suspense fallback={null}>
-          <NavigationLoader />
-        </Suspense>
+        <NextTopLoader
+          color="#f59e0b"
+          initialPosition={0.08}
+          crawlSpeed={200}
+          height={3}
+          crawl={true}
+          showSpinner={false}
+          easing="ease"
+          speed={200}
+          shadow="0 0 10px #f59e0b,0 0 5px #f59e0b"
+        />
         {/* Google Analytics 4 – loads whenever GA_ID is available */}
         {GA_ID && (
           <>
@@ -283,6 +292,7 @@ export default function RootLayout({
           <MainNav />
           {children}
           <BookingFlyout />
+          <Toaster richColors position="bottom-right" />
         </NotificationProvider>
       </body>
     </html>

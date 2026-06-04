@@ -4,27 +4,38 @@ import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { deleteBatchPayroll } from '@/actions/hr/payroll';
 import { Loader2 } from 'lucide-react';
+import { useNotifications } from '@/components/ui/useNotifications';
 
 interface ClearBatchButtonProps {
   month: number;
   year: number;
   monthName: string;
+  isSuperAdmin?: boolean;
 }
 
-export function ClearBatchButton({ month, year, monthName }: ClearBatchButtonProps) {
+export function ClearBatchButton({ month, year, monthName, isSuperAdmin = false }: ClearBatchButtonProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { showModal, removeModal } = useNotifications();
+
+  if (!isSuperAdmin) return null;
 
   function handleClick() {
-    if (!window.confirm(`Are you sure you want to clear the entire draft batch for ${monthName} ${year}? This action cannot be undone.`)) {
-      return;
-    }
-    startTransition(async () => {
-      const res = await deleteBatchPayroll(month, year);
-      if (res && 'error' in res && res.error) {
-        alert(res.error);
-      } else {
-        router.refresh();
+    const modalId = showModal({
+      title: 'Clear Draft Batch',
+      description: `Are you sure you want to clear the entire draft batch for ${monthName} ${year}? This action cannot be undone.`,
+      confirmText: 'Clear Batch',
+      cancelText: 'Cancel',
+      onCancel: () => removeModal(modalId),
+      onConfirm: () => {
+        startTransition(async () => {
+          const res = await deleteBatchPayroll(month, year);
+          if (res && 'error' in res && res.error) {
+            alert(res.error);
+          } else {
+            router.refresh();
+          }
+        });
       }
     });
   }

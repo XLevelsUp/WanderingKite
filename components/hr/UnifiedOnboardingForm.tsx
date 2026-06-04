@@ -37,6 +37,7 @@ interface Manager {
 interface UnifiedOnboardingFormProps {
   branches: Branch[];
   managers: Manager[];
+  nextEmployeeNumber?: string;
 }
 
 const STEPS = [
@@ -67,7 +68,7 @@ function FieldError({ message }: { message?: string }) {
   return <p className='mt-1 text-xs text-red-400'>{message}</p>;
 }
 
-export function UnifiedOnboardingForm({ branches, managers }: UnifiedOnboardingFormProps) {
+export function UnifiedOnboardingForm({ branches, managers, nextEmployeeNumber }: UnifiedOnboardingFormProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [isPending, startTransition] = useTransition();
@@ -411,9 +412,14 @@ export function UnifiedOnboardingForm({ branches, managers }: UnifiedOnboardingF
               </div>
 
               <div>
-                <FieldLabel>Employee Number</FieldLabel>
-                <input {...register('employeeNumber')} className={inputClass} placeholder='e.g. EMP-001' />
-                <FieldError message={errors.employeeNumber?.message} />
+                <FieldLabel>Employee ID</FieldLabel>
+                <input
+                  {...register('employeeNumber')}
+                  className={`${inputClass} cursor-not-allowed opacity-70`}
+                  placeholder={nextEmployeeNumber || 'Auto-generated (e.g. WK-001)'}
+                  readOnly
+                  disabled
+                />
               </div>
 
               <div>

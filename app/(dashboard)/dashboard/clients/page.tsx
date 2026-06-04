@@ -16,8 +16,25 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { hasAccess } from '@/lib/access';
 
 export default async function ClientsPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (!hasAccess(profile?.role ?? 'EMPLOYEE', '/dashboard/clients')) {
+    redirect('/dashboard');
+  }
+
   const clients = await getClients();
 
   return (

@@ -136,6 +136,36 @@ export async function getHREmployee(profileId: string): Promise<HREmployee | nul
   };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// EMPLOYEE ID AUTO-GENERATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function getNextEmployeeNumber(): Promise<string> {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from('employee_contracts')
+    .select('employeeNumber')
+    .like('employeeNumber', 'WK-%')
+    .order('employeeNumber', { ascending: false });
+
+  if (error || !data || data.length === 0) {
+    return 'WK-001';
+  }
+
+  let maxId = 0;
+  for (const row of data) {
+    if (row.employeeNumber) {
+      const match = row.employeeNumber.match(/^WK-(\d+)$/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxId) maxId = num;
+      }
+    }
+  }
+
+  return `WK-${(maxId + 1).toString().padStart(3, '0')}`;
+}
+
 /**
  * Returns all profiles that do NOT yet have an employee_contract row.
  * Used to populate the "Link existing profile" dropdown in onboarding.
@@ -312,35 +342,59 @@ export async function createAndOnboardEmployee(formData: UnifiedOnboardingFormDa
     return { error: 'User created but failed to set profile details. Please try again.' };
   }
 
-  // 3. Create the HR contract
-  const { error: contractError } = await adminAuthClient
-    .from('employee_contracts')
-    .insert({
-      profileId: newProfileId,
-      jobTitle,
-      employmentType,
-      baseSalary,
-      joiningDate,
-      bankAccountName: bankAccountName || null,
-      bankAccountNumber: bankAccountNumber || null,
-      bankIFSC: bankIFSC || null,
-      upiId: upiId || null,
-      avatarUrl: avatarUrl || null,
-      notes: notes || null,
-      incentive: incentive || 0,
-      employeeNumber: formData.employeeNumber || null,
-      department: formData.department || null,
-      pfEnrolled: formData.pfEnrolled || false,
-      pfContinued: formData.pfContinued || false,
-      ptExempt: formData.ptExempt || false,
-      tdsExempt: formData.tdsExempt || false,
-      exemptionReason: formData.exemptionReason || null,
-    });
+  // 3. Create the HR contract with retry logic for employeeNumber conflict
+  let contractError = null;
+  let attempt = 0;
+  let currentEmpNum = await getNextEmployeeNumber();
 
-  if (contractError) {
+  while (attempt < 5) {
+    const { error: insertError } = await adminAuthClient
+      .from('employee_contracts')
+      .insert({
+        profileId: newProfileId,
+        jobTitle,
+        employmentType,
+        baseSalary,
+        joiningDate,
+        bankAccountName: bankAccountName || null,
+        bankAccountNumber: bankAccountNumber || null,
+        bankIFSC: bankIFSC || null,
+        upiId: upiId || null,
+        avatarUrl: avatarUrl || null,
+        notes: notes || null,
+        incentive: incentive || 0,
+        employeeNumber: currentEmpNum,
+        department: formData.department || null,
+        pfEnrolled: formData.pfEnrolled || false,
+        pfContinued: formData.pfContinued || false,
+        ptExempt: formData.ptExempt || false,
+        tdsExempt: formData.tdsExempt || false,
+        exemptionReason: formData.exemptionReason || null,
+      });
+
+    if (insertError) {
+      if (insertError.code === '23505' && insertError.message.includes('employeeNumber')) {
+        attempt++;
+        const match = currentEmpNum.match(/^WK-(\d+)$/);
+        if (match) {
+          const nextNum = parseInt(match[1], 10) + 1;
+          currentEmpNum = `WK-${nextNum.toString().padStart(3, '0')}`;
+        }
+        continue;
+      }
+      contractError = insertError;
+      break;
+    }
+    
+    // Success
+    contractError = null;
+    break;
+  }
+
+  if (contractError || attempt >= 5) {
     // Cleanup: delete auth user (profile row will cascade)
     await adminAuthClient.auth.admin.deleteUser(newProfileId);
-    return { error: 'User created but failed to create HR contract: ' + contractError.message };
+    return { error: 'User created but failed to create HR contract: ' + (contractError?.message || 'ID conflict') };
   }
 
   revalidatePath('/admin/employees');

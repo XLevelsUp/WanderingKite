@@ -17,8 +17,12 @@ import {
 } from '@/components/ui/table';
 import Link from 'next/link';
 import Image from 'next/image';
-import { User, MapPin, Radio, Package } from 'lucide-react';
+import { User, MapPin, Radio, Package, Loader2 } from 'lucide-react';
 import { DeleteEquipmentButton } from '@/components/dashboard/DeleteEquipmentButton';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
+import { hasAccess } from '@/lib/access';
 
 export const dynamic = 'force-dynamic';
 
@@ -161,16 +165,18 @@ function FieldStatusCell({
   );
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Data Component (Wrapped in Suspense)
+// ─────────────────────────────────────────────────────────────────────────────
 
-export default async function EquipmentPage() {
+async function EquipmentData({ isEmployee }: { isEmployee: boolean }) {
   const equipment = await getEquipmentWithFieldStatus();
   const inFieldCount = equipment.filter(
     (e) => e.activeAssignment !== null
   ).length;
 
   return (
-    <div className="space-y-8">
+    <>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Equipment</h1>
@@ -184,9 +190,11 @@ export default async function EquipmentPage() {
             )}
           </p>
         </div>
-        <Link href="/dashboard/equipment/new">
-          <Button>Add Equipment</Button>
-        </Link>
+        {!isEmployee && (
+          <Link href="/dashboard/equipment/new">
+            <Button>Add Equipment</Button>
+          </Link>
+        )}
       </div>
 
       <Card>
@@ -300,10 +308,12 @@ export default async function EquipmentPage() {
                           History
                         </Button>
                       </Link>
-                      <DeleteEquipmentButton
-                        equipmentId={item.id}
-                        equipmentName={item.name}
-                      />
+                      {!isEmployee && (
+                        <DeleteEquipmentButton
+                          equipmentId={item.id}
+                          equipmentName={item.name}
+                        />
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
@@ -312,6 +322,43 @@ export default async function EquipmentPage() {
           </Table>
         </CardContent>
       </Card>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Page
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default async function EquipmentPage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect('/login');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  const isEmployee = profile?.role === 'EMPLOYEE';
+
+  return (
+    <div className="space-y-8 min-h-[500px]">
+      <Suspense 
+        fallback={
+          <div className="flex flex-col items-center justify-center py-20 text-foreground/40 gap-4">
+            <Loader2 className="w-8 h-8 animate-spin text-primary/50" />
+            <p className="text-sm font-medium animate-pulse">Loading equipment inventory...</p>
+          </div>
+        }
+      >
+        <EquipmentData isEmployee={isEmployee} />
+      </Suspense>
     </div>
   );
 }
