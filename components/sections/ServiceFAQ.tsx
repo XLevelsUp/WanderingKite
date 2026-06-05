@@ -80,7 +80,7 @@ export function ServiceFAQ({ faqs, accentColor = 'amber' }: ServiceFAQProps) {
           <div className="mt-12 text-center">
             <p className="mb-4 text-muted-foreground">Still have questions?</p>
             <a
-              href="https://wa.me/919876543210?text=Hi!%20I%20have%20a%20question..."
+              href="https://wa.me/917010092090?text=Hi!%20I%20have%20a%20question..."
               target="_blank"
               rel="noopener noreferrer"
               className={`inline-block rounded-full bg-secondary px-8 py-3 font-semibold text-foreground transition-colors hover:bg-zinc-700`}

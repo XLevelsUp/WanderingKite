@@ -20,10 +20,13 @@ function fmt(n: number) {
 
 export default async function PayrollBatchPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ month: string }>;
+  searchParams: Promise<{ employee?: string }>;
 }) {
   const { month: monthParam } = await params;
+  const { employee } = await searchParams;
 
   // Expected format: YYYY-MM
   const parts = monthParam.split('-');
@@ -42,17 +45,21 @@ export default async function PayrollBatchPage({
     if (profile?.role === 'SUPER_ADMIN') isSuperAdmin = true;
   }
 
-  const records = await getPayrollForMonth(month, year);
+  let records = await getPayrollForMonth(month, year);
+
+  if (employee) {
+    records = records.filter((r: any) => r.employeeId === employee);
+  }
 
   if (records.length === 0) {
     return (
       <div className='p-6 md:p-8 max-w-5xl mx-auto space-y-8'>
         <Link
-          href='/admin/payroll'
+          href={employee ? `/admin/employees/${employee}/payroll` : '/admin/payroll'}
           className='inline-flex items-center gap-2 text-sm text-foreground/50 hover:text-foreground transition-colors'
         >
           <ArrowLeft className='h-4 w-4' />
-          Back to Payroll
+          {employee ? 'Back to Employee Payroll' : 'Back to Payroll'}
         </Link>
         <div className='rounded-xl border border-primary/12 bg-[rgba(17,17,22,0.6)] px-8 py-16 text-center'>
           <p className='text-sm text-foreground/40'>
@@ -77,11 +84,11 @@ export default async function PayrollBatchPage({
     <div className='p-6 md:p-8 max-w-5xl mx-auto space-y-8'>
       {/* Back */}
       <Link
-        href='/admin/payroll'
+        href={employee ? `/admin/employees/${employee}/payroll` : '/admin/payroll'}
         className='inline-flex items-center gap-2 text-sm text-foreground/50 hover:text-foreground transition-colors'
       >
         <ArrowLeft className='h-4 w-4' />
-        Back to Payroll
+        {employee ? 'Back to Employee Payroll' : 'Back to Payroll'}
       </Link>
 
       {/* Header */}

@@ -28,6 +28,10 @@ import {
   AlertCircle,
   XCircle,
   Info,
+  ShieldAlert,
+  ShieldCheck,
+  Receipt,
+  FileImage,
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -148,7 +152,21 @@ export default async function EquipmentDetailPage({
     image_url: imageUrl,
     specs,
     description: equipment.description ?? null,
+    ownership_type: (equipment as any).ownership_type,
+    purchase_date: (equipment as any).purchase_date,
+    warranty_duration_months: (equipment as any).warranty_duration_months,
+    warranty_expiration_date: (equipment as any).warranty_expiration_date,
+    service_cost: (equipment as any).service_cost,
+    repair_cost: (equipment as any).repair_cost,
+    purchase_bill: (equipment as any).purchase_bill,
   };
+
+  const isWarrantyExpired = (equipment as any).warranty_expiration_date 
+    ? new Date((equipment as any).warranty_expiration_date) < new Date() 
+    : false;
+  const isWarrantyExpiringSoon = (equipment as any).warranty_expiration_date 
+    ? new Date((equipment as any).warranty_expiration_date).getTime() - new Date().getTime() < 30 * 24 * 60 * 60 * 1000 && !isWarrantyExpired
+    : false;
 
   return (
     <div className="space-y-8">
@@ -223,12 +241,26 @@ export default async function EquipmentDetailPage({
         <div className="lg:col-span-3 space-y-6">
           {/* Header */}
           <div>
-            {category && (
-              <span className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-500 border border-amber-500/20">
-                <Tag className="h-3 w-3" />
-                {category}
-              </span>
-            )}
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              {(equipment as any).ownership_type === 'RENTAL' && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-400 border border-violet-500/20">
+                  <Package className="h-3 w-3" />
+                  Rental Item
+                </span>
+              )}
+              {(equipment as any).ownership_type === 'IN_HOUSE' && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-400 border border-blue-500/20">
+                  <Package className="h-3 w-3" />
+                  In-House Asset
+                </span>
+              )}
+              {category && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-500 border border-amber-500/20">
+                  <Tag className="h-3 w-3" />
+                  {category}
+                </span>
+              )}
+            </div>
             <h1 className="mt-2 text-2xl font-bold leading-tight tracking-tight text-foreground">
               {equipment.name}
             </h1>
@@ -275,6 +307,65 @@ export default async function EquipmentDetailPage({
                 label="Serial Number"
                 value={(equipment as any).serialNumber}
               />
+              {(equipment as any).purchase_date && (
+                <InfoRow
+                  icon={CalendarDays}
+                  label="Purchase Date"
+                  value={new Date((equipment as any).purchase_date).toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                />
+              )}
+              {(equipment as any).warranty_expiration_date && (
+                <div className="flex items-start gap-3 py-3 border-b border-border/50 last:border-0">
+                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${isWarrantyExpired ? 'bg-red-500/20' : isWarrantyExpiringSoon ? 'bg-amber-500/20' : 'bg-emerald-500/20'}`}>
+                    {isWarrantyExpired ? <ShieldAlert className="h-4 w-4 text-red-500" /> : <ShieldCheck className={`h-4 w-4 ${isWarrantyExpiringSoon ? 'text-amber-500' : 'text-emerald-500'}`} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground mb-0.5">Warranty Expiration</p>
+                    <p className={`text-sm font-medium truncate flex items-center gap-2 ${isWarrantyExpired ? 'text-red-400' : isWarrantyExpiringSoon ? 'text-amber-400' : 'text-foreground'}`}>
+                      {new Date((equipment as any).warranty_expiration_date).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                      {isWarrantyExpired && <span className="text-[10px] bg-red-500/20 px-1.5 py-0.5 rounded text-red-400">EXPIRED</span>}
+                      {isWarrantyExpiringSoon && <span className="text-[10px] bg-amber-500/20 px-1.5 py-0.5 rounded text-amber-400">EXPIRING SOON</span>}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {((equipment as any).service_cost > 0 || (equipment as any).repair_cost > 0) && (
+                <div className="flex items-start gap-3 py-3 border-b border-border/50 last:border-0">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/60">
+                    <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground mb-0.5">Financial History</p>
+                    <div className="text-sm font-medium text-foreground flex items-center gap-4">
+                      <span>Service: <span className="text-amber-400 font-mono">₹{(equipment as any).service_cost || 0}</span></span>
+                      <span>Repairs: <span className="text-red-400 font-mono">₹{(equipment as any).repair_cost || 0}</span></span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {(equipment as any).purchase_bill && (
+                <div className="flex items-start gap-3 py-3 border-b border-border/50 last:border-0">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/20">
+                    <Receipt className="h-4 w-4 text-blue-400" />
+                  </div>
+                  <div className="flex-1 min-w-0 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">Purchase Bill</p>
+                      <a href={(equipment as any).purchase_bill} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-400 hover:underline flex items-center gap-1.5">
+                        <FileImage className="h-3.5 w-3.5" /> View Purchase Bill
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
               {category && (
                 <InfoRow icon={Tag} label="Category" value={category} />
               )}
@@ -329,7 +420,8 @@ export default async function EquipmentDetailPage({
       </div>
 
       {/* Assignment history */}
-      <Card>
+      {!isEmployee && (
+        <Card>
         <CardHeader className="flex flex-row items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted/60">
             <History className="h-4 w-4 text-muted-foreground" />
@@ -435,6 +527,7 @@ export default async function EquipmentDetailPage({
           )}
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }

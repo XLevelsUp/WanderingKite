@@ -39,8 +39,9 @@ export const ROUTE_ACCESS: Record<string, AppRole> = {
 
   // ── Admin operational pages ──────────────────────────────────────────────
   '/dashboard/equipment':     'EMPLOYEE',
-  '/dashboard/deployments':   'EMPLOYEE',
+  '/dashboard/fieldops':      'EMPLOYEE',
   '/dashboard/clients':       'ADMIN',
+  '/dashboard/audit-logs':    'ADMIN',
   '/dashboard/rentals':       'ADMIN',
   '/dashboard/categories':    'ADMIN',
   '/dashboard/branches':      'ADMIN',
@@ -54,7 +55,7 @@ export const ROUTE_ACCESS: Record<string, AppRole> = {
   '/admin/payroll/payslip':   'EMPLOYEE', // Allow employees to view their own detailed payslip
 
   // ── Super Admin only ─────────────────────────────────────────────────────
-  '/dashboard/audit-logs':    'SUPER_ADMIN',
+  // Removed duplicate /dashboard/audit-logs
 };
 
 /**

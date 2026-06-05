@@ -35,10 +35,12 @@ function ImageUploadField({
   name,
   defaultValue,
   disabled,
+  bucket,
 }: {
   name: string;
   defaultValue?: string;
   disabled?: boolean;
+  bucket?: string;
 }) {
   const [url, setUrl] = useState(defaultValue ?? '');
   return (
@@ -47,7 +49,7 @@ function ImageUploadField({
       <ImageUpload
         value={url || null}
         onChange={setUrl}
-        bucket="equipment-images"
+        bucket={bucket ?? "equipment-images"}
         disabled={disabled}
       />
     </>
@@ -63,6 +65,7 @@ export function NewEquipmentForm({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('');
+  const [ownershipType, setOwnershipType] = useState('IN_HOUSE');
   const { showError, showInfo, showSuccess } = useNotify();
 
   // Pricing Plans state
@@ -189,6 +192,7 @@ export function NewEquipmentForm({
       const formData = new FormData(e.currentTarget);
       formData.set('category_id', selectedCategory);
       formData.set('branch_id', selectedBranch);
+      formData.set('ownership_type', ownershipType);
       formData.set('pricing_plans', JSON.stringify(plans));
 
       await createEquipment(formData);
@@ -274,6 +278,24 @@ export function NewEquipmentForm({
                     {branch.name}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="ownership_type">Ownership Type *</Label>
+            <Select
+              value={ownershipType}
+              onValueChange={setOwnershipType}
+              required
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select ownership" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="IN_HOUSE">In-House</SelectItem>
+                <SelectItem value="RENTAL">Rental</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -481,7 +503,80 @@ export function NewEquipmentForm({
               Drag &amp; drop an image, or click to browse. Uploaded
               automatically to Supabase Storage.
             </p>
-            <ImageUploadField name="image_url" disabled={isLoading} />
+            <ImageUploadField name="image_url" disabled={isLoading} bucket="equipment-images" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="purchase_date">Purchase Date</Label>
+              <Input
+                id="purchase_date"
+                name="purchase_date"
+                type="date"
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="warranty_duration_months">Warranty Duration (Months)</Label>
+              <Input
+                id="warranty_duration_months"
+                name="warranty_duration_months"
+                type="number"
+                min="0"
+                placeholder="e.g. 12"
+                disabled={isLoading}
+                onChange={(e) => {
+                  const months = parseInt(e.target.value, 10);
+                  const purchaseDateInput = document.getElementById('purchase_date') as HTMLInputElement;
+                  const expDateInput = document.getElementById('warranty_expiration_date') as HTMLInputElement;
+                  if (!isNaN(months) && purchaseDateInput?.value && expDateInput) {
+                    const pd = new Date(purchaseDateInput.value);
+                    pd.setMonth(pd.getMonth() + months);
+                    expDateInput.value = pd.toISOString().split('T')[0];
+                  }
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="warranty_expiration_date">Warranty Expiration Date</Label>
+              <Input
+                id="warranty_expiration_date"
+                name="warranty_expiration_date"
+                type="date"
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Purchase Bill</Label>
+              <ImageUploadField name="purchase_bill" disabled={isLoading} bucket="equipment-images" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="service_cost">Service Cost (₹)</Label>
+              <Input
+                id="service_cost"
+                name="service_cost"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="repair_cost">Repair Cost (₹)</Label>
+              <Input
+                id="repair_cost"
+                name="repair_cost"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                disabled={isLoading}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

@@ -11,6 +11,7 @@ import {
   type BulkAttendanceFormData,
   type AttendanceSettingsData,
 } from '@/lib/validations/hr';
+import { AttendanceService } from '@/lib/services/AttendanceService';
 import { deriveAttendanceStatus } from '@/lib/payroll-engine';
 import type { AttendanceLogRow, AttendanceLogWithEmployee, AttendanceSettingRow, AttendanceStatus } from '@/lib/types/hr';
 
@@ -45,27 +46,8 @@ async function requireAdmin() {
 
 export async function getAttendanceSettings(dateStr?: string): Promise<AttendanceSettingRow | null> {
   const supabase = await createClient();
-  const queryDate = dateStr || new Date().toISOString().split('T')[0];
-
-  const { data } = await supabase
-    .from('attendance_settings')
-    .select('*')
-    .lte('effectiveDate', queryDate)
-    .order('effectiveDate', { ascending: false })
-    .order('createdAt', { ascending: false })
-    .limit(1)
-    .single();
-
-  if (data) return (data as AttendanceSettingRow);
-
-  const { data: fallback } = await supabase
-    .from('attendance_settings')
-    .select('*')
-    .order('effectiveDate', { ascending: true })
-    .limit(1)
-    .single();
-
-  return (fallback as AttendanceSettingRow) ?? null;
+  const service = new AttendanceService(supabase);
+  return service.getSettings(dateStr);
 }
 
 export async function updateAttendanceSettings(data: AttendanceSettingsData) {
@@ -123,41 +105,8 @@ export async function getMonthlyAttendance(
   year: number,
 ): Promise<AttendanceLogWithEmployee[]> {
   const { supabase } = await requireAdmin();
-
-  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-  const lastDay = new Date(year, month, 0).getDate();
-  const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-
-
-
-  const { data, error } = await supabase
-    .from('attendance_logs')
-    .select(
-      `
-      id, employeeId, date, clockIn, clockOut, status, totalHours, markedById, notes, createdAt, updatedAt,
-      employee:employeeId(
-        id, fullName, email,
-        contract:employee_contracts(jobTitle, avatarUrl)
-      )
-    `,
-    )
-    .gte('date', startDate)
-    .lte('date', endDate)
-    .order('date', { ascending: true });
-
-  if (error) return [];
-
-  return (data ?? []).map((row: any) => ({
-    ...row,
-    employee: {
-      id: row.employee?.id,
-      fullName: row.employee?.fullName ?? null,
-      email: row.employee?.email ?? '',
-      contract: Array.isArray(row.employee?.contract)
-        ? (row.employee.contract[0] ?? null)
-        : (row.employee?.contract ?? null),
-    },
-  }));
+  const service = new AttendanceService(supabase);
+  return service.getMonthlyAttendance(month, year);
 }
 
 /**
@@ -169,23 +118,8 @@ export async function getEmployeeMonthlyAttendance(
   year: number,
 ): Promise<AttendanceLogRow[]> {
   const supabase = await createClient();
-
-  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-  const lastDay = new Date(year, month, 0).getDate();
-  const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-
-
-
-  const { data, error } = await supabase
-    .from('attendance_logs')
-    .select('*')
-    .eq('employeeId', employeeId)
-    .gte('date', startDate)
-    .lte('date', endDate)
-    .order('date', { ascending: true });
-
-  if (error) return [];
-  return (data ?? []) as AttendanceLogRow[];
+  const service = new AttendanceService(supabase);
+  return service.getEmployeeMonthlyAttendance(employeeId, month, year);
 }
 
 /**
@@ -217,7 +151,30 @@ export async function getOwnAttendance(
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WRITE: Single log
-// ─────────────────────────────────────────────────────────────────────────────
+// Helper to get employee's joiningDate or fallback profile createdAt date
+async function getEmployeeStartDate(supabase: any, employeeId: string): Promise<string | null> {
+  const { data: contract } = await supabase
+    .from('employee_contracts')
+    .select('joiningDate')
+    .eq('profileId', employeeId)
+    .maybeSingle();
+
+  if (contract?.joiningDate) {
+    return contract.joiningDate;
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('createdAt')
+    .eq('id', employeeId)
+    .maybeSingle();
+
+  if (profile?.createdAt) {
+    return profile.createdAt.split('T')[0];
+  }
+
+  return null;
+}
 
 /** Upsert a single attendance log (admin can set any status + times) */
 export async function upsertAttendanceLog(formData: AttendanceLogFormData) {
@@ -229,6 +186,11 @@ export async function upsertAttendanceLog(formData: AttendanceLogFormData) {
   }
 
   const { employeeId, date, clockIn, clockOut, status, notes } = result.data;
+
+  const startDate = await getEmployeeStartDate(supabase, employeeId);
+  if (startDate && date < startDate) {
+    return { error: `Cannot mark attendance prior to the employee's joining date (${startDate}).` };
+  }
 
   // Auto-derive status from clock times if both are provided and status not explicitly set
   let finalStatus = status;
@@ -261,6 +223,8 @@ export async function upsertAttendanceLog(formData: AttendanceLogFormData) {
   if (error) return { error: error.message };
 
   revalidatePath('/admin/attendance');
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/attendance');
   return { success: true };
 }
 
@@ -277,6 +241,8 @@ export async function deleteAttendanceLog(employeeId: string, date: string) {
   if (error) return { error: error.message };
 
   revalidatePath('/admin/attendance');
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/attendance');
   return { success: true };
 }
 
@@ -296,7 +262,30 @@ export async function bulkMarkAttendance(formData: BulkAttendanceFormData) {
   const { date, entries } = result.data;
   const settings = await getAttendanceSettings(date);
 
-  const rows = entries.map((entry) => {
+  // Fetch joining dates for all employees in the entries
+  const employeeIds = entries.map((e) => e.employeeId);
+  const [contractsRes, profilesRes] = await Promise.all([
+    supabase.from('employee_contracts').select('profileId, joiningDate').in('profileId', employeeIds),
+    supabase.from('profiles').select('id, createdAt').in('id', employeeIds),
+  ]);
+
+  const startDates = new Map<string, string>();
+  for (const c of contractsRes.data ?? []) {
+    if (c.joiningDate) startDates.set(c.profileId, c.joiningDate);
+  }
+  for (const p of profilesRes.data ?? []) {
+    if (!startDates.has(p.id) && p.createdAt) {
+      startDates.set(p.id, p.createdAt.split('T')[0]);
+    }
+  }
+
+  const rows = [];
+  for (const entry of entries) {
+    const startDate = startDates.get(entry.employeeId);
+    if (startDate && date < startDate) {
+      continue; // Skip logs before joining date
+    }
+
     let status = entry.status;
 
     // Auto-derive if clocking in on a non-explicit status
@@ -310,15 +299,19 @@ export async function bulkMarkAttendance(formData: BulkAttendanceFormData) {
       );
     }
 
-    return {
+    rows.push({
       employeeId: entry.employeeId,
       date,
       clockIn: entry.clockIn || null,
       clockOut: entry.clockOut || null,
       status,
       markedById: userId,
-    };
-  });
+    });
+  }
+
+  if (rows.length === 0) {
+    return { error: 'All selected entries are prior to the employees\' joining dates.' };
+  }
 
   const { error } = await supabase
     .from('attendance_logs')
@@ -327,6 +320,8 @@ export async function bulkMarkAttendance(formData: BulkAttendanceFormData) {
   if (error) return { error: error.message };
 
   revalidatePath('/admin/attendance');
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/attendance');
   return { success: true, count: rows.length };
 }
 
@@ -370,6 +365,8 @@ export async function logClockIn() {
   if (error) return { error: error.message };
 
   revalidatePath('/admin/attendance');
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/attendance');
   return { success: true, clockIn: now, status };
 }
 
@@ -417,6 +414,8 @@ export async function logClockOut() {
   if (error) return { error: error.message };
 
   revalidatePath('/admin/attendance');
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/attendance');
   return { success: true, clockOut: now };
 }
 
@@ -442,7 +441,7 @@ export async function bulkMarkRangeAttendance(
   // Get active employees
   const { data: employees, error: empError } = await supabase
     .from('employee_contracts')
-    .select('profileId')
+    .select('profileId, joiningDate')
     .eq('isActive', true);
 
   if (empError) return { error: empError.message };
@@ -468,6 +467,10 @@ export async function bulkMarkRangeAttendance(
 
   for (const date of dates) {
     for (const emp of employees) {
+      if (emp.joiningDate && date < emp.joiningDate) {
+        continue; // Skip logs before joining date
+      }
+
       let clockIn: string | null = null;
       let clockOut: string | null = null;
 
@@ -500,6 +503,10 @@ export async function bulkMarkRangeAttendance(
     }
   }
 
+  if (rows.length === 0) {
+    return { error: 'All dates in the range are prior to the active employees\' joining dates.' };
+  }
+
   const { error } = await supabase
     .from('attendance_logs')
     .upsert(rows, { onConflict: 'employeeId,date' });
@@ -507,6 +514,8 @@ export async function bulkMarkRangeAttendance(
   if (error) return { error: error.message };
 
   revalidatePath('/admin/attendance');
-  return { success: true, count: employees.length * dates.length };
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/attendance');
+  return { success: true, count: rows.length };
 }
 

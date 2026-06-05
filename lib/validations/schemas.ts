@@ -19,6 +19,13 @@ export const equipmentSchema = z.object({
   specs: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
   pricingPlans: z.array(pricingPlanSchema).min(1, 'Provide at least one pricing plan'),
+  purchaseBill: z.string().url('Invalid URL').optional().or(z.literal('')),
+  purchaseDate: z.string().optional().nullable(),
+  warrantyDurationMonths: z.number().int().nonnegative().optional().nullable(),
+  warrantyExpirationDate: z.string().optional().nullable(),
+  serviceCost: z.number().nonnegative().optional().nullable(),
+  repairCost: z.number().nonnegative().optional().nullable(),
+  ownershipType: z.enum(['IN_HOUSE', 'RENTAL']).default('IN_HOUSE'),
 });
 
 export type EquipmentFormData = z.infer<typeof equipmentSchema>;
@@ -63,14 +70,19 @@ export type BranchFormData = z.infer<typeof branchSchema>;
 
 // Equipment Assignment Validation (Field Operations / Triad View)
 export const assignmentSchema = z.object({
-  equipmentId: z.string().uuid('Invalid equipment ID'),
+  equipmentIds: z.array(z.string().uuid()).min(1, 'Select at least one equipment item'),
   employeeId: z.string().uuid('Invalid employee ID'),
-  clientId: z.string().uuid('Invalid client ID').optional(),
+  clientId: z.string().uuid('Invalid client ID'),
+  serviceType: z.enum([
+    'wedding', 'engagement', 'birthday', 'family', 'maternity', 'baby_shoot',
+    'product', 'cinematic_video', 'social_media', 'model_shoot', 'headshot',
+    'ads', 'music_video', 'short_film', 'podcast', 'equipment_rental', 'space_allocation'
+  ], { message: 'Select a project type' }),
+  assignedAt: z.string().datetime({ message: 'Invalid taken time' }),
   expectedReturn: z
     .string()
-    .datetime({ message: 'Invalid date format' })
-    .optional(),
-  location: z.string().min(1).max(255).optional(),
+    .datetime({ message: 'Invalid return time' }),
+  location: z.string().min(1, 'Project location is required').max(255),
   notes: z.string().max(1000).optional(),
 });
 

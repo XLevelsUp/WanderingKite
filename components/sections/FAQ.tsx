@@ -99,7 +99,7 @@ export function FAQ() {
               Didn't find your answer?
             </p>
             <a
-              href="https://wa.me/919876543210?text=Hi!%20I%20have%20a%20question..."
+              href="https://wa.me/917010092090?text=Hi!%20I%20have%20a%20question..."
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block rounded-full bg-green-600 px-8 py-3 font-semibold text-foreground transition-colors hover:bg-green-500"

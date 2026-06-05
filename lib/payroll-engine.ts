@@ -267,6 +267,7 @@ export function computePresentDaysForMonth(
   year: number,
   logs: AttendanceLogMin[],
   allowedPaidLeaves: number = 0,
+  joiningDate?: string | null,
 ): {
   presentDays: number;
   lateDays: number;
@@ -286,6 +287,7 @@ export function computePresentDaysForMonth(
   let onAidLeaveDays = 0;
   let lateDays = 0;
   let presentDaysCount = 0;
+  let unjoinedDays = 0;
 
   // Create a map of date string (YYYY-MM-DD) to status
   const logMap = new Map<string, string>();
@@ -303,6 +305,12 @@ export function computePresentDaysForMonth(
 
     if (isSunday) {
       // Sundays are holidays: paid by default (so they never add to unpaid leaves).
+      continue;
+    }
+
+    // Check if before joining date
+    if (joiningDate && dateStr < joiningDate) {
+      unjoinedDays += 1.0;
       continue;
     }
 
@@ -333,8 +341,8 @@ export function computePresentDaysForMonth(
   const paidLeavesUsed = Math.min(totalAbsences, allowedPaidLeaves);
   const unpaidLeaveDays = Math.max(0, totalAbsences - paidLeavesUsed);
 
-  // Deduction days (half days, and whatever unpaid absences are left)
-  const deductionDays = (halfDays * 0.5) + unpaidLeaveDays;
+  // Deduction days (unjoined days, half days, and whatever unpaid absences are left)
+  const deductionDays = unjoinedDays + (halfDays * 0.5) + unpaidLeaveDays;
 
   // Net present days
   const presentDays = Math.max(0, totalDays - deductionDays);

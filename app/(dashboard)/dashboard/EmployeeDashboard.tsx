@@ -137,7 +137,7 @@ export async function EmployeeDashboard({ user, profile }: { user: any, profile:
             <CardDescription>Easily access your operational tools</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Link href="/dashboard/deployments" className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-white/5 transition-colors">
+            <Link href="/dashboard/fieldops" className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-white/5 transition-colors">
               <div>
                 <p className="font-semibold text-sm">Field Operations</p>
                 <p className="text-xs text-foreground/50">View all deployments and Quick Return</p>

@@ -15,6 +15,8 @@ import {
   Activity,
   GitBranch,
   ArrowLeftCircle,
+  Wrench,
+  ShieldAlert,
 } from 'lucide-react';
 import { getNavAccess } from '@/lib/access';
 
@@ -115,6 +117,13 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
         </Link>
       )}
 
+      {access.canViewAuditLogs && (
+        <Link href='/dashboard/audit-logs' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+          <ShieldAlert className='w-4 h-4 opacity-75' />
+          Audit Logs
+        </Link>
+      )}
+
       {/* Admin-only operational pages */}
       {access.canViewPortfolio && (
         <Link href='/dashboard/portfolio' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
@@ -143,7 +152,7 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
       )}
       */}
       {access.canViewDeployments && (
-        <Link href='/dashboard/deployments' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+        <Link href='/dashboard/fieldops' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
           <Activity className='w-4 h-4 opacity-75' />
           Field Ops
         </Link>

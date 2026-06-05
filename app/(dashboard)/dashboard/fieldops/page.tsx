@@ -65,7 +65,7 @@ function StatCard({
 // Data Component (Wrapped in Suspense)
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function DeploymentsData({ isAdmin }: { isAdmin: boolean }) {
+async function DeploymentsData({ isAdmin, currentUserId }: { isAdmin: boolean; currentUserId: string }) {
   // Fetch active deployments + form data in parallel
   const [groups, formData] = await Promise.all([
     getActiveDeployments(),
@@ -87,6 +87,8 @@ async function DeploymentsData({ isAdmin }: { isAdmin: boolean }) {
           employees={formData.employees as any}
           equipment={formData.equipment as any}
           clients={formData.clients as any}
+          isEmployee={!isAdmin}
+          currentUserId={currentUserId}
         />
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/8">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -95,17 +97,19 @@ async function DeploymentsData({ isAdmin }: { isAdmin: boolean }) {
       </div>
 
       {/* ── Stats Row ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
+      <div className={`grid grid-cols-1 gap-4 mt-8 ${isAdmin ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
         <StatCard
           icon={Package}
-          label="Active Deployments"
+          label="Active Equipments"
           value={totalDeployments}
         />
-        <StatCard
-          icon={Users}
-          label="Photographers in Field"
-          value={activeEmployees}
-        />
+        {isAdmin && (
+          <StatCard
+            icon={Users}
+            label="Photographers in Field"
+            value={activeEmployees}
+          />
+        )}
         <StatCard
           icon={AlertTriangle}
           label="Overdue Returns"
@@ -186,7 +190,7 @@ export default async function DeploymentsPage() {
           </div>
         }
       >
-        <DeploymentsData isAdmin={isAdmin} />
+        <DeploymentsData isAdmin={isAdmin} currentUserId={user.id} />
       </Suspense>
     </div>
   );

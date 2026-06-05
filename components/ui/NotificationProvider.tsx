@@ -7,6 +7,7 @@ import { Banner, BannerProps } from './Banner';
 import { Modal, ModalProps } from './Modal';
 import { setupFetchInterceptor, restoreFetch } from '@/lib/fetch-interceptor';
 import { createClient } from '@/lib/supabase/client';
+import { usePathname, useSearchParams } from 'next/navigation';
 
 type OmittedToastProps = Omit<ToastProps, 'id' | 'onClose'>;
 type OmittedModalProps = Omit<ModalProps, 'id'>;
@@ -42,6 +43,14 @@ export function NotificationProvider({
   const [modals, setModals] = useState<ModalProps[]>([]);
   const [banners, setBanners] = useState<BannerProps[]>([]);
   const [loaderMessage, setLoaderMessage] = useState<string | null>(null);
+
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Clear loader automatically when route changes
+  useEffect(() => {
+    setLoaderMessage(null);
+  }, [pathname, searchParams]);
 
   // Toasts
   const removeToast = useCallback((id: string) => {

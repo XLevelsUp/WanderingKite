@@ -28,6 +28,7 @@ export function ClearBatchButton({ month, year, monthName, isSuperAdmin = false 
       cancelText: 'Cancel',
       onCancel: () => removeModal(modalId),
       onConfirm: () => {
+        removeModal(modalId);
         startTransition(async () => {
           const res = await deleteBatchPayroll(month, year);
           if (res && 'error' in res && res.error) {

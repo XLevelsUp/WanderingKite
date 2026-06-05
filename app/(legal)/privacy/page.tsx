@@ -284,7 +284,7 @@ export default function PrivacyPage() {
                   <li>
                     <strong>Phone:</strong>{' '}
                     <a
-                      href="tel:+919876543210"
+                      href="tel:+917010092090"
                       className="text-blue-400 hover:text-blue-300"
                     >
                       {' '}

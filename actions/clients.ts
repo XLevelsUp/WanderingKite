@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { clientSchema } from '@/lib/validations/schemas';
+import { parseSupabaseError } from '@/lib/errorHandler';
 
 // Get all clients
 export async function getClients() {
@@ -42,7 +43,7 @@ export async function createNewClient(formData: FormData) {
     .single();
 
   if (error) {
-    throw new Error(`Failed to create client: ${error.message}`);
+    throw new Error(parseSupabaseError(error, 'Failed to create client'));
   }
 
   revalidatePath('/dashboard/clients');
@@ -72,7 +73,7 @@ export async function updateClient(id: string, formData: FormData) {
     .single();
 
   if (error) {
-    throw new Error(`Failed to update client: ${error.message}`);
+    throw new Error(parseSupabaseError(error, 'Failed to update client'));
   }
 
   revalidatePath('/dashboard/clients');
@@ -86,7 +87,7 @@ export async function deleteClient(id: string) {
   const { error } = await supabase.from('clients').delete().eq('id', id);
 
   if (error) {
-    throw new Error(`Failed to delete client: ${error.message}`);
+    throw new Error(parseSupabaseError(error, 'Failed to delete client'));
   }
 
   revalidatePath('/dashboard/clients');

@@ -229,6 +229,43 @@ export async function getPayrollMonths(): Promise<{ month: number; year: number;
   return Array.from(grouped.values());
 }
 
+/**
+ * Get all payroll records for a specific employee.
+ */
+export async function getEmployeePayrollHistory(employeeId: string): Promise<PayrollRecordWithEmployee[]> {
+  const { supabase } = await requireAdmin();
+
+  const { data, error } = await supabase
+    .from('payroll_records')
+    .select(
+      `
+      *,
+      employee:employeeId(
+        id, fullName, email,
+        contract:employee_contracts(
+          jobTitle, department, employeeNumber, avatarUrl,
+          bankAccountName, bankAccountNumber, bankIFSC, upiId
+        )
+      )
+    `
+    )
+    .eq('employeeId', employeeId)
+    .order('year', { ascending: false })
+    .order('month', { ascending: false });
+
+  if (error) return [];
+
+  return (data ?? []).map((row: any) => ({
+    ...row,
+    employee: {
+      ...row.employee,
+      contract: Array.isArray(row.employee?.contract)
+        ? row.employee.contract[0]
+        : row.employee?.contract,
+    },
+  }));
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // GENERATE DRAFT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -237,6 +274,145 @@ const MONTH_NAMES = [
   '', 'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
+
+/**
+ * Checks for any active employees in the given month who have working days (Monday-Saturday)
+ * on or after their joiningDate with no attendance log.
+ * Returns a list of employees with the dates and count of unmarked days.
+ */
+export async function checkUnmarkedAttendance(month: number, year: number) {
+  const { supabase } = await requireAdmin();
+
+  // Fetch all active employees
+  const { data: contracts, error: contractError } = await supabase
+    .from('employee_contracts')
+    .select('profileId, joiningDate, profiles(fullName, email)')
+    .eq('isActive', true);
+
+  if (contractError) return { error: contractError.message };
+  if (!contracts || contracts.length === 0) return { unmarked: [] };
+
+  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+  const lastDay = new Date(year, month, 0).getDate();
+  const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+  // Fetch all logs for this month
+  const { data: logs, error: logsError } = await supabase
+    .from('attendance_logs')
+    .select('employeeId, date')
+    .gte('date', startDate)
+    .lte('date', endDate);
+
+  if (logsError) return { error: logsError.message };
+
+  // Create a fast lookup map of employeeId -> Set of date strings
+  const logMap = new Map<string, Set<string>>();
+  for (const log of logs ?? []) {
+    if (!logMap.has(log.employeeId)) {
+      logMap.set(log.employeeId, new Set<string>());
+    }
+    logMap.get(log.employeeId)!.add(log.date);
+  }
+
+  const result = [];
+
+  for (const contract of contracts) {
+    const profileId = contract.profileId;
+    const joiningDate = contract.joiningDate;
+    const profile = contract.profiles as any;
+    const fullName = profile?.fullName || 'Unknown';
+    const email = profile?.email || '';
+
+    // If joiningDate is after this month, skip them entirely
+    if (joiningDate && joiningDate > endDate) {
+      continue;
+    }
+
+    const unmarkedDates = [];
+    const empLogs = logMap.get(profileId) ?? new Set<string>();
+
+    for (let day = 1; day <= lastDay; day++) {
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const dateObj = new Date(year, month - 1, day);
+      const isSunday = dateObj.getDay() === 0;
+
+      if (isSunday) continue; // Sundays are holidays
+
+      // Skip days before they joined
+      if (joiningDate && dateStr < joiningDate) {
+        continue;
+      }
+
+      if (!empLogs.has(dateStr)) {
+        unmarkedDates.push(dateStr);
+      }
+    }
+
+    if (unmarkedDates.length > 0) {
+      result.push({
+        employeeId: profileId,
+        fullName,
+        email,
+        unmarkedDates,
+      });
+    }
+  }
+
+  return { unmarked: result };
+}
+
+/**
+ * Auto-fills missing attendance logs for the given list of unmarked dates/employees.
+ * Can fill as either 'PRESENT' or 'ABSENT'.
+ */
+export async function autoFillMissingAttendance(
+  month: number,
+  year: number,
+  fillType: 'PRESENT' | 'ABSENT',
+) {
+  const { supabase, userId } = await requireAdmin();
+
+  // Call checkUnmarkedAttendance to find exactly what is missing
+  const { unmarked, error } = await checkUnmarkedAttendance(month, year);
+  if (error) return { error };
+  if (!unmarked || unmarked.length === 0) return { success: true, count: 0 };
+
+  const settings = await getAttendanceSettings(`${year}-${String(month).padStart(2, '0')}-01`);
+  const rows = [];
+
+  for (const item of unmarked) {
+    for (const date of item.unmarkedDates) {
+      let clockIn: string | null = null;
+      let clockOut: string | null = null;
+
+      if (fillType === 'PRESENT') {
+        clockIn = settings?.studioStartTime ? settings.studioStartTime.slice(0, 5) : '09:00';
+        clockOut = '18:00';
+      }
+
+      rows.push({
+        employeeId: item.employeeId,
+        date,
+        clockIn: clockIn ? `${clockIn}:00` : null,
+        clockOut: clockOut ? `${clockOut}:00` : null,
+        status: fillType,
+        markedById: userId,
+      });
+    }
+  }
+
+  if (rows.length > 0) {
+    const { error: upsertError } = await supabase
+      .from('attendance_logs')
+      .upsert(rows, { onConflict: 'employeeId,date' });
+
+    if (upsertError) return { error: upsertError.message };
+  }
+
+  revalidatePath('/admin/attendance');
+  revalidatePath('/admin/payroll');
+  return { success: true, count: rows.length };
+}
 
 /**
  * Generate payroll drafts for all active employees for the given month/year.
@@ -251,6 +427,17 @@ export async function generatePayrollDraft(formData: PayrollGenerateData) {
   }
 
   const { month, year } = result.data;
+
+  // 0. Prevent future payroll generation
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1; // 1-indexed
+
+  if (year > currentYear || (year === currentYear && month > currentMonth)) {
+    return {
+      error: `You cannot generate payroll for a future month (${month}/${year}). Please wait until the month has started.`,
+    };
+  }
 
   // 1. Prevent duplicate payroll generation: check if any records exist for this month/year
   const { data: existingRecords, error: checkError } = await supabase
@@ -322,7 +509,7 @@ export async function generatePayrollDraft(formData: PayrollGenerateData) {
       halfDays,
       onAidLeaveDays,
       deductionDays,
-    } = computePresentDaysForMonth(month, year, logs ?? [], allowedPaidLeaves);
+    } = computePresentDaysForMonth(month, year, logs ?? [], allowedPaidLeaves, joiningDate);
 
     // Estimate average late minutes (15 min if late)
     const avgLateMinutes = lateDays > 0 ? 15 : 0;
