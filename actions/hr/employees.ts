@@ -15,6 +15,7 @@ import {
   type PersonalDetailsFormData,
 } from '@/lib/validations/hr';
 import type { HREmployee } from '@/lib/types/hr';
+import { parseSupabaseError } from '@/lib/errorHandler';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GUARDS
@@ -92,6 +93,22 @@ export async function getHREmployees(query?: string): Promise<HREmployee[]> {
     bloodGroup: row.bloodGroup ?? null,
     panNumber: row.panNumber ?? null,
   }));
+}
+
+/**
+ * Checks if an email is already registered in the profiles table.
+ * Returns true if it exists, false if it's available.
+ */
+export async function checkEmailExists(email: string): Promise<boolean> {
+  const supabase = await createClient(); // Does not require admin just to check uniqueness for UX
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('email')
+    .eq('email', email)
+    .maybeSingle();
+  
+  if (error) return false;
+  return !!data;
 }
 
 /** Single employee — profile + contract */
@@ -175,22 +192,20 @@ export async function getProfilesWithoutContract() {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, email, fullName, role')
+    .select('id, email, fullName, role, employee_contracts(profileId)')
     .is('deletedAt', null)
     .order('fullName');
 
   if (error) return [];
 
-  // Filter client-side: profiles with no contract row
-  const { data: contractProfiles } = await supabase
-    .from('employee_contracts')
-    .select('profileId');
-
-  const contractedIds = new Set(
-    (contractProfiles ?? []).map((c: any) => c.profileId),
-  );
-
-  return (data ?? []).filter((p: any) => !contractedIds.has(p.id));
+  return (data ?? [])
+    .filter((p: any) => !p.employee_contracts || p.employee_contracts.length === 0)
+    .map((p: any) => ({
+      id: p.id,
+      email: p.email,
+      fullName: p.fullName,
+      role: p.role,
+    }));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -316,7 +331,7 @@ export async function createAndOnboardEmployee(formData: UnifiedOnboardingFormDa
     });
 
   if (authError || !authUser.user) {
-    return { error: authError?.message || 'Failed to create user account' };
+    return { error: parseSupabaseError(authError, 'Failed to create user account') };
   }
 
   const newProfileId = authUser.user.id;
@@ -339,7 +354,7 @@ export async function createAndOnboardEmployee(formData: UnifiedOnboardingFormDa
   if (profileError) {
     // Best-effort cleanup: delete the auth user so we don't leave orphans
     await adminAuthClient.auth.admin.deleteUser(newProfileId);
-    return { error: 'User created but failed to set profile details. Please try again.' };
+    return { error: parseSupabaseError(profileError, 'User created but failed to set profile details. Please try again.') };
   }
 
   // 3. Create the HR contract with retry logic for employeeNumber conflict

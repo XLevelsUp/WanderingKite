@@ -52,6 +52,7 @@ export function PayrollBatchActions({ month, year, allStatuses, isSuperAdmin = f
       cancelText: 'Cancel',
       onCancel: () => removeModal(modalId),
       onConfirm: () => {
+        removeModal(modalId);
         setError(null);
         startTransition(async () => {
           const res = await deleteBatchPayroll(month, year);

@@ -24,7 +24,7 @@ const termsData: Record<ServiceType, { header: string; items: TermItem[] }> = {
       {
         title: 'Booking Requirement',
         details:
-          'A 50% non-refundable advance is mandatory to confirm your specific slot. Bookings are on a first-come, first-served basis.',
+          'For events and weddings, we recommend booking at least 30 days in advance. Bookings are on a first-come, first-served basis.',
       },
       {
         title: 'ID Verification',

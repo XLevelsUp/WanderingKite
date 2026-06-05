@@ -431,8 +431,11 @@ const pricingTiers = [
 ];
 
 export default async function StudioPage() {
-  // Fetch live equipment summary
-  const equipment = await getEquipment();
+  // Fetch live equipment summary and filter for rental gear only
+  const allEquipment = await getEquipment();
+  const rentalEquipment = allEquipment.filter(
+    (eq: any) => eq.ownership_type === 'RENTAL' || !eq.ownership_type
+  );
 
   // Hardcoded equipment previews for the rental section below
   const previewCameras = 'Sony A7 IV, Canon EOS R5, Lumix S5 IIX ,Sony Alpha M7 V,Sony Alpha FX3 , Sony Alpha FX 30';
@@ -497,8 +500,7 @@ export default async function StudioPage() {
               Check our competitive photo studio rental Coimbatore price options to book photography studio Coimbatore sessions today. Everything you need under one roof.
             </p>
 
-            {/* Space Allocation / Pricing Engine */}
-            <StudioPricingEngine equipment={equipment} />
+            <StudioPricingEngine equipment={rentalEquipment} />
 
             {/* Podcast Studio */}
             <div className="mb-20">

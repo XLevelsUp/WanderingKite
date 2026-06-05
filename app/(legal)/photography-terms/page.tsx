@@ -60,8 +60,7 @@ export default function PhotographyTerms() {
             </p>
             <ul className="list-disc pl-6 space-y-3">
               <li>
-                A <strong>50% non-refundable advance</strong> is mandatory to
-                confirm any photography slot.
+                For events and weddings, we recommend booking at least 30 days in advance.
               </li>
               <li>
                 Slots are secured only after payment and receipt of mandatory

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { equipmentSchema } from '@/lib/validations/schemas';
 import type { Database } from '@/lib/database.types';
 import { redirect } from 'next/navigation';
+import { parseSupabaseError } from '@/lib/errorHandler';
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -141,6 +142,13 @@ export async function createEquipment(formData: FormData) {
     specs: (formData.get('specs') as string) || null,
     description: (formData.get('description') as string) || null,
     pricingPlans: pricingPlansParsed,
+    purchaseBill: (formData.get('purchase_bill') as string) || '',
+    purchaseDate: (formData.get('purchase_date') as string) || null,
+    warrantyDurationMonths: formData.get('warranty_duration_months') ? parseInt(formData.get('warranty_duration_months') as string, 10) : null,
+    warrantyExpirationDate: (formData.get('warranty_expiration_date') as string) || null,
+    serviceCost: formData.get('service_cost') ? parseFloat(formData.get('service_cost') as string) : 0,
+    repairCost: formData.get('repair_cost') ? parseFloat(formData.get('repair_cost') as string) : 0,
+    ownershipType: (formData.get('ownership_type') as string) || 'IN_HOUSE',
   };
 
   const validatedData = equipmentSchema.parse(rawData);
@@ -157,12 +165,19 @@ export async function createEquipment(formData: FormData) {
       specs: validatedData.specs ? JSON.stringify(validatedData.specs.split(',').map((s: string) => s.trim()).filter(Boolean)) : '[]',
       description: validatedData.description,
       status: 'AVAILABLE',
+      purchase_bill: validatedData.purchaseBill || null,
+      purchase_date: validatedData.purchaseDate || null,
+      warranty_duration_months: validatedData.warrantyDurationMonths || null,
+      warranty_expiration_date: validatedData.warrantyExpirationDate || null,
+      service_cost: validatedData.serviceCost || 0,
+      repair_cost: validatedData.repairCost || 0,
+      ownership_type: validatedData.ownershipType,
     } as any)
     .select()
     .single();
 
   if (error) {
-    throw new Error(`Failed to create equipment: ${error.message}`);
+    throw new Error(parseSupabaseError(error, 'Failed to create equipment'));
   }
   revalidatePath('/dashboard/equipment');
   revalidatePath('/rentals');
@@ -187,6 +202,13 @@ export async function updateEquipment(id: string, formData: FormData) {
     specs: (formData.get('specs') as string) || null,
     description: (formData.get('description') as string) || null,
     pricingPlans: pricingPlansParsed,
+    purchaseBill: (formData.get('purchase_bill') as string) || '',
+    purchaseDate: (formData.get('purchase_date') as string) || null,
+    warrantyDurationMonths: formData.get('warranty_duration_months') ? parseInt(formData.get('warranty_duration_months') as string, 10) : null,
+    warrantyExpirationDate: (formData.get('warranty_expiration_date') as string) || null,
+    serviceCost: formData.get('service_cost') ? parseFloat(formData.get('service_cost') as string) : 0,
+    repairCost: formData.get('repair_cost') ? parseFloat(formData.get('repair_cost') as string) : 0,
+    ownershipType: (formData.get('ownership_type') as string) || 'IN_HOUSE',
   };
 
   const validatedData = equipmentSchema.parse(rawData);
@@ -202,11 +224,18 @@ export async function updateEquipment(id: string, formData: FormData) {
       image_url: validatedData.imageUrl || null,
       specs: validatedData.specs ? JSON.stringify(validatedData.specs.split(',').map((s: string) => s.trim()).filter(Boolean)) : '[]',
       description: validatedData.description,
+      purchase_bill: validatedData.purchaseBill || null,
+      purchase_date: validatedData.purchaseDate || null,
+      warranty_duration_months: validatedData.warrantyDurationMonths || null,
+      warranty_expiration_date: validatedData.warrantyExpirationDate || null,
+      service_cost: validatedData.serviceCost || 0,
+      repair_cost: validatedData.repairCost || 0,
+      ownership_type: validatedData.ownershipType,
     } as any)
     .eq('id', id);
 
   if (error) {
-    throw new Error(`Failed to update equipment: ${error.message}`);
+    throw new Error(parseSupabaseError(error, 'Failed to update equipment'));
   }
   revalidatePath('/dashboard/equipment');
   revalidatePath(`/dashboard/equipment/${id}`);

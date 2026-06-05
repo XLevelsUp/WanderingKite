@@ -288,12 +288,14 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
-        <NotificationProvider>
-          <MainNav />
-          {children}
-          <BookingFlyout />
-          <Toaster richColors position="bottom-right" />
-        </NotificationProvider>
+        <Suspense>
+          <NotificationProvider>
+            <MainNav />
+            {children}
+            <BookingFlyout />
+            <Toaster richColors position="bottom-right" />
+          </NotificationProvider>
+        </Suspense>
       </body>
     </html>
   );

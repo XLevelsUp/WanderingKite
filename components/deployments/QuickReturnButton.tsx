@@ -46,7 +46,7 @@ export function QuickReturnButton({
       ) : (
         <>
           <CheckCircle className="w-3.5 h-3.5" />
-          Quick Return
+          Mark Returned
         </>
       )}
     </button>

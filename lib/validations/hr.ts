@@ -12,16 +12,11 @@ export const contractSchema = z.object({
     .number()
     .min(0, 'Incentive must be non-negative'),
   joiningDate: z.string().min(1, 'Joining date is required'), // ISO date
-  bankAccountName: z.string().max(200).optional().or(z.literal('')),
-  bankAccountNumber: z.string().max(50).optional().or(z.literal('')),
+  bankAccountName: z.string().min(1, 'Account holder name is required').max(200),
+  bankAccountNumber: z.string().min(1, 'Account number is required').max(50),
   bankIFSC: z
     .string()
-    .optional()
-    .or(z.literal(''))
-    .refine(
-      (v) => !v || /^[A-Za-z]{4}0[A-Za-z0-9]{6}$/i.test(v),
-      'Invalid IFSC code',
-    ),
+    .regex(/^[A-Za-z]{4}0[A-Za-z0-9]{6}$/i, 'Invalid IFSC code'),
   upiId: z.string().max(100).optional().or(z.literal('')),
   avatarUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
   notes: z.string().max(1000).optional().or(z.literal('')),
@@ -52,15 +47,18 @@ export type HROnboardingFormData = z.infer<typeof hrOnboardingSchema>;
 export const unifiedOnboardingSchema = z.object({
   // Step 1 — Personal info (account creation)
   fullName: z.string().min(1, 'Full name is required').max(200),
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address').regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Please enter a valid email format'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   // Step 2 — Personal details (required: DOB, phone, gender; optional: blood group, PAN)
-  dateOfBirth: z.string().min(1, 'Date of birth is required'),
+  dateOfBirth: z.string().min(1, 'Date of birth is required').refine((val) => {
+    const dob = new Date(val);
+    const eighteenYearsAgo = new Date();
+    eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+    return dob <= eighteenYearsAgo;
+  }, 'Employee must be at least 18 years old (Indian Labour Law)'),
   phone: z
     .string()
-    .min(10, 'Phone must be at least 10 digits')
-    .max(15, 'Phone number too long')
-    .regex(/^[+]?[0-9\s\-()]+$/, 'Invalid phone number'),
+    .regex(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits (no spaces or code)'),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY'], {
     message: 'Gender is required',
   }),
@@ -92,12 +90,15 @@ export const BLOOD_GROUP_OPTIONS = [
 ] as const;
 
 export const personalDetailsSchema = z.object({
-  dateOfBirth: z.string().min(1, 'Date of birth is required'),
+  dateOfBirth: z.string().min(1, 'Date of birth is required').refine((val) => {
+    const dob = new Date(val);
+    const eighteenYearsAgo = new Date();
+    eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+    return dob <= eighteenYearsAgo;
+  }, 'Employee must be at least 18 years old'),
   phone: z
     .string()
-    .min(10, 'Phone must be at least 10 digits')
-    .max(15, 'Phone number too long')
-    .regex(/^[+]?[0-9\s\-()]+$/, 'Invalid phone number'),
+    .regex(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits (no spaces or code)'),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY'], {
     message: 'Gender is required',
   }),

@@ -39,11 +39,13 @@ function ImageUploadField({
   defaultValue,
   disabled,
   onChange,
+  bucket,
 }: {
   name: string;
   defaultValue?: string | null;
   disabled?: boolean;
   onChange?: (url: string) => void;
+  bucket?: string;
 }) {
   const [url, setUrl] = useState(defaultValue ?? '');
 
@@ -58,7 +60,7 @@ function ImageUploadField({
       <ImageUpload
         value={url || null}
         onChange={handleChange}
-        bucket="equipment-images"
+        bucket={bucket ?? "equipment-images"}
         disabled={disabled}
       />
     </>
@@ -85,6 +87,13 @@ interface EquipmentData {
   image_url?: string | null;
   specs?: string[] | null;
   description?: string | null;
+  ownership_type?: string;
+  purchase_date?: string | null;
+  warranty_duration_months?: number | null;
+  warranty_expiration_date?: string | null;
+  service_cost?: number;
+  repair_cost?: number;
+  purchase_bill?: string | null;
 }
 
 interface EditEquipmentFormProps {
@@ -211,6 +220,9 @@ export function EditEquipmentDialog({
   const [selectedBranch, setSelectedBranch] = useState(
     equipment.branchId ?? ''
   );
+  const [ownershipType, setOwnershipType] = useState(
+    equipment.ownership_type ?? 'IN_HOUSE'
+  );
 
   // Plans manager state inside modal
   const [plans, setPlans] = useState<Array<{ name: string; durationHours: number; rate: number }>>(() => {
@@ -332,6 +344,7 @@ export function EditEquipmentDialog({
       const formData = new FormData(e.currentTarget);
       formData.set('category_id', selectedCategory);
       formData.set('branch_id', selectedBranch);
+      formData.set('ownership_type', ownershipType);
       formData.set('pricing_plans', JSON.stringify(plans));
 
       await updateEquipment(equipment.id, formData);
@@ -438,6 +451,23 @@ export function EditEquipmentDialog({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Ownership Type *</Label>
+            <Select
+              value={ownershipType}
+              onValueChange={setOwnershipType}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select ownership" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="IN_HOUSE">In-House</SelectItem>
+                <SelectItem value="RENTAL">Rental</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Pricing Plans Manager */}
@@ -648,7 +678,88 @@ export function EditEquipmentDialog({
               name="image_url"
               defaultValue={equipment.image_url}
               disabled={isLoading}
+              bucket="equipment-images"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-purchase-date">Purchase Date</Label>
+              <Input
+                id="edit-purchase-date"
+                name="purchase_date"
+                type="date"
+                defaultValue={equipment.purchase_date?.split('T')[0] ?? ''}
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-warranty-duration">Warranty Duration (Months)</Label>
+              <Input
+                id="edit-warranty-duration"
+                name="warranty_duration_months"
+                type="number"
+                min="0"
+                defaultValue={equipment.warranty_duration_months ?? ''}
+                disabled={isLoading}
+                onChange={(e) => {
+                  const months = parseInt(e.target.value, 10);
+                  const purchaseDateInput = document.getElementById('edit-purchase-date') as HTMLInputElement;
+                  const expDateInput = document.getElementById('edit-warranty-expiration') as HTMLInputElement;
+                  if (!isNaN(months) && purchaseDateInput?.value && expDateInput) {
+                    const pd = new Date(purchaseDateInput.value);
+                    pd.setMonth(pd.getMonth() + months);
+                    expDateInput.value = pd.toISOString().split('T')[0];
+                  }
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-warranty-expiration">Warranty Expiration Date</Label>
+              <Input
+                id="edit-warranty-expiration"
+                name="warranty_expiration_date"
+                type="date"
+                defaultValue={equipment.warranty_expiration_date?.split('T')[0] ?? ''}
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Purchase Bill</Label>
+              <ImageUploadField 
+                name="purchase_bill" 
+                defaultValue={equipment.purchase_bill}
+                disabled={isLoading} 
+                bucket="equipment-images" 
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-service-cost">Service Cost (₹)</Label>
+              <Input
+                id="edit-service-cost"
+                name="service_cost"
+                type="number"
+                min="0"
+                step="0.01"
+                defaultValue={equipment.service_cost ?? ''}
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-repair-cost">Repair Cost (₹)</Label>
+              <Input
+                id="edit-repair-cost"
+                name="repair_cost"
+                type="number"
+                min="0"
+                step="0.01"
+                defaultValue={equipment.repair_cost ?? ''}
+                disabled={isLoading}
+              />
+            </div>
           </div>
 
           {/* Specs */}

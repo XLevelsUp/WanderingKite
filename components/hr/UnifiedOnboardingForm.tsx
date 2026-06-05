@@ -9,7 +9,7 @@ import {
   type UnifiedOnboardingFormData,
   BLOOD_GROUP_OPTIONS,
 } from '@/lib/validations/hr';
-import { createAndOnboardEmployee } from '@/actions/hr/employees';
+import { createAndOnboardEmployee, checkEmailExists } from '@/actions/hr/employees';
 import {
   CheckCircle,
   ChevronRight,
@@ -82,6 +82,8 @@ export function UnifiedOnboardingForm({ branches, managers, nextEmployeeNumber }
     formState: { errors },
     watch,
     trigger,
+    setError,
+    clearErrors,
     getValues,
   } = useForm<UnifiedOnboardingFormData>({
     resolver: zodResolver(unifiedOnboardingSchema),
@@ -124,14 +126,27 @@ export function UnifiedOnboardingForm({ branches, managers, nextEmployeeNumber }
   const STEP_FIELDS: Record<number, (keyof UnifiedOnboardingFormData)[]> = {
     1: ['fullName', 'email', 'password'],
     2: ['dateOfBirth', 'phone', 'gender', 'bloodGroup', 'panNumber'],
-    3: ['role'],
+    3: ['role', 'branchId', 'managerId'],
     4: ['jobTitle', 'employmentType', 'baseSalary', 'joiningDate', 'incentive'],
-    5: [],
+    5: ['bankAccountName', 'bankAccountNumber', 'bankIFSC', 'upiId'],
   };
 
   async function nextStep() {
+    clearErrors('email');
     const valid = await trigger(STEP_FIELDS[step]);
-    if (valid) setStep((s) => Math.min(s + 1, STEPS.length));
+    
+    if (valid) {
+      if (step === 1) {
+        // Run async check on email uniqueness
+        const email = getValues('email');
+        const emailTaken = await checkEmailExists(email);
+        if (emailTaken) {
+          setError('email', { type: 'manual', message: 'This email is already registered in the system' });
+          return; // Block progression
+        }
+      }
+      setStep((s) => Math.min(s + 1, STEPS.length));
+    }
   }
 
   function prevStep() {
@@ -537,7 +552,7 @@ export function UnifiedOnboardingForm({ branches, managers, nextEmployeeNumber }
             <div>
               <p className='text-[10px] font-semibold uppercase tracking-[0.22em] text-primary opacity-70 mb-1'>Step 5 of 5</p>
               <h3 className='text-xl font-bold text-foreground mb-1'>Bank & Payment Details</h3>
-              <p className='text-sm text-foreground/50'>Optional — add bank details for salary disbursement.</p>
+              <p className='text-sm text-foreground/50'>Required for salary disbursement.</p>
             </div>
 
             {/* Review summary card */}
@@ -577,17 +592,19 @@ export function UnifiedOnboardingForm({ branches, managers, nextEmployeeNumber }
 
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
               <div className='sm:col-span-2'>
-                <FieldLabel>Account Holder Name</FieldLabel>
+                <FieldLabel required>Account Holder Name</FieldLabel>
                 <input {...register('bankAccountName')} placeholder='Full name as per bank' className={inputClass} />
+                <FieldError message={errors.bankAccountName?.message} />
               </div>
 
               <div>
-                <FieldLabel>Account Number</FieldLabel>
+                <FieldLabel required>Account Number</FieldLabel>
                 <input {...register('bankAccountNumber')} placeholder='xxxxxxxxxxxxxxxxx' className={inputClass} />
+                <FieldError message={errors.bankAccountNumber?.message} />
               </div>
 
               <div>
-                <FieldLabel>IFSC Code</FieldLabel>
+                <FieldLabel required>IFSC Code</FieldLabel>
                 <input {...register('bankIFSC')} placeholder='e.g. SBIN0001234' className={`${inputClass} uppercase`} />
                 <FieldError message={errors.bankIFSC?.message} />
               </div>

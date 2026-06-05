@@ -22,10 +22,13 @@ export async function getEmployees(query?: string) {
     redirect('/login');
   }
 
-  // Let's rely on RLS for data protection, but we'll add search logic.
-  let dbQuery = supabase
+  // The user requested that employees can see all other employees in the team list.
+  // We use adminAuthClient to bypass RLS which normally restricts employees to seeing only their own profile.
+  // We exclude soft-deleted profiles and profiles where the employee contract is inactive.
+  let dbQuery = adminAuthClient
     .from('profiles')
-    .select('*, branches(name), manager:managerId(fullName)')
+    .select('*, branches(name), manager:managerId(fullName), employee_contracts(isActive)')
+    .is('deletedAt', null)
     .order('createdAt', { ascending: false });
 
   if (query) {
@@ -38,7 +41,15 @@ export async function getEmployees(query?: string) {
     return [];
   }
 
-  return data ?? [];
+  // Filter out profiles where ALL contracts are inactive.
+  // Profiles with no contracts (e.g. ADMIN/SUPER_ADMIN) are kept.
+  const activeEmployees = (data ?? []).filter((profile: any) => {
+    const contracts = profile.employee_contracts;
+    if (!contracts || contracts.length === 0) return true; // No contract → keep (admin etc.)
+    return contracts.some((c: any) => c.isActive === true); // Has at least one active contract
+  });
+
+  return activeEmployees;
 }
 
 export async function getBranches() {

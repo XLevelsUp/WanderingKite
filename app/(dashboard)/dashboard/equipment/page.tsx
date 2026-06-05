@@ -299,15 +299,6 @@ async function EquipmentData({ isEmployee }: { isEmployee: boolean }) {
                           View
                         </Button>
                       </Link>
-                      <Link href={`/dashboard/equipment/${item.id}/history`}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-foreground/40"
-                        >
-                          History
-                        </Button>
-                      </Link>
                       {!isEmployee && (
                         <DeleteEquipmentButton
                           equipmentId={item.id}

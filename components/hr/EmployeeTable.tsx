@@ -133,25 +133,32 @@ export function HREmployeeTable({
         confirmText: 'Deactivate',
         cancelText: 'Cancel',
         onCancel: () => removeModal(modalId),
-        onConfirm: () => {
-          startTransition(async () => {
-            showLoader('Deactivating...');
-            const res = await deactivateEmployee(employee.id);
-            if (res?.error) showError(res.error);
-            else showSuccess('Employee deactivated');
-            hideLoader();
-            router.refresh();
-          });
+        onConfirm: async () => {
+          showLoader('Deactivating...');
+          const res = await deactivateEmployee(employee.id);
+          if (res?.error) showError(res.error);
+          else showSuccess('Employee deactivated');
+          hideLoader();
+          removeModal(modalId);
+          router.refresh();
         },
       });
     } else {
-      startTransition(async () => {
-        showLoader('Reactivating...');
-        const res = await reactivateEmployee(employee.id);
-        if (res?.error) showError(res.error);
-        else showSuccess('Employee reactivated');
-        hideLoader();
-        router.refresh();
+      const modalId = showModal({
+        title: 'Reactivate Employee',
+        description: `Are you sure you want to reactivate ${employee.fullName || 'this employee'}?`,
+        confirmText: 'Reactivate',
+        cancelText: 'Cancel',
+        onCancel: () => removeModal(modalId),
+        onConfirm: async () => {
+          showLoader('Reactivating...');
+          const res = await reactivateEmployee(employee.id);
+          if (res?.error) showError(res.error);
+          else showSuccess('Employee reactivated');
+          hideLoader();
+          removeModal(modalId);
+          router.refresh();
+        }
       });
     }
   }
@@ -309,7 +316,10 @@ export function HREmployeeTable({
                   Edit Employee
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => router.push(`/admin/payroll?employee=${e.id}`)}
+                  onClick={() => {
+                    showLoader('Loading Payroll...');
+                    router.push(`/admin/employees/${e.id}/payroll`);
+                  }}
                   className='text-foreground hover:text-foreground focus:text-foreground hover:bg-primary/10 focus:bg-primary/10 cursor-pointer'
                 >
                   <ExternalLink className='mr-2 h-4 w-4 text-primary' />
