@@ -8,7 +8,7 @@ import { siteConfig } from '@/config/site';
 
 const navItems = [
   { label: 'Photography', href: '/photography', icon: Camera },
-  // { label: 'Rentals', href: '/rentals', icon: Video },
+  { label: 'Rentals', href: '/rentals', icon: Video },
   { label: 'The Studio Space', href: '/studiospace', icon: Building2 },
 ];
 

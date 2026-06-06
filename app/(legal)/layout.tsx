@@ -17,10 +17,13 @@ export default function LegalLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // LocalBusiness Schema for SEO Authority
+  // LocalBusiness Schema — canonical values MUST match root layout.tsx.
+  // @id links this to the same entity declared globally; AI agents and
+  // search engines will merge rather than conflict the two blocks.
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
+    '@id': 'https://wanderingkite.in/#business', // same @id as root layout
     name: siteConfig.name,
     image: `${siteConfig.url}/wkfulllogo.png`,
     address: {
@@ -38,20 +41,20 @@ export default function LegalLayout({
     },
     url: siteConfig.url,
     telephone: siteConfig.contact.phone,
-    priceRange: '$$',
+    priceRange: '₹₹',
+    // Canonical hours — must stay in sync with root layout.tsx
     openingHoursSpecification: [
       {
         '@type': 'OpeningHoursSpecification',
-        dayOfWeek: [
-          'Monday',
-          'Tuesday',
-          'Wednesday',
-          'Thursday',
-          'Friday',
-          'Saturday',
-        ],
+        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
         opens: '09:00',
-        closes: '21:00',
+        closes: '18:00',
+      },
+      {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: 'Saturday',
+        opens: '10:00',
+        closes: '17:00',
       },
     ],
   };
