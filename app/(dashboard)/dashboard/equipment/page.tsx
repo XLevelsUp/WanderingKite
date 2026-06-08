@@ -169,7 +169,7 @@ function FieldStatusCell({
 // Data Component (Wrapped in Suspense)
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function EquipmentData({ isEmployee }: { isEmployee: boolean }) {
+async function EquipmentData({ isEmployee, isSuperAdmin }: { isEmployee: boolean, isSuperAdmin: boolean }) {
   const equipment = await getEquipmentWithFieldStatus();
   const inFieldCount = equipment.filter(
     (e) => e.activeAssignment !== null
@@ -299,7 +299,7 @@ async function EquipmentData({ isEmployee }: { isEmployee: boolean }) {
                           View
                         </Button>
                       </Link>
-                      {!isEmployee && (
+                      {isSuperAdmin && (
                         <DeleteEquipmentButton
                           equipmentId={item.id}
                           equipmentName={item.name}
@@ -337,6 +337,7 @@ export default async function EquipmentPage() {
     .single();
 
   const isEmployee = profile?.role === 'EMPLOYEE';
+  const isSuperAdmin = profile?.role === 'SUPER_ADMIN';
 
   return (
     <div className="space-y-8 min-h-[500px]">
@@ -348,7 +349,7 @@ export default async function EquipmentPage() {
           </div>
         }
       >
-        <EquipmentData isEmployee={isEmployee} />
+        <EquipmentData isEmployee={isEmployee} isSuperAdmin={isSuperAdmin} />
       </Suspense>
     </div>
   );

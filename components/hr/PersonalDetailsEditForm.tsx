@@ -15,13 +15,14 @@ import type { HREmployee } from '@/lib/types/hr';
 
 interface PersonalDetailsEditFormProps {
   employee: HREmployee;
+  readOnly?: boolean;
 }
 
 const inputClass =
   'w-full px-3 py-2.5 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-foreground/85 placeholder-foreground/30 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all duration-150 disabled:opacity-40';
 
 const selectClass =
-  'w-full px-3 py-2.5 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all [&>option]:bg-[#1a1a24]';
+  'w-full px-3 py-2.5 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all [&>option]:bg-[#1a1a24] disabled:opacity-40';
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
@@ -37,7 +38,7 @@ function FieldError({ message }: { message?: string }) {
   return <p className='mt-1 text-xs text-red-400'>{message}</p>;
 }
 
-export function PersonalDetailsEditForm({ employee }: PersonalDetailsEditFormProps) {
+export function PersonalDetailsEditForm({ employee, readOnly = false }: PersonalDetailsEditFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
@@ -77,13 +78,13 @@ export function PersonalDetailsEditForm({ employee }: PersonalDetailsEditFormPro
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
         <div>
           <FieldLabel required>Date of Birth</FieldLabel>
-          <input type='date' {...register('dateOfBirth')} className={inputClass} />
+          <input type='date' {...register('dateOfBirth')} className={inputClass} disabled={readOnly} />
           <FieldError message={errors.dateOfBirth?.message} />
         </div>
 
         <div>
           <FieldLabel required>Gender</FieldLabel>
-          <select {...register('gender')} className={selectClass}>
+          <select {...register('gender')} className={selectClass} disabled={readOnly}>
             <option value=''>Select gender</option>
             <option value='MALE'>Male</option>
             <option value='FEMALE'>Female</option>
@@ -100,13 +101,14 @@ export function PersonalDetailsEditForm({ employee }: PersonalDetailsEditFormPro
             {...register('phone')}
             placeholder='e.g. +91 98765 43210'
             className={inputClass}
+            disabled={readOnly}
           />
           <FieldError message={errors.phone?.message} />
         </div>
 
         <div>
           <FieldLabel>Blood Group</FieldLabel>
-          <select {...register('bloodGroup')} className={selectClass}>
+          <select {...register('bloodGroup')} className={selectClass} disabled={readOnly}>
             <option value=''>Unknown</option>
             {BLOOD_GROUP_OPTIONS.map((bg) => (
               <option key={bg} value={bg}>{bg}</option>
@@ -121,6 +123,7 @@ export function PersonalDetailsEditForm({ employee }: PersonalDetailsEditFormPro
             placeholder='e.g. ABCDE1234F'
             className={`${inputClass} uppercase`}
             maxLength={10}
+            disabled={readOnly}
           />
           <FieldError message={errors.panNumber?.message} />
         </div>
@@ -132,31 +135,33 @@ export function PersonalDetailsEditForm({ employee }: PersonalDetailsEditFormPro
         </div>
       )}
 
-      <div className='flex items-center justify-end gap-3 pt-2 border-t border-primary/12'>
-        {saved && (
-          <span className='flex items-center gap-1.5 text-xs text-emerald-400'>
-            <CheckCircle className='w-3.5 h-3.5' />
-            Saved
-          </span>
-        )}
-        <button
-          type='submit'
-          disabled={isPending || !isDirty}
-          className='flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-black text-sm font-bold hover:bg-primary/90 disabled:opacity-50 transition-all'
-        >
-          {isPending ? (
-            <>
-              <Loader2 className='h-4 w-4 animate-spin' />
-              Saving…
-            </>
-          ) : (
-            <>
-              <Pencil className='h-4 w-4' />
-              Save Changes
-            </>
+      {!readOnly && (
+        <div className='flex items-center justify-end gap-3 pt-2 border-t border-primary/12'>
+          {saved && (
+            <span className='flex items-center gap-1.5 text-xs text-emerald-400'>
+              <CheckCircle className='w-3.5 h-3.5' />
+              Saved
+            </span>
           )}
-        </button>
-      </div>
+          <button
+            type='submit'
+            disabled={isPending || !isDirty}
+            className='flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-black text-sm font-bold hover:bg-primary/90 disabled:opacity-50 transition-all'
+          >
+            {isPending ? (
+              <>
+                <Loader2 className='h-4 w-4 animate-spin' />
+                Saving…
+              </>
+            ) : (
+              <>
+                <Pencil className='h-4 w-4' />
+                Save Changes
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </form>
   );
 }

@@ -7,6 +7,23 @@ import type { Database } from '@/lib/database.types';
 type ShootRow = Database['public']['Tables']['shoots']['Row'];
 type GalleryImageRow = Database['public']['Tables']['gallery_images']['Row'];
 
+async function requireAdmin() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SUPER_ADMIN')) {
+    throw new Error('Insufficient permissions');
+  }
+  return { supabase, user };
+}
+
 export async function getShoots() {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -49,7 +66,7 @@ export async function getShootsBySubCategory(subCategory: string) {
 }
 
 export async function createShoot(formData: FormData) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const title = formData.get('title') as string;
   const category = formData.get('category') as string;
   const sub_category = formData.get('sub_category') as string;
@@ -69,7 +86,7 @@ export async function createShoot(formData: FormData) {
 }
 
 export async function updateShoot(id: string, formData: FormData) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const title = formData.get('title') as string;
   const category = formData.get('category') as string;
   const sub_category = formData.get('sub_category') as string;
@@ -89,7 +106,7 @@ export async function updateShoot(id: string, formData: FormData) {
 }
 
 export async function deleteShoot(id: string) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { error } = await supabase.from('shoots').delete().eq('id', id);
 
   if (error) throw new Error(`Failed to delete shoot: ${error.message}`);
@@ -100,7 +117,7 @@ export async function deleteShoot(id: string) {
 }
 
 export async function addGalleryImage(shootId: string, url: string, altText?: string) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from('gallery_images')
     .insert({ shoot_id: shootId, url, alt_text: altText || null })
@@ -115,7 +132,7 @@ export async function addGalleryImage(shootId: string, url: string, altText?: st
 }
 
 export async function deleteGalleryImage(id: string, shootId: string) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { error } = await supabase.from('gallery_images').delete().eq('id', id);
 
   if (error) throw new Error(`Failed to delete image: ${error.message}`);

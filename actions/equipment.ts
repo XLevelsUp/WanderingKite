@@ -126,7 +126,7 @@ export async function getEquipmentById(id: string) {
 
 // Create equipment
 export async function createEquipment(formData: FormData) {
-  const { supabase } = await requireAdmin();
+  const { supabase, user } = await requireAdmin();
 
   let pricingPlansParsed: any[] = [];
   try {
@@ -149,6 +149,9 @@ export async function createEquipment(formData: FormData) {
     serviceCost: formData.get('service_cost') ? parseFloat(formData.get('service_cost') as string) : 0,
     repairCost: formData.get('repair_cost') ? parseFloat(formData.get('repair_cost') as string) : 0,
     ownershipType: (formData.get('ownership_type') as string) || 'IN_HOUSE',
+    isRental: formData.get('is_rental') === 'true',
+    equipmentType: (formData.get('equipment_type') as string) || 'RENTAL',
+    categoryName: (formData.get('category_name') as string) || '',
   };
 
   const validatedData = equipmentSchema.parse(rawData);
@@ -172,6 +175,9 @@ export async function createEquipment(formData: FormData) {
       service_cost: validatedData.serviceCost || 0,
       repair_cost: validatedData.repairCost || 0,
       ownership_type: validatedData.ownershipType,
+      is_rental: validatedData.isRental,
+      equipment_type: validatedData.equipmentType,
+      category_name: validatedData.categoryName || null,
     } as any)
     .select()
     .single();
@@ -179,6 +185,18 @@ export async function createEquipment(formData: FormData) {
   if (error) {
     throw new Error(parseSupabaseError(error, 'Failed to create equipment'));
   }
+  
+  // Log creation
+  if (data?.id) {
+    await supabase.from('equipment_history').insert({
+      equipment_id: data.id,
+      user_id: user.id,
+      action: 'CREATED',
+      changes: validatedData as any,
+      notes: 'Initial creation'
+    });
+  }
+
   revalidatePath('/dashboard/equipment');
   revalidatePath('/rentals');
   return data;
@@ -186,7 +204,7 @@ export async function createEquipment(formData: FormData) {
 
 // Update equipment
 export async function updateEquipment(id: string, formData: FormData) {
-  const { supabase } = await requireAdmin();
+  const { supabase, user } = await requireAdmin();
 
   let pricingPlansParsed: any[] = [];
   try {
@@ -209,6 +227,9 @@ export async function updateEquipment(id: string, formData: FormData) {
     serviceCost: formData.get('service_cost') ? parseFloat(formData.get('service_cost') as string) : 0,
     repairCost: formData.get('repair_cost') ? parseFloat(formData.get('repair_cost') as string) : 0,
     ownershipType: (formData.get('ownership_type') as string) || 'IN_HOUSE',
+    isRental: formData.get('is_rental') === 'true',
+    equipmentType: (formData.get('equipment_type') as string) || 'RENTAL',
+    categoryName: (formData.get('category_name') as string) || '',
   };
 
   const validatedData = equipmentSchema.parse(rawData);
@@ -231,12 +252,25 @@ export async function updateEquipment(id: string, formData: FormData) {
       service_cost: validatedData.serviceCost || 0,
       repair_cost: validatedData.repairCost || 0,
       ownership_type: validatedData.ownershipType,
+      is_rental: validatedData.isRental,
+      equipment_type: validatedData.equipmentType,
+      category_name: validatedData.categoryName || null,
     } as any)
     .eq('id', id);
 
   if (error) {
     throw new Error(parseSupabaseError(error, 'Failed to update equipment'));
   }
+  
+  // Log update
+  await supabase.from('equipment_history').insert({
+    equipment_id: id,
+    user_id: user.id,
+    action: 'UPDATED',
+    changes: validatedData as any,
+    notes: 'Equipment details updated'
+  });
+
   revalidatePath('/dashboard/equipment');
   revalidatePath(`/dashboard/equipment/${id}`);
   revalidatePath('/rentals');
@@ -274,16 +308,32 @@ export async function updateEquipmentStatus(
 
 // Soft-delete equipment — sets deletedAt, does NOT remove the row
 export async function deleteEquipment(id: string) {
-  const { supabase } = await requireAdmin();
+  const { supabase, user } = await requireAdmin();
+
+  // Verify SUPER_ADMIN
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (profile?.role !== 'SUPER_ADMIN') {
+    throw new Error('Only Super Admin can delete equipment');
+  }
 
   const { error } = await supabase
     .from('equipment')
-    .update({ deletedAt: new Date().toISOString() })
+    .update({ deletedAt: new Date().toISOString(), status: 'RETIRED' })
     .eq('id', id);
 
   if (error) {
     throw new Error(`Failed to delete equipment: ${error.message}`);
   }
+  
+  // Log deletion
+  await supabase.from('equipment_history').insert({
+    equipment_id: id,
+    user_id: user.id,
+    action: 'DELETED',
+    changes: { deleted: true },
+    notes: 'This equipment was deleted by Super Admin'
+  });
+
   revalidatePath('/dashboard/equipment');
   revalidatePath('/rentals');
 }
@@ -308,6 +358,32 @@ export async function getEquipmentAssignmentHistory(equipmentId: string) {
     )
     .eq('equipmentId', equipmentId)
     .order('assignedAt', { ascending: false });
+
+  if (error) {
+    return [];
+  }
+
+  return data ?? [];
+}
+
+// Get equipment audit logs
+export async function getEquipmentAuditLog(equipmentId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('equipment_history')
+    .select(
+      `
+      id,
+      action,
+      notes,
+      created_at,
+      changes,
+      user:profiles!equipment_history_user_id_fkey(id, fullName, email)
+    `
+    )
+    .eq('equipment_id', equipmentId)
+    .order('created_at', { ascending: false });
 
   if (error) {
     return [];

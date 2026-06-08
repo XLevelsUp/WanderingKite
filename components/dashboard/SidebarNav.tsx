@@ -137,6 +137,12 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
           Equipment
         </Link>
       )}
+      {access.canViewRentalSettings && (
+        <Link href='/dashboard/rental-settings' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+          <Wrench className='w-4 h-4 opacity-75' />
+          Rental Settings
+        </Link>
+      )}
       {access.canViewClients && (
         <Link href='/dashboard/clients' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
           <Users className='w-4 h-4 opacity-75' />

@@ -3,6 +3,7 @@ import {
   getEquipmentAssignmentHistory,
   getCategories,
   getBranches,
+  getEquipmentAuditLog,
 } from '@/actions/equipment';
 import { EditEquipmentDialog, QuickImageUpload } from './EditEquipmentForm';
 import { Button } from '@/components/ui/button';
@@ -121,10 +122,11 @@ export default async function EquipmentDetailPage({
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
   const isEmployee = profile?.role === 'EMPLOYEE';
 
-  const [equipment, categoriesRaw, branchesRaw] = await Promise.all([
+  const [equipment, categoriesRaw, branchesRaw, auditLogsRaw] = await Promise.all([
     getEquipmentById(id).catch(() => null),
     getCategories().catch(() => []),
     getBranches().catch(() => []),
+    getEquipmentAuditLog(id).catch(() => []),
   ]);
   if (!equipment) notFound();
 
@@ -187,6 +189,7 @@ export default async function EquipmentDetailPage({
             equipment={equipmentForEdit}
             categories={categoriesRaw as { id: string; name: string }[]}
             branches={branchesRaw as { id: string; name: string }[]}
+            auditLogs={auditLogsRaw}
           />
         )}
       </div>

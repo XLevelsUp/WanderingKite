@@ -11,6 +11,7 @@ import type { EmployeeContractRow } from '@/lib/types/hr';
 
 interface ContractEditFormProps {
   contract: EmployeeContractRow;
+  readOnly?: boolean;
 }
 
 const inputClass =
@@ -33,7 +34,7 @@ function FieldError({ message }: { message?: string }) {
   return <p className='mt-1 text-xs text-red-400'>{message}</p>;
 }
 
-export function ContractEditForm({ contract }: ContractEditFormProps) {
+export function ContractEditForm({ contract, readOnly = false }: ContractEditFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
@@ -86,25 +87,25 @@ export function ContractEditForm({ contract }: ContractEditFormProps) {
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
         <div className='sm:col-span-2'>
           <FieldLabel required>Job Title</FieldLabel>
-          <input {...register('jobTitle')} className={inputClass} placeholder='e.g. Senior Photographer' />
+          <input {...register('jobTitle')} className={inputClass} placeholder='e.g. Senior Photographer' disabled={readOnly} />
           <FieldError message={errors.jobTitle?.message} />
         </div>
 
         <div>
           <FieldLabel>Employee Number</FieldLabel>
-          <input {...register('employeeNumber')} className={inputClass} placeholder='e.g. EMP-001' />
+          <input {...register('employeeNumber')} className={inputClass} placeholder='e.g. EMP-001' disabled={readOnly} />
           <FieldError message={errors.employeeNumber?.message} />
         </div>
 
         <div>
           <FieldLabel>Department</FieldLabel>
-          <input {...register('department')} className={inputClass} placeholder='e.g. Design' />
+          <input {...register('department')} className={inputClass} placeholder='e.g. Design' disabled={readOnly} />
           <FieldError message={errors.department?.message} />
         </div>
 
         <div>
           <FieldLabel required>Employment Type</FieldLabel>
-          <select {...register('employmentType')} className={selectClass}>
+          <select {...register('employmentType')} className={selectClass} disabled={readOnly}>
             <option value='FULL_TIME'>Full-Time</option>
             <option value='PART_TIME'>Part-Time</option>
             <option value='CONTRACT'>Contract</option>
@@ -115,7 +116,7 @@ export function ContractEditForm({ contract }: ContractEditFormProps) {
 
         <div>
           <FieldLabel required>Joining Date</FieldLabel>
-          <input type='date' {...register('joiningDate')} className={inputClass} />
+          <input type='date' {...register('joiningDate')} className={inputClass} disabled={readOnly} />
           <FieldError message={errors.joiningDate?.message} />
         </div>
 
@@ -138,6 +139,7 @@ export function ContractEditForm({ contract }: ContractEditFormProps) {
               }
             }}
             className={inputClass}
+            disabled={readOnly}
           />
           <FieldError message={errors.baseSalary?.message} />
         </div>
@@ -161,6 +163,7 @@ export function ContractEditForm({ contract }: ContractEditFormProps) {
               }
             }}
             className={inputClass}
+            disabled={readOnly}
           />
           <FieldError message={errors.incentive?.message} />
         </div>
@@ -169,59 +172,59 @@ export function ContractEditForm({ contract }: ContractEditFormProps) {
           <h3 className="text-sm font-bold text-primary uppercase tracking-widest mb-4">Statutory Compliance</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="flex items-center gap-3">
-              <input type="checkbox" id="pfEnrolled" {...register('pfEnrolled')} className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50" />
+              <input type="checkbox" id="pfEnrolled" {...register('pfEnrolled')} className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50" disabled={readOnly} />
               <label htmlFor="pfEnrolled" className="text-sm font-semibold text-foreground/80">Enrolled in PF</label>
             </div>
             
             <div className="flex items-center gap-3">
-              <input type="checkbox" id="pfContinued" {...register('pfContinued')} className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50" />
+              <input type="checkbox" id="pfContinued" {...register('pfContinued')} className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50" disabled={readOnly} />
               <label htmlFor="pfContinued" className="text-sm font-semibold text-foreground/80">PF Continued {'>'} 15k</label>
             </div>
 
             <div className="flex items-center gap-3">
-              <input type="checkbox" id="ptExempt" {...register('ptExempt')} className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50" />
+              <input type="checkbox" id="ptExempt" {...register('ptExempt')} className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50" disabled={readOnly} />
               <label htmlFor="ptExempt" className="text-sm font-semibold text-foreground/80">Exempt from PT</label>
             </div>
 
             <div className="flex items-center gap-3">
-              <input type="checkbox" id="tdsExempt" {...register('tdsExempt')} className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50" />
+              <input type="checkbox" id="tdsExempt" {...register('tdsExempt')} className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50" disabled={readOnly} />
               <label htmlFor="tdsExempt" className="text-sm font-semibold text-foreground/80">Exempt from TDS</label>
             </div>
 
             <div className='sm:col-span-2'>
               <FieldLabel>Exemption Reason</FieldLabel>
-              <input {...register('exemptionReason')} className={inputClass} placeholder='Required if exempt...' />
+              <input {...register('exemptionReason')} className={inputClass} placeholder='Required if exempt...' disabled={readOnly} />
             </div>
           </div>
         </div>
 
         <div className='sm:col-span-2'>
           <FieldLabel>Avatar URL</FieldLabel>
-          <input {...register('avatarUrl')} className={inputClass} placeholder='https://…' />
+          <input {...register('avatarUrl')} className={inputClass} placeholder='https://…' disabled={readOnly} />
           <FieldError message={errors.avatarUrl?.message} />
         </div>
 
         <div>
           <FieldLabel>Account Holder Name</FieldLabel>
-          <input {...register('bankAccountName')} className={inputClass} />
+          <input {...register('bankAccountName')} className={inputClass} disabled={readOnly} />
         </div>
         <div>
           <FieldLabel>Account Number</FieldLabel>
-          <input {...register('bankAccountNumber')} className={inputClass} />
+          <input {...register('bankAccountNumber')} className={inputClass} disabled={readOnly} />
         </div>
         <div>
           <FieldLabel>IFSC Code</FieldLabel>
-          <input {...register('bankIFSC')} className={`${inputClass} uppercase`} />
+          <input {...register('bankIFSC')} className={`${inputClass} uppercase`} disabled={readOnly} />
           <FieldError message={errors.bankIFSC?.message} />
         </div>
         <div>
           <FieldLabel>UPI ID</FieldLabel>
-          <input {...register('upiId')} className={inputClass} />
+          <input {...register('upiId')} className={inputClass} disabled={readOnly} />
         </div>
 
         <div className='sm:col-span-2'>
           <FieldLabel>Notes</FieldLabel>
-          <textarea {...register('notes')} rows={3} className={`${inputClass} resize-none`} />
+          <textarea {...register('notes')} rows={3} className={`${inputClass} resize-none`} disabled={readOnly} />
         </div>
       </div>
 
@@ -231,31 +234,33 @@ export function ContractEditForm({ contract }: ContractEditFormProps) {
         </div>
       )}
 
-      <div className='flex items-center justify-end gap-3 pt-2 border-t border-primary/12'>
-        {saved && (
-          <span className='flex items-center gap-1.5 text-xs text-emerald-400'>
-            <CheckCircle className='w-3.5 h-3.5' />
-            Saved
-          </span>
-        )}
-        <button
-          type='submit'
-          disabled={isPending || !isDirty}
-          className='flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-black text-sm font-bold hover:bg-primary/90 disabled:opacity-50 transition-all'
-        >
-          {isPending ? (
-            <>
-              <Loader2 className='h-4 w-4 animate-spin' />
-              Saving…
-            </>
-          ) : (
-            <>
-              <Pencil className='h-4 w-4' />
-              Save Changes
-            </>
+      {!readOnly && (
+        <div className='flex items-center justify-end gap-3 pt-2 border-t border-primary/12'>
+          {saved && (
+            <span className='flex items-center gap-1.5 text-xs text-emerald-400'>
+              <CheckCircle className='w-3.5 h-3.5' />
+              Saved
+            </span>
           )}
-        </button>
-      </div>
+          <button
+            type='submit'
+            disabled={isPending || !isDirty}
+            className='flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-black text-sm font-bold hover:bg-primary/90 disabled:opacity-50 transition-all'
+          >
+            {isPending ? (
+              <>
+                <Loader2 className='h-4 w-4 animate-spin' />
+                Saving…
+              </>
+            ) : (
+              <>
+                <Pencil className='h-4 w-4' />
+                Save Changes
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </form>
   );
 }

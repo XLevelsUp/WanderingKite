@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Loader2 } from 'lucide-react';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
+import { usePathname } from 'next/navigation';
 import { useNotify } from '@/hooks/useNotify';
 
 interface BookingFlyoutProps {
@@ -15,11 +16,16 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
   const [expanded, setExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { showError, showInfo } = useNotify();
+  const pathname = usePathname();
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 2500);
     return () => clearTimeout(timer);
   }, []);
+
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/admin')) {
+    return null;
+  }
 
   const handleWhatsAppClick = async () => {
     setIsLoading(true);

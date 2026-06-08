@@ -430,7 +430,7 @@ export async function updateProfileDetails(profileId: string, data: PersonalDeta
     return { error: 'Validation failed', details: result.error.flatten() };
   }
 
-  const { error } = await supabase
+  const { error } = await adminAuthClient
     .from('profiles')
     .update({
       dateOfBirth: result.data.dateOfBirth || null,

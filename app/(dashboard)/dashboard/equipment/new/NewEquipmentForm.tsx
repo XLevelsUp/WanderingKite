@@ -66,6 +66,9 @@ export function NewEquipmentForm({
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('');
   const [ownershipType, setOwnershipType] = useState('IN_HOUSE');
+  const [isRental, setIsRental] = useState(true);
+  const [equipmentType, setEquipmentType] = useState('RENTAL');
+  const [categoryName, setCategoryName] = useState('');
   const { showError, showInfo, showSuccess } = useNotify();
 
   // Pricing Plans state
@@ -193,6 +196,9 @@ export function NewEquipmentForm({
       formData.set('category_id', selectedCategory);
       formData.set('branch_id', selectedBranch);
       formData.set('ownership_type', ownershipType);
+      formData.set('is_rental', isRental.toString());
+      formData.set('equipment_type', equipmentType);
+      formData.set('category_name', categoryName);
       formData.set('pricing_plans', JSON.stringify(plans));
 
       await createEquipment(formData);
@@ -240,25 +246,68 @@ export function NewEquipmentForm({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="category">Category *</Label>
-            <Select
-              value={selectedCategory}
-              onValueChange={setSelectedCategory}
-              required
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="category_name">Category Name *</Label>
+              <Input
+                id="category_name"
+                name="category_name"
+                placeholder="e.g. Camera, Lens"
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="equipment_type">Equipment Type *</Label>
+              <Select
+                value={equipmentType}
+                onValueChange={setEquipmentType}
+                required
+                disabled={isLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="RENTAL">Rental</SelectItem>
+                  <SelectItem value="STUDIO_SPACE">Studio Space</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="ownership_type">Ownership Type *</Label>
+              <Select
+                value={ownershipType}
+                onValueChange={setOwnershipType}
+                required
+                disabled={isLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select ownership" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="IN_HOUSE">In-House {isRental ? 'Rental' : ''}</SelectItem>
+                  <SelectItem value="RENTAL">External Rental</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 flex flex-col justify-center pt-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isRental}
+                  onChange={(e) => setIsRental(e.target.checked)}
+                  disabled={isLoading}
+                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                />
+                <span className="text-sm font-medium">Is Rental? (Available for booking)</span>
+              </label>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -278,24 +327,6 @@ export function NewEquipmentForm({
                     {branch.name}
                   </SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="ownership_type">Ownership Type *</Label>
-            <Select
-              value={ownershipType}
-              onValueChange={setOwnershipType}
-              required
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select ownership" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="IN_HOUSE">In-House</SelectItem>
-                <SelectItem value="RENTAL">Rental</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -409,7 +440,9 @@ export function NewEquipmentForm({
                   >
                     <div className="flex items-center gap-4">
                       <span className="font-semibold text-foreground min-w-[80px]">{p.name}</span>
-                      <span className="text-xs text-muted-foreground">Duration: {p.durationHours}h</span>
+                      <span className="text-xs text-muted-foreground">
+                        Duration: {p.durationHours === 8 ? '1 Day (8h)' : p.durationHours === 56 ? '1 Week (56h)' : `${p.durationHours}h`}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-bold text-primary mr-2">₹{p.rate}</span>

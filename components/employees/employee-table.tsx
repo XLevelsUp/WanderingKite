@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Pencil, Trash } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash, ExternalLink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { deleteEmployee } from '@/actions/employees';
 import { useState } from 'react';
@@ -146,15 +146,27 @@ export function EmployeeTable({
                       <DropdownMenuLabel className="text-primary text-xs uppercase tracking-widest opacity-70">
                         Actions
                       </DropdownMenuLabel>
-                      <DropdownMenuItem
-                        onClick={() =>
-                          router.push(`/dashboard/employees/${employee.id}`)
-                        }
-                        className="text-foreground hover:text-foreground focus:text-foreground hover:bg-primary/10 focus:bg-primary/10 cursor-pointer"
-                      >
-                        <Pencil className="mr-2 h-4 w-4 text-primary" />
-                        Edit
-                      </DropdownMenuItem>
+                      {currentUserRole === 'SUPER_ADMIN' ? (
+                        <DropdownMenuItem
+                          onClick={() =>
+                            router.push(`/dashboard/employees/${employee.id}`)
+                          }
+                          className="text-foreground hover:text-foreground focus:text-foreground hover:bg-primary/10 focus:bg-primary/10 cursor-pointer"
+                        >
+                          <Pencil className="mr-2 h-4 w-4 text-primary" />
+                          Edit
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem
+                          onClick={() =>
+                            router.push(`/dashboard/employees/${employee.id}`)
+                          }
+                          className="text-foreground hover:text-foreground focus:text-foreground hover:bg-primary/10 focus:bg-primary/10 cursor-pointer"
+                        >
+                          <ExternalLink className="mr-2 h-4 w-4 text-primary" />
+                          View Details
+                        </DropdownMenuItem>
+                      )}
                       {currentUserRole === 'SUPER_ADMIN' && (
                         <>
                           <DropdownMenuSeparator className="bg-primary/12" />

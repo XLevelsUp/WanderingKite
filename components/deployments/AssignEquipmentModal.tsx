@@ -28,6 +28,10 @@ interface EquipmentOption {
   name: string;
   serialNumber: string;
   categories: { name: string } | null;
+  category_name?: string | null;
+  ownership_type?: string;
+  is_rental?: boolean;
+  equipment_type?: string;
 }
 interface ClientOption {
   id: string;
@@ -95,6 +99,7 @@ export function AssignEquipmentModal({
   const formRef = useRef<HTMLFormElement>(null);
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
   const [search, setSearch] = useState('');
+  const [filterOwnership, setFilterOwnership] = useState<string>('ALL');
 
   const now = new Date();
   const todayDateStr = now.toISOString().slice(0, 10);
@@ -151,7 +156,7 @@ export function AssignEquipmentModal({
           setConflictIds([]);
         }
       } catch (err) {
-        console.error("Precheck failed", err);
+        toast.error("Failed to verify equipment availability");
       } finally {
         setIsChecking(false);
       }
@@ -230,10 +235,24 @@ export function AssignEquipmentModal({
     });
   }
 
-  const filteredEquipment = equipment.filter(eq => 
-    eq.name.toLowerCase().includes(search.toLowerCase()) || 
-    eq.serialNumber.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredEquipment = equipment.filter(eq => {
+    const searchStr = search.toLowerCase();
+    const categoryMatch = eq.category_name ? eq.category_name.toLowerCase().includes(searchStr) : false;
+    const oldCategoryMatch = eq.categories?.name ? eq.categories.name.toLowerCase().includes(searchStr) : false;
+    const matchesSearch = eq.name.toLowerCase().includes(searchStr) || 
+                          eq.serialNumber.toLowerCase().includes(searchStr) || 
+                          categoryMatch || 
+                          oldCategoryMatch;
+    
+    if (!matchesSearch) return false;
+
+    if (filterOwnership === 'IN_HOUSE') {
+      return eq.ownership_type === 'IN_HOUSE';
+    } else if (filterOwnership === 'RENTAL') {
+      return eq.ownership_type === 'RENTAL';
+    }
+    return true;
+  });
 
   const hasConflicts = selectedEquipment.some(id => conflictIds.includes(id));
 
@@ -355,15 +374,26 @@ export function AssignEquipmentModal({
                 error={fieldErrors.equipmentIds}
               >
                 <div className="border border-white/10 rounded-xl bg-white/[0.02] overflow-hidden flex flex-col h-48">
-                  <div className="relative border-b border-white/10">
+                  <div className="relative border-b border-white/10 flex items-center">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
                     <input 
                       type="text" 
-                      placeholder="Search equipment..."
+                      placeholder="Search by name, serial, or category..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="w-full bg-transparent border-none py-2.5 pl-9 pr-3 text-sm focus:outline-none text-foreground placeholder-foreground/30"
+                      className="flex-1 bg-transparent border-none py-2.5 pl-9 pr-3 text-sm focus:outline-none text-foreground placeholder-foreground/30"
                     />
+                    <div className="border-l border-white/10 h-full px-2">
+                      <select 
+                        value={filterOwnership}
+                        onChange={(e) => setFilterOwnership(e.target.value)}
+                        className="bg-transparent text-xs focus:outline-none text-foreground/70 py-2.5 pr-2"
+                      >
+                        <option value="ALL" className="bg-[#1a1a24]">All Ownership</option>
+                        <option value="IN_HOUSE" className="bg-[#1a1a24]">In-House</option>
+                        <option value="RENTAL" className="bg-[#1a1a24]">Rental</option>
+                      </select>
+                    </div>
                   </div>
                   <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
                     {filteredEquipment.length === 0 ? (
@@ -381,7 +411,19 @@ export function AssignEquipmentModal({
                             />
                             <div className="flex-1">
                               <p className="text-sm font-medium text-foreground/90">{eq.name}</p>
-                              <p className="text-[10px] text-foreground/50">{eq.serialNumber}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <p className="text-[10px] text-foreground/50">{eq.serialNumber}</p>
+                                {(eq.category_name || eq.categories?.name) && (
+                                  <span className="text-[10px] text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">
+                                    {eq.category_name || eq.categories?.name}
+                                  </span>
+                                )}
+                                {eq.ownership_type && (
+                                  <span className="text-[10px] text-amber-400/80 bg-amber-400/10 px-1.5 py-0.5 rounded">
+                                    {eq.ownership_type === 'IN_HOUSE' ? 'In-House' : 'Rental'}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                             {isConflict && (
                               <span className="text-[10px] font-medium text-red-400 bg-red-500/10 px-2 py-0.5 rounded-md flex items-center gap-1">

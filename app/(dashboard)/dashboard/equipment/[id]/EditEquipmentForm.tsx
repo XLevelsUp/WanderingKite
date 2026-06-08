@@ -86,20 +86,24 @@ interface EquipmentData {
   pricingPlans: Array<{ name: string; durationHours: number; rate: number }>;
   image_url?: string | null;
   specs?: string[] | null;
-  description?: string | null;
   ownership_type?: string;
+  is_rental?: boolean;
+  equipment_type?: string;
+  category_name?: string | null;
   purchase_date?: string | null;
   warranty_duration_months?: number | null;
   warranty_expiration_date?: string | null;
   service_cost?: number;
   repair_cost?: number;
   purchase_bill?: string | null;
+  description?: string | null;
 }
 
 interface EditEquipmentFormProps {
   equipment: EquipmentData;
   categories: Category[];
   branches: Branch[];
+  auditLogs?: any[];
 }
 
 // ── Inline Image-Only Quick-Upload Panel ─────────────────────────────────────
@@ -207,6 +211,7 @@ export function EditEquipmentDialog({
   equipment,
   categories,
   branches,
+  auditLogs = [],
 }: EditEquipmentFormProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -222,6 +227,15 @@ export function EditEquipmentDialog({
   );
   const [ownershipType, setOwnershipType] = useState(
     equipment.ownership_type ?? 'IN_HOUSE'
+  );
+  const [isRental, setIsRental] = useState(
+    equipment.is_rental ?? true
+  );
+  const [equipmentType, setEquipmentType] = useState(
+    equipment.equipment_type ?? 'RENTAL'
+  );
+  const [categoryName, setCategoryName] = useState(
+    equipment.category_name ?? ''
   );
 
   // Plans manager state inside modal
@@ -345,6 +359,9 @@ export function EditEquipmentDialog({
       formData.set('category_id', selectedCategory);
       formData.set('branch_id', selectedBranch);
       formData.set('ownership_type', ownershipType);
+      formData.set('is_rental', isRental.toString());
+      formData.set('equipment_type', equipmentType);
+      formData.set('category_name', categoryName);
       formData.set('pricing_plans', JSON.stringify(plans));
 
       await updateEquipment(equipment.id, formData);
@@ -411,27 +428,40 @@ export function EditEquipmentDialog({
             />
           </div>
 
-          {/* Category & Branch */}
+          {/* Category Name & Type */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Category *</Label>
+              <Label htmlFor="edit-category-name">Category Name *</Label>
+              <Input
+                id="edit-category-name"
+                name="category_name"
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                placeholder="e.g. Camera"
+                required
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Equipment Type *</Label>
               <Select
-                value={selectedCategory}
-                onValueChange={setSelectedCategory}
+                value={equipmentType}
+                onValueChange={setEquipmentType}
                 disabled={isLoading}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="RENTAL">Rental</SelectItem>
+                  <SelectItem value="STUDIO_SPACE">Studio Space</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Branch & Ownership */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Branch *</Label>
               <Select
@@ -451,24 +481,39 @@ export function EditEquipmentDialog({
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>Ownership Type *</Label>
+              <Select
+                value={ownershipType}
+                onValueChange={setOwnershipType}
+                disabled={isLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select ownership" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="IN_HOUSE">In-House {isRental ? 'Rental' : ''}</SelectItem>
+                  <SelectItem value="RENTAL">External Rental</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Ownership Type *</Label>
-            <Select
-              value={ownershipType}
-              onValueChange={setOwnershipType}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select ownership" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="IN_HOUSE">In-House</SelectItem>
-                <SelectItem value="RENTAL">Rental</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Is Rental Checkbox */}
+          <div className="space-y-2 flex flex-col justify-center">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isRental}
+                onChange={(e) => setIsRental(e.target.checked)}
+                disabled={isLoading}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <span className="text-sm font-medium">Is Rental? (Available for booking)</span>
+            </label>
           </div>
+
+
 
           {/* Pricing Plans Manager */}
           <div className="space-y-3 rounded-2xl border border-border bg-muted/20 p-4">
@@ -579,7 +624,9 @@ export function EditEquipmentDialog({
                   >
                     <div className="flex items-center gap-4">
                       <span className="font-semibold text-foreground min-w-[80px]">{p.name}</span>
-                      <span className="text-xs text-muted-foreground">Duration: {p.durationHours}h</span>
+                      <span className="text-xs text-muted-foreground">
+                        Duration: {p.durationHours === 8 ? '1 Day (8h)' : p.durationHours === 56 ? '1 Week (56h)' : `${p.durationHours}h`}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-bold text-primary mr-2">₹{p.rate}</span>
@@ -790,8 +837,31 @@ export function EditEquipmentDialog({
             />
           </div>
 
+          {/* Audit History */}
+          {auditLogs && auditLogs.length > 0 && (
+            <div className="space-y-3 pt-4 border-t border-border/60">
+              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Audit History</Label>
+              <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                {auditLogs.map((log: any) => (
+                  <div key={log.id} className="text-xs bg-muted/30 p-3 rounded-lg border border-border/50">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-semibold text-foreground">
+                        {log.action === 'CREATED' && <span className="text-emerald-500">Created</span>}
+                        {log.action === 'UPDATED' && <span className="text-blue-500">Updated</span>}
+                        {log.action === 'DELETED' && <span className="text-red-500">Deleted</span>}
+                        {' by '}{log.user?.fullName || log.user?.email || 'Unknown'}
+                      </span>
+                      <span className="text-muted-foreground">{new Date(log.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                    </div>
+                    {log.notes && <p className="text-muted-foreground mt-1">{log.notes}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Actions */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-2 mt-4 border-t border-border/60">
             <Button type="submit" disabled={isLoading} className="flex-1">
               {isLoading ? 'Saving…' : 'Save Changes'}
             </Button>
