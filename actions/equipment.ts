@@ -132,7 +132,7 @@ export async function createEquipment(formData: FormData) {
   let pricingPlansParsed: any[] = [];
   try {
     pricingPlansParsed = JSON.parse((formData.get('pricing_plans') as string) || '[]');
-  } catch (err) {}
+  } catch (err) { }
 
   const rawData = {
     name: formData.get('name') as string,
@@ -154,7 +154,12 @@ export async function createEquipment(formData: FormData) {
     categoryName: (formData.get('category_name') as string) || '',
   };
 
-  const validatedData = equipmentSchema.parse(rawData);
+  const parsed = equipmentSchema.safeParse(rawData);
+  if (!parsed.success) {
+    const errorMsg = parsed.error.issues.map((e: any) => e.message).join(', ');
+    throw new Error(`Validation Error: ${errorMsg}`);
+  }
+  const validatedData = parsed.data;
 
   const { data, error } = await supabase
     .from('equipment')
@@ -184,7 +189,7 @@ export async function createEquipment(formData: FormData) {
   if (error) {
     throw new Error(parseSupabaseError(error, 'Failed to create equipment'));
   }
-  
+
   // Log creation
   if (data?.id) {
     await supabase.from('equipment_history').insert({
@@ -208,7 +213,7 @@ export async function updateEquipment(id: string, formData: FormData) {
   let pricingPlansParsed: any[] = [];
   try {
     pricingPlansParsed = JSON.parse((formData.get('pricing_plans') as string) || '[]');
-  } catch (err) {}
+  } catch (err) { }
 
   const rawData = {
     name: formData.get('name') as string,
@@ -230,7 +235,12 @@ export async function updateEquipment(id: string, formData: FormData) {
     categoryName: (formData.get('category_name') as string) || '',
   };
 
-  const validatedData = equipmentSchema.parse(rawData);
+  const parsed = equipmentSchema.safeParse(rawData);
+  if (!parsed.success) {
+    const errorMsg = parsed.error.issues.map((e: any) => e.message).join(', ');
+    throw new Error(`Validation Error: ${errorMsg}`);
+  }
+  const validatedData = parsed.data;
 
   const { error } = await supabase
     .from('equipment')
@@ -258,7 +268,7 @@ export async function updateEquipment(id: string, formData: FormData) {
   if (error) {
     throw new Error(parseSupabaseError(error, 'Failed to update equipment'));
   }
-  
+
   // Log update
   await supabase.from('equipment_history').insert({
     equipment_id: id,
@@ -321,7 +331,7 @@ export async function deleteEquipment(id: string) {
   if (error) {
     throw new Error(`Failed to delete equipment: ${error.message}`);
   }
-  
+
   // Log deletion
   await supabase.from('equipment_history').insert({
     equipment_id: id,
@@ -454,11 +464,12 @@ export async function getMaintenanceRecords(equipmentId: string) {
 
   const { data, error } = await supabase
     .from('equipment_maintenance_history')
-    .select('*, user:created_by(email, raw_user_meta_data)')
+    .select('*')
     .eq('equipment_id', equipmentId)
     .order('date', { ascending: false });
 
   if (error) {
+    console.error('Error fetching maintenance records for equipment:', equipmentId, error);
     return [];
   }
 

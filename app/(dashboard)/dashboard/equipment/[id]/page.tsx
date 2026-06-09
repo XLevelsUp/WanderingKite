@@ -133,7 +133,10 @@ export default async function EquipmentDetailPage({
     getCategories().catch(() => []),
     getBranches().catch(() => []),
     getEquipmentAuditLog(id).catch(() => []),
-    getMaintenanceRecords(id).catch(() => []),
+    getMaintenanceRecords(id).catch((err) => {
+      console.error("Error loading maintenance records in page.tsx:", err);
+      return [];
+    }),
   ]);
   if (!equipment) notFound();
 

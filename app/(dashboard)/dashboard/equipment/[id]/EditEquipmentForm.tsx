@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { updateEquipment } from '@/actions/equipment';
+import { useState, useEffect } from 'react';
+import { updateEquipment, getMaintenanceRecords, getEquipmentAuditLog } from '@/actions/equipment';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -207,7 +207,15 @@ export function QuickImageUpload({
   );
 }
 
-function MaintenanceHistoryTracker({ equipmentId, records }: { equipmentId: string, records: any[] }) {
+function MaintenanceHistoryTracker({ 
+  equipmentId, 
+  records, 
+  onRecordAdded 
+}: { 
+  equipmentId: string; 
+  records: any[]; 
+  onRecordAdded?: () => void;
+}) {
   const [adding, setAdding] = useState(false);
   const [type, setType] = useState('SERVICE');
   const [cost, setCost] = useState('');
@@ -215,6 +223,7 @@ function MaintenanceHistoryTracker({ equipmentId, records }: { equipmentId: stri
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { showError, showSuccess } = useNotify();
 
   const handleAdd = async () => {
     if (!cost || !date) return;
@@ -234,9 +243,11 @@ function MaintenanceHistoryTracker({ equipmentId, records }: { equipmentId: stri
       setCost('');
       setNotes('');
       setDate(new Date().toISOString().split('T')[0]);
+      onRecordAdded?.();
       router.refresh();
+      showSuccess('Maintenance record added successfully');
     } catch (err: any) {
-      alert(err.message || 'Failed to add maintenance record');
+      showError(err.message || 'Failed to add maintenance record');
     } finally {
       setLoading(false);
     }
@@ -256,14 +267,15 @@ function MaintenanceHistoryTracker({ equipmentId, records }: { equipmentId: stri
           <div className="grid grid-cols-2 gap-2">
             <div>
               <Label className="text-xs">Type</Label>
-              <select 
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                value={type} 
-                onChange={(e) => setType(e.target.value)}
-              >
-                <option value="SERVICE">SERVICE</option>
-                <option value="REPAIR">REPAIR</option>
-              </select>
+              <Select value={type} onValueChange={setType}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="SERVICE">SERVICE</SelectItem>
+                  <SelectItem value="REPAIR">REPAIR</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label className="text-xs">Cost (₹)</Label>
@@ -381,6 +393,46 @@ function EditEquipmentFormContent({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const { showError, showInfo } = useNotify();
+
+  const [maintRecords, setMaintRecords] = useState<any[]>(maintenanceRecords);
+  const [logs, setLogs] = useState<any[]>(auditLogs);
+  const [fetchingData, setFetchingData] = useState(false);
+
+  const refreshData = async () => {
+    try {
+      const fetchedMaint = await getMaintenanceRecords(equipment.id);
+      setMaintRecords(fetchedMaint);
+    } catch (err) {
+      console.error('Failed to refresh maintenance records:', err);
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+    async function loadData() {
+      setFetchingData(true);
+      try {
+        const [fetchedMaint, fetchedLogs] = await Promise.all([
+          getMaintenanceRecords(equipment.id).catch(() => []),
+          getEquipmentAuditLog(equipment.id).catch(() => []),
+        ]);
+        if (active) {
+          setMaintRecords(fetchedMaint);
+          setLogs(fetchedLogs);
+        }
+      } catch (err) {
+        console.error('Failed to load maintenance data:', err);
+      } finally {
+        if (active) {
+          setFetchingData(false);
+        }
+      }
+    }
+    loadData();
+    return () => {
+      active = false;
+    };
+  }, [equipment.id]);
 
   const [selectedCategory, setSelectedCategory] = useState(
     equipment.categoryId ?? ''
@@ -951,7 +1003,11 @@ function EditEquipmentFormContent({
         </div>
       </div>
 
-      <MaintenanceHistoryTracker equipmentId={equipment.id} records={maintenanceRecords} />
+      <MaintenanceHistoryTracker 
+        equipmentId={equipment.id} 
+        records={maintRecords} 
+        onRecordAdded={refreshData}
+      />
 
       {/* Specs */}
       <div className="space-y-2">
@@ -982,11 +1038,11 @@ function EditEquipmentFormContent({
       </div>
 
       {/* Audit History */}
-      {auditLogs && auditLogs.length > 0 && (
+      {logs && logs.length > 0 && (
         <div className="space-y-3 pt-4 border-t border-border/60">
           <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Audit History</Label>
           <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
-            {auditLogs.map((log: any) => (
+            {logs.map((log: any) => (
               <div key={log.id} className="text-xs bg-muted/30 p-3 rounded-lg border border-border/50">
                 <div className="flex justify-between items-center mb-1">
                   <span className="font-semibold text-foreground">
