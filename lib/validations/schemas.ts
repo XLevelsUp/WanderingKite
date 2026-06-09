@@ -14,6 +14,7 @@ export const equipmentSchema = z.object({
   name: z.string().min(1, 'Equipment name is required'),
   serialNumber: z.string().min(1, 'Serial number is required'),
   categoryId: z.string().uuid('Invalid category').optional().or(z.literal('')),
+  categoryName: z.string().min(1, 'Category is required').optional().or(z.literal('')),
   branchId: z.string().uuid('Invalid branch').optional().or(z.literal('')),
   imageUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
   specs: z.string().optional().nullable(),
@@ -26,6 +27,7 @@ export const equipmentSchema = z.object({
   serviceCost: z.number().nonnegative().optional().nullable(),
   repairCost: z.number().nonnegative().optional().nullable(),
   ownershipType: z.enum(['IN_HOUSE', 'RENTAL']).default('IN_HOUSE'),
+  isRental: z.boolean().default(true),
 });
 
 export type EquipmentFormData = z.infer<typeof equipmentSchema>;

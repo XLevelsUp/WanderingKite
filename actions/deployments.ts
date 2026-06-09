@@ -25,13 +25,13 @@ export async function getAssignmentFormData() {
   const [employeesRes, equipmentRes, clientsRes] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, fullName, email, role')
+      .select('id, fullName, email, role, employee_contracts(isActive)')
       .is('deletedAt', null)
       .in('role', ['EMPLOYEE', 'ADMIN', 'SUPER_ADMIN'])
       .order('fullName'),
     supabase
       .from('equipment')
-      .select('id, name, serialNumber, categories(name)')
+      .select('id, name, serialNumber, categories(name), category_name, ownership_type, is_rental')
       .is('deletedAt', null)
       .eq('status', 'AVAILABLE')
       .order('name'),
@@ -42,8 +42,20 @@ export async function getAssignmentFormData() {
       .order('name'),
   ]);
 
+  const rawEmployees = employeesRes.data ?? [];
+  const activeEmployees = rawEmployees.filter((profile: any) => {
+    const contracts = profile.employee_contracts;
+    if (!contracts || contracts.length === 0) return true;
+    return contracts.some((c: any) => c.isActive === true);
+  }).map((p: any) => ({
+    id: p.id,
+    fullName: p.fullName,
+    email: p.email,
+    role: p.role,
+  }));
+
   return {
-    employees: employeesRes.data ?? [],
+    employees: activeEmployees,
     equipment: equipmentRes.data ?? [],
     clients: clientsRes.data ?? [],
   };

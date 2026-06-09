@@ -77,7 +77,7 @@ export default async function PayrollPage() {
               return (
                 <div
                   key={`${batch.year}-${batch.month}`}
-                  className='flex items-center justify-between px-5 py-4 rounded-xl border border-primary/12 bg-[rgba(17,17,22,0.7)] hover:border-primary/25 transition-all flex-row'
+                  className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-5 py-4 rounded-xl border border-primary/12 bg-[rgba(17,17,22,0.7)] hover:border-primary/25 transition-all'
                 >
                   <Link
                     href={`/admin/payroll/${batch.year}-${String(batch.month).padStart(2, '0')}`}

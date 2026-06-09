@@ -431,10 +431,10 @@ const pricingTiers = [
 ];
 
 export default async function StudioPage() {
-  // Fetch live equipment summary and filter for rental gear only
+  // Fetch live equipment summary and filter for all rental gear (both In-House and External)
   const allEquipment = await getEquipment();
   const rentalEquipment = allEquipment.filter(
-    (eq: any) => eq.ownership_type === 'RENTAL' || !eq.ownership_type
+    (eq: any) => eq.is_rental === true
   );
 
   // Hardcoded equipment previews for the rental section below

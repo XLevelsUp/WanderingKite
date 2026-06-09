@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 
 export const metadata = { title: 'Employee Detail — Admin' };
 
@@ -41,13 +42,26 @@ function calcAge(dob: string | null): string {
 
 export default async function EmployeeDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { id } = await params;
   const employee = await getHREmployee(id);
 
   if (!employee) notFound();
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) notFound();
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  const isSuperAdmin = profile?.role === 'SUPER_ADMIN';
 
   const { contract } = employee;
   const initials = (employee.fullName ?? employee.email)
@@ -59,15 +73,18 @@ export default async function EmployeeDetailPage({
   const hasMissingPersonalDetails =
     !employee.phone || !employee.dateOfBirth || !employee.gender;
 
+  const sp = await searchParams;
+  const fromDashboard = sp?.from === 'dashboard';
+
   return (
     <div className='p-6 md:p-8 max-w-4xl mx-auto space-y-8'>
       {/* Back */}
       <Link
-        href='/admin/employees'
+        href={fromDashboard ? '/dashboard/employees' : '/admin/employees'}
         className='inline-flex items-center gap-2 text-sm text-foreground/50 hover:text-foreground transition-colors'
       >
         <ArrowLeft className='h-4 w-4' />
-        Back to Employees
+        {fromDashboard ? 'Back to Dashboard' : 'Back to Employees'}
       </Link>
 
       {/* ── Profile header card ───────────────────────────────────────────── */}
@@ -201,7 +218,7 @@ export default async function EmployeeDetailPage({
         </div>
 
         {/* Edit form */}
-        <PersonalDetailsEditForm employee={employee} />
+        <PersonalDetailsEditForm employee={employee} readOnly={!isSuperAdmin} />
       </div>
 
       {/* ── Contract card ────────────────────────────────────────────────── */}
@@ -209,9 +226,11 @@ export default async function EmployeeDetailPage({
         <div className='rounded-2xl border border-primary/12 bg-[rgba(17,17,22,0.85)] backdrop-blur-md p-6'>
           <div className='mb-6'>
             <p className='text-[10px] font-semibold uppercase tracking-[0.22em] text-primary opacity-70 mb-1'>Contract</p>
-            <h2 className='text-xl font-bold text-foreground'>Edit Contract</h2>
+            <h2 className='text-xl font-bold text-foreground'>
+              {isSuperAdmin ? 'Edit Contract' : 'Contract Details'}
+            </h2>
           </div>
-          <ContractEditForm contract={contract} />
+          <ContractEditForm contract={contract} readOnly={!isSuperAdmin} />
         </div>
       ) : (
         <div className='rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6 text-sm text-amber-400'>

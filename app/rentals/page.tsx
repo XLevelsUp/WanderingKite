@@ -139,8 +139,13 @@ export default async function RentalsPage() {
   // 1. Fetch live data
   const remoteData = await getEquipment();
 
-  // 2. Format it to match the Card props
-  const equipmentItems = remoteData.map((e) => {
+  // 2. Filter for External Rentals that are available for booking
+  const externalRentals = remoteData.filter(
+    (eq: any) => eq.ownership_type === 'RENTAL' && eq.is_rental === true
+  );
+
+  // 3. Format it to match the Card props
+  const equipmentItems = externalRentals.map((e) => {
     let parsedSpecs: string[] = [];
     if (typeof e.specs === 'string') {
       try {
@@ -151,7 +156,7 @@ export default async function RentalsPage() {
     }
 
     // The joined table 'categories' returns either { name: string } or an array of it due to the join
-    const categoryName = (e.categories as any)?.name?.toLowerCase() || '';
+    const categoryName = e.category_name?.toLowerCase() || (e.categories as any)?.name?.toLowerCase() || '';
 
     return {
       id: e.id,

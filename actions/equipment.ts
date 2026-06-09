@@ -37,7 +37,7 @@ export async function getEquipment() {
     .order('createdAt', { ascending: false });
 
   if (error) {
-    return [];
+    throw new Error(parseSupabaseError(error, 'Failed to fetch equipment.'));
   }
 
   return data ?? [];
@@ -66,6 +66,7 @@ export async function getEquipmentWithFieldStatus() {
       image_url,
       description,
       deletedAt,
+      category_name,
       categories(name),
       branches(name),
       activeAssignment:equipment_assignments!equipmentId(
@@ -83,7 +84,7 @@ export async function getEquipmentWithFieldStatus() {
     .order('createdAt', { ascending: false });
 
   if (error) {
-    return [];
+    throw new Error(parseSupabaseError(error, 'Failed to fetch equipment status.'));
   }
 
   // PostgREST returns the join as an array — flatten to single active assignment
@@ -118,7 +119,7 @@ export async function getEquipmentById(id: string) {
     .single();
 
   if (error) {
-    return null;
+    throw new Error(parseSupabaseError(error, 'Failed to fetch equipment details.'));
   }
 
   return data;
@@ -126,12 +127,12 @@ export async function getEquipmentById(id: string) {
 
 // Create equipment
 export async function createEquipment(formData: FormData) {
-  const { supabase } = await requireAdmin();
+  const { supabase, user } = await requireAdmin();
 
   let pricingPlansParsed: any[] = [];
   try {
     pricingPlansParsed = JSON.parse((formData.get('pricing_plans') as string) || '[]');
-  } catch (err) {}
+  } catch (err) { }
 
   const rawData = {
     name: formData.get('name') as string,
@@ -149,9 +150,16 @@ export async function createEquipment(formData: FormData) {
     serviceCost: formData.get('service_cost') ? parseFloat(formData.get('service_cost') as string) : 0,
     repairCost: formData.get('repair_cost') ? parseFloat(formData.get('repair_cost') as string) : 0,
     ownershipType: (formData.get('ownership_type') as string) || 'IN_HOUSE',
+    isRental: formData.get('is_rental') === 'true',
+    categoryName: (formData.get('category_name') as string) || '',
   };
 
-  const validatedData = equipmentSchema.parse(rawData);
+  const parsed = equipmentSchema.safeParse(rawData);
+  if (!parsed.success) {
+    const errorMsg = parsed.error.issues.map((e: any) => e.message).join(', ');
+    throw new Error(`Validation Error: ${errorMsg}`);
+  }
+  const validatedData = parsed.data;
 
   const { data, error } = await supabase
     .from('equipment')
@@ -172,6 +180,8 @@ export async function createEquipment(formData: FormData) {
       service_cost: validatedData.serviceCost || 0,
       repair_cost: validatedData.repairCost || 0,
       ownership_type: validatedData.ownershipType,
+      is_rental: validatedData.isRental,
+      category_name: validatedData.categoryName || null,
     } as any)
     .select()
     .single();
@@ -179,6 +189,18 @@ export async function createEquipment(formData: FormData) {
   if (error) {
     throw new Error(parseSupabaseError(error, 'Failed to create equipment'));
   }
+
+  // Log creation
+  if (data?.id) {
+    await supabase.from('equipment_history').insert({
+      equipment_id: data.id,
+      user_id: user.id,
+      action: 'CREATED',
+      changes: validatedData as any,
+      notes: 'Initial creation'
+    });
+  }
+
   revalidatePath('/dashboard/equipment');
   revalidatePath('/rentals');
   return data;
@@ -186,12 +208,12 @@ export async function createEquipment(formData: FormData) {
 
 // Update equipment
 export async function updateEquipment(id: string, formData: FormData) {
-  const { supabase } = await requireAdmin();
+  const { supabase, user } = await requireAdmin();
 
   let pricingPlansParsed: any[] = [];
   try {
     pricingPlansParsed = JSON.parse((formData.get('pricing_plans') as string) || '[]');
-  } catch (err) {}
+  } catch (err) { }
 
   const rawData = {
     name: formData.get('name') as string,
@@ -209,9 +231,16 @@ export async function updateEquipment(id: string, formData: FormData) {
     serviceCost: formData.get('service_cost') ? parseFloat(formData.get('service_cost') as string) : 0,
     repairCost: formData.get('repair_cost') ? parseFloat(formData.get('repair_cost') as string) : 0,
     ownershipType: (formData.get('ownership_type') as string) || 'IN_HOUSE',
+    isRental: formData.get('is_rental') === 'true',
+    categoryName: (formData.get('category_name') as string) || '',
   };
 
-  const validatedData = equipmentSchema.parse(rawData);
+  const parsed = equipmentSchema.safeParse(rawData);
+  if (!parsed.success) {
+    const errorMsg = parsed.error.issues.map((e: any) => e.message).join(', ');
+    throw new Error(`Validation Error: ${errorMsg}`);
+  }
+  const validatedData = parsed.data;
 
   const { error } = await supabase
     .from('equipment')
@@ -231,12 +260,24 @@ export async function updateEquipment(id: string, formData: FormData) {
       service_cost: validatedData.serviceCost || 0,
       repair_cost: validatedData.repairCost || 0,
       ownership_type: validatedData.ownershipType,
+      is_rental: validatedData.isRental,
+      category_name: validatedData.categoryName || null,
     } as any)
     .eq('id', id);
 
   if (error) {
     throw new Error(parseSupabaseError(error, 'Failed to update equipment'));
   }
+
+  // Log update
+  await supabase.from('equipment_history').insert({
+    equipment_id: id,
+    user_id: user.id,
+    action: 'UPDATED',
+    changes: validatedData as any,
+    notes: 'Equipment details updated'
+  });
+
   revalidatePath('/dashboard/equipment');
   revalidatePath(`/dashboard/equipment/${id}`);
   revalidatePath('/rentals');
@@ -274,16 +315,32 @@ export async function updateEquipmentStatus(
 
 // Soft-delete equipment — sets deletedAt, does NOT remove the row
 export async function deleteEquipment(id: string) {
-  const { supabase } = await requireAdmin();
+  const { supabase, user } = await requireAdmin();
+
+  // Verify SUPER_ADMIN
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (profile?.role !== 'SUPER_ADMIN') {
+    throw new Error('Only Super Admin can delete equipment');
+  }
 
   const { error } = await supabase
     .from('equipment')
-    .update({ deletedAt: new Date().toISOString() })
+    .update({ deletedAt: new Date().toISOString(), status: 'RETIRED' })
     .eq('id', id);
 
   if (error) {
     throw new Error(`Failed to delete equipment: ${error.message}`);
   }
+
+  // Log deletion
+  await supabase.from('equipment_history').insert({
+    equipment_id: id,
+    user_id: user.id,
+    action: 'DELETED',
+    changes: { deleted: true },
+    notes: 'This equipment was deleted by Super Admin'
+  });
+
   revalidatePath('/dashboard/equipment');
   revalidatePath('/rentals');
 }
@@ -316,6 +373,32 @@ export async function getEquipmentAssignmentHistory(equipmentId: string) {
   return data ?? [];
 }
 
+// Get equipment audit logs
+export async function getEquipmentAuditLog(equipmentId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('equipment_history')
+    .select(
+      `
+      id,
+      action,
+      notes,
+      created_at,
+      changes,
+      user:profiles!equipment_history_user_id_fkey(id, fullName, email)
+    `
+    )
+    .eq('equipment_id', equipmentId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    return [];
+  }
+
+  return data ?? [];
+}
+
 // Get all categories (for dropdowns)
 export async function getCategories() {
   const supabase = await createClient();
@@ -326,7 +409,7 @@ export async function getCategories() {
     .order('name');
 
   if (error) {
-    return [];
+    throw new Error(parseSupabaseError(error, 'Failed to fetch categories.'));
   }
 
   return data ?? [];
@@ -342,6 +425,51 @@ export async function getBranches() {
     .order('name');
 
   if (error) {
+    throw new Error(parseSupabaseError(error, 'Failed to fetch branches.'));
+  }
+
+  return data ?? [];
+}
+
+// Add maintenance record
+export async function addMaintenanceRecord(formData: FormData) {
+  const { supabase, user } = await requireAdmin();
+
+  const equipmentId = formData.get('equipment_id') as string;
+  const type = formData.get('maintenance_type') as string;
+  const cost = Number(formData.get('cost'));
+  const date = formData.get('date') as string;
+  const notes = formData.get('notes') as string;
+
+  const { error } = await supabase.from('equipment_maintenance_history').insert({
+    equipment_id: equipmentId,
+    maintenance_type: type,
+    cost: cost,
+    date: date,
+    notes: notes,
+    created_by: user.id
+  });
+
+  if (error) {
+    throw new Error(parseSupabaseError(error, 'Failed to add maintenance record.'));
+  }
+
+  revalidatePath(`/dashboard/equipment/${equipmentId}`);
+  revalidatePath('/dashboard/equipment');
+}
+
+// Get maintenance records for equipment
+export async function getMaintenanceRecords(equipmentId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('equipment_maintenance_history')
+    .select('*')
+    .eq('equipment_id', equipmentId)
+    .order('date', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching maintenance records for equipment:', equipmentId, error);
     return [];
   }
 

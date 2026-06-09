@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { logger } from '@/lib/logger';
+import { useNotify } from '@/hooks/useNotify';
 
 export function DeleteEquipmentButton({
   equipmentId,
@@ -15,6 +16,7 @@ export function DeleteEquipmentButton({
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
+  const { showError, showSuccess } = useNotify();
 
   const handleDelete = async () => {
     if (
@@ -35,10 +37,11 @@ export function DeleteEquipmentButton({
         throw new Error('Failed to delete equipment');
       }
 
+      showSuccess('Equipment deleted successfully');
       router.refresh(); // Refresh the page to show updated list
     } catch (error) {
       logger.error('[DeleteEquipment]', error);
-      alert('Failed to delete equipment.');
+      showError('Failed to delete equipment. Please try again.');
     } finally {
       setIsDeleting(false);
     }

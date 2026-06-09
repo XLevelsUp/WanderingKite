@@ -225,6 +225,30 @@ export function AttendanceGrid({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [editingCell, isPending]);
 
+  useEffect(() => {
+    if (!showSettings) {
+      setSettingsForm({
+        studioStartTime: settings?.studioStartTime ?? '09:00',
+        graceMinutes: settings?.graceMinutes ?? 15,
+        halfDayThresholdHours: settings?.halfDayThresholdHours ?? 4.0,
+        latePenaltyPerMinute: settings?.latePenaltyPerMinute ?? 0,
+        allowedPaidLeavesPerMonth: settings?.allowedPaidLeavesPerMonth ?? 0,
+        pfWageCeiling: settings?.pfWageCeiling ?? 15000,
+        pfContributionPercent: settings?.pfContributionPercent ?? 12,
+        pfAutoEnrollAboveCeiling: settings?.pfAutoEnrollAboveCeiling ?? false,
+        ptState: settings?.ptState ?? 'Tamil Nadu',
+        ptDeductionFrequency: settings?.ptDeductionFrequency ?? 'MONTHLY',
+        tdsRegime: settings?.tdsRegime ?? 'New Regime FY 2025-26',
+        enablePF: settings?.enablePF ?? true,
+        enablePT: settings?.enablePT ?? true,
+        enableTDS: settings?.enableTDS ?? true,
+      });
+      setSettingsTab('ATTENDANCE');
+      setSettingsError(null);
+      setSettingsSuccess(false);
+    }
+  }, [showSettings, settings]);
+
   const STATUS_OPTIONS: { value: AttendanceStatus | 'UNMARKED'; label: string; cls: string; dot: string }[] = [
     { value: 'PRESENT', label: 'Present', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30', dot: 'bg-emerald-400' },
     { value: 'LATE', label: 'Late', cls: 'bg-amber-500/15 text-amber-300 border-amber-500/25', dot: 'bg-amber-400' },

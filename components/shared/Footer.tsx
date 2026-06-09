@@ -31,7 +31,14 @@ interface FooterProps {
   account?: 'wanderingkite' | 'studio';
 }
 
+import { usePathname } from 'next/navigation';
+
 export function Footer({ account = 'wanderingkite' }: FooterProps) {
+  const pathname = usePathname();
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <footer className="border-t border-border bg-background">
       {/* Instagram Follow CTA */}

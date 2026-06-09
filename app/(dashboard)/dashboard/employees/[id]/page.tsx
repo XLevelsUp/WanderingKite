@@ -44,7 +44,9 @@ export default async function EmployeePage(props: EmployeePageProps) {
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Edit Employee</h2>
+        <h2 className="text-3xl font-bold tracking-tight">
+          {profile?.role === 'SUPER_ADMIN' ? 'Edit Employee' : 'View Employee Details'}
+        </h2>
       </div>
       <div className="grid gap-4 grid-cols-1 md:max-w-2xl">
         <EmployeeForm
@@ -52,6 +54,7 @@ export default async function EmployeePage(props: EmployeePageProps) {
           branches={branches || []}
           managers={admins || []}
           isEditing={true}
+          readOnly={profile?.role !== 'SUPER_ADMIN'}
         />
       </div>
     </div>

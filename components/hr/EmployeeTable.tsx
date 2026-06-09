@@ -290,7 +290,15 @@ export function HREmployeeTable({
         const isActive = e.contract?.isActive ?? true;
 
         return (
-          <div className='text-right'>
+          <div className='flex items-center justify-end gap-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              className='h-8 px-3 hidden sm:flex text-xs font-medium'
+              onClick={() => router.push(`/admin/employees/${e.id}`)}
+            >
+              View
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -308,13 +316,23 @@ export function HREmployeeTable({
                 <DropdownMenuLabel className='text-primary text-xs uppercase tracking-widest opacity-70'>
                   Actions
                 </DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={() => router.push(`/admin/employees/${e.id}`)}
-                  className='text-foreground hover:text-foreground focus:text-foreground hover:bg-primary/10 focus:bg-primary/10 cursor-pointer'
-                >
-                  <Pencil className='mr-2 h-4 w-4 text-primary' />
-                  Edit Employee
-                </DropdownMenuItem>
+                {currentUserRole === 'SUPER_ADMIN' ? (
+                  <DropdownMenuItem
+                    onClick={() => router.push(`/admin/employees/${e.id}`)}
+                    className='text-foreground hover:text-foreground focus:text-foreground hover:bg-primary/10 focus:bg-primary/10 cursor-pointer'
+                  >
+                    <Pencil className='mr-2 h-4 w-4 text-primary' />
+                    Edit Employee
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() => router.push(`/admin/employees/${e.id}`)}
+                    className='text-foreground hover:text-foreground focus:text-foreground hover:bg-primary/10 focus:bg-primary/10 cursor-pointer'
+                  >
+                    <ExternalLink className='mr-2 h-4 w-4 text-primary' />
+                    View Details
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   onClick={() => {
                     showLoader('Loading Payroll...');
@@ -411,8 +429,8 @@ export function HREmployeeTable({
       </div>
 
       {/* Table */}
-      <div className='rounded-xl border border-primary/15 bg-[rgba(17,17,22,0.85)] backdrop-blur-md overflow-hidden'>
-        <Table>
+      <div className='rounded-xl border border-primary/15 bg-[rgba(17,17,22,0.85)] backdrop-blur-md overflow-x-auto'>
+        <Table className="min-w-[1000px]">
           <TableHeader>
             <TableRow className='border-b border-primary/12 hover:bg-transparent'>
               {table.getFlatHeaders().map((header) => (

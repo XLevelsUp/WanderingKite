@@ -1,4 +1,5 @@
-import { getEquipmentWithFieldStatus } from '@/actions/equipment';
+import { getEquipmentWithFieldStatus, getCategories, getBranches } from '@/actions/equipment';
+import { EditEquipmentDialog } from './[id]/EditEquipmentForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -57,6 +58,10 @@ function EquipmentStatusBadge({ status }: { status: EquipStatus }) {
     LOST: {
       label: 'Lost',
       cls: 'bg-red-500/12 text-red-400 border border-red-500/25',
+    },
+    RETIRED: {
+      label: 'Retired',
+      cls: 'bg-slate-500/12 text-slate-400 border border-slate-500/25',
     },
   };
   const cfg = map[status] ?? {
@@ -165,12 +170,40 @@ function FieldStatusCell({
   );
 }
 
+import { EquipmentFilterBar } from './EquipmentFilterBar';
+
+// ... other imports ...
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Data Component (Wrapped in Suspense)
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function EquipmentData({ isEmployee }: { isEmployee: boolean }) {
-  const equipment = await getEquipmentWithFieldStatus();
+async function EquipmentData({ 
+  isEmployee, 
+  isSuperAdmin, 
+  categories, 
+  branches,
+  searchParams 
+}: { 
+  isEmployee: boolean; 
+  isSuperAdmin: boolean; 
+  categories: any[]; 
+  branches: any[];
+  searchParams?: { q?: string; category?: string };
+}) {
+  let equipment = await getEquipmentWithFieldStatus();
+  
+  if (searchParams?.q) {
+    const q = searchParams.q.toLowerCase();
+    equipment = equipment.filter(e => e.name.toLowerCase().includes(q) || e.serialNumber.toLowerCase().includes(q));
+  }
+  if (searchParams?.category && searchParams.category !== 'all') {
+    equipment = equipment.filter(e => {
+      const cat = (e as any).category_name || (e.categories as any)?.name;
+      return cat === searchParams.category;
+    });
+  }
+
   const inFieldCount = equipment.filter(
     (e) => e.activeAssignment !== null
   ).length;
@@ -197,11 +230,13 @@ async function EquipmentData({ isEmployee }: { isEmployee: boolean }) {
         )}
       </div>
 
+      <EquipmentFilterBar categories={categories} />
+
       <Card>
         <CardHeader>
           <CardTitle>All Equipment</CardTitle>
           <CardDescription>
-            {equipment.length} items in inventory
+            {equipment.length} items found
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -260,7 +295,7 @@ async function EquipmentData({ isEmployee }: { isEmployee: boolean }) {
                       {item.serialNumber}
                     </TableCell>
                     <TableCell className="text-foreground/60">
-                      {(item.categories as any)?.name || 'N/A'}
+                      {(item as any).category_name || (item.categories as any)?.name || 'N/A'}
                     </TableCell>
                     <TableCell>
                       <EquipmentStatusBadge status={item.status} />
@@ -294,17 +329,43 @@ async function EquipmentData({ isEmployee }: { isEmployee: boolean }) {
                       })()}
                     </TableCell>
                     <TableCell className="space-x-2">
-                      <Link href={`/dashboard/equipment/${item.id}`}>
-                        <Button variant="outline" size="sm">
-                          View
-                        </Button>
-                      </Link>
-                      {!isEmployee && (
-                        <DeleteEquipmentButton
-                          equipmentId={item.id}
-                          equipmentName={item.name}
-                        />
-                      )}
+                      <div className="inline-flex items-center gap-2">
+                        <Link href={`/dashboard/equipment/${item.id}`}>
+                          <Button variant="outline" size="sm">
+                            View
+                          </Button>
+                        </Link>
+                        {!isEmployee && (
+                          <EditEquipmentDialog
+                            equipment={{
+                              id: item.id,
+                              name: item.name,
+                              serialNumber: item.serialNumber,
+                              categoryId: (item as any).categoryId ?? null,
+                              branchId: (item as any).branchId ?? null,
+                              pricingPlans: Array.isArray(item.pricingPlans) ? (item.pricingPlans as any[]) : [],
+                              image_url: item.image_url,
+                              specs: Array.isArray((item as any).specs) ? ((item as any).specs as string[]) : typeof (item as any).specs === 'string' ? JSON.parse((item as any).specs) : [],
+                              description: item.description ?? null,
+                              ownership_type: (item as any).ownership_type,
+                              purchase_date: (item as any).purchase_date,
+                              warranty_duration_months: (item as any).warranty_duration_months,
+                              warranty_expiration_date: (item as any).warranty_expiration_date,
+                              service_cost: (item as any).service_cost,
+                              repair_cost: (item as any).repair_cost,
+                              purchase_bill: (item as any).purchase_bill,
+                            }}
+                            categories={categories}
+                            branches={branches}
+                          />
+                        )}
+                        {isSuperAdmin && (
+                          <DeleteEquipmentButton
+                            equipmentId={item.id}
+                            equipmentName={item.name}
+                          />
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -321,7 +382,12 @@ async function EquipmentData({ isEmployee }: { isEmployee: boolean }) {
 // Page
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default async function EquipmentPage() {
+export default async function EquipmentPage({ 
+  searchParams 
+}: { 
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }> 
+}) {
+  const resolvedSearchParams = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -337,6 +403,12 @@ export default async function EquipmentPage() {
     .single();
 
   const isEmployee = profile?.role === 'EMPLOYEE';
+  const isSuperAdmin = profile?.role === 'SUPER_ADMIN';
+
+  const [categories, branches] = await Promise.all([
+    getCategories().catch(() => []),
+    getBranches().catch(() => []),
+  ]);
 
   return (
     <div className="space-y-8 min-h-[500px]">
@@ -348,7 +420,13 @@ export default async function EquipmentPage() {
           </div>
         }
       >
-        <EquipmentData isEmployee={isEmployee} />
+        <EquipmentData 
+          isEmployee={isEmployee} 
+          isSuperAdmin={isSuperAdmin} 
+          categories={categories} 
+          branches={branches}
+          searchParams={resolvedSearchParams}
+        />
       </Suspense>
     </div>
   );

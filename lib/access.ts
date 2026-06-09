@@ -53,6 +53,7 @@ export const ROUTE_ACCESS: Record<string, AppRole> = {
   '/admin/attendance':        'ADMIN',
   '/admin/payroll':           'ADMIN',
   '/admin/payroll/payslip':   'EMPLOYEE', // Allow employees to view their own detailed payslip
+  '/dashboard/rental-settings': 'ADMIN',
 
   // ── Super Admin only ─────────────────────────────────────────────────────
   // Removed duplicate /dashboard/audit-logs
@@ -75,6 +76,7 @@ export const ROLE_NAV_ACCESS = {
     canAccessHR: false,
     canViewAuditLogs: false,
     canViewAdminExtras: false,    // Categories, Branches
+    canViewRentalSettings: false,
   },
   ADMIN: {
     canViewEmployees: true,
@@ -88,6 +90,7 @@ export const ROLE_NAV_ACCESS = {
     canAccessHR: true,
     canViewAuditLogs: false,
     canViewAdminExtras: true,
+    canViewRentalSettings: true,
   },
   SUPER_ADMIN: {
     canViewEmployees: true,
@@ -101,6 +104,7 @@ export const ROLE_NAV_ACCESS = {
     canAccessHR: true,
     canViewAuditLogs: true,
     canViewAdminExtras: true,
+    canViewRentalSettings: true,
   },
 } satisfies Record<AppRole, Record<string, boolean>>;
 

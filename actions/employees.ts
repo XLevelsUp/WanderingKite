@@ -11,6 +11,7 @@ import {
   UpdateEmployeeFormData,
 } from '@/lib/validations/employees';
 import { redirect } from 'next/navigation';
+import { parseSupabaseError } from '@/lib/errorHandler';
 
 export async function getEmployees(query?: string) {
   const supabase = await createClient();
@@ -38,7 +39,7 @@ export async function getEmployees(query?: string) {
   const { data, error } = await dbQuery;
 
   if (error) {
-    return [];
+    throw new Error(parseSupabaseError(error, 'Failed to retrieve employee directory.'));
   }
 
   // Filter out profiles where ALL contracts are inactive.
@@ -60,7 +61,7 @@ export async function getBranches() {
     .order('name');
 
   if (error) {
-    return [];
+    throw new Error(parseSupabaseError(error, 'Failed to fetch branches.'));
   }
 
   return data;
@@ -76,7 +77,7 @@ export async function getEmployee(id: string) {
     .single();
 
   if (error) {
-    return null;
+    throw new Error(parseSupabaseError(error, 'Failed to fetch employee details.'));
   }
 
   return data;
@@ -115,6 +116,10 @@ export async function createEmployee(data: CreateEmployeeFormData) {
 
   const { email, password, full_name, role, branch_id, manager_id } =
     result.data;
+
+  if (requesterProfile.role === 'ADMIN' && role === 'SUPER_ADMIN') {
+    return { error: 'Cannot create a Super Admin' };
+  }
 
   // 1. Create User in Auth (using Service Role)
   // We pass fullName in metadata to match the updated trigger requirement
@@ -199,7 +204,7 @@ export async function updateEmployee(id: string, data: UpdateEmployeeFormData) {
   }
 
   // Update
-  const { error } = await supabase
+  const { error } = await adminAuthClient
     .from('profiles')
     .update({
       fullName: full_name,
@@ -263,7 +268,7 @@ export async function getAdmins() {
     .order('fullName');
 
   if (error) {
-    return [];
+    throw new Error(parseSupabaseError(error, 'Failed to fetch administrators.'));
   }
 
   return data;

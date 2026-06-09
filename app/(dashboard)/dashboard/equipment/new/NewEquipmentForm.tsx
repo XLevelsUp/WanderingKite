@@ -66,6 +66,9 @@ export function NewEquipmentForm({
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('');
   const [ownershipType, setOwnershipType] = useState('IN_HOUSE');
+  const [isRental, setIsRental] = useState(false);
+  const [classification, setClassification] = useState('IN_HOUSE');
+  const [categoryName, setCategoryName] = useState('');
   const { showError, showInfo, showSuccess } = useNotify();
 
   // Pricing Plans state
@@ -193,6 +196,8 @@ export function NewEquipmentForm({
       formData.set('category_id', selectedCategory);
       formData.set('branch_id', selectedBranch);
       formData.set('ownership_type', ownershipType);
+      formData.set('is_rental', isRental.toString());
+      formData.set('category_name', categoryName);
       formData.set('pricing_plans', JSON.stringify(plans));
 
       await createEquipment(formData);
@@ -241,24 +246,84 @@ export function NewEquipmentForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Category *</Label>
+            <Label htmlFor="category_name">Category Name *</Label>
             <Select
-              value={selectedCategory}
-              onValueChange={setSelectedCategory}
+              value={categoryName}
+              onValueChange={setCategoryName}
               required
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger id="category_name">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.name}>
+                    {cat.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <input type="hidden" name="category_name" value={categoryName} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="classification">Classification *</Label>
+              <Select
+                value={classification}
+                onValueChange={(val) => {
+                  setClassification(val);
+                  if (val === 'IN_HOUSE') {
+                    setOwnershipType('IN_HOUSE');
+                    setIsRental(false);
+                  } else if (val === 'IN_HOUSE_RENTAL') {
+                    setOwnershipType('IN_HOUSE');
+                    setIsRental(true);
+                  } else if (val === 'RENTAL') {
+                    setOwnershipType('RENTAL');
+                    setIsRental(true);
+                  }
+                }}
+                required
+                disabled={isLoading}
+              >
+                <SelectTrigger id="classification">
+                  <SelectValue placeholder="Select classification" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="IN_HOUSE">In-House</SelectItem>
+                  <SelectItem value="IN_HOUSE_RENTAL">In-House Rental (Internal Use)</SelectItem>
+                  <SelectItem value="RENTAL">External Rental</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {classification === 'RENTAL' ? (
+              <div className="space-y-2">
+                <Label htmlFor="is_rental_toggle">Is Rental (External Availability) *</Label>
+                <Select
+                  value={isRental ? 'true' : 'false'}
+                  onValueChange={(val) => setIsRental(val === 'true')}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger id="is_rental_toggle">
+                    <SelectValue placeholder="Is Rental" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Yes</SelectItem>
+                    <SelectItem value="false">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div className="space-y-2 flex flex-col justify-end pb-2">
+                <p className="text-xs text-muted-foreground italic">
+                  {classification === 'IN_HOUSE' 
+                    ? 'Staff use only. Hidden from public portals.' 
+                    : 'Studio use only. Displayed in Studio Space booking (/studiospace).'}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -278,24 +343,6 @@ export function NewEquipmentForm({
                     {branch.name}
                   </SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="ownership_type">Ownership Type *</Label>
-            <Select
-              value={ownershipType}
-              onValueChange={setOwnershipType}
-              required
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select ownership" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="IN_HOUSE">In-House</SelectItem>
-                <SelectItem value="RENTAL">Rental</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -409,7 +456,9 @@ export function NewEquipmentForm({
                   >
                     <div className="flex items-center gap-4">
                       <span className="font-semibold text-foreground min-w-[80px]">{p.name}</span>
-                      <span className="text-xs text-muted-foreground">Duration: {p.durationHours}h</span>
+                      <span className="text-xs text-muted-foreground">
+                        Duration: {p.durationHours === 8 ? '1 Day (8h)' : p.durationHours === 56 ? '1 Week (56h)' : `${p.durationHours}h`}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-bold text-primary mr-2">₹{p.rate}</span>

@@ -15,7 +15,7 @@ export async function getClients() {
     .order('createdAt', { ascending: false });
 
   if (error) {
-    return [];
+    throw new Error(parseSupabaseError(error, 'Failed to fetch client lists.'));
   }
 
   return data ?? [];

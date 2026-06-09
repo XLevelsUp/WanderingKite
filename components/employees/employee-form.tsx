@@ -58,16 +58,18 @@ interface Manager {
 
 interface EmployeeFormProps {
   initialData?: any;
-  branches: Branch[];
-  managers: Manager[];
+  branches?: Branch[];
+  managers?: Manager[];
   isEditing?: boolean;
+  readOnly?: boolean;
 }
 
 export function EmployeeForm({
   initialData,
-  branches,
-  managers,
+  branches = [],
+  managers = [],
   isEditing = false,
+  readOnly = false,
 }: EmployeeFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -183,7 +185,7 @@ export function EmployeeForm({
             <FormItem>
               <FormLabel>Full Name</FormLabel>
               <FormControl>
-                <Input placeholder="John Doe" {...field} />
+                <Input placeholder="John Doe" {...field} disabled={readOnly} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -217,7 +219,7 @@ export function EmployeeForm({
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="******" {...field} />
+                  <Input type="password" placeholder="******" {...field} disabled={readOnly} />
                 </FormControl>
                 <FormDescription>At least 6 characters.</FormDescription>
                 <FormMessage />
@@ -236,6 +238,7 @@ export function EmployeeForm({
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  disabled={readOnly}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -266,6 +269,7 @@ export function EmployeeForm({
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value || 'no_manager'}
+                    disabled={readOnly}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -297,6 +301,7 @@ export function EmployeeForm({
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value || undefined}
+                  disabled={readOnly}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -318,13 +323,15 @@ export function EmployeeForm({
           />
         </div>
 
-        <Button type="submit" disabled={isLoading}>
-          {isLoading
-            ? 'Saving...'
-            : isEditing
-              ? 'Update Employee'
-              : 'Create Employee'}
-        </Button>
+        {!readOnly && (
+          <Button type="submit" disabled={isLoading}>
+            {isLoading
+              ? 'Saving...'
+              : isEditing
+                ? 'Update Employee'
+                : 'Create Employee'}
+          </Button>
+        )}
       </form>
     </Form>
   );
