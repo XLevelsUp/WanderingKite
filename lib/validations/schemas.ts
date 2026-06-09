@@ -28,7 +28,6 @@ export const equipmentSchema = z.object({
   repairCost: z.number().nonnegative().optional().nullable(),
   ownershipType: z.enum(['IN_HOUSE', 'RENTAL']).default('IN_HOUSE'),
   isRental: z.boolean().default(true),
-  equipmentType: z.enum(['RENTAL', 'STUDIO_SPACE']).default('RENTAL'),
 });
 
 export type EquipmentFormData = z.infer<typeof equipmentSchema>;

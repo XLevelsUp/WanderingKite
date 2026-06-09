@@ -42,8 +42,10 @@ function calcAge(dob: string | null): string {
 
 export default async function EmployeeDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { id } = await params;
   const employee = await getHREmployee(id);
@@ -71,15 +73,18 @@ export default async function EmployeeDetailPage({
   const hasMissingPersonalDetails =
     !employee.phone || !employee.dateOfBirth || !employee.gender;
 
+  const sp = await searchParams;
+  const fromDashboard = sp?.from === 'dashboard';
+
   return (
     <div className='p-6 md:p-8 max-w-4xl mx-auto space-y-8'>
       {/* Back */}
       <Link
-        href='/admin/employees'
+        href={fromDashboard ? '/dashboard/employees' : '/admin/employees'}
         className='inline-flex items-center gap-2 text-sm text-foreground/50 hover:text-foreground transition-colors'
       >
         <ArrowLeft className='h-4 w-4' />
-        Back to Employees
+        {fromDashboard ? 'Back to Dashboard' : 'Back to Employees'}
       </Link>
 
       {/* ── Profile header card ───────────────────────────────────────────── */}

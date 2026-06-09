@@ -58,7 +58,7 @@ export function ResponsiveSidebarWrapper({
       {/* ── Mobile / Tablet hamburger button ─────────────────── */}
       <button
         onClick={() => setIsOpen(true)}
-        className="lg:hidden fixed top-[72px] left-4 z-40 p-2 rounded-xl bg-[rgba(17,17,22,0.95)] border border-primary/20 text-primary/70 hover:text-primary hover:bg-primary/10 transition-all shadow-lg backdrop-blur-sm"
+        className="lg:hidden fixed top-[88px] left-4 z-40 p-2 rounded-xl bg-[rgba(17,17,22,0.95)] border border-primary/20 text-primary/70 hover:text-primary hover:bg-primary/10 transition-all shadow-lg backdrop-blur-sm"
         aria-label="Open navigation"
       >
         <Menu className="w-5 h-5" />
@@ -104,7 +104,7 @@ export function ResponsiveSidebarWrapper({
       </aside>
 
       {/* ── Main content ─────────────────────────────────────── */}
-      <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 min-h-screen bg-[#0A0A0B] w-full">
+      <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-16 sm:pt-20 lg:pt-8 min-h-screen bg-[#0A0A0B] w-full overflow-x-hidden">
         {children}
       </main>
     </div>

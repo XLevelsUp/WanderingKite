@@ -11,6 +11,7 @@ import {
   UpdateEmployeeFormData,
 } from '@/lib/validations/employees';
 import { redirect } from 'next/navigation';
+import { parseSupabaseError } from '@/lib/errorHandler';
 
 export async function getEmployees(query?: string) {
   const supabase = await createClient();
@@ -38,7 +39,7 @@ export async function getEmployees(query?: string) {
   const { data, error } = await dbQuery;
 
   if (error) {
-    return [];
+    throw new Error(parseSupabaseError(error, 'Failed to retrieve employee directory.'));
   }
 
   // Filter out profiles where ALL contracts are inactive.
@@ -60,7 +61,7 @@ export async function getBranches() {
     .order('name');
 
   if (error) {
-    return [];
+    throw new Error(parseSupabaseError(error, 'Failed to fetch branches.'));
   }
 
   return data;
@@ -76,7 +77,7 @@ export async function getEmployee(id: string) {
     .single();
 
   if (error) {
-    return null;
+    throw new Error(parseSupabaseError(error, 'Failed to fetch employee details.'));
   }
 
   return data;
@@ -267,7 +268,7 @@ export async function getAdmins() {
     .order('fullName');
 
   if (error) {
-    return [];
+    throw new Error(parseSupabaseError(error, 'Failed to fetch administrators.'));
   }
 
   return data;

@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { updateGlobalRentalPolicySettings, updateEquipmentRate } from '@/actions/rental-policy';
 import { useNotify } from '@/hooks/useNotify';
 import { Edit, Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function RentalSettingsClient({ 
   role, 
@@ -25,10 +26,21 @@ export function RentalSettingsClient({
   const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
   
   // Local state for global settings form
-  const [globalSettings, setGlobalSettings] = useState(settings || {
-    repeat_client_discount_percentage: '0',
-    default_security_deposit: '0',
-    default_late_penalty_rate: '0'
+  const [globalSettings, setGlobalSettings] = useState(() => {
+    if (!settings) {
+      return {
+        repeat_client_discount_percentage: '0',
+        default_security_deposit: '0',
+        default_late_penalty_amount: '0',
+        active_billing_policy: 'HOURLY',
+      };
+    }
+    return {
+      repeat_client_discount_percentage: settings.repeat_client_discount_percentage ?? '0',
+      default_security_deposit: settings.default_security_deposit ?? '0',
+      default_late_penalty_amount: (settings.default_late_penalty_amount !== undefined ? settings.default_late_penalty_amount : settings.default_late_penalty_rate) ?? '0',
+      active_billing_policy: settings.active_billing_policy ?? 'HOURLY',
+    };
   });
 
   // Local state for equipment form (inline editing)
@@ -42,7 +54,7 @@ export function RentalSettingsClient({
     try {
       const formData = new FormData();
       Object.keys(globalSettings).forEach(key => {
-        formData.append(key, globalSettings[key]);
+        formData.append(key, (globalSettings as any)[key]);
       });
       await updateGlobalRentalPolicySettings(formData);
       showSuccess('Global settings updated successfully');
@@ -62,7 +74,7 @@ export function RentalSettingsClient({
       daily_rate: item.daily_rate || '',
       weekly_rate: item.weekly_rate || '',
       security_deposit: item.security_deposit || '',
-      late_penalty_rate: item.late_penalty_rate || '',
+      late_penalty_amount: (item.late_penalty_amount !== undefined ? item.late_penalty_amount : item.late_penalty_rate) || '',
       min_rental_duration_hours: item.min_rental_duration_hours || '',
       condition: item.condition || 'GOOD'
     });
@@ -121,13 +133,29 @@ export function RentalSettingsClient({
                 />
               </div>
               <div className="space-y-2">
-                <Label>Late Penalty Rate (Multiplier)</Label>
+                <Label>Default Late Penalty Amount (₹)</Label>
                 <Input 
-                  type="number" step="0.1" 
-                  value={globalSettings.default_late_penalty_rate} 
-                  onChange={e => handleNumberChange('default_late_penalty_rate', e.target.value)}
+                  type="number" step="1" 
+                  value={globalSettings.default_late_penalty_amount} 
+                  onChange={e => handleNumberChange('default_late_penalty_amount', e.target.value)}
                   disabled={role !== 'SUPER_ADMIN'}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>Active Billing Policy</Label>
+                <Select
+                  disabled={role !== 'SUPER_ADMIN'}
+                  value={globalSettings.active_billing_policy}
+                  onValueChange={val => setGlobalSettings({ ...globalSettings, active_billing_policy: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Policy" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="HOURLY">Hourly Billing (Exact time used)</SelectItem>
+                    <SelectItem value="SLOT_BASED">Slot-Based Billing (Half-Day / Full-Day)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             {role === 'SUPER_ADMIN' && (

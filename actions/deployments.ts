@@ -31,7 +31,7 @@ export async function getAssignmentFormData() {
       .order('fullName'),
     supabase
       .from('equipment')
-      .select('id, name, serialNumber, categories(name), category_name, ownership_type, is_rental, equipment_type')
+      .select('id, name, serialNumber, categories(name), category_name, ownership_type, is_rental')
       .is('deletedAt', null)
       .eq('status', 'AVAILABLE')
       .order('name'),

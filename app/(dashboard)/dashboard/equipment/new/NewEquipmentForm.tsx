@@ -66,8 +66,8 @@ export function NewEquipmentForm({
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('');
   const [ownershipType, setOwnershipType] = useState('IN_HOUSE');
-  const [isRental, setIsRental] = useState(true);
-  const [equipmentType, setEquipmentType] = useState('RENTAL');
+  const [isRental, setIsRental] = useState(false);
+  const [classification, setClassification] = useState('IN_HOUSE');
   const [categoryName, setCategoryName] = useState('');
   const { showError, showInfo, showSuccess } = useNotify();
 
@@ -197,7 +197,6 @@ export function NewEquipmentForm({
       formData.set('branch_id', selectedBranch);
       formData.set('ownership_type', ownershipType);
       formData.set('is_rental', isRental.toString());
-      formData.set('equipment_type', equipmentType);
       formData.set('category_name', categoryName);
       formData.set('pricing_plans', JSON.stringify(plans));
 
@@ -246,68 +245,85 @@ export function NewEquipmentForm({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="category_name">Category Name *</Label>
-              <Input
-                id="category_name"
-                name="category_name"
-                placeholder="e.g. Camera, Lens"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="equipment_type">Equipment Type *</Label>
-              <Select
-                value={equipmentType}
-                onValueChange={setEquipmentType}
-                required
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="RENTAL">Rental</SelectItem>
-                  <SelectItem value="STUDIO_SPACE">Studio Space</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="category_name">Category Name *</Label>
+            <Select
+              value={categoryName}
+              onValueChange={setCategoryName}
+              required
+              disabled={isLoading}
+            >
+              <SelectTrigger id="category_name">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <input type="hidden" name="category_name" value={categoryName} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="ownership_type">Ownership Type *</Label>
+              <Label htmlFor="classification">Classification *</Label>
               <Select
-                value={ownershipType}
-                onValueChange={setOwnershipType}
+                value={classification}
+                onValueChange={(val) => {
+                  setClassification(val);
+                  if (val === 'IN_HOUSE') {
+                    setOwnershipType('IN_HOUSE');
+                    setIsRental(false);
+                  } else if (val === 'IN_HOUSE_RENTAL') {
+                    setOwnershipType('IN_HOUSE');
+                    setIsRental(true);
+                  } else if (val === 'RENTAL') {
+                    setOwnershipType('RENTAL');
+                    setIsRental(true);
+                  }
+                }}
                 required
                 disabled={isLoading}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select ownership" />
+                <SelectTrigger id="classification">
+                  <SelectValue placeholder="Select classification" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="IN_HOUSE">In-House {isRental ? 'Rental' : ''}</SelectItem>
+                  <SelectItem value="IN_HOUSE">In-House</SelectItem>
+                  <SelectItem value="IN_HOUSE_RENTAL">In-House Rental (Internal Use)</SelectItem>
                   <SelectItem value="RENTAL">External Rental</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2 flex flex-col justify-center pt-6">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isRental}
-                  onChange={(e) => setIsRental(e.target.checked)}
+            {classification === 'RENTAL' ? (
+              <div className="space-y-2">
+                <Label htmlFor="is_rental_toggle">Is Rental (External Availability) *</Label>
+                <Select
+                  value={isRental ? 'true' : 'false'}
+                  onValueChange={(val) => setIsRental(val === 'true')}
                   disabled={isLoading}
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <span className="text-sm font-medium">Is Rental? (Available for booking)</span>
-              </label>
-            </div>
+                >
+                  <SelectTrigger id="is_rental_toggle">
+                    <SelectValue placeholder="Is Rental" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Yes</SelectItem>
+                    <SelectItem value="false">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div className="space-y-2 flex flex-col justify-end pb-2">
+                <p className="text-xs text-muted-foreground italic">
+                  {classification === 'IN_HOUSE' 
+                    ? 'Staff use only. Hidden from public portals.' 
+                    : 'Studio use only. Displayed in Studio Space booking (/studiospace).'}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">

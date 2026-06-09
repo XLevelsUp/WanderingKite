@@ -222,7 +222,7 @@ export function DeploymentMatrix({ groups, isAdmin }: DeploymentMatrixProps) {
     <div className="rounded-xl border border-white/8 bg-[rgba(17,17,22,0.7)] backdrop-blur-sm overflow-hidden">
       {hasData ? (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
+          <table className="w-full min-w-[800px] text-sm border-collapse">
             <thead>
               <tr className="border-b border-white/8">
                 <th className="px-4 py-3 text-left text-[11px] font-semibold text-foreground/35 uppercase tracking-widest">

@@ -4,6 +4,7 @@ import {
   getCategories,
   getBranches,
   getEquipmentAuditLog,
+  getMaintenanceRecords,
 } from '@/actions/equipment';
 import { EditEquipmentDialog, QuickImageUpload } from './EditEquipmentForm';
 import { Button } from '@/components/ui/button';
@@ -67,6 +68,11 @@ const STATUS_CONFIG: Record<
     color: 'bg-red-500/10     text-red-400     border-red-500/20',
     icon: XCircle,
   },
+  RETIRED: {
+    label: 'Retired',
+    color: 'bg-slate-500/10   text-slate-400   border-slate-500/20',
+    icon: XCircle,
+  },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -122,17 +128,18 @@ export default async function EquipmentDetailPage({
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
   const isEmployee = profile?.role === 'EMPLOYEE';
 
-  const [equipment, categoriesRaw, branchesRaw, auditLogsRaw] = await Promise.all([
+  const [equipment, categoriesRaw, branchesRaw, auditLogsRaw, maintenanceRecords] = await Promise.all([
     getEquipmentById(id).catch(() => null),
     getCategories().catch(() => []),
     getBranches().catch(() => []),
     getEquipmentAuditLog(id).catch(() => []),
+    getMaintenanceRecords(id).catch(() => []),
   ]);
   if (!equipment) notFound();
 
   const history = await getEquipmentAssignmentHistory(id).catch(() => []);
 
-  const category = (equipment.categories as any)?.name as string | undefined;
+  const category = ((equipment as any).category_name || (equipment.categories as any)?.name) as string | undefined;
   const branch = (equipment.branches as any)?.name as string | undefined;
   const specs = Array.isArray(equipment.specs)
     ? (equipment.specs as string[])
@@ -190,6 +197,7 @@ export default async function EquipmentDetailPage({
             categories={categoriesRaw as { id: string; name: string }[]}
             branches={branchesRaw as { id: string; name: string }[]}
             auditLogs={auditLogsRaw}
+            maintenanceRecords={maintenanceRecords}
           />
         )}
       </div>

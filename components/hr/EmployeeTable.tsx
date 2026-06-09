@@ -429,8 +429,8 @@ export function HREmployeeTable({
       </div>
 
       {/* Table */}
-      <div className='rounded-xl border border-primary/15 bg-[rgba(17,17,22,0.85)] backdrop-blur-md overflow-hidden'>
-        <Table>
+      <div className='rounded-xl border border-primary/15 bg-[rgba(17,17,22,0.85)] backdrop-blur-md overflow-x-auto'>
+        <Table className="min-w-[1000px]">
           <TableHeader>
             <TableRow className='border-b border-primary/12 hover:bg-transparent'>
               {table.getFlatHeaders().map((header) => (

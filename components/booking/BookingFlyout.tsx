@@ -23,7 +23,7 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
     return () => clearTimeout(timer);
   }, []);
 
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/admin')) {
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/admin') || pathname === '/login') {
     return null;
   }
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -44,6 +45,9 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
   if (isExpanded) {
     return (
       <nav className='space-y-1.5 animate-in fade-in duration-200'>
+        <div className='mb-8'>
+          <Image src="/wkfulllogo.png" alt="Wandering Kite Logo" width={160} height={40} className="mb-6 object-contain" />
+        </div>
         <button
           onClick={() => setIsExpanded(false)}
           className='w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-xl text-xs font-bold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 hover:bg-primary/18 transition-all duration-150 group'
@@ -76,7 +80,10 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
 
   return (
     <nav className='space-y-1.5 animate-in fade-in duration-200'>
-      <h1 className='text-xl font-bold mb-8 text-gradient-brand'>Main Menu</h1>
+      <div className='mb-8'>
+        <Image src="/wkfulllogo.png" alt="Wandering Kite Logo" width={160} height={40} className="mb-6 object-contain" />
+        <h1 className='text-xl font-bold text-gradient-brand'>Main Menu</h1>
+      </div>
       {/* Always visible: Overview */}
       <Link
         href='/dashboard'

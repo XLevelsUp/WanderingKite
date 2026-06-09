@@ -312,9 +312,10 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
                 { title: 'Audio/Mic', key: 'audio' },
                 { title: 'Others', key: 'other' },
               ].map((cat) => {
-                const items = equipment.filter((e) =>
-                  (e.categories as any)?.name?.toLowerCase().includes(cat.key)
-                );
+                const items = equipment.filter((e) => {
+                  const catName = e.category_name?.toLowerCase() || (e.categories as any)?.name?.toLowerCase() || '';
+                  return catName.includes(cat.key);
+                });
                 if (items.length === 0) return null;
                 return (
                   <div key={cat.key} className="w-full">
