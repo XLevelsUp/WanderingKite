@@ -63,12 +63,24 @@ export async function getEquipmentWithFieldStatus() {
       serialNumber,
       status,
       pricingPlans,
+      studioPricingPlans,
       image_url,
       description,
       deletedAt,
       category_name,
       categories(name),
       branches(name),
+      is_studio_space,
+      is_rental,
+      categoryId,
+      branchId,
+      specs,
+      purchase_date,
+      warranty_duration_months,
+      warranty_expiration_date,
+      service_cost,
+      repair_cost,
+      purchase_bill,
       activeAssignment:equipment_assignments!equipmentId(
         id,
         status,
@@ -134,6 +146,11 @@ export async function createEquipment(formData: FormData) {
     pricingPlansParsed = JSON.parse((formData.get('pricing_plans') as string) || '[]');
   } catch (err) { }
 
+  let studioPricingPlansParsed: any[] = [];
+  try {
+    studioPricingPlansParsed = JSON.parse((formData.get('studio_pricing_plans') as string) || '[]');
+  } catch (err) { }
+
   const rawData = {
     name: formData.get('name') as string,
     serialNumber: formData.get('serial_number') as string,
@@ -143,13 +160,14 @@ export async function createEquipment(formData: FormData) {
     specs: (formData.get('specs') as string) || null,
     description: (formData.get('description') as string) || null,
     pricingPlans: pricingPlansParsed,
+    studioPricingPlans: studioPricingPlansParsed,
     purchaseBill: (formData.get('purchase_bill') as string) || '',
     purchaseDate: (formData.get('purchase_date') as string) || null,
     warrantyDurationMonths: formData.get('warranty_duration_months') ? parseInt(formData.get('warranty_duration_months') as string, 10) : null,
     warrantyExpirationDate: (formData.get('warranty_expiration_date') as string) || null,
     serviceCost: formData.get('service_cost') ? parseFloat(formData.get('service_cost') as string) : 0,
     repairCost: formData.get('repair_cost') ? parseFloat(formData.get('repair_cost') as string) : 0,
-    ownershipType: (formData.get('ownership_type') as string) || 'IN_HOUSE',
+    isStudioSpace: formData.get('is_studio_space') === 'true',
     isRental: formData.get('is_rental') === 'true',
     categoryName: (formData.get('category_name') as string) || '',
   };
@@ -161,6 +179,16 @@ export async function createEquipment(formData: FormData) {
   }
   const validatedData = parsed.data;
 
+  // Sync flat rate columns for external rentals
+  const hourlyRate = validatedData.pricingPlans?.find((p: any) => p.name.toLowerCase() === 'hourly')?.rate || 0.00;
+  const dailyRate = validatedData.pricingPlans?.find((p: any) => p.name.toLowerCase() === 'daily')?.rate || 0.00;
+  const weeklyRate = validatedData.pricingPlans?.find((p: any) => p.name.toLowerCase() === 'weekly')?.rate || 0.00;
+
+  // Sync flat rate columns for studio space
+  const studioHourlyRate = validatedData.studioPricingPlans?.find((p: any) => p.name.toLowerCase() === 'hourly')?.rate || 0.00;
+  const studioDailyRate = validatedData.studioPricingPlans?.find((p: any) => p.name.toLowerCase() === 'daily')?.rate || 0.00;
+  const studioWeeklyRate = validatedData.studioPricingPlans?.find((p: any) => p.name.toLowerCase() === 'weekly')?.rate || 0.00;
+
   const { data, error } = await supabase
     .from('equipment')
     .insert({
@@ -169,6 +197,13 @@ export async function createEquipment(formData: FormData) {
       categoryId: validatedData.categoryId || null,
       branchId: validatedData.branchId || null,
       pricingPlans: validatedData.pricingPlans,
+      hourly_rate: hourlyRate,
+      daily_rate: dailyRate,
+      weekly_rate: weeklyRate,
+      studioPricingPlans: validatedData.studioPricingPlans,
+      studio_hourly_rate: studioHourlyRate,
+      studio_daily_rate: studioDailyRate,
+      studio_weekly_rate: studioWeeklyRate,
       image_url: validatedData.imageUrl || null,
       specs: validatedData.specs ? JSON.stringify(validatedData.specs.split(',').map((s: string) => s.trim()).filter(Boolean)) : '[]',
       description: validatedData.description,
@@ -179,7 +214,7 @@ export async function createEquipment(formData: FormData) {
       warranty_expiration_date: validatedData.warrantyExpirationDate || null,
       service_cost: validatedData.serviceCost || 0,
       repair_cost: validatedData.repairCost || 0,
-      ownership_type: validatedData.ownershipType,
+      is_studio_space: validatedData.isStudioSpace,
       is_rental: validatedData.isRental,
       category_name: validatedData.categoryName || null,
     } as any)
@@ -215,6 +250,11 @@ export async function updateEquipment(id: string, formData: FormData) {
     pricingPlansParsed = JSON.parse((formData.get('pricing_plans') as string) || '[]');
   } catch (err) { }
 
+  let studioPricingPlansParsed: any[] = [];
+  try {
+    studioPricingPlansParsed = JSON.parse((formData.get('studio_pricing_plans') as string) || '[]');
+  } catch (err) { }
+
   const rawData = {
     name: formData.get('name') as string,
     serialNumber: formData.get('serial_number') as string,
@@ -224,13 +264,14 @@ export async function updateEquipment(id: string, formData: FormData) {
     specs: (formData.get('specs') as string) || null,
     description: (formData.get('description') as string) || null,
     pricingPlans: pricingPlansParsed,
+    studioPricingPlans: studioPricingPlansParsed,
     purchaseBill: (formData.get('purchase_bill') as string) || '',
     purchaseDate: (formData.get('purchase_date') as string) || null,
     warrantyDurationMonths: formData.get('warranty_duration_months') ? parseInt(formData.get('warranty_duration_months') as string, 10) : null,
     warrantyExpirationDate: (formData.get('warranty_expiration_date') as string) || null,
     serviceCost: formData.get('service_cost') ? parseFloat(formData.get('service_cost') as string) : 0,
     repairCost: formData.get('repair_cost') ? parseFloat(formData.get('repair_cost') as string) : 0,
-    ownershipType: (formData.get('ownership_type') as string) || 'IN_HOUSE',
+    isStudioSpace: formData.get('is_studio_space') === 'true',
     isRental: formData.get('is_rental') === 'true',
     categoryName: (formData.get('category_name') as string) || '',
   };
@@ -242,6 +283,16 @@ export async function updateEquipment(id: string, formData: FormData) {
   }
   const validatedData = parsed.data;
 
+  // Sync flat rate columns for external rentals
+  const hourlyRate = validatedData.pricingPlans?.find((p: any) => p.name.toLowerCase() === 'hourly')?.rate || 0.00;
+  const dailyRate = validatedData.pricingPlans?.find((p: any) => p.name.toLowerCase() === 'daily')?.rate || 0.00;
+  const weeklyRate = validatedData.pricingPlans?.find((p: any) => p.name.toLowerCase() === 'weekly')?.rate || 0.00;
+
+  // Sync flat rate columns for studio space
+  const studioHourlyRate = validatedData.studioPricingPlans?.find((p: any) => p.name.toLowerCase() === 'hourly')?.rate || 0.00;
+  const studioDailyRate = validatedData.studioPricingPlans?.find((p: any) => p.name.toLowerCase() === 'daily')?.rate || 0.00;
+  const studioWeeklyRate = validatedData.studioPricingPlans?.find((p: any) => p.name.toLowerCase() === 'weekly')?.rate || 0.00;
+
   const { error } = await supabase
     .from('equipment')
     .update({
@@ -250,6 +301,13 @@ export async function updateEquipment(id: string, formData: FormData) {
       categoryId: validatedData.categoryId || null,
       branchId: validatedData.branchId || null,
       pricingPlans: validatedData.pricingPlans,
+      hourly_rate: hourlyRate,
+      daily_rate: dailyRate,
+      weekly_rate: weeklyRate,
+      studioPricingPlans: validatedData.studioPricingPlans,
+      studio_hourly_rate: studioHourlyRate,
+      studio_daily_rate: studioDailyRate,
+      studio_weekly_rate: studioWeeklyRate,
       image_url: validatedData.imageUrl || null,
       specs: validatedData.specs ? JSON.stringify(validatedData.specs.split(',').map((s: string) => s.trim()).filter(Boolean)) : '[]',
       description: validatedData.description,
@@ -259,7 +317,7 @@ export async function updateEquipment(id: string, formData: FormData) {
       warranty_expiration_date: validatedData.warrantyExpirationDate || null,
       service_cost: validatedData.serviceCost || 0,
       repair_cost: validatedData.repairCost || 0,
-      ownership_type: validatedData.ownershipType,
+      is_studio_space: validatedData.isStudioSpace,
       is_rental: validatedData.isRental,
       category_name: validatedData.categoryName || null,
     } as any)

@@ -66,17 +66,25 @@ const ADD_ONS = [
 ];
 const getEquipmentHourlyRate = (item: any): number => {
   if (!item) return 0;
-  const plans = Array.isArray(item.pricingPlans) ? item.pricingPlans : [];
   
-  // 1. Try to find an "Hourly" plan
+  // 1. Try studioPricingPlans first
+  const studioPlans = Array.isArray(item.studioPricingPlans) ? item.studioPricingPlans : [];
+  const studioHourlyPlan = studioPlans.find((p: any) => p.name?.toLowerCase() === 'hourly');
+  if (studioHourlyPlan) return Number(studioHourlyPlan.rate) || 0;
+
+  // 2. Try flat studio_hourly_rate column
+  if (item.studio_hourly_rate && Number(item.studio_hourly_rate) > 0) {
+    return Number(item.studio_hourly_rate);
+  }
+  
+  // 3. Fallback to legacy pricingPlans
+  const plans = Array.isArray(item.pricingPlans) ? item.pricingPlans : [];
   const hourlyPlan = plans.find((p: any) => p.name?.toLowerCase() === 'hourly');
   if (hourlyPlan) return Number(hourlyPlan.rate) || 0;
   
-  // 2. Fallback to "Daily" plan divided by 10 (as in the migration 11 default mapping)
   const dailyPlan = plans.find((p: any) => p.name?.toLowerCase() === 'daily');
   if (dailyPlan) return Math.round((Number(dailyPlan.rate) || 0) / 10);
   
-  // 3. Fallback to any first plan in the list normalized by hours
   if (plans.length > 0) {
     const first = plans[0];
     const duration = Number(first.durationHours) || 1;

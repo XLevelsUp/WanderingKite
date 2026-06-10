@@ -32,6 +32,7 @@ import { useRouter } from 'next/navigation';
 import { ImageUpload } from '@/components/shared/ImageUpload';
 import { Pencil, CheckCircle2, Plus, Trash2, RefreshCw, Loader2 } from 'lucide-react';
 import { useNotify } from '@/hooks/useNotify';
+import { PricingPlansManager, type PricingPlan } from '@/components/dashboard/PricingPlansManager';
 
 // ── ImageUploadField ──────────────────────────────────────────────────────────
 function ImageUploadField({
@@ -84,11 +85,11 @@ interface EquipmentData {
   categoryId: string | null;
   branchId: string | null;
   pricingPlans: Array<{ name: string; durationHours: number; rate: number }>;
+  studioPricingPlans?: Array<{ name: string; durationHours: number; rate: number }> | null;
   image_url?: string | null;
   specs?: string[] | null;
-  ownership_type?: string;
+  is_studio_space?: boolean;
   is_rental?: boolean;
-  equipment_type?: string;
   category_name?: string | null;
   purchase_date?: string | null;
   warranty_duration_months?: number | null;
@@ -116,8 +117,11 @@ export function QuickImageUpload({
   categoryId,
   branchId,
   pricingPlans,
+  studioPricingPlans,
   specs,
   description,
+  isStudioSpace,
+  isRental,
 }: {
   equipmentId: string;
   currentImageUrl?: string | null;
@@ -126,8 +130,11 @@ export function QuickImageUpload({
   categoryId?: string | null;
   branchId?: string | null;
   pricingPlans: any[];
+  studioPricingPlans: any[];
   specs?: string[] | null;
   description?: string | null;
+  isStudioSpace?: boolean;
+  isRental?: boolean;
 }) {
   const router = useRouter();
   const [imageUrl, setImageUrl] = useState(currentImageUrl ?? '');
@@ -146,9 +153,12 @@ export function QuickImageUpload({
       fd.set('category_id', categoryId ?? '');
       fd.set('branch_id', branchId ?? '');
       fd.set('pricing_plans', JSON.stringify(pricingPlans));
+      fd.set('studio_pricing_plans', JSON.stringify(studioPricingPlans || []));
       fd.set('image_url', imageUrl);
       fd.set('specs', Array.isArray(specs) ? specs.join(', ') : '');
       fd.set('description', description ?? '');
+      fd.set('is_studio_space', String(isStudioSpace ?? false));
+      fd.set('is_rental', String(isRental ?? false));
       await updateEquipment(equipmentId, fd);
       setSaved(true);
       router.refresh();
@@ -440,136 +450,39 @@ function EditEquipmentFormContent({
   const [selectedBranch, setSelectedBranch] = useState(
     equipment.branchId ?? ''
   );
-  const [ownershipType, setOwnershipType] = useState(
-    equipment.ownership_type ?? 'IN_HOUSE'
-  );
   const [isRental, setIsRental] = useState(
-    equipment.is_rental ?? true
+    equipment.is_rental ?? false
   );
-  const [classification, setClassification] = useState(() => {
-    if (equipment.ownership_type === 'RENTAL') {
-      return 'RENTAL';
-    }
-    if (equipment.ownership_type === 'IN_HOUSE' && equipment.is_rental) {
-      return 'IN_HOUSE_RENTAL';
-    }
-    return 'IN_HOUSE';
-  });
+  const [isStudioSpace, setIsStudioSpace] = useState(
+    equipment.is_studio_space ?? false
+  );
   const [categoryName, setCategoryName] = useState(
     equipment.category_name ?? ''
   );
 
   // Plans manager state inside modal
-  const [plans, setPlans] = useState<Array<{ name: string; durationHours: number; rate: number }>>(() => {
-    return equipment.pricingPlans || [];
+  const [plans, setPlans] = useState<PricingPlan[]>(() => {
+    return (equipment.pricingPlans as PricingPlan[]) || [];
   });
 
-  const [baseHourlyRate, setBaseHourlyRate] = useState<string>(() => {
-    const hourlyPlan = equipment.pricingPlans?.find((p) => p.name.toLowerCase() === 'hourly');
-    return hourlyPlan ? String(hourlyPlan.rate) : '';
+  const [studioPlans, setStudioPlans] = useState<PricingPlan[]>(() => {
+    return (equipment.studioPricingPlans as PricingPlan[]) || [];
   });
 
-  const [newPlanName, setNewPlanName] = useState('');
-  const [newPlanDuration, setNewPlanDuration] = useState('');
-  const [newPlanRate, setNewPlanRate] = useState('');
-
-  // Inline editing state
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editPlanName, setEditPlanName] = useState('');
-  const [editPlanDuration, setEditPlanDuration] = useState('');
-  const [editPlanRate, setEditPlanRate] = useState('');
-
-  const handleHourlyRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setBaseHourlyRate(val);
-    const rate = parseFloat(val);
-    if (!isNaN(rate) && rate > 0) {
-      setPlans([
-        { name: 'Hourly', durationHours: 1, rate: rate },
-        { name: 'Daily', durationHours: 8, rate: rate * 8 },
-        { name: 'Weekly', durationHours: 56, rate: rate * 8 * 7 },
-      ]);
-    } else {
-      setPlans([]);
-    }
-  };
-
-  const handleAddPlan = () => {
-    if (!newPlanName || !newPlanDuration || !newPlanRate) {
-      showInfo('Please fill out all pricing plan fields');
-      return;
-    }
-    const duration = parseInt(newPlanDuration, 10);
-    const rate = parseFloat(newPlanRate);
-
-    if (isNaN(duration) || duration <= 0) {
-      showError('Duration must be a positive number of hours');
-      return;
-    }
-    if (isNaN(rate) || rate <= 0) {
-      showError('Rate must be a positive number');
-      return;
-    }
-    if (plans.some((p) => p.name.toLowerCase() === newPlanName.toLowerCase())) {
-      showError('A plan with this name already exists');
-      return;
-    }
-
-    setPlans((prev) => [...prev, { name: newPlanName, durationHours: duration, rate }]);
-    setNewPlanName('');
-    setNewPlanDuration('');
-    setNewPlanRate('');
-  };
-
-  const handleSaveEditPlan = (index: number) => {
-    if (!editPlanName || !editPlanDuration || !editPlanRate) {
-      showInfo('Please fill out all pricing plan fields');
-      return;
-    }
-    const duration = parseInt(editPlanDuration, 10);
-    const rate = parseFloat(editPlanRate);
-
-    if (isNaN(duration) || duration <= 0) {
-      showError('Duration must be a positive number of hours');
-      return;
-    }
-    if (isNaN(rate) || rate <= 0) {
-      showError('Rate must be a positive number');
-      return;
-    }
-    if (plans.some((p, idx) => idx !== index && p.name.toLowerCase() === editPlanName.toLowerCase())) {
-      showError('A plan with this name already exists');
-      return;
-    }
-
-    setPlans((prev) => {
-      const next = [...prev];
-      next[index] = { name: editPlanName, durationHours: duration, rate };
-      return next;
-    });
-    setEditingIndex(null);
-  };
-
-  const handleRemovePlan = (nameToRemove: string) => {
-    setPlans((prev) => prev.filter((p) => p.name !== nameToRemove));
-    if (editingIndex !== null && plans[editingIndex]?.name === nameToRemove) {
-      setEditingIndex(null);
-    }
-  };
-
-  const handleLoadDefaults = () => {
-    setBaseHourlyRate('150');
-    setPlans([
-      { name: 'Hourly', durationHours: 1, rate: 150 },
-      { name: 'Daily', durationHours: 8, rate: 1200 },
-      { name: 'Weekly', durationHours: 56, rate: 8400 },
-    ]);
+  const handleCategoryChange = (valName: string) => {
+    setCategoryName(valName);
+    const matched = categories.find((c) => c.name === valName);
+    setSelectedCategory(matched ? matched.id : '');
   };
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (plans.length === 0) {
-      setError('Please configure at least one pricing plan');
+    if (isRental && plans.length === 0) {
+      setError('Please configure at least one pricing plan for External Rental');
+      return;
+    }
+    if (isStudioSpace && studioPlans.length === 0) {
+      setError('Please configure at least one pricing plan for Studio Space');
       return;
     }
     setIsLoading(true);
@@ -579,10 +492,11 @@ function EditEquipmentFormContent({
       const formData = new FormData(e.currentTarget);
       formData.set('category_id', selectedCategory);
       formData.set('branch_id', selectedBranch);
-      formData.set('ownership_type', ownershipType);
+      formData.set('is_studio_space', isStudioSpace.toString());
       formData.set('is_rental', isRental.toString());
       formData.set('category_name', categoryName);
       formData.set('pricing_plans', JSON.stringify(plans));
+      formData.set('studio_pricing_plans', JSON.stringify(studioPlans));
 
       await updateEquipment(equipment.id, formData);
       onClose();
@@ -608,6 +522,7 @@ function EditEquipmentFormContent({
 
       {/* Hidden input to pass pricing plans */}
       <input type="hidden" name="pricing_plans" value={JSON.stringify(plans)} />
+      <input type="hidden" name="studio_pricing_plans" value={JSON.stringify(studioPlans)} />
 
       {/* Name */}
       <div className="space-y-2">
@@ -638,7 +553,7 @@ function EditEquipmentFormContent({
         <Label htmlFor="edit-category-name">Category Name *</Label>
         <Select
           value={categoryName}
-          onValueChange={setCategoryName}
+          onValueChange={handleCategoryChange}
           required
           disabled={isLoading}
         >
@@ -677,263 +592,77 @@ function EditEquipmentFormContent({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="edit-classification">Classification *</Label>
-          <Select
-            value={classification}
-            onValueChange={(val) => {
-              setClassification(val);
-              if (val === 'IN_HOUSE') {
-                setOwnershipType('IN_HOUSE');
-                setIsRental(false);
-              } else if (val === 'IN_HOUSE_RENTAL') {
-                setOwnershipType('IN_HOUSE');
-                setIsRental(true);
-              } else if (val === 'RENTAL') {
-                setOwnershipType('RENTAL');
-                setIsRental(true);
-              }
-            }}
-            disabled={isLoading}
-          >
-            <SelectTrigger id="edit-classification">
-              <SelectValue placeholder="Select classification" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="IN_HOUSE">In-House</SelectItem>
-              <SelectItem value="IN_HOUSE_RENTAL">In-House Rental (Internal Use)</SelectItem>
-              <SelectItem value="RENTAL">External Rental</SelectItem>
-            </SelectContent>
-          </Select>
+      </div>
+
+      {/* Visibility Checklist */}
+      <div className="space-y-3 rounded-2xl border border-border bg-muted/20 p-4">
+        <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Visibility & Availability</Label>
+        <div className="space-y-4 pt-2">
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={isStudioSpace}
+              onChange={(e) => setIsStudioSpace(e.target.checked)}
+              disabled={isLoading}
+              className="mt-1 h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary/50 cursor-pointer disabled:opacity-40"
+            />
+            <div>
+              <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                Available in Studio Space
+              </span>
+              <p className="text-xs text-muted-foreground">
+                Allows this equipment to be selected/booked inside the Studio Space booking (/studiospace).
+              </p>
+            </div>
+          </label>
+
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={isRental}
+              onChange={(e) => setIsRental(e.target.checked)}
+              disabled={isLoading}
+              className="mt-1 h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary/50 cursor-pointer disabled:opacity-40"
+            />
+            <div>
+              <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                Available for External Rental
+              </span>
+              <p className="text-xs text-muted-foreground">
+                Makes this equipment visible and cartable on the public rentals catalog (/rentals).
+              </p>
+            </div>
+          </label>
+        </div>
+        <div className="text-xs text-muted-foreground italic mt-2 border-t border-border/40 pt-2">
+          {!isStudioSpace && !isRental && 'Staff use only. Hidden from public portals (ERP system only).'}
+          {isStudioSpace && !isRental && 'Studio use only. Displayed in Studio Space booking (/studiospace).'}
+          {isStudioSpace && isRental && 'Displayed on both /studiospace and /rentals pages.'}
+          {!isStudioSpace && isRental && 'Displayed on /rentals page only.'}
         </div>
       </div>
 
-      {/* Is Rental Toggle or explanatory text */}
-      {classification === 'RENTAL' ? (
-        <div className="space-y-2">
-          <Label htmlFor="edit-is-rental-toggle">Is Rental (External Availability) *</Label>
-          <Select
-            value={isRental ? 'true' : 'false'}
-            onValueChange={(val) => setIsRental(val === 'true')}
-            disabled={isLoading}
-          >
-            <SelectTrigger id="edit-is-rental-toggle">
-              <SelectValue placeholder="Is Rental" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="true">Yes</SelectItem>
-              <SelectItem value="false">No</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      ) : (
-        <div className="space-y-2 flex flex-col justify-end pb-2">
-          <p className="text-xs text-muted-foreground italic">
-            {classification === 'IN_HOUSE'
-              ? 'Staff use only. Hidden from public portals.'
-              : 'Studio use only. Displayed in Studio Space booking (/studiospace).'}
-          </p>
-        </div>
+      {/* Conditional Studio Space Pricing */}
+      {isStudioSpace && (
+        <PricingPlansManager
+          title="Studio Space Pricing Plans"
+          description="Configure pricing structure when rented inside the studio"
+          initialPlans={studioPlans}
+          onChange={setStudioPlans}
+          disabled={isLoading}
+        />
       )}
 
-      {/* Pricing Plans Manager */}
-      <div className="space-y-3 rounded-2xl border border-border bg-muted/20 p-4">
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Pricing Plans *</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleLoadDefaults}
-            className="gap-1.5 text-xs"
-            disabled={isLoading}
-          >
-            <RefreshCw className="h-3 w-3" /> Reset to Defaults
-          </Button>
-        </div>
-
-        <div className="space-y-2 border-b border-border/60 pb-3 mb-2">
-          <Label htmlFor="edit-base-hourly-rate" className="text-xs font-semibold text-foreground">
-            Base Hourly Rate (₹/hr) *
-          </Label>
-          <Input
-            id="edit-base-hourly-rate"
-            type="number"
-            placeholder="e.g. 150"
-            value={baseHourlyRate}
-            onChange={handleHourlyRateChange}
-            required
-            disabled={isLoading}
-            className="h-9 bg-background"
-          />
-          <p className="text-[10px] text-muted-foreground">
-            Type an hourly rate to automatically calculate Daily (8 hours) and Weekly (56 hours) plans.
-          </p>
-        </div>
-
-        {/* List of active plans */}
-        <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
-          {plans.map((p, idx) => {
-            const isEditing = editingIndex === idx;
-            if (isEditing) {
-              return (
-                <div
-                  key={p.name}
-                  className="flex flex-col gap-2 p-2.5 rounded-xl border border-warning/30 bg-muted/40 text-sm"
-                >
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <Label className="text-[10px] text-muted-foreground">Name</Label>
-                      <Input
-                        value={editPlanName}
-                        onChange={(e) => setEditPlanName(e.target.value)}
-                        disabled={isLoading}
-                        className="h-8 text-xs bg-background"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-[10px] text-muted-foreground">Duration (h)</Label>
-                      <Input
-                        type="number"
-                        value={editPlanDuration}
-                        onChange={(e) => setEditPlanDuration(e.target.value)}
-                        disabled={isLoading}
-                        className="h-8 text-xs bg-background"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-[10px] text-muted-foreground">Rate (₹)</Label>
-                      <Input
-                        type="number"
-                        value={editPlanRate}
-                        onChange={(e) => setEditPlanRate(e.target.value)}
-                        disabled={isLoading}
-                        className="h-8 text-xs bg-background"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-2 pt-1 border-t border-border/50">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                      onClick={() => setEditingIndex(null)}
-                      disabled={isLoading}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="h-7 text-xs text-warning hover:bg-warning/10"
-                      onClick={() => handleSaveEditPlan(idx)}
-                      disabled={isLoading}
-                    >
-                      Save
-                    </Button>
-                  </div>
-                </div>
-              );
-            }
-
-            return (
-              <div
-                key={p.name}
-                className="flex items-center justify-between rounded-xl border border-border bg-background px-3 py-2 text-sm"
-              >
-                <div className="flex items-center gap-4">
-                  <span className="font-semibold text-foreground min-w-[80px]">{p.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    Duration: {p.durationHours === 8 ? '1 Day (8h)' : p.durationHours === 56 ? '1 Week (56h)' : `${p.durationHours}h`}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-bold text-primary mr-2">₹{p.rate}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setEditingIndex(idx);
-                      setEditPlanName(p.name);
-                      setEditPlanDuration(String(p.durationHours));
-                      setEditPlanRate(String(p.rate));
-                    }}
-                    className="h-7 w-7 p-0 text-muted-foreground hover:bg-muted hover:text-foreground"
-                    disabled={isLoading}
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemovePlan(p.name)}
-                    className="h-7 w-7 p-0 text-red-400 hover:bg-red-500/10 hover:text-red-500"
-                    disabled={isLoading}
-                  >
-                    <Trash2 className="h-4.5 w-4.5" />
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
-          {plans.length === 0 && (
-            <p className="text-xs text-muted-foreground italic py-2">No pricing plans defined. Create one below.</p>
-          )}
-        </div>
-
-        {/* Dynamic plan creator */}
-        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/60">
-          <div className="space-y-1">
-            <Label htmlFor="edit-plan-name" className="text-[10px] text-muted-foreground">Plan Name</Label>
-            <Input
-              id="edit-plan-name"
-              placeholder="e.g. Weekend"
-              value={newPlanName}
-              onChange={(e) => setNewPlanName(e.target.value)}
-              disabled={isLoading}
-              className="h-8 text-xs"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="edit-plan-duration" className="text-[10px] text-muted-foreground">Duration (Hours)</Label>
-            <Input
-              id="edit-plan-duration"
-              type="number"
-              placeholder="e.g. 48"
-              value={newPlanDuration}
-              onChange={(e) => setNewPlanDuration(e.target.value)}
-              disabled={isLoading}
-              className="h-8 text-xs"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="edit-plan-rate" className="text-[10px] text-muted-foreground">Rate (₹)</Label>
-            <div className="flex items-center gap-1.5">
-              <Input
-                id="edit-plan-rate"
-                type="number"
-                placeholder="4000"
-                value={newPlanRate}
-                onChange={(e) => setNewPlanRate(e.target.value)}
-                disabled={isLoading}
-                className="h-8 text-xs flex-1"
-              />
-              <Button
-                type="button"
-                onClick={handleAddPlan}
-                className="h-8 w-8 p-0"
-                disabled={isLoading}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Conditional External Rental Pricing */}
+      {isRental && (
+        <PricingPlansManager
+          title="External Rental Pricing Plans"
+          description="Configure pricing structure when rented externally"
+          initialPlans={plans}
+          onChange={setPlans}
+          disabled={isLoading}
+        />
+      )}
 
       {/* Image */}
       <div className="space-y-2">

@@ -141,7 +141,7 @@ export default async function RentalsPage() {
 
   // 2. Filter for External Rentals that are available for booking
   const externalRentals = remoteData.filter(
-    (eq: any) => eq.ownership_type === 'RENTAL' && eq.is_rental === true
+    (eq: any) => eq.is_rental === true
   );
 
   // 3. Format it to match the Card props

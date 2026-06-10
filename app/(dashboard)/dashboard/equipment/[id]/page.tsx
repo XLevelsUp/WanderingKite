@@ -152,6 +152,9 @@ export default async function EquipmentDetailPage({
   const pricingPlans = Array.isArray((equipment as any).pricingPlans)
     ? ((equipment as any).pricingPlans as any[])
     : [];
+  const studioPricingPlans = Array.isArray((equipment as any).studioPricingPlans)
+    ? ((equipment as any).studioPricingPlans as any[])
+    : [];
 
   // Minimal shape needed by the edit dialog
   const equipmentForEdit = {
@@ -161,10 +164,12 @@ export default async function EquipmentDetailPage({
     categoryId: (equipment as any).categoryId ?? null,
     branchId: (equipment as any).branchId ?? null,
     pricingPlans,
+    studioPricingPlans,
     image_url: imageUrl,
     specs,
     description: equipment.description ?? null,
-    ownership_type: (equipment as any).ownership_type,
+    is_studio_space: (equipment as any).is_studio_space,
+    is_rental: (equipment as any).is_rental,
     purchase_date: (equipment as any).purchase_date,
     warranty_duration_months: (equipment as any).warranty_duration_months,
     warranty_expiration_date: (equipment as any).warranty_expiration_date,
@@ -245,8 +250,11 @@ export default async function EquipmentDetailPage({
               categoryId={(equipment as any).categoryId ?? null}
               branchId={(equipment as any).branchId ?? null}
               pricingPlans={pricingPlans}
+              studioPricingPlans={studioPricingPlans}
               specs={specs}
               description={equipment.description ?? null}
+              isStudioSpace={(equipment as any).is_studio_space}
+              isRental={(equipment as any).is_rental}
             />
           )}
         </div>
@@ -256,16 +264,28 @@ export default async function EquipmentDetailPage({
           {/* Header */}
           <div>
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              {(equipment as any).ownership_type === 'RENTAL' && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-400 border border-violet-500/20">
+              {(equipment as any).is_studio_space && !(equipment as any).is_rental && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-500 border border-amber-500/20">
                   <Package className="h-3 w-3" />
-                  Rental Item
+                  Studio Space Rental
                 </span>
               )}
-              {(equipment as any).ownership_type === 'IN_HOUSE' && (
+              {!(equipment as any).is_studio_space && !(equipment as any).is_rental && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-400 border border-blue-500/20">
                   <Package className="h-3 w-3" />
                   In-House Asset
+                </span>
+              )}
+              {!(equipment as any).is_studio_space && (equipment as any).is_rental && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-400 border border-violet-500/20">
+                  <Package className="h-3 w-3" />
+                  External Rental
+                </span>
+              )}
+              {(equipment as any).is_studio_space && (equipment as any).is_rental && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-400 border border-violet-500/20 border-dashed">
+                  <Package className="h-3 w-3" />
+                  External Available
                 </span>
               )}
               {category && (
@@ -286,31 +306,69 @@ export default async function EquipmentDetailPage({
           </div>
 
           {/* Pricing */}
-          <div className="grid grid-cols-1 gap-4">
-            <Card className="bg-muted/30">
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground mb-3 font-semibold uppercase tracking-wider">Pricing Plans</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {pricingPlans.map((plan: any) => (
-                    <div
-                      key={plan.name}
-                      className="rounded-xl border border-border bg-background/50 px-4 py-3 text-center transition-all hover:bg-background/80"
-                    >
-                      <p className="text-xs font-semibold text-muted-foreground">{plan.name}</p>
-                      <p className="mt-1 text-xl font-bold text-primary">
-                        ₹{Number(plan.rate).toLocaleString('en-IN')}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                        for {plan.durationHours} {plan.durationHours === 1 ? 'hour' : 'hours'}
-                      </p>
-                    </div>
-                  ))}
-                  {pricingPlans.length === 0 && (
-                    <p className="text-sm text-muted-foreground py-2">No pricing plans defined yet.</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 gap-6">
+            {(equipment as any).is_rental && (
+              <Card className="bg-muted/30">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground mb-3 font-semibold uppercase tracking-wider">External Rental Pricing Plans</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {pricingPlans.map((plan: any) => (
+                      <div
+                        key={plan.name}
+                        className="rounded-xl border border-border bg-background/50 px-4 py-3 text-center transition-all hover:bg-background/80"
+                      >
+                        <p className="text-xs font-semibold text-muted-foreground">{plan.name}</p>
+                        <p className="mt-1 text-xl font-bold text-primary">
+                          ₹{Number(plan.rate).toLocaleString('en-IN')}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                          for {plan.durationHours} {plan.durationHours === 1 ? 'hour' : 'hours'}
+                        </p>
+                      </div>
+                    ))}
+                    {pricingPlans.length === 0 && (
+                      <p className="text-sm text-muted-foreground py-2 col-span-full text-center">No external rental pricing plans defined.</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {(equipment as any).is_studio_space && (
+              <Card className="bg-muted/30">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground mb-3 font-semibold uppercase tracking-wider">Studio Space Rental Pricing Plans</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {studioPricingPlans.map((plan: any) => (
+                      <div
+                        key={plan.name}
+                        className="rounded-xl border border-border bg-background/50 px-4 py-3 text-center transition-all hover:bg-background/80"
+                      >
+                        <p className="text-xs font-semibold text-muted-foreground">{plan.name}</p>
+                        <p className="mt-1 text-xl font-bold text-amber-500">
+                          ₹{Number(plan.rate).toLocaleString('en-IN')}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                          for {plan.durationHours} {plan.durationHours === 1 ? 'hour' : 'hours'}
+                        </p>
+                      </div>
+                    ))}
+                    {studioPricingPlans.length === 0 && (
+                      <p className="text-sm text-muted-foreground py-2 col-span-full text-center">No studio space pricing plans defined.</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {!(equipment as any).is_rental && !(equipment as any).is_studio_space && (
+              <Card className="bg-muted/30 border-dashed">
+                <CardContent className="p-4 text-center">
+                  <p className="text-sm text-muted-foreground">In-House Asset Only</p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">This item has no pricing configured because it is not available for external or studio space rental.</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Info rows */}

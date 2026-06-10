@@ -77,10 +77,17 @@ export async function updateEquipmentRate(equipmentId: string, formData: FormDat
   const { data: currentItem } = await supabase.from('equipment').select('*').eq('id', equipmentId).single();
   if (!currentItem) throw new Error('Equipment not found');
 
+  const updatedPricingPlans = [
+    { name: 'Hourly', durationHours: 1, rate: newHourly },
+    { name: 'Daily', durationHours: 8, rate: newDaily },
+    { name: 'Weekly', durationHours: 56, rate: newWeekly }
+  ];
+
   const newRatesJson = {
     hourly_rate: newHourly,
     daily_rate: newDaily,
     weekly_rate: newWeekly,
+    pricingPlans: updatedPricingPlans,
     security_deposit: newDeposit,
     late_penalty_amount: newPenalty,
     min_rental_duration_hours: newMinDuration,
@@ -101,7 +108,7 @@ export async function updateEquipmentRate(equipmentId: string, formData: FormDat
   if (Number(currentItem.late_penalty_amount) !== newPenalty) changes.late_penalty_amount = { old: currentItem.late_penalty_amount, new: newPenalty };
   if (Number(currentItem.min_rental_duration_hours) !== newMinDuration) changes.min_rental_duration_hours = { old: currentItem.min_rental_duration_hours, new: newMinDuration };
 
-  const { error: updateError } = await supabase.from('equipment').update(newRatesJson).eq('id', equipmentId);
+  const { error: updateError } = await supabase.from('equipment').update(newRatesJson as any).eq('id', equipmentId);
   if (updateError) {
     throw new Error('Failed to update equipment rates: ' + updateError.message);
   }

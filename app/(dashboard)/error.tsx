@@ -33,7 +33,7 @@ export default function DashboardError({
             <AlertTriangle className="h-6 w-6" />
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
-            System Error
+            Something went wrong
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             We encountered a problem fetching or displaying this screen.
