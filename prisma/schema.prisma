@@ -72,8 +72,29 @@ model Equipment {
   name          String
   serialNumber  String          @unique
   status        EquipmentStatus @default(AVAILABLE)
-  rentalPrice   Float
+  pricingPlans  Json            @default("[]")   @map("pricingPlans")
   description   String?
+  
+  // Visibility
+  isStudioSpace Boolean         @default(false)  @map("is_studio_space")
+  isRental      Boolean         @default(false)  @map("is_rental")
+  
+  // External Rental Rates
+  hourlyRate    Decimal?        @map("hourly_rate")
+  dailyRate     Decimal?        @map("daily_rate")
+  weeklyRate    Decimal?        @map("weekly_rate")
+
+  // Studio Space Rates
+  studioPricingPlans Json         @default("[]")   @map("studioPricingPlans")
+  studioHourlyRate   Decimal?     @map("studio_hourly_rate")
+  studioDailyRate    Decimal?     @map("studio_daily_rate")
+  studioWeeklyRate   Decimal?     @map("studio_weekly_rate")
+
+  minRentalDurationHours Int?     @map("min_rental_duration_hours")
+  securityDeposit        Decimal? @map("security_deposit")
+  latePenaltyAmount      Decimal? @map("late_penalty_amount")
+  condition              String?  @default("GOOD")
+  categoryName           String?  @map("category_name")
   
   orderItems    OrderItem[]
 

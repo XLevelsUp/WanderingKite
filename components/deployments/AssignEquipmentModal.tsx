@@ -29,7 +29,7 @@ interface EquipmentOption {
   serialNumber: string;
   categories: { name: string } | null;
   category_name?: string | null;
-  ownership_type?: string;
+  is_studio_space?: boolean;
   is_rental?: boolean;
 }
 interface ClientOption {
@@ -302,9 +302,9 @@ function AssignEquipmentFormContent({
     if (!matchesSearch) return false;
 
     if (filterOwnership === 'IN_HOUSE') {
-      return eq.ownership_type === 'IN_HOUSE';
-    } else if (filterOwnership === 'RENTAL') {
-      return eq.ownership_type === 'RENTAL';
+      return !eq.is_studio_space;
+    } else if (filterOwnership === 'STUDIO_SPACE') {
+      return !!eq.is_studio_space;
     }
     return true;
   });
@@ -417,9 +417,9 @@ function AssignEquipmentFormContent({
                     onChange={(e) => setFilterOwnership(e.target.value)}
                     className="bg-transparent text-xs focus:outline-none text-foreground/70 py-2.5 pr-2"
                   >
-                    <option value="ALL" className="bg-[#1a1a24]">All Ownership</option>
+                    <option value="ALL" className="bg-[#1a1a24]">All Classifications</option>
                     <option value="IN_HOUSE" className="bg-[#1a1a24]">In-House</option>
-                    <option value="RENTAL" className="bg-[#1a1a24]">Rental</option>
+                    <option value="STUDIO_SPACE" className="bg-[#1a1a24]">Studio Space</option>
                   </select>
                 </div>
               </div>
@@ -446,11 +446,13 @@ function AssignEquipmentFormContent({
                                 {eq.category_name || eq.categories?.name}
                               </span>
                             )}
-                            {eq.ownership_type && (
-                              <span className="text-[10px] text-amber-400/80 bg-amber-400/10 px-1.5 py-0.5 rounded">
-                                {eq.ownership_type === 'IN_HOUSE' ? 'In-House' : 'Rental'}
-                              </span>
-                            )}
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                              eq.is_studio_space 
+                                ? 'text-amber-400/80 bg-amber-400/10' 
+                                : 'text-blue-400/80 bg-blue-400/10'
+                            }`}>
+                              {eq.is_studio_space ? 'Studio Space' : 'In-House'}
+                            </span>
                           </div>
                         </div>
                         {isConflict && (

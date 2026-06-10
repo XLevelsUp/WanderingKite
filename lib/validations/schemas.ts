@@ -13,21 +13,37 @@ export type PricingPlan = z.infer<typeof pricingPlanSchema>;
 export const equipmentSchema = z.object({
   name: z.string().min(1, 'Equipment name is required'),
   serialNumber: z.string().min(1, 'Serial number is required'),
-  categoryId: z.string().uuid('Invalid category').optional().or(z.literal('')),
-  categoryName: z.string().min(1, 'Category is required').optional().or(z.literal('')),
+  categoryId: z.string().uuid('Category is required'),
+  categoryName: z.string().optional().or(z.literal('')),
   branchId: z.string().uuid('Invalid branch').optional().or(z.literal('')),
   imageUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
   specs: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
-  pricingPlans: z.array(pricingPlanSchema).min(1, 'Provide at least one pricing plan'),
+  pricingPlans: z.array(pricingPlanSchema).optional().default([]),
+  studioPricingPlans: z.array(pricingPlanSchema).optional().default([]),
   purchaseBill: z.string().url('Invalid URL').optional().or(z.literal('')),
   purchaseDate: z.string().optional().nullable(),
   warrantyDurationMonths: z.number().int().nonnegative().optional().nullable(),
   warrantyExpirationDate: z.string().optional().nullable(),
   serviceCost: z.number().nonnegative().optional().nullable(),
   repairCost: z.number().nonnegative().optional().nullable(),
-  ownershipType: z.enum(['IN_HOUSE', 'RENTAL']).default('IN_HOUSE'),
-  isRental: z.boolean().default(true),
+  isStudioSpace: z.boolean().default(false),
+  isRental: z.boolean().default(false),
+}).superRefine((data, ctx) => {
+  if (data.isRental && (!data.pricingPlans || data.pricingPlans.length === 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['pricingPlans'],
+      message: 'Provide at least one pricing plan for External Rental',
+    });
+  }
+  if (data.isStudioSpace && (!data.studioPricingPlans || data.studioPricingPlans.length === 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['studioPricingPlans'],
+      message: 'Provide at least one pricing plan for Studio Space',
+    });
+  }
 });
 
 export type EquipmentFormData = z.infer<typeof equipmentSchema>;

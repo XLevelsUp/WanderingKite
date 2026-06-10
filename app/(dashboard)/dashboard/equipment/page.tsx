@@ -303,30 +303,42 @@ async function EquipmentData({
                     <TableCell>
                       <FieldStatusCell assignment={item.activeAssignment} />
                     </TableCell>
-                    <TableCell className="text-foreground/70 text-xs">
-                      {(() => {
-                        const plans = Array.isArray(item.pricingPlans) ? (item.pricingPlans as any[]) : [];
-                        if (plans.length === 0) return '—';
-                        
-                        const hourly = plans.find((p: any) => p.name?.toLowerCase() === 'hourly');
-                        const daily = plans.find((p: any) => p.name?.toLowerCase() === 'daily');
-                        
-                        const parts = [];
-                        if (hourly) {
-                          parts.push(`₹${Number(hourly.rate).toLocaleString('en-IN')}/hr`);
-                        }
-                        if (daily) {
-                          parts.push(`₹${Number(daily.rate).toLocaleString('en-IN')}/day`);
-                        }
-                        
-                        if (parts.length > 0) {
-                          return parts.join(' · ');
-                        }
-                        
-                        // Fallback to first plan in list
-                        const first = plans[0];
-                        return `₹${Number(first.rate).toLocaleString('en-IN')} (${first.name})`;
-                      })()}
+                    <TableCell className="text-foreground/70 text-xs py-2 max-w-[200px]">
+                      <div className="space-y-1">
+                        {item.is_rental && (
+                          <div>
+                            <span className="text-[10px] uppercase font-semibold text-primary block">Rental:</span>
+                            {(() => {
+                              const plans = Array.isArray(item.pricingPlans) ? (item.pricingPlans as any[]) : [];
+                              if (plans.length === 0) return <span className="text-muted-foreground">—</span>;
+                              const hourly = plans.find((p: any) => p.name?.toLowerCase() === 'hourly');
+                              const daily = plans.find((p: any) => p.name?.toLowerCase() === 'daily');
+                              const parts = [];
+                              if (hourly) parts.push(`₹${Number(hourly.rate).toLocaleString('en-IN')}/hr`);
+                              if (daily) parts.push(`₹${Number(daily.rate).toLocaleString('en-IN')}/day`);
+                              return parts.length > 0 ? parts.join(' · ') : `₹${Number(plans[0].rate).toLocaleString('en-IN')} (${plans[0].name})`;
+                            })()}
+                          </div>
+                        )}
+                        {item.is_studio_space && (
+                          <div>
+                            <span className="text-[10px] uppercase font-semibold text-amber-500 block">Studio:</span>
+                            {(() => {
+                              const plans = Array.isArray(item.studioPricingPlans) ? (item.studioPricingPlans as any[]) : [];
+                              if (plans.length === 0) return <span className="text-muted-foreground">—</span>;
+                              const hourly = plans.find((p: any) => p.name?.toLowerCase() === 'hourly');
+                              const daily = plans.find((p: any) => p.name?.toLowerCase() === 'daily');
+                              const parts = [];
+                              if (hourly) parts.push(`₹${Number(hourly.rate).toLocaleString('en-IN')}/hr`);
+                              if (daily) parts.push(`₹${Number(daily.rate).toLocaleString('en-IN')}/day`);
+                              return parts.length > 0 ? parts.join(' · ') : `₹${Number(plans[0].rate).toLocaleString('en-IN')} (${plans[0].name})`;
+                            })()}
+                          </div>
+                        )}
+                        {!item.is_rental && !item.is_studio_space && (
+                          <span className="text-muted-foreground italic font-medium">In-house</span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="space-x-2">
                       <div className="inline-flex items-center gap-2">
@@ -344,10 +356,12 @@ async function EquipmentData({
                               categoryId: (item as any).categoryId ?? null,
                               branchId: (item as any).branchId ?? null,
                               pricingPlans: Array.isArray(item.pricingPlans) ? (item.pricingPlans as any[]) : [],
+                              studioPricingPlans: Array.isArray((item as any).studioPricingPlans) ? ((item as any).studioPricingPlans as any[]) : [],
                               image_url: item.image_url,
                               specs: Array.isArray((item as any).specs) ? ((item as any).specs as string[]) : typeof (item as any).specs === 'string' ? JSON.parse((item as any).specs) : [],
                               description: item.description ?? null,
-                              ownership_type: (item as any).ownership_type,
+                              is_studio_space: (item as any).is_studio_space,
+                              is_rental: (item as any).is_rental,
                               purchase_date: (item as any).purchase_date,
                               warranty_duration_months: (item as any).warranty_duration_months,
                               warranty_expiration_date: (item as any).warranty_expiration_date,

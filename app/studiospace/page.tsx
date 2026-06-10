@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { BookingFlyout } from '@/components/booking/BookingFlyout';
 import { Footer } from '@/components/shared/Footer';
 import { Testimonials } from '@/components/sections/Testimonials';
@@ -431,10 +432,10 @@ const pricingTiers = [
 ];
 
 export default async function StudioPage() {
-  // Fetch live equipment summary and filter for all rental gear (both In-House and External)
+  // Fetch live equipment summary and filter for Studio Space Rental gear
   const allEquipment = await getEquipment();
   const rentalEquipment = allEquipment.filter(
-    (eq: any) => eq.is_rental === true
+    (eq: any) => eq.is_studio_space === true
   );
 
   // Hardcoded equipment previews for the rental section below
@@ -448,6 +449,21 @@ export default async function StudioPage() {
       <JsonLd
         data={[studioFaqSchema, studioBreadcrumbSchema, studioPricingSchema]}
       />
+      <Script id="fb-pixel-studio" strategy="afterInteractive">
+        {`
+          !function(f,b,e,v,n,t,s)
+          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+          n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t,s)}(window, document,'script',
+          'https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init', '863723466283459');
+          fbq('track', 'PageView');
+        `}
+      </Script>
+      <noscript dangerouslySetInnerHTML={{ __html: `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=863723466283459&ev=PageView&noscript=1" />` }} />
       <main className="min-h-screen bg-background pt-16">
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-16 lg:py-24">

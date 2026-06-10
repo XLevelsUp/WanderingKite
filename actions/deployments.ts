@@ -9,6 +9,7 @@ import type {
   ActiveAssignment,
   EmployeeDeploymentGroup,
 } from '@/lib/types/deployments';
+import { parseSupabaseError } from '@/lib/errorHandler';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // READ: Form data for Create Assignment modal
@@ -31,7 +32,7 @@ export async function getAssignmentFormData() {
       .order('fullName'),
     supabase
       .from('equipment')
-      .select('id, name, serialNumber, categories(name), category_name, ownership_type, is_rental')
+      .select('id, name, serialNumber, categories(name), category_name, is_studio_space, is_rental')
       .is('deletedAt', null)
       .eq('status', 'AVAILABLE')
       .order('name'),
@@ -41,6 +42,16 @@ export async function getAssignmentFormData() {
       .is('deletedAt', null)
       .order('name'),
   ]);
+
+  if (employeesRes.error) {
+    throw new Error(parseSupabaseError(employeesRes.error, 'Failed to fetch employees.'));
+  }
+  if (equipmentRes.error) {
+    throw new Error(parseSupabaseError(equipmentRes.error, 'Failed to fetch equipment.'));
+  }
+  if (clientsRes.error) {
+    throw new Error(parseSupabaseError(clientsRes.error, 'Failed to fetch clients.'));
+  }
 
   const rawEmployees = employeesRes.data ?? [];
   const activeEmployees = rawEmployees.filter((profile: any) => {

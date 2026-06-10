@@ -17,7 +17,8 @@ export function parseSupabaseError(error: any, fallback = 'An unexpected error o
         const match = error.message?.match(/unique constraint "(.*?)"/i) || error.detail?.match(/Key \((.*?)\)=/i);
         if (match && match[1]) {
           const field = match[1].split('_').pop() || match[1];
-          return `This ${field} is already in use. Please use a different one.`;
+          const friendlyField = field === 'serialNumber' ? 'serial number' : field;
+          return `This ${friendlyField} is already in use. Please use a different one.`;
         }
         return 'This record already exists. Please check for duplicates.';
       case '23503': // foreign_key_violation
@@ -25,7 +26,13 @@ export function parseSupabaseError(error: any, fallback = 'An unexpected error o
       case '23502': // not_null_violation
         return 'A required field is missing. Please fill out all required fields.';
       case '42501': // insufficient_privilege
-        return 'You do not have permission to perform this action.';
+        return 'Your account does not have permission to perform this action.';
+      case '42703': // undefined_column
+      case '42P01': // undefined_table
+        return 'We are experiencing system maintenance issues. The database setup is out of sync. Please contact support.';
+      case '08001': // sqlclient_unable_to_establish_sqlconnection
+      case '08006': // connection_failure
+        return 'Unable to connect to the studio network. Please check your internet connection and try again.';
       default:
         return error.message || fallback;
     }
