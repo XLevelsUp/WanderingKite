@@ -140,20 +140,25 @@ export function PricingPlansManager({
 
   return (
     <div className="space-y-3 rounded-2xl border border-border bg-muted/20 p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{title}</Label>
-          {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
+      <div className="flex flex-col items-center gap-1.5 pb-1">
+        <div className="text-center flex flex-row items-center justify-center gap-1.5 flex-wrap text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          <span>{title}</span>
+          {description && (
+            <>
+              <span className="text-muted-foreground/30 hidden sm:inline">•</span>
+              <span className="text-xs font-normal lowercase normal-case text-muted-foreground">{description}</span>
+            </>
+          )}
         </div>
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={handleLoadDefaults}
-          className="gap-1.5 text-xs"
+          className="gap-1.5 text-xs h-7 px-2.5 shrink-0"
           disabled={disabled}
         >
-          <RefreshCw className="h-3 w-3" /> Reset to Defaults
+          <RefreshCw className="h-3 w-3" /> Reset Defaults
         </Button>
       </div>
 
@@ -175,17 +180,17 @@ export function PricingPlansManager({
       </div>
 
       {/* List of active plans */}
-      <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+      <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
         {plans.map((p, idx) => {
           const isEditing = editingIndex === idx;
           if (isEditing) {
             return (
               <div
                 key={p.name}
-                className="flex flex-col gap-2 p-2.5 rounded-xl border border-warning/30 bg-muted/40 text-sm"
+                className="flex flex-col gap-2.5 p-2.5 rounded-xl border border-warning/30 bg-muted/40 text-sm"
               >
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex-1 min-w-[70px]">
                     <Label className="text-[10px] text-muted-foreground">Name</Label>
                     <Input
                       value={editPlanName}
@@ -194,7 +199,7 @@ export function PricingPlansManager({
                       className="h-8 text-xs bg-background"
                     />
                   </div>
-                  <div>
+                  <div className="w-full sm:w-20">
                     <Label className="text-[10px] text-muted-foreground">Duration (h)</Label>
                     <Input
                       type="number"
@@ -204,7 +209,7 @@ export function PricingPlansManager({
                       className="h-8 text-xs bg-background"
                     />
                   </div>
-                  <div>
+                  <div className="flex-1 min-w-[70px]">
                     <Label className="text-[10px] text-muted-foreground">Rate (₹)</Label>
                     <Input
                       type="number"
@@ -215,7 +220,7 @@ export function PricingPlansManager({
                     />
                   </div>
                 </div>
-                <div className="flex justify-end gap-2 pt-1 border-t border-border/50">
+                <div className="flex justify-end gap-2 pt-1.5 border-t border-border/50">
                   <Button
                     type="button"
                     variant="ghost"
@@ -244,41 +249,45 @@ export function PricingPlansManager({
           return (
             <div
               key={p.name}
-              className="flex items-center justify-between rounded-xl border border-border bg-background px-3 py-2 text-sm"
+              className="flex items-center justify-between rounded-xl border border-border bg-background p-2.5 text-sm gap-2 w-full min-w-0"
             >
-              <div className="flex items-center gap-4">
-                <span className="font-semibold text-foreground min-w-[80px]">{p.name}</span>
-                <span className="text-xs text-muted-foreground">
-                  Duration: {p.durationHours === 8 ? '1 Day (8h)' : p.durationHours === 56 ? '1 Week (56h)' : `${p.durationHours}h`}
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <span className="font-semibold text-foreground truncate max-w-[80px] shrink-0" title={p.name}>
+                  {p.name}
+                </span>
+                <span className="text-xs text-muted-foreground truncate">
+                  {p.durationHours === 8 ? '1 Day (8h)' : p.durationHours === 56 ? '1 Week (56h)' : `${p.durationHours}h`}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="font-mono font-bold text-primary mr-2">₹{p.rate}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setEditingIndex(idx);
-                    setEditPlanName(p.name);
-                    setEditPlanDuration(String(p.durationHours));
-                    setEditPlanRate(String(p.rate));
-                  }}
-                  className="h-7 w-7 p-0 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  disabled={disabled}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleRemovePlan(p.name)}
-                  className="h-7 w-7 p-0 text-red-400 hover:bg-red-500/10 hover:text-red-500"
-                  disabled={disabled}
-                >
-                  <Trash2 className="h-4.5 w-4.5" />
-                </Button>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="font-mono font-bold text-primary">₹{p.rate}</span>
+                <div className="flex items-center gap-0.5">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setEditingIndex(idx);
+                      setEditPlanName(p.name);
+                      setEditPlanDuration(String(p.durationHours));
+                      setEditPlanRate(String(p.rate));
+                    }}
+                    className="h-7 w-7 p-0 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    disabled={disabled}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemovePlan(p.name)}
+                    className="h-7 w-7 p-0 text-red-400 hover:bg-red-500/10 hover:text-red-500"
+                    disabled={disabled}
+                  >
+                    <Trash2 className="h-4.5 w-4.5" />
+                  </Button>
+                </div>
               </div>
             </div>
           );
@@ -290,42 +299,42 @@ export function PricingPlansManager({
 
       {/* Dynamic plan creator */}
       <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/60">
-        <div className="space-y-1">
-          <Label className="text-[10px] text-muted-foreground">Plan Name</Label>
+        <div className="space-y-1 min-w-0">
+          <Label className="text-[10px] text-muted-foreground truncate block">Plan Name</Label>
           <Input
             placeholder="e.g. Weekend"
             value={newPlanName}
             onChange={(e) => setNewPlanName(e.target.value)}
             disabled={disabled}
-            className="h-8 text-xs"
+            className="h-8 text-xs w-full min-w-0 placeholder:text-[10px]"
           />
         </div>
-        <div className="space-y-1">
-          <Label className="text-[10px] text-muted-foreground">Duration (Hours)</Label>
+        <div className="space-y-1 min-w-0">
+          <Label className="text-[10px] text-muted-foreground truncate block">Duration (Hours)</Label>
           <Input
             type="number"
             placeholder="e.g. 48"
             value={newPlanDuration}
             onChange={(e) => setNewPlanDuration(e.target.value)}
             disabled={disabled}
-            className="h-8 text-xs"
+            className="h-8 text-xs w-full min-w-0 placeholder:text-[10px]"
           />
         </div>
-        <div className="space-y-1">
-          <Label className="text-[10px] text-muted-foreground">Rate (₹)</Label>
-          <div className="flex items-center gap-1.5">
+        <div className="space-y-1 min-w-0">
+          <Label className="text-[10px] text-muted-foreground truncate block">Rate (₹)</Label>
+          <div className="flex items-center gap-1 w-full min-w-0">
             <Input
               type="number"
               placeholder="4000"
               value={newPlanRate}
               onChange={(e) => setNewPlanRate(e.target.value)}
               disabled={disabled}
-              className="h-8 text-xs flex-1"
+              className="h-8 text-xs flex-1 min-w-0 placeholder:text-[10px]"
             />
             <Button
               type="button"
               onClick={handleAddPlan}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 shrink-0"
               disabled={disabled}
             >
               <Plus className="h-4 w-4" />

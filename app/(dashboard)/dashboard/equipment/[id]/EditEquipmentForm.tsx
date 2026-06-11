@@ -217,13 +217,13 @@ export function QuickImageUpload({
   );
 }
 
-function MaintenanceHistoryTracker({ 
-  equipmentId, 
-  records, 
-  onRecordAdded 
-}: { 
-  equipmentId: string; 
-  records: any[]; 
+function MaintenanceHistoryTracker({
+  equipmentId,
+  records,
+  onRecordAdded
+}: {
+  equipmentId: string;
+  records: any[];
   onRecordAdded?: () => void;
 }) {
   const [adding, setAdding] = useState(false);
@@ -245,10 +245,10 @@ function MaintenanceHistoryTracker({
       fd.append('cost', cost);
       fd.append('date', date);
       fd.append('notes', notes);
-      
+
       const { addMaintenanceRecord } = await import('@/actions/equipment');
       await addMaintenanceRecord(fd);
-      
+
       setAdding(false);
       setCost('');
       setNotes('');
@@ -351,7 +351,7 @@ export function EditEquipmentDialog({
           Edit Equipment
         </Button>
       </DialogTrigger>
-      <DialogContent 
+      <DialogContent
         className="max-w-2xl max-h-[90vh] overflow-y-auto"
         onPointerDownOutside={(e) => {
           if (isLoading) e.preventDefault();
@@ -642,26 +642,29 @@ function EditEquipmentFormContent({
         </div>
       </div>
 
-      {/* Conditional Studio Space Pricing */}
-      {isStudioSpace && (
-        <PricingPlansManager
-          title="Studio Space Pricing Plans"
-          description="Configure pricing structure when rented inside the studio"
-          initialPlans={studioPlans}
-          onChange={setStudioPlans}
-          disabled={isLoading}
-        />
-      )}
+      {/* Conditional Pricing Sections */}
+      {(isStudioSpace || isRental) && (
+        <div className={`grid gap-6 w-full ${isStudioSpace && isRental ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+          {isStudioSpace && (
+            <PricingPlansManager
+              title="Studio Pricing"
+              description="Rates for inside the studio."
+              initialPlans={studioPlans}
+              onChange={setStudioPlans}
+              disabled={isLoading}
+            />
+          )}
 
-      {/* Conditional External Rental Pricing */}
-      {isRental && (
-        <PricingPlansManager
-          title="External Rental Pricing Plans"
-          description="Configure pricing structure when rented externally"
-          initialPlans={plans}
-          onChange={setPlans}
-          disabled={isLoading}
-        />
+          {isRental && (
+            <PricingPlansManager
+              title="External Pricing"
+              description="Rates for taken outside."
+              initialPlans={plans}
+              onChange={setPlans}
+              disabled={isLoading}
+            />
+          )}
+        </div>
       )}
 
       {/* Image */}
@@ -723,18 +726,18 @@ function EditEquipmentFormContent({
         </div>
         <div className="space-y-2">
           <Label>Purchase Bill</Label>
-          <ImageUploadField 
-            name="purchase_bill" 
+          <ImageUploadField
+            name="purchase_bill"
             defaultValue={equipment.purchase_bill}
-            disabled={isLoading} 
-            bucket="equipment-images" 
+            disabled={isLoading}
+            bucket="equipment-images"
           />
         </div>
       </div>
 
-      <MaintenanceHistoryTracker 
-        equipmentId={equipment.id} 
-        records={maintRecords} 
+      <MaintenanceHistoryTracker
+        equipmentId={equipment.id}
+        records={maintRecords}
         onRecordAdded={refreshData}
       />
 

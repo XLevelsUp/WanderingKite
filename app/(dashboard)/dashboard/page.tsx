@@ -33,6 +33,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase.from('profiles').select('role, fullName').eq('id', user.id).single();
   const isEmployee = profile?.role === 'EMPLOYEE';
+  const isSuperAdmin = profile?.role === 'SUPER_ADMIN';
 
   if (isEmployee) {
     return <EmployeeDashboard user={user} profile={profile} />;
@@ -116,6 +117,13 @@ export default async function DashboardPage() {
     },
   ];
 
+  const filteredStatCards = statCards.filter((card) => {
+    if (card.href === '/dashboard/clients') {
+      return isSuperAdmin;
+    }
+    return true;
+  });
+
   return (
     <div className="space-y-8">
       <div>
@@ -127,7 +135,7 @@ export default async function DashboardPage() {
 
       {/* Stat Cards */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
-        {statCards.map((card) => (
+        {filteredStatCards.map((card) => (
           <Link key={card.title} href={card.href} className="block">
             <Card className="hover:shadow-md transition-shadow cursor-pointer">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -176,19 +184,21 @@ export default async function DashboardPage() {
               </Button>
             </Link>
           </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold mb-1">Register Client</h3>
-              <p className="text-sm text-slate-600">
-                Add a new client profile.
-              </p>
+          {isSuperAdmin && (
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold mb-1">Register Client</h3>
+                <p className="text-sm text-slate-600">
+                  Add a new client profile.
+                </p>
+              </div>
+              <Link href="/dashboard/clients/new">
+                <Button size="sm" variant="secondary">
+                  Add Client
+                </Button>
+              </Link>
             </div>
-            <Link href="/dashboard/clients/new">
-              <Button size="sm" variant="secondary">
-                Add Client
-              </Button>
-            </Link>
-          </div>
+          )}
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold mb-1">Create Order</h3>

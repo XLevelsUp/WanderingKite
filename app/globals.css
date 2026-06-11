@@ -200,3 +200,14 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
   opacity: 0.9;
 }
 
+/* Autofill style overrides to prevent white/yellow backgrounds in dark mode inputs */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #020617 inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+

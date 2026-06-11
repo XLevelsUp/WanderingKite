@@ -235,26 +235,29 @@ export function NewEquipmentForm({
             </div>
           </div>
 
-          {/* Conditional Studio Space Pricing */}
-          {isStudioSpace && (
-            <PricingPlansManager
-              title="Studio Space Pricing Plans"
-              description="Configure pricing structure when rented inside the studio"
-              initialPlans={studioPlans}
-              onChange={setStudioPlans}
-              disabled={isLoading}
-            />
-          )}
+          {/* Conditional Pricing Sections */}
+          {(isStudioSpace || isRental) && (
+            <div className={`grid gap-6 w-full ${isStudioSpace && isRental ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+              {isStudioSpace && (
+                <PricingPlansManager
+                  title="Studio Pricing"
+                  description="Rates for inside the studio."
+                  initialPlans={studioPlans}
+                  onChange={setStudioPlans}
+                  disabled={isLoading}
+                />
+              )}
 
-          {/* Conditional External Rental Pricing */}
-          {isRental && (
-            <PricingPlansManager
-              title="External Rental Pricing Plans"
-              description="Configure pricing structure when rented externally"
-              initialPlans={plans}
-              onChange={setPlans}
-              disabled={isLoading}
-            />
+              {isRental && (
+                <PricingPlansManager
+                  title="External Pricing"
+                  description="Rates for taken outside."
+                  initialPlans={plans}
+                  onChange={setPlans}
+                  disabled={isLoading}
+                />
+              )}
+            </div>
           )}
 
           <div className="space-y-2">

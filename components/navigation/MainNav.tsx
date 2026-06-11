@@ -15,7 +15,8 @@ const navItems = [
 
 export function MainNav() {
   const pathname = usePathname();
-  const isDashboardOrAdmin = pathname.startsWith('/dashboard') || pathname.startsWith('/admin');
+  const isDashboardOrAdmin = pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin') || false;
+  const isAuthPage = pathname === '/login';
 
   return (
     <nav
@@ -25,15 +26,15 @@ export function MainNav() {
       bg-black backdrop-blur-xl
     "
     >
-      <div className="container mx-auto flex h-20 items-center justify-between px-6">
+      <div className="container mx-auto flex h-20 items-center justify-between px-4 sm:px-6">
         {/* Logo */}
-        <Link href="/" className="group flex items-center gap-2">
+        <Link href="/" className="group flex items-center gap-2 shrink-0">
           <Image
             src="/wkfulllogo.png"
             alt={siteConfig.name}
             width={320}
             height={80}
-            className="h-20 w-auto transition-transform duration-300 group-hover:scale-105"
+            className="h-10 sm:h-16 md:h-20 w-auto transition-transform duration-300 group-hover:scale-105"
             priority
           />
         </Link>
@@ -60,25 +61,44 @@ export function MainNav() {
               ))}
             </ul>
 
-            {/* CTA */}
-            <a
-              href={generateWhatsAppLink()}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Contact us on WhatsApp"
-              className="
-                flex h-11 items-center gap-2 rounded-full
-                border border-primary/35
-                bg-primary/8
-                px-5 text-sm font-semibold text-primary
-                transition-all duration-200
-                hover:bg-primary/18 hover:border-primary/60
-                hover:text-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.20)]
-              "
-            >
-              <MessageCircle className="h-4 w-4" aria-hidden="true" />
-              <span className="hidden sm:inline">Contact</span>
-            </a>
+            {/* CTA & Client Auth Buttons */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {!isAuthPage && (
+                <Link
+                  href="/client/login"
+                  className="
+                    flex h-9 sm:h-10 items-center rounded-full
+                    border border-primary/35
+                    bg-primary/8
+                    px-3 sm:px-4 text-xs sm:text-sm font-semibold text-primary
+                    transition-all duration-200
+                    hover:bg-primary/18 hover:border-primary/60
+                    hover:text-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.20)]
+                  "
+                >
+                  Client Login/Signup
+                </Link>
+              )}
+              <a
+                href={generateWhatsAppLink()}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Contact us on WhatsApp"
+                className="
+                  flex h-9 sm:h-10 items-center gap-1.5 rounded-full
+                  border border-primary/35
+                  bg-primary/8
+                  px-3 sm:px-4 text-xs sm:text-sm font-semibold text-primary
+                  transition-all duration-200
+                  hover:bg-primary/18 hover:border-primary/60
+                  hover:text-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.20)]
+                  hidden sm:flex
+                "
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                <span className="hidden md:inline">Contact</span>
+              </a>
+            </div>
           </>
         )}
       </div>

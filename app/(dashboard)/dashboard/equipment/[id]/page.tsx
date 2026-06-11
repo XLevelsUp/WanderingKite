@@ -306,11 +306,11 @@ export default async function EquipmentDetailPage({
           </div>
 
           {/* Pricing */}
-          <div className="grid grid-cols-1 gap-6">
+          <div className={`grid gap-6 w-full ${(equipment as any).is_rental && (equipment as any).is_studio_space ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
             {(equipment as any).is_rental && (
               <Card className="bg-muted/30">
                 <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground mb-3 font-semibold uppercase tracking-wider">External Rental Pricing Plans</p>
+                  <p className="text-xs text-muted-foreground mb-3 font-semibold uppercase tracking-wider">External Pricing</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {pricingPlans.map((plan: any) => (
                       <div
@@ -337,7 +337,7 @@ export default async function EquipmentDetailPage({
             {(equipment as any).is_studio_space && (
               <Card className="bg-muted/30">
                 <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground mb-3 font-semibold uppercase tracking-wider">Studio Space Rental Pricing Plans</p>
+                  <p className="text-xs text-muted-foreground mb-3 font-semibold uppercase tracking-wider">Studio Pricing</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {studioPricingPlans.map((plan: any) => (
                       <div
