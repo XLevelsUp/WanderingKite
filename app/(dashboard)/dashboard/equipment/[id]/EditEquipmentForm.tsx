@@ -289,7 +289,7 @@ function MaintenanceHistoryTracker({
             </div>
             <div>
               <Label className="text-xs">Cost (₹)</Label>
-              <Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} placeholder="0" />
+              <Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} />
             </div>
             <div>
               <Label className="text-xs">Date</Label>
@@ -297,7 +297,7 @@ function MaintenanceHistoryTracker({
             </div>
             <div>
               <Label className="text-xs">Notes</Label>
-              <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional details..." />
+              <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
           </div>
           <Button type="button" size="sm" onClick={handleAdd} disabled={loading} className="w-full">
@@ -748,7 +748,6 @@ function EditEquipmentFormContent({
           id="edit-specs"
           name="specs"
           defaultValue={specsString}
-          placeholder="33MP, 4K 60fps, IBIS"
           disabled={isLoading}
         />
         <p className="text-xs text-muted-foreground">
@@ -763,7 +762,6 @@ function EditEquipmentFormContent({
           id="edit-description"
           name="description"
           defaultValue={equipment.description ?? ''}
-          placeholder="Additional details…"
           rows={3}
           disabled={isLoading}
         />

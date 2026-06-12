@@ -58,9 +58,10 @@ export default function ClientLoginForm() {
       });
 
       const data = await response.json();
-
       if (!response.ok) {
-        if (response.status === 401) {
+        if (response.status === 403 && data.error === 'deactivated') {
+          toast.error(data.message || "Your account has been deactivated. Please contact administration for assistance.", { id: toastId });
+        } else if (response.status === 401) {
           toast.error("The email or password you entered is incorrect. Please try again.", { id: toastId });
         } else {
           toast.error("Something went wrong on our end. Please try again in a moment.", { id: toastId });
@@ -97,9 +98,10 @@ export default function ClientLoginForm() {
           <div className="space-y-2">
             <Label htmlFor="email" className="text-slate-300">Email</Label>
             <Input
-              id="email"
+              id="login-email"
               type="email"
               placeholder="e.g. client@example.com"
+              autoComplete="email"
               {...register("email")}
               disabled={isLoading}
               className={errors.email ? "border-red-500 focus-visible:ring-red-500" : "border-slate-800 bg-slate-950/40 text-white"}
@@ -112,9 +114,10 @@ export default function ClientLoginForm() {
             <Label htmlFor="password" className="text-slate-300">Password</Label>
             <div className="relative">
               <Input
-                id="password"
+                id="login-password"
                 type={showPassword ? "text" : "password"}
                 placeholder="e.g. ••••••••"
+                autoComplete="current-password"
                 {...register("password")}
                 disabled={isLoading}
                 className={`w-full bg-slate-950/40 text-white border-slate-800 pr-10 ${

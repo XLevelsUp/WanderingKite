@@ -6,11 +6,20 @@ import { useNotifications } from "@/components/ui/useNotifications";
 import { signOut } from "next-auth/react";
 
 export default function ClientSignOutButton() {
-  const { showLoader } = useNotifications();
+  const { showModal, removeModal, showLoader } = useNotifications();
 
-  const handleSignOut = async () => {
-    showLoader("Signing out...");
-    await signOut({ callbackUrl: "/client/login" });
+  const handleSignOut = () => {
+    const modalId = showModal({
+      title: "Sign Out",
+      description: "Are you sure you want to sign out of your client account?",
+      confirmText: "Sign Out",
+      cancelText: "Cancel",
+      onCancel: () => removeModal(modalId),
+      onConfirm: () => {
+        showLoader("Signing out...");
+        signOut({ callbackUrl: "/client/login" });
+      },
+    });
   };
 
   return (

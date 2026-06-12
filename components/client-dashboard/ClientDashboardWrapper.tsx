@@ -102,9 +102,7 @@ export default function ClientDashboardWrapper({
               <div className="space-y-1">
                 <div className="text-slate-400 font-medium">Date of Birth</div>
                 <div className="text-white">
-                  {new Date(client.dateOfBirth).toLocaleDateString([], {
-                    dateStyle: 'medium',
-                  })}
+                  {formatDateStable(client.dateOfBirth)}
                 </div>
               </div>
             )}
@@ -200,3 +198,13 @@ export default function ClientDashboardWrapper({
     </div>
   );
 }
+
+const formatDateStable = (dateStr: string) => {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  const day = date.getDate();
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  return `${month} ${day}, ${year}`;
+};

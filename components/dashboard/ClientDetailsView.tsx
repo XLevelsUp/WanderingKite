@@ -170,6 +170,627 @@ export default function ClientDetailsView({
   const [agreementUrlInput, setAgreementUrlInput] = useState('');
   const [rentalError, setRentalError] = useState('');
 
+  // Booking Update Dialog State
+  const [isBookingUpdateOpen, setIsBookingUpdateOpen] = useState(false);
+  const [activeBookingId, setActiveBookingId] = useState<string | null>(null);
+  const [activeBookingType, setActiveBookingType] = useState<'PHOTOGRAPHY' | 'STUDIO' | null>(null);
+  const [updateStatus, setUpdateStatus] = useState<'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED'>('PENDING');
+  const [updateAmountPaid, setUpdateAmountPaid] = useState('');
+  const [updateAdvancePaid, setUpdateAdvancePaid] = useState('');
+  const [updateQuotationAmount, setUpdateQuotationAmount] = useState('');
+  const [updatePaymentStatus, setUpdatePaymentStatus] = useState<'COMPLETED' | 'PARTIALLY_COMPLETED' | 'PENDING'>('PARTIALLY_COMPLETED');
+  const [bookingUpdateError, setBookingUpdateError] = useState('');
+
+  const activeBooking = activeBookingType === 'PHOTOGRAPHY'
+    ? photographyBookings.find((b) => b.id === activeBookingId)
+    : studioBookings.find((b) => b.id === activeBookingId);
+
+  const pendingPhotography = photographyBookings.filter((b) => b.status === 'PENDING');
+  const confirmedPhotography = photographyBookings.filter((b) => b.status !== 'PENDING');
+
+  const pendingStudio = studioBookings.filter((b) => b.status === 'PENDING');
+  const confirmedStudio = studioBookings.filter((b) => b.status !== 'PENDING');
+
+  const pendingRentals = rentalBookings.filter((b) => b.status === 'PENDING');
+  const confirmedRentals = rentalBookings.filter((b) => b.status !== 'PENDING');
+
+  const renderPhotographyBookingItem = (booking: any) => {
+    const { userNotes, metadata } = parseNotesMetadata(booking.notes);
+    
+    return (
+      <div
+        key={booking.id}
+        className="p-3.5 bg-slate-950/60 border border-slate-850 hover:border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-start justify-between gap-4 transition-all duration-200 text-xs w-full"
+      >
+        <div className="space-y-1 w-full sm:max-w-[70%]">
+          <div className="font-semibold text-white">
+            {formatDateTime12h(booking.dateTime)}
+          </div>
+          <div className="text-slate-400">
+            Type: <span className="text-slate-200">{booking.sessionType}</span> | Location:{' '}
+            <span className="text-slate-200">{booking.location}</span>
+          </div>
+          {userNotes && <div className="text-[10px] text-slate-500 italic max-w-sm">"{userNotes}"</div>}
+          
+          {/* Payment & Quotation details: Visible only to Super Admin */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-1.5 text-[11px] text-slate-450 bg-slate-900/40 p-2 rounded-lg border border-slate-850/50 w-full sm:w-fit">
+            {metadata.quotationAmount !== undefined && (
+              <span>Quotation: <span className="font-semibold text-white">₹{metadata.quotationAmount}</span></span>
+            )}
+            {booking.advancePaid !== undefined && Number(booking.advancePaid) > 0 && (
+              <span>Advance Recd: <span className="font-semibold text-slate-300">₹{booking.advancePaid}</span></span>
+            )}
+            <span>Total Paid: <span className="font-semibold text-slate-300">₹{booking.amountPaid || 0}</span></span>
+            
+            {/* Outstanding Balance */}
+            {metadata.quotationAmount !== undefined && (
+              <span className="font-medium">
+                Balance:{' '}
+                <span className={Number(metadata.quotationAmount) - Number(booking.amountPaid || 0) > 0 ? 'text-amber-500 font-bold' : 'text-emerald-500'}>
+                  ₹{Math.max(0, Number(metadata.quotationAmount) - Number(booking.amountPaid || 0))}
+                </span>
+              </span>
+            )}
+
+            {metadata.paymentStatus && (
+              <Badge className={`py-0.5 px-1.5 text-[9px] uppercase font-bold rounded ${
+                booking.status === 'CANCELLED' && (Number(booking.advancePaid || 0) > 0 || Number(booking.amountPaid || 0) > 0)
+                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                  : metadata.paymentStatus === 'COMPLETED'
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                  : metadata.paymentStatus === 'PENDING'
+                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+              }`}>
+                {booking.status === 'CANCELLED' && (Number(booking.advancePaid || 0) > 0 || Number(booking.amountPaid || 0) > 0)
+                  ? 'Cancelled (Retained Advance)'
+                  : metadata.paymentStatus === 'COMPLETED'
+                  ? 'Paid Fully'
+                  : metadata.paymentStatus === 'PENDING'
+                  ? 'Payment Pending'
+                  : 'Partial'}
+              </Badge>
+            )}
+          </div>
+
+          {booking.album && (
+            <div className="pt-1.5 flex items-center gap-1.5">
+              <FileText className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+              <a
+                href={booking.album.downloadLink || ''}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-500 hover:text-amber-400 font-semibold inline-flex items-center gap-0.5"
+              >
+                Album: {booking.album.name}
+                <ExternalLink className="h-2.5 w-2.5" />
+              </a>
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2.5 shrink-0 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-850/50 w-full sm:w-auto">
+          <div>
+            {booking.status === 'PENDING' && (
+              <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px]">
+                Pending
+              </Badge>
+            )}
+            {booking.status === 'CONFIRMED' && (
+              <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-[10px]">
+                Confirmed
+              </Badge>
+            )}
+            {booking.status === 'COMPLETED' && (
+              <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px]">
+                Completed & Delivered
+              </Badge>
+            )}
+            {booking.status === 'CANCELLED' && (
+              <Badge className="bg-slate-800 text-slate-450 border border-slate-700 px-2 py-0.5 rounded text-[10px]">
+                Cancelled
+              </Badge>
+            )}
+          </div>
+
+          {booking.status !== 'CANCELLED' && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="border-slate-800 hover:bg-slate-900 text-[10px] h-6 py-0.5 px-2 rounded">
+                  Update
+                  <ChevronDown className="h-3 w-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-slate-950 border border-slate-855 text-white text-xs">
+                {booking.status !== 'COMPLETED' ? (
+                  <>
+                    {booking.status === 'PENDING' && (
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setActiveBookingId(booking.id);
+                          setActiveBookingType('PHOTOGRAPHY');
+                          setUpdateStatus('CONFIRMED');
+                          
+                          const { metadata: meta } = parseNotesMetadata(booking.notes);
+                          setUpdateQuotationAmount(String(meta.quotationAmount || ''));
+                          setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                          setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                          setUpdateAdvancePaid(String(booking.advancePaid || '0'));
+                          setBookingUpdateError('');
+                          setIsBookingUpdateOpen(true);
+                        }}
+                      >
+                        Confirm & Collect Advance
+                      </DropdownMenuItem>
+                    )}
+                    {booking.status === 'CONFIRMED' && (
+                      <>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setActiveBookingId(booking.id);
+                            setActiveBookingType('PHOTOGRAPHY');
+                            setUpdateStatus('CONFIRMED');
+                            const { metadata: meta } = parseNotesMetadata(booking.notes);
+                            setUpdateQuotationAmount(String(meta.quotationAmount || ''));
+                            setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                            setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                            setUpdateAdvancePaid(String(booking.advancePaid || '0'));
+                            setBookingUpdateError('');
+                            setIsBookingUpdateOpen(true);
+                          }}
+                        >
+                          Update Payments
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setActivePhotoBookingId(booking.id);
+                            const { metadata: meta } = parseNotesMetadata(booking.notes);
+                            setUpdateQuotationAmount(String(meta.quotationAmount || ''));
+                            setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                            setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                            setUpdateAdvancePaid(String(booking.advancePaid || '0'));
+                            setAlbumName(booking.album?.name || '');
+                            setAlbumLink(booking.album?.downloadLink || '');
+                            setPhotoError('');
+                            setIsPhotoCompleteOpen(true);
+                          }}
+                        >
+                          Mark Completed (Deliver Album)
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setActiveBookingId(booking.id);
+                        setActiveBookingType('PHOTOGRAPHY');
+                        setUpdateStatus('CANCELLED');
+                        
+                        const { metadata: meta } = parseNotesMetadata(booking.notes);
+                        setUpdateQuotationAmount(String(meta.quotationAmount || ''));
+                        setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                        setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                        setUpdateAdvancePaid(String(booking.advancePaid || '0'));
+                        setBookingUpdateError('');
+                        setIsBookingUpdateOpen(true);
+                      }}
+                      className="text-rose-400 hover:bg-rose-500/10"
+                    >
+                      Cancel Session
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setActiveBookingId(booking.id);
+                      setActiveBookingType('PHOTOGRAPHY');
+                      setUpdateStatus('COMPLETED');
+                      
+                      const { metadata: meta } = parseNotesMetadata(booking.notes);
+                      setUpdateQuotationAmount(String(meta.quotationAmount || ''));
+                      setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                      setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                      setUpdateAdvancePaid(String(booking.advancePaid || '0'));
+                      setBookingUpdateError('');
+                      setIsBookingUpdateOpen(true);
+                    }}
+                  >
+                    Update Payments
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderStudioBookingItem = (booking: any) => {
+    const { userNotes, metadata } = parseNotesMetadata(booking.notes);
+
+    return (
+      <div
+        key={booking.id}
+        className="p-3.5 bg-slate-950/60 border border-slate-850 hover:border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-start justify-between gap-4 transition-all duration-200 text-xs w-full"
+      >
+        <div className="space-y-1 w-full sm:max-w-[70%]">
+          <div className="font-semibold text-white">
+            {formatDateTime12h(booking.dateTime)} ({booking.durationHours} hrs)
+          </div>
+          <div className="text-slate-400">
+            Purpose: <span className="text-slate-200">{booking.purpose}</span>
+          </div>
+          <div className="flex flex-wrap gap-1 pt-1">
+            {booking.equipments.map((eq: any) => (
+              <span
+                key={eq.id}
+                className="bg-slate-900 text-slate-355 border border-slate-800 px-1.5 py-0.5 rounded text-[9px] uppercase font-semibold shrink-0"
+              >
+                {eq.name}
+              </span>
+            ))}
+          </div>
+          {userNotes && <div className="text-[10px] text-slate-500 italic max-w-sm">"{userNotes}"</div>}
+
+          {/* Payment & Quotation details: Visible only to Super Admin */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 text-[11px] text-slate-450 bg-slate-900/40 p-2 rounded-lg border border-slate-850/50 w-full sm:w-fit">
+            {metadata.quotationAmount !== undefined && (
+              <span>Quotation: <span className="font-semibold text-white">₹{metadata.quotationAmount}</span></span>
+            )}
+            {metadata.advancePaid !== undefined && Number(metadata.advancePaid) > 0 && (
+              <span>Advance Recd: <span className="font-semibold text-slate-300">₹{metadata.advancePaid}</span></span>
+            )}
+            <span>Total Paid: <span className="font-semibold text-slate-300">₹{booking.amountPaid || 0}</span></span>
+            
+            {/* Outstanding Balance */}
+            {metadata.quotationAmount !== undefined && (
+              <span className="font-medium">
+                Balance:{' '}
+                <span className={Number(metadata.quotationAmount) - Number(booking.amountPaid || 0) > 0 ? 'text-amber-500 font-bold' : 'text-emerald-500'}>
+                  ₹{Math.max(0, Number(metadata.quotationAmount) - Number(booking.amountPaid || 0))}
+                </span>
+              </span>
+            )}
+
+            {metadata.paymentStatus && (
+              <Badge className={`py-0.5 px-1.5 text-[9px] uppercase font-bold rounded ${
+                booking.status === 'CANCELLED' && (Number(metadata.advancePaid || 0) > 0 || Number(booking.amountPaid || 0) > 0)
+                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                  : metadata.paymentStatus === 'COMPLETED'
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                  : metadata.paymentStatus === 'PENDING'
+                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+              }`}>
+                {booking.status === 'CANCELLED' && (Number(metadata.advancePaid || 0) > 0 || Number(booking.amountPaid || 0) > 0)
+                  ? 'Cancelled (Retained Advance)'
+                  : metadata.paymentStatus === 'COMPLETED'
+                  ? 'Paid Fully'
+                  : metadata.paymentStatus === 'PENDING'
+                  ? 'Payment Pending'
+                  : 'Partial'}
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2.5 shrink-0 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-850/50 w-full sm:w-auto">
+          <div>
+            {booking.status === 'PENDING' && (
+              <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px]">
+                Pending
+              </Badge>
+            )}
+            {booking.status === 'CONFIRMED' && (
+              <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-[10px]">
+                Confirmed
+              </Badge>
+            )}
+            {booking.status === 'COMPLETED' && (
+              <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px]">
+                Completed & Delivered
+              </Badge>
+            )}
+            {booking.status === 'CANCELLED' && (
+              <Badge className="bg-slate-800 text-slate-450 border border-slate-700 px-2 py-0.5 rounded text-[10px]">
+                Cancelled
+              </Badge>
+            )}
+          </div>
+
+          {booking.status !== 'CANCELLED' && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="border-slate-800 hover:bg-slate-900 text-[10px] h-6 py-0.5 px-2 rounded">
+                  Update
+                  <ChevronDown className="h-3 w-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-slate-950 border border-slate-855 text-white text-xs">
+                {booking.status !== 'COMPLETED' ? (
+                  <>
+                    {booking.status === 'PENDING' && (
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setActiveBookingId(booking.id);
+                          setActiveBookingType('STUDIO');
+                          setUpdateStatus('CONFIRMED');
+                          
+                          const { metadata: meta } = parseNotesMetadata(booking.notes);
+                          setUpdateQuotationAmount(String(meta.quotationAmount || ''));
+                          setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                          setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                          setUpdateAdvancePaid(String(meta.advancePaid || '0'));
+                          setBookingUpdateError('');
+                          setIsBookingUpdateOpen(true);
+                        }}
+                      >
+                        Confirm & Collect Advance
+                      </DropdownMenuItem>
+                    )}
+                    {booking.status === 'CONFIRMED' && (
+                      <>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setActiveBookingId(booking.id);
+                            setActiveBookingType('STUDIO');
+                            setUpdateStatus('CONFIRMED');
+                            const { metadata: meta } = parseNotesMetadata(booking.notes);
+                            setUpdateQuotationAmount(String(meta.quotationAmount || ''));
+                            setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                            setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                            setUpdateAdvancePaid(String(meta.advancePaid || '0'));
+                            setBookingUpdateError('');
+                            setIsBookingUpdateOpen(true);
+                          }}
+                        >
+                          Update Payments
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setActiveBookingId(booking.id);
+                            setActiveBookingType('STUDIO');
+                            setUpdateStatus('COMPLETED');
+                            const { metadata: meta } = parseNotesMetadata(booking.notes);
+                            setUpdateQuotationAmount(String(meta.quotationAmount || ''));
+                            setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                            setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                            setUpdateAdvancePaid(String(meta.advancePaid || '0'));
+                            setBookingUpdateError('');
+                            setIsBookingUpdateOpen(true);
+                          }}
+                        >
+                          Mark Completed
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setActiveBookingId(booking.id);
+                        setActiveBookingType('STUDIO');
+                        setUpdateStatus('CANCELLED');
+                        
+                        const { metadata: meta } = parseNotesMetadata(booking.notes);
+                        setUpdateQuotationAmount(String(meta.quotationAmount || ''));
+                        setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                        setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                        setUpdateAdvancePaid(String(meta.advancePaid || '0'));
+                        setBookingUpdateError('');
+                        setIsBookingUpdateOpen(true);
+                      }}
+                      className="text-rose-400 hover:bg-rose-500/10"
+                    >
+                      Cancel Booking
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setActiveBookingId(booking.id);
+                      setActiveBookingType('STUDIO');
+                      setUpdateStatus('COMPLETED');
+                      
+                      const { metadata: meta } = parseNotesMetadata(booking.notes);
+                      setUpdateQuotationAmount(String(meta.quotationAmount || ''));
+                      setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                      setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                      setUpdateAdvancePaid(String(meta.advancePaid || '0'));
+                      setBookingUpdateError('');
+                      setIsBookingUpdateOpen(true);
+                    }}
+                  >
+                    Update Payments
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderRentalBookingItem = (booking: any) => {
+    const idNotVerified = !idProof || idProof.status !== 'VERIFIED';
+    return (
+      <div
+        key={booking.id}
+        className="p-3.5 bg-slate-950/60 border border-slate-850 rounded-xl flex flex-col sm:flex-row sm:items-start justify-between gap-4 text-xs w-full"
+      >
+        <div className="space-y-1 w-full sm:max-w-[70%]">
+          <div className="font-semibold text-white">
+            Out: {formatDateTime12h(booking.startDate)}
+          </div>
+          <div className="text-slate-400">
+            In: {formatDateTime12h(booking.endDate)}
+          </div>
+          <div className="flex flex-wrap gap-1 pt-1">
+            {booking.equipments.map((eq: any) => (
+              <span
+                key={eq.id}
+                className="bg-slate-900 text-slate-355 border border-slate-800 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold shrink-0"
+              >
+                {eq.name}
+              </span>
+            ))}
+          </div>
+          {booking.purpose && (
+            <div className="text-slate-400 pt-0.5">
+              Purpose: <span className="text-slate-200">{booking.purpose}</span>
+            </div>
+          )}
+          {booking.pickupCondition && (
+            <div className="text-[10px] text-slate-400 mt-1">
+              Condition: Out = <span className="text-slate-300">{booking.pickupCondition}</span>
+              {booking.returnCondition && (
+                <>
+                  , In = <span className={booking.status === 'DAMAGED' ? 'text-rose-400 font-bold' : 'text-slate-300'}>{booking.returnCondition}</span>
+                </>
+              )}
+            </div>
+          )}
+          {booking.returnedAt && (
+            <div className="text-[10px] text-slate-450 mt-0.5">
+              Returned at: <span className="text-slate-300">{formatDateTime12h(booking.returnedAt)}</span>
+            </div>
+          )}
+          {booking.status === 'DAMAGED' && (
+            <div className="text-[10px] text-rose-400 font-medium">
+              Damage assessment charge: ₹{booking.damageCost} ({booking.damageDescription})
+            </div>
+          )}
+          {booking.agreementUrl && (
+            <div className="pt-1 flex items-center gap-1.5">
+              <FileText className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+              <a
+                href={booking.agreementUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-500 hover:text-amber-400 font-semibold inline-flex items-center gap-0.5 text-[10px]"
+              >
+                Signed Agreement File
+                <ExternalLink className="h-2.5 w-2.5" />
+              </a>
+            </div>
+          )}
+          {/* ID Verification indicator for PENDING/unconfirmed rentals */}
+          {booking.status === 'PENDING' && idNotVerified && (
+            <div className="mt-2 flex items-center gap-1.5 p-2 rounded-lg bg-amber-500/5 border border-amber-500/15">
+              <Shield className="h-3 w-3 text-amber-500 shrink-0" />
+              <span className="text-[10px] text-amber-400 font-medium">
+                {!idProof ? 'No ID uploaded — verify before confirming.' : 'ID under review — verify before confirming.'}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2.5 shrink-0 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-850/50 w-full sm:w-auto">
+          {/* ID proof badge */}
+          {booking.status === 'PENDING' && (
+            <div>
+              {!idProof && (
+                <Badge className="bg-slate-800 text-slate-450 border border-slate-700 px-2 py-0.5 rounded text-[9px] flex items-center gap-1">
+                  <Shield className="h-2.5 w-2.5" /> No ID
+                </Badge>
+              )}
+              {idProof?.status === 'PENDING' && (
+                <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[9px] flex items-center gap-1">
+                  <Shield className="h-2.5 w-2.5" /> ID Pending
+                </Badge>
+              )}
+              {idProof?.status === 'VERIFIED' && (
+                <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[9px] flex items-center gap-1">
+                  <Shield className="h-2.5 w-2.5" /> ID Verified
+                </Badge>
+              )}
+              {idProof?.status === 'REJECTED' && (
+                <Badge className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded text-[9px] flex items-center gap-1">
+                  <Shield className="h-2.5 w-2.5" /> ID Rejected
+                </Badge>
+              )}
+            </div>
+          )}
+
+          <div>
+            {booking.status === 'PENDING' && (
+              <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px]">
+                Pending Review
+              </Badge>
+            )}
+            {booking.status === 'CONFIRMED' && (
+              <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-[10px]">
+                Leased Out
+              </Badge>
+            )}
+            {booking.status === 'RETURNED' && (
+              <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px]">
+                Returned
+              </Badge>
+            )}
+            {booking.status === 'DAMAGED' && (
+              <Badge className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded text-[10px]">
+                Damaged
+              </Badge>
+            )}
+            {booking.status === 'CANCELLED' && (
+              <Badge className="bg-slate-800 text-slate-450 border border-slate-700 px-2 py-0.5 rounded text-[10px]">
+                Cancelled
+              </Badge>
+            )}
+          </div>
+
+          {booking.status !== 'RETURNED' && booking.status !== 'DAMAGED' && booking.status !== 'CANCELLED' && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="border-slate-800 hover:bg-slate-900 text-[10px] h-6 py-0.5 px-2 rounded">
+                  Update
+                  <ChevronDown className="h-3 w-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-slate-950 border border-slate-850 text-white text-xs">
+                {booking.status === 'PENDING' && (
+                  <DropdownMenuItem
+                    onClick={() => handleConfirmRental(booking.id)}
+                    disabled={idNotVerified}
+                    className={idNotVerified ? 'opacity-50 cursor-not-allowed' : ''}
+                    title={idNotVerified ? 'Verify client ID before confirming rental' : undefined}
+                  >
+                    <Shield className={`h-3 w-3 mr-1.5 ${idNotVerified ? 'text-amber-400' : 'text-emerald-400'}`} />
+                    {idNotVerified ? 'ID Not Verified — Cannot Confirm' : 'Mark Picked Up (Confirm)'}
+                  </DropdownMenuItem>
+                )}
+                {booking.status === 'CONFIRMED' && (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setActiveRentalBooking(booking);
+                        setRentalStatus('RETURNED');
+                        setIsRentalUpdateOpen(true);
+                      }}
+                    >
+                      Mark Returned
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setActiveRentalBooking(booking);
+                        setRentalStatus('DAMAGED');
+                        setIsRentalUpdateOpen(true);
+                      }}
+                      className="text-rose-400 hover:bg-rose-500/10"
+                    >
+                      Mark Returned Damaged
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+
   // Account Toggle
   const handleToggleAccount = async () => {
     const nextActiveState = !client.isActive;
@@ -243,7 +864,10 @@ export default function ClientDetailsView({
         body: JSON.stringify({ bookingType, bookingId, status }),
       });
 
-      if (!res.ok) throw new Error('Booking status update failed');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Booking status update failed');
+      }
       
       toast.success(`Booking status set to ${status}.`);
       
@@ -257,9 +881,102 @@ export default function ClientDetailsView({
         );
       }
       router.refresh();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error('Could not update booking status.');
+      toast.error(error.message || 'Could not update booking status.');
+    } finally {
+      hideLoader();
+    }
+  };
+
+  // Handle Booking Update & Payments Submit
+  const handleBookingUpdateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBookingUpdateError('');
+
+    if (!activeBookingId || !activeBookingType) return;
+
+    const parsedQuotation = updateQuotationAmount === '' ? 0 : Number(updateQuotationAmount);
+    const parsedAdvance = updateAdvancePaid === '' ? 0 : Number(updateAdvancePaid);
+    let parsedAmount = updateAmountPaid === '' ? 0 : Number(updateAmountPaid);
+
+    if (isNaN(parsedQuotation) || isNaN(parsedAdvance) || isNaN(parsedAmount)) {
+      setBookingUpdateError('Please enter valid numeric amounts.');
+      return;
+    }
+
+    // Determine amountPaid based on the booking's ORIGINAL status (before admin action)
+    // activeBooking?.status reflects the pre-action state from local state arrays
+    let finalPaymentStatus = updatePaymentStatus;
+    if (activeBooking?.status === 'PENDING') {
+      // Initial confirmation (PENDING → CONFIRMED): paid amount = advance collected now
+      parsedAmount = parsedAdvance;
+      finalPaymentStatus = 'PARTIALLY_COMPLETED';
+    } else if (updatePaymentStatus === 'COMPLETED') {
+      // Admin selected "Fully Paid" — set total to quotation
+      parsedAmount = parsedQuotation;
+    }
+    // For CONFIRMED or COMPLETED "Update Payments", use the admin's entered amount as-is
+
+    showLoader('Updating booking details...');
+    try {
+      const res = await fetch('/api/admin/bookings/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingType: activeBookingType,
+          bookingId: activeBookingId,
+          status: updateStatus,
+          amountPaid: parsedAmount,
+          advancePaid: parsedAdvance,
+          quotationAmount: parsedQuotation,
+          paymentStatus: finalPaymentStatus,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Booking update failed');
+      }
+
+      const resData = await res.json();
+      const updatedBooking = resData.booking;
+
+      toast.success('Booking updated successfully.');
+      setIsBookingUpdateOpen(false);
+
+      if (activeBookingType === 'PHOTOGRAPHY') {
+        setPhotographyBookings((prev) =>
+          prev.map((b) =>
+            b.id === activeBookingId
+              ? {
+                  ...b,
+                  status: updateStatus,
+                  amountPaid: parsedAmount,
+                  advancePaid: parsedAdvance,
+                  notes: updatedBooking?.notes || b.notes
+                }
+              : b
+          )
+        );
+      } else {
+        setStudioBookings((prev) =>
+          prev.map((b) =>
+            b.id === activeBookingId
+              ? {
+                  ...b,
+                  status: updateStatus,
+                  amountPaid: parsedAmount,
+                  notes: updatedBooking?.notes || b.notes
+                }
+              : b
+          )
+        );
+      }
+      router.refresh();
+    } catch (error: any) {
+      console.error(error);
+      setBookingUpdateError(error.message || 'Could not update booking.');
     } finally {
       hideLoader();
     }
@@ -275,6 +992,20 @@ export default function ClientDetailsView({
       return;
     }
 
+    const parsedQuotation = updateQuotationAmount === '' ? 0 : Number(updateQuotationAmount);
+    const parsedAdvance = updateAdvancePaid === '' ? 0 : Number(updateAdvancePaid);
+    let parsedAmount = updateAmountPaid === '' ? 0 : Number(updateAmountPaid);
+
+    if (isNaN(parsedQuotation) || isNaN(parsedAdvance) || isNaN(parsedAmount)) {
+      setPhotoError('Please enter valid numeric amounts.');
+      return;
+    }
+
+    let finalPaymentStatus = updatePaymentStatus;
+    if (updatePaymentStatus === 'COMPLETED') {
+      parsedAmount = parsedQuotation; // Fully Paid: amountPaid is set to quotation
+    }
+
     showLoader('Completing shoot & delivering album...');
     try {
       const res = await fetch('/api/admin/bookings/update', {
@@ -286,11 +1017,16 @@ export default function ClientDetailsView({
           status: 'COMPLETED',
           albumName,
           downloadLink: albumLink || null,
+          amountPaid: parsedAmount,
+          advancePaid: parsedAdvance,
+          quotationAmount: parsedQuotation,
+          paymentStatus: finalPaymentStatus,
         }),
       });
 
       if (!res.ok) throw new Error('Failed to complete photography booking');
       const data = await res.json();
+      const updatedBooking = data.booking;
 
       toast.success('Shoot marked as completed and album link delivered!');
       setIsPhotoCompleteOpen(false);
@@ -303,6 +1039,9 @@ export default function ClientDetailsView({
             ? {
                 ...b,
                 status: 'COMPLETED',
+                amountPaid: parsedAmount,
+                advancePaid: parsedAdvance,
+                notes: updatedBooking?.notes || b.notes,
                 album: {
                   id: '',
                   name: albumName,
@@ -430,7 +1169,7 @@ export default function ClientDetailsView({
           <h1 className="text-3xl font-bold tracking-tight">{clientName}</h1>
           <p className="text-slate-400 mt-2 flex items-center gap-1.5 text-sm">
             <User className="h-4 w-4 text-amber-500" />
-            Registered client since {new Date(client.createdAt).toLocaleDateString()}
+            Registered client since {formatDateStable(client.createdAt)}
           </p>
         </div>
 
@@ -482,6 +1221,18 @@ export default function ClientDetailsView({
                 <div className="flex items-start gap-3">
                   <MapPin className="h-4.5 w-4.5 text-slate-500 shrink-0 mt-0.5" />
                   <span>{client.address}</span>
+                </div>
+              )}
+              {client.dateOfBirth && (
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-4.5 w-4.5 text-slate-500 shrink-0" />
+                  <span>DOB: {formatDateStable(client.dateOfBirth)}</span>
+                </div>
+              )}
+              {client.gender && (
+                <div className="flex items-center gap-3">
+                  <User className="h-4.5 w-4.5 text-slate-500 shrink-0" />
+                  <span className="capitalize">Gender: {client.gender.toLowerCase()}</span>
                 </div>
               )}
               <div className="pt-2 border-t border-slate-800">
@@ -627,94 +1378,27 @@ export default function ClientDetailsView({
               {photographyBookings.length === 0 ? (
                 <p className="text-xs text-slate-500 italic py-2">No photo session logs.</p>
               ) : (
-                <div className="space-y-3.5 max-h-[300px] overflow-y-auto pr-1">
-                  {photographyBookings.map((booking) => (
-                    <div
-                      key={booking.id}
-                      className="p-3.5 bg-slate-950/60 border border-slate-850 hover:border-slate-800 rounded-xl flex items-start justify-between gap-4 transition-all duration-200"
-                    >
-                      <div className="space-y-1 text-xs">
-                        <div className="font-semibold text-white">
-                          {new Date(booking.dateTime).toLocaleString([], {
-                            dateStyle: 'medium',
-                            timeStyle: 'short',
-                          })}
-                        </div>
-                        <div className="text-slate-400">
-                          Type: <span className="text-slate-200">{booking.sessionType}</span> | Location:{' '}
-                          <span className="text-slate-200">{booking.location}</span>
-                        </div>
-                        {booking.notes && <div className="text-[10px] text-slate-500 italic max-w-sm">"{booking.notes}"</div>}
-                        {booking.album && (
-                          <div className="pt-1.5 flex items-center gap-1.5">
-                            <FileText className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-                            <a
-                              href={booking.album.downloadLink || ''}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-amber-500 hover:text-amber-400 font-semibold inline-flex items-center gap-0.5"
-                            >
-                              Album: {booking.album.name}
-                              <ExternalLink className="h-2.5 w-2.5" />
-                            </a>
-                          </div>
-                        )}
+                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                  {pendingPhotography.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/5 px-2.5 py-1 rounded border border-amber-500/10">
+                        Booking Requests (Pending Approval)
                       </div>
-
-                      <div className="flex flex-col items-end gap-2.5 shrink-0">
-                        {booking.status === 'PENDING' && (
-                          <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px]">
-                            Pending
-                          </Badge>
-                        )}
-                        {booking.status === 'CONFIRMED' && (
-                          <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-[10px]">
-                            Confirmed
-                          </Badge>
-                        )}
-                        {booking.status === 'COMPLETED' && (
-                          <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px]">
-                            Completed
-                          </Badge>
-                        )}
-                        {booking.status === 'CANCELLED' && (
-                          <Badge className="bg-slate-800 text-slate-450 border border-slate-700 px-2 py-0.5 rounded text-[10px]">
-                            Cancelled
-                          </Badge>
-                        )}
-
-                        {/* Dropdown status update */}
-                        {booking.status !== 'COMPLETED' && booking.status !== 'CANCELLED' && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm" className="border-slate-800 hover:bg-slate-900 text-[10px] h-6 py-0.5 px-2 rounded">
-                                Update
-                                <ChevronDown className="h-3 w-3 ml-1" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="bg-slate-950 border border-slate-850 text-white text-xs">
-                              {booking.status === 'PENDING' && (
-                                <DropdownMenuItem onClick={() => handleUpdateBookingStatus('PHOTOGRAPHY', booking.id, 'CONFIRMED')}>
-                                  Confirm Shoot
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setActivePhotoBookingId(booking.id);
-                                  setIsPhotoCompleteOpen(true);
-                                }}
-                              >
-                                Mark Completed (Deliver Album)
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleUpdateBookingStatus('PHOTOGRAPHY', booking.id, 'CANCELLED')} className="text-rose-400 hover:bg-rose-500/10">
-                                Cancel Session
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
+                      <div className="space-y-2">
+                        {pendingPhotography.map((booking) => renderPhotographyBookingItem(booking))}
                       </div>
                     </div>
-                  ))}
+                  )}
+                  {confirmedPhotography.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-500 bg-emerald-500/5 px-2.5 py-1 rounded border border-emerald-500/10">
+                        Confirmed Bookings
+                      </div>
+                      <div className="space-y-2">
+                        {confirmedPhotography.map((booking) => renderPhotographyBookingItem(booking))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -732,125 +1416,27 @@ export default function ClientDetailsView({
               {rentalBookings.length === 0 ? (
                 <p className="text-xs text-slate-500 italic py-2">No equipment lease logs.</p>
               ) : (
-                <div className="space-y-3.5 max-h-[300px] overflow-y-auto pr-1">
-                  {rentalBookings.map((booking) => (
-                    <div
-                      key={booking.id}
-                      className="p-3.5 bg-slate-950/60 border border-slate-850 rounded-xl flex items-start justify-between gap-4"
-                    >
-                      <div className="space-y-1 text-xs">
-                        <div className="font-semibold text-white">
-                          Out: {new Date(booking.startDate).toLocaleDateString()} | In:{' '}
-                          {new Date(booking.endDate).toLocaleDateString()}
-                        </div>
-                        <div className="flex flex-wrap gap-1 pt-1">
-                          {booking.equipments.map((eq) => (
-                            <span
-                              key={eq.id}
-                              className="bg-slate-900 text-slate-350 border border-slate-800 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold"
-                            >
-                              {eq.name}
-                            </span>
-                          ))}
-                        </div>
-                        {booking.pickupCondition && (
-                          <div className="text-[10px] text-slate-400 mt-1">
-                            Condition: Out = <span className="text-slate-300">{booking.pickupCondition}</span>
-                            {booking.returnCondition && (
-                              <>
-                                , In = <span className={booking.status === 'DAMAGED' ? 'text-rose-400 font-bold' : 'text-slate-300'}>{booking.returnCondition}</span>
-                              </>
-                            )}
-                          </div>
-                        )}
-                        {booking.status === 'DAMAGED' && (
-                          <div className="text-[10px] text-rose-400 font-medium">
-                            Damage assessment charge: ₹{booking.damageCost} ({booking.damageDescription})
-                          </div>
-                        )}
-                        {booking.agreementUrl && (
-                          <div className="pt-1 flex items-center gap-1.5">
-                            <FileText className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-                            <a
-                              href={booking.agreementUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-amber-500 hover:text-amber-400 font-semibold inline-flex items-center gap-0.5 text-[10px]"
-                            >
-                              Signed Agreement File
-                              <ExternalLink className="h-2.5 w-2.5" />
-                            </a>
-                          </div>
-                        )}
+                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                  {pendingRentals.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/5 px-2.5 py-1 rounded border border-amber-500/10">
+                        Booking Requests (Pending Approval)
                       </div>
-
-                      <div className="flex flex-col items-end gap-2.5 shrink-0">
-                        {booking.status === 'PENDING' && (
-                          <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px]">
-                            Pending Review
-                          </Badge>
-                        )}
-                        {booking.status === 'CONFIRMED' && (
-                          <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-[10px]">
-                            Leased Out
-                          </Badge>
-                        )}
-                        {booking.status === 'RETURNED' && (
-                          <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px]">
-                            Returned
-                          </Badge>
-                        )}
-                        {booking.status === 'DAMAGED' && (
-                          <Badge className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded text-[10px]">
-                            Damaged
-                          </Badge>
-                        )}
-                        {booking.status === 'CANCELLED' && (
-                          <Badge className="bg-slate-800 text-slate-450 border border-slate-700 px-2 py-0.5 rounded text-[10px]">
-                            Cancelled
-                          </Badge>
-                        )}
-
-                        {/* Return/Damage updating */}
-                        {booking.status !== 'RETURNED' && booking.status !== 'DAMAGED' && booking.status !== 'CANCELLED' && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm" className="border-slate-800 hover:bg-slate-900 text-[10px] h-6 py-0.5 px-2 rounded">
-                                Update
-                                <ChevronDown className="h-3 w-3 ml-1" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="bg-slate-950 border border-slate-850 text-white text-xs">
-                              {booking.status === 'PENDING' && (
-                                <DropdownMenuItem onClick={() => handleConfirmRental(booking.id)}>
-                                  Mark Picked Up (Confirm)
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setActiveRentalBooking(booking);
-                                  setRentalStatus('RETURNED');
-                                  setIsRentalUpdateOpen(true);
-                                }}
-                              >
-                                Mark Returned
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setActiveRentalBooking(booking);
-                                  setRentalStatus('DAMAGED');
-                                  setIsRentalUpdateOpen(true);
-                                }}
-                                className="text-rose-400 hover:bg-rose-500/10"
-                              >
-                                Mark Returned Damaged
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
+                      <div className="space-y-2">
+                        {pendingRentals.map((booking) => renderRentalBookingItem(booking))}
                       </div>
                     </div>
-                  ))}
+                  )}
+                  {confirmedRentals.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-500 bg-emerald-500/5 px-2.5 py-1 rounded border border-emerald-500/10">
+                        Confirmed Bookings
+                      </div>
+                      <div className="space-y-2">
+                        {confirmedRentals.map((booking) => renderRentalBookingItem(booking))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -868,85 +1454,27 @@ export default function ClientDetailsView({
               {studioBookings.length === 0 ? (
                 <p className="text-xs text-slate-500 italic py-2">No studio space logs.</p>
               ) : (
-                <div className="space-y-3.5 max-h-[300px] overflow-y-auto pr-1">
-                  {studioBookings.map((booking) => (
-                    <div
-                      key={booking.id}
-                      className="p-3.5 bg-slate-950/60 border border-slate-850 rounded-xl flex items-start justify-between gap-4"
-                    >
-                      <div className="space-y-1 text-xs">
-                        <div className="font-semibold text-white">
-                          {new Date(booking.dateTime).toLocaleString([], {
-                            dateStyle: 'medium',
-                            timeStyle: 'short',
-                          })}{' '}
-                          ({booking.durationHours} hrs)
-                        </div>
-                        <div className="text-slate-400">
-                          Purpose: <span className="text-slate-200">{booking.purpose}</span>
-                        </div>
-                        <div className="flex flex-wrap gap-1 pt-1">
-                          {booking.equipments.map((eq) => (
-                            <span
-                              key={eq.id}
-                              className="bg-slate-900 text-slate-350 border border-slate-800 px-1.5 py-0.5 rounded text-[9px]"
-                            >
-                              {eq.name}
-                            </span>
-                          ))}
-                        </div>
-                        {booking.notes && <div className="text-[10px] text-slate-500 italic">"{booking.notes}"</div>}
+                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                  {pendingStudio.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/5 px-2.5 py-1 rounded border border-amber-500/10">
+                        Booking Requests (Pending Approval)
                       </div>
-
-                      <div className="flex flex-col items-end gap-2.5 shrink-0">
-                        {booking.status === 'PENDING' && (
-                          <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px]">
-                            Pending
-                          </Badge>
-                        )}
-                        {booking.status === 'CONFIRMED' && (
-                          <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-[10px]">
-                            Confirmed
-                          </Badge>
-                        )}
-                        {booking.status === 'COMPLETED' && (
-                          <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px]">
-                            Completed
-                          </Badge>
-                        )}
-                        {booking.status === 'CANCELLED' && (
-                          <Badge className="bg-slate-800 text-slate-450 border border-slate-700 px-2 py-0.5 rounded text-[10px]">
-                            Cancelled
-                          </Badge>
-                        )}
-
-                        {/* Dropdown status update */}
-                        {booking.status !== 'COMPLETED' && booking.status !== 'CANCELLED' && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm" className="border-slate-800 hover:bg-slate-900 text-[10px] h-6 py-0.5 px-2 rounded">
-                                Update
-                                <ChevronDown className="h-3 w-3 ml-1" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="bg-slate-950 border border-slate-855 text-white text-xs">
-                              {booking.status === 'PENDING' && (
-                                <DropdownMenuItem onClick={() => handleUpdateBookingStatus('STUDIO', booking.id, 'CONFIRMED')}>
-                                  Confirm Space
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem onClick={() => handleUpdateBookingStatus('STUDIO', booking.id, 'CONFIRMED')}>
-                                Mark Completed
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleUpdateBookingStatus('STUDIO', booking.id, 'CANCELLED')} className="text-rose-400 hover:bg-rose-500/10">
-                                Cancel Booking
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
+                      <div className="space-y-2">
+                        {pendingStudio.map((booking) => renderStudioBookingItem(booking))}
                       </div>
                     </div>
-                  ))}
+                  )}
+                  {confirmedStudio.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-500 bg-emerald-500/5 px-2.5 py-1 rounded border border-emerald-500/10">
+                        Confirmed Bookings
+                      </div>
+                      <div className="space-y-2">
+                        {confirmedStudio.map((booking) => renderStudioBookingItem(booking))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -963,7 +1491,7 @@ export default function ClientDetailsView({
               Complete Shoot & Deliver Album
             </DialogTitle>
             <DialogDescription className="text-slate-400 text-xs mt-1">
-              Mark this photography session as complete and optionally associate a high-resolution download link for the client.
+              Mark this photography session as complete and update final album delivery and payment records.
             </DialogDescription>
           </DialogHeader>
 
@@ -988,7 +1516,7 @@ export default function ClientDetailsView({
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="albumLink" className="text-xs font-semibold text-slate-350">Download / Gallery URL</Label>
+              <Label htmlFor="albumLink" className="text-xs font-semibold text-slate-355">Download / Gallery URL</Label>
               <Input
                 type="url"
                 id="albumLink"
@@ -998,6 +1526,55 @@ export default function ClientDetailsView({
                 className="bg-slate-950 border-slate-800 text-white rounded-lg h-9 text-xs"
               />
             </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="albumQuotationAmount" className="text-xs font-semibold text-slate-350">Quotation Amount (₹)</Label>
+              <Input
+                type="number"
+                id="albumQuotationAmount"
+                value={updateQuotationAmount}
+                disabled
+                className="bg-slate-955 border border-slate-850 text-slate-400 rounded-lg h-9 text-xs font-medium"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="albumPaymentStatus" className="text-xs font-semibold text-slate-350">Payment Tracking *</Label>
+              <select
+                id="albumPaymentStatus"
+                value={updatePaymentStatus}
+                onChange={(e) => {
+                  const newStatus = e.target.value as any;
+                  setUpdatePaymentStatus(newStatus);
+                  if (newStatus === 'COMPLETED') {
+                    setUpdateAmountPaid(updateQuotationAmount);
+                  } else if (newStatus === 'PENDING') {
+                    setUpdateAmountPaid(updateAdvancePaid);
+                  }
+                }}
+                className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg h-9 px-3 text-xs focus:border-amber-500/50 focus:outline-none"
+              >
+                <option value="COMPLETED">Fully Paid</option>
+                <option value="PARTIALLY_COMPLETED">Partially Paid</option>
+                <option value="PENDING">Payment Pending</option>
+              </select>
+            </div>
+
+            {updatePaymentStatus !== 'COMPLETED' && (
+              <div className="space-y-1">
+                <Label htmlFor="albumAmountPaid" className="text-xs font-semibold text-slate-355">Total Paid Amount (₹) *</Label>
+                <Input
+                  type="number"
+                  id="albumAmountPaid"
+                  value={updateAmountPaid}
+                  onChange={(e) => setUpdateAmountPaid(cleanNumberInput(e.target.value))}
+                  placeholder="e.g. 8000"
+                  min="0"
+                  className="bg-slate-950 border-slate-800 text-white rounded-lg h-9 text-xs"
+                  required
+                />
+              </div>
+            )}
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
               <DialogClose asChild>
@@ -1069,7 +1646,7 @@ export default function ClientDetailsView({
                       type="number"
                       id="damageCost"
                       value={damageCost}
-                      onChange={(e) => setDamageCost(e.target.value)}
+                      onChange={(e) => setDamageCost(cleanNumberInput(e.target.value))}
                       placeholder="e.g. 5000"
                       min="0"
                       className="bg-slate-950 border-slate-800 text-white pl-9 rounded-lg h-9 text-xs"
@@ -1117,6 +1694,288 @@ export default function ClientDetailsView({
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Booking Update / Payment Dialog Modal */}
+      <Dialog open={isBookingUpdateOpen} onOpenChange={setIsBookingUpdateOpen}>
+        <DialogContent className="bg-slate-900 border border-slate-800 text-white max-w-md w-full p-6 shadow-2xl rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
+              <CircleDollarSign className="h-5 w-5 text-amber-500" />
+              Update Booking & Payments
+            </DialogTitle>
+            <DialogDescription className="text-slate-400 text-xs mt-1">
+              Modify the status and record payment amounts for this {activeBookingType === 'PHOTOGRAPHY' ? 'photography session' : 'studio reservation'}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleBookingUpdateSubmit} className="space-y-4 mt-2">
+            {bookingUpdateError && (
+              <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{bookingUpdateError}</span>
+              </div>
+            )}
+
+            {/* Status — always read-only badge, prevents manual status regressions */}
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold text-slate-350">Booking Status</Label>
+              <div className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border ${
+                updateStatus === 'PENDING' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                updateStatus === 'CONFIRMED' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                updateStatus === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                'bg-slate-800 text-slate-400 border-slate-700'
+              }`}>
+                {updateStatus === 'PENDING' ? 'Pending Review' :
+                 updateStatus === 'CONFIRMED' ? 'Confirmed' :
+                 updateStatus === 'COMPLETED' ? 'Completed & Delivered' : 'Cancelled'}
+              </div>
+            </div>
+
+            {/* PENDING → Confirmation: set quotation + advance */}
+            {updateStatus === 'PENDING' && (
+              <>
+                <div className="space-y-1">
+                  <Label htmlFor="updateQuotationAmount" className="text-xs font-semibold text-slate-350">Quotation Amount (₹) *</Label>
+                  <Input
+                    type="number"
+                    id="updateQuotationAmount"
+                    value={updateQuotationAmount}
+                    onChange={(e) => setUpdateQuotationAmount(cleanNumberInput(e.target.value))}
+                    placeholder="e.g. 15000"
+                    min="0"
+                    className="bg-slate-950 border-slate-800 text-white rounded-lg h-9 text-xs"
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="updateAdvancePaid" className="text-xs font-semibold text-slate-350">Advance Amount Received (₹) *</Label>
+                  <Input
+                    type="number"
+                    id="updateAdvancePaid"
+                    value={updateAdvancePaid}
+                    onChange={(e) => setUpdateAdvancePaid(cleanNumberInput(e.target.value))}
+                    placeholder="e.g. 3000"
+                    min="0"
+                    className="bg-slate-950 border-slate-800 text-white rounded-lg h-9 text-xs"
+                    required
+                  />
+                </div>
+              </>
+            )}
+
+            {/* CONFIRMED → Update Payments: show full payment fields */}
+            {updateStatus === 'CONFIRMED' && (
+              <>
+                <div className="space-y-1">
+                  <Label htmlFor="updateQuotationAmount" className="text-xs font-semibold text-slate-350">Quotation Amount (₹)</Label>
+                  <Input
+                    type="number"
+                    id="updateQuotationAmount"
+                    value={updateQuotationAmount}
+                    onChange={(e) => setUpdateQuotationAmount(cleanNumberInput(e.target.value))}
+                    placeholder="e.g. 15000"
+                    min="0"
+                    className="bg-slate-955 border border-slate-850 text-slate-400 rounded-lg h-9 text-xs"
+                    disabled
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="updateAdvancePaid" className="text-xs font-semibold text-slate-350">Advance Already Paid (₹)</Label>
+                  <Input
+                    type="number"
+                    id="updateAdvancePaid"
+                    value={updateAdvancePaid}
+                    onChange={(e) => setUpdateAdvancePaid(cleanNumberInput(e.target.value))}
+                    placeholder="e.g. 3000"
+                    min="0"
+                    className="bg-slate-955 border border-slate-850 text-slate-400 rounded-lg h-9 text-xs"
+                    disabled
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="updatePaymentStatus" className="text-xs font-semibold text-slate-350">Payment Status *</Label>
+                  <select
+                    id="updatePaymentStatus"
+                    value={updatePaymentStatus}
+                    onChange={(e) => {
+                      const newStatus = e.target.value as any;
+                      setUpdatePaymentStatus(newStatus);
+                      if (newStatus === 'COMPLETED') {
+                        setUpdateAmountPaid(updateQuotationAmount);
+                      } else if (newStatus === 'PENDING') {
+                        setUpdateAmountPaid(updateAdvancePaid);
+                      }
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg h-9 px-3 text-xs focus:border-amber-500/50 focus:outline-none"
+                  >
+                    <option value="COMPLETED">Fully Paid</option>
+                    <option value="PARTIALLY_COMPLETED">Partially Paid</option>
+                    <option value="PENDING">Payment Pending</option>
+                  </select>
+                </div>
+                {updatePaymentStatus !== 'COMPLETED' && (
+                  <div className="space-y-1">
+                    <Label htmlFor="updateAmountPaid" className="text-xs font-semibold text-slate-350">Total Amount Received So Far (₹) *</Label>
+                    <Input
+                      type="number"
+                      id="updateAmountPaid"
+                      value={updateAmountPaid}
+                      onChange={(e) => setUpdateAmountPaid(cleanNumberInput(e.target.value))}
+                      placeholder="e.g. 8000"
+                      min="0"
+                      className="bg-slate-950 border-slate-800 text-white rounded-lg h-9 text-xs"
+                      required
+                    />
+                  </div>
+                )}
+                {/* Outstanding balance preview */}
+                {updateQuotationAmount && (
+                  <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-850 text-xs flex items-center justify-between">
+                    <span className="text-slate-400">Outstanding Balance</span>
+                    <span className={`font-bold ${Number(updateQuotationAmount) - Number(updateAmountPaid) > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                      ₹{Math.max(0, Number(updateQuotationAmount) - Number(updateAmountPaid))}
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* COMPLETED — editable payment update (e.g. client pays balance later) */}
+            {updateStatus === 'COMPLETED' && (
+              <>
+                <div className="space-y-1">
+                  <Label htmlFor="cpl-quotation" className="text-xs font-semibold text-slate-350">Quotation Amount (₹)</Label>
+                  <Input
+                    type="number"
+                    id="cpl-quotation"
+                    value={updateQuotationAmount}
+                    disabled
+                    className="bg-slate-955 border border-slate-850 text-slate-400 rounded-lg h-9 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="cpl-advance" className="text-xs font-semibold text-slate-350">Advance Already Paid (₹)</Label>
+                  <Input
+                    type="number"
+                    id="cpl-advance"
+                    value={updateAdvancePaid}
+                    disabled
+                    className="bg-slate-955 border border-slate-850 text-slate-400 rounded-lg h-9 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="cpl-payment-status" className="text-xs font-semibold text-slate-350">Payment Status *</Label>
+                  <select
+                    id="cpl-payment-status"
+                    value={updatePaymentStatus}
+                    onChange={(e) => {
+                      const newStatus = e.target.value as any;
+                      setUpdatePaymentStatus(newStatus);
+                      if (newStatus === 'COMPLETED') {
+                        setUpdateAmountPaid(updateQuotationAmount);
+                      } else if (newStatus === 'PENDING') {
+                        setUpdateAmountPaid(updateAdvancePaid);
+                      }
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg h-9 px-3 text-xs focus:border-amber-500/50 focus:outline-none"
+                  >
+                    <option value="COMPLETED">Fully Paid</option>
+                    <option value="PARTIALLY_COMPLETED">Partially Paid</option>
+                    <option value="PENDING">Payment Pending</option>
+                  </select>
+                </div>
+                {updatePaymentStatus !== 'COMPLETED' && (
+                  <div className="space-y-1">
+                    <Label htmlFor="cpl-amount-paid" className="text-xs font-semibold text-slate-350">Total Amount Received So Far (₹) *</Label>
+                    <Input
+                      type="number"
+                      id="cpl-amount-paid"
+                      value={updateAmountPaid}
+                      onChange={(e) => setUpdateAmountPaid(cleanNumberInput(e.target.value))}
+                      placeholder="e.g. 8000"
+                      min="0"
+                      className="bg-slate-950 border-slate-800 text-white rounded-lg h-9 text-xs"
+                      required
+                    />
+                  </div>
+                )}
+                {/* Balance preview */}
+                {updateQuotationAmount && (
+                  <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-850 text-xs flex items-center justify-between">
+                    <span className="text-slate-400">Outstanding Balance</span>
+                    <span className={`font-bold ${
+                      Number(updateQuotationAmount) - Number(updateAmountPaid) > 0
+                        ? 'text-amber-400'
+                        : 'text-emerald-400'
+                    }`}>
+                      ₹{Math.max(0, Number(updateQuotationAmount) - Number(updateAmountPaid))}
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <DialogClose asChild>
+                <Button type="button" variant="outline" className="border-slate-800 hover:bg-slate-800 text-slate-350 rounded-lg">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-lg">
+                Save Updates
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+// Helpers for parsing/serializing metadata in notes field and 12h date formatting
+const cleanNumberInput = (val: string) => {
+  if (val.startsWith('0') && val.length > 1 && !val.startsWith('0.')) {
+    return val.replace(/^0+/, '');
+  }
+  return val;
+};
+
+const parseNotesMetadata = (notes: string | null): { userNotes: string; metadata: any } => {
+  if (!notes) return { userNotes: '', metadata: {} };
+  const marker = '\n---METADATA---\n';
+  const parts = notes.split(marker);
+  if (parts.length > 1) {
+    try {
+      const metadata = JSON.parse(parts[1]);
+      return { userNotes: parts[0], metadata };
+    } catch (e) {
+      // Ignore parsing error
+    }
+  }
+  return { userNotes: notes, metadata: {} };
+};
+
+const formatDateTime12h = (dateStr: string) => {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  const day = date.getDate();
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  let hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // the hour '0' should be '12'
+  return `${day} ${month} ${year}, ${hours}:${minutes} ${ampm}`;
+};
+
+const formatDateStable = (dateStr: string) => {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  const day = date.getDate();
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  return `${month} ${day}, ${year}`;
+};

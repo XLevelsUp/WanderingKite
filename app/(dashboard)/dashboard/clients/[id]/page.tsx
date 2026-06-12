@@ -73,7 +73,14 @@ export default async function ClientDetailPage({
     createdAt: client.createdAt,
   };
 
-  const initialServices = (client.client_services || []).map((s: any) => s.type);
+  const servicePriority: Record<string, number> = {
+    PHOTOGRAPHY: 1,
+    STUDIO_SPACE: 2,
+    RENTALS: 3,
+  };
+  const initialServices = (client.client_services || [])
+    .map((s: any) => s.type)
+    .sort((a: string, b: string) => (servicePriority[a] || 99) - (servicePriority[b] || 99));
   const initialIdProof = idProofObj
     ? {
         id: idProofObj.id,

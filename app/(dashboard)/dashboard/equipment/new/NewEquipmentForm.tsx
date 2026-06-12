@@ -149,7 +149,6 @@ export function NewEquipmentForm({
             <Input
               id="name"
               name="name"
-              placeholder="e.g., Canon EOS R5"
               required
               disabled={isLoading}
             />
@@ -160,7 +159,6 @@ export function NewEquipmentForm({
             <Input
               id="serial_number"
               name="serial_number"
-              placeholder="e.g., SN123456789"
               required
               disabled={isLoading}
             />
@@ -311,7 +309,6 @@ export function NewEquipmentForm({
                   name="warranty_duration_months"
                   type="number"
                   min="0"
-                  placeholder="e.g. 12"
                   disabled={isLoading}
                   onChange={(e) => {
                     const months = parseInt(e.target.value, 10);
@@ -351,7 +348,6 @@ export function NewEquipmentForm({
                 type="number"
                 min="0"
                 step="0.01"
-                placeholder="0.00"
                 disabled={isLoading}
               />
             </div>
@@ -363,7 +359,6 @@ export function NewEquipmentForm({
                 type="number"
                 min="0"
                 step="0.01"
-                placeholder="0.00"
                 disabled={isLoading}
               />
             </div>
@@ -374,7 +369,6 @@ export function NewEquipmentForm({
             <Input
               id="specs"
               name="specs"
-              placeholder="33MP Full-Frame, 4K 60fps, IBIS"
               disabled={isLoading}
             />
             <p className="text-xs text-muted-foreground">
@@ -387,7 +381,6 @@ export function NewEquipmentForm({
             <Textarea
               id="description"
               name="description"
-              placeholder="Additional details about this equipment..."
               rows={4}
               disabled={isLoading}
             />

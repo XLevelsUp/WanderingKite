@@ -189,15 +189,19 @@ body::before {
 
 /* Custom styling for date and time inputs to fit dark mode nicely */
 input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-  opacity: 0.6;
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  display: block !important;
+  opacity: 0.85 !important;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  filter: invert(62%) sepia(93%) saturate(1682%) hue-rotate(15deg) brightness(102%) contrast(101%) !important;
+  transition: opacity 0.15s ease, filter 0.15s ease;
 }
 input[type="date"]::-webkit-calendar-picker-indicator:hover,
-input[type="time"]::-webkit-calendar-picker-indicator:hover {
-  opacity: 0.9;
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1 !important;
+  filter: invert(72%) sepia(61%) saturate(3033%) hue-rotate(5deg) brightness(101%) contrast(97%) !important;
 }
 
 /* Autofill style overrides to prevent white/yellow backgrounds in dark mode inputs */

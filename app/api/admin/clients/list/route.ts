@@ -22,7 +22,7 @@ export async function GET() {
 
     const { data: clients, error: clientsError } = await supabase
       .from('clients')
-      .select('*, client_services(type), photography_bookings(date_time, created_at), rental_bookings(start_date, created_at), studio_bookings(date_time, created_at)')
+      .select('*, client_services(type), photography_bookings(status, date_time, created_at), rental_bookings(status, start_date, created_at), studio_bookings(status, date_time, created_at)')
       .order('createdAt', { ascending: false });
 
     if (clientsError) {

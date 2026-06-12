@@ -1,8 +1,9 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Camera, Video, Building2, MessageCircle } from 'lucide-react';
+import { Camera, Video, Building2, MessageCircle, User } from 'lucide-react';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { siteConfig } from '@/config/site';
 import { usePathname } from 'next/navigation';
@@ -16,7 +17,27 @@ const navItems = [
 export function MainNav() {
   const pathname = usePathname();
   const isDashboardOrAdmin = pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin') || false;
-  const isAuthPage = pathname === '/login';
+  const isAuthPage = pathname === '/login' || pathname === '/client/login' || pathname === '/client/signup';
+
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+
+  React.useEffect(() => {
+    fetch('/api/client/session')
+      .then((res) => {
+        if (res.ok) {
+          return res.json();
+        }
+        throw new Error('Not authenticated');
+      })
+      .then((data) => {
+        if (data.authenticated) {
+          setIsAuthenticated(true);
+        }
+      })
+      .catch(() => {
+        setIsAuthenticated(false);
+      });
+  }, []);
 
   return (
     <nav
@@ -65,9 +86,9 @@ export function MainNav() {
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               {!isAuthPage && (
                 <Link
-                  href="/client/login"
+                  href={isAuthenticated ? "/client/dashboard" : "/client/login"}
                   className="
-                    flex h-9 sm:h-10 items-center rounded-full
+                    flex h-9 sm:h-10 items-center gap-1.5 rounded-full
                     border border-primary/35
                     bg-primary/8
                     px-3 sm:px-4 text-xs sm:text-sm font-semibold text-primary
@@ -76,7 +97,8 @@ export function MainNav() {
                     hover:text-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.20)]
                   "
                 >
-                  Client Login/Signup
+                  {isAuthenticated && <User className="h-4 w-4 shrink-0" />}
+                  {isAuthenticated ? "My Dashboard" : "Client Login/Signup"}
                 </Link>
               )}
               <a

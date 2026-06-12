@@ -283,10 +283,10 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
           <div className="flex flex-col text-xs space-y-0.5">
             <div className="flex items-center gap-1.5 text-white font-medium">
               <Calendar className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-              <span>{new Date(start).toLocaleDateString([], { dateStyle: 'medium' })}</span>
+              <span>{formatDate12h(start)}</span>
             </div>
             <div className="text-slate-400 pl-5">
-              to {new Date(end).toLocaleDateString([], { dateStyle: 'medium' })}
+              to {formatDate12h(end)}
             </div>
           </div>
         );
@@ -388,6 +388,9 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
   const isVerified = idProof?.status === 'VERIFIED';
   const isPending = idProof?.status === 'PENDING';
   const isRejected = idProof?.status === 'REJECTED';
+
+  const pendingRequests = bookings.filter((b) => b.status === 'PENDING');
+  const confirmedBookings = bookings.filter((b) => b.status !== 'PENDING');
 
   return (
     <div className="space-y-6">
@@ -499,7 +502,12 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
                         id="startDate"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9"
+                        onClick={(e) => {
+                          try {
+                            e.currentTarget.showPicker();
+                          } catch (err) {}
+                        }}
+                        className="bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 cursor-pointer"
                         required
                       />
                     </div>
@@ -510,7 +518,12 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
                         id="endDate"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9"
+                        onClick={(e) => {
+                          try {
+                            e.currentTarget.showPicker();
+                          } catch (err) {}
+                        }}
+                        className="bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 cursor-pointer"
                         required
                       />
                     </div>
@@ -522,7 +535,6 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
                       id="purpose"
                       value={purpose}
                       onChange={(e) => setPurpose(e.target.value)}
-                      placeholder="e.g. Indie film shoot, portrait session"
                       className="bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9"
                     />
                   </div>
@@ -665,7 +677,27 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
           onAction={isVerified ? () => setIsBookDialogOpen(true) : undefined}
         />
       ) : (
-        <BookingTable columns={columns} data={bookings} emptyMessage="No rentals booked." />
+        <div className="space-y-8">
+          {pendingRequests.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold tracking-wider text-amber-400 uppercase">
+                Rental Requests (Pending Approval)
+              </h3>
+              <BookingTable columns={columns} data={pendingRequests} emptyMessage="No pending rental requests." />
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold tracking-wider text-emerald-400 uppercase">
+              Confirmed Rentals & Leased Gear
+            </h3>
+            <BookingTable
+              columns={columns}
+              data={confirmedBookings}
+              emptyMessage={pendingRequests.length > 0 ? "No confirmed rentals yet. Your request is pending review." : "No confirmed rentals yet."}
+            />
+          </div>
+        </div>
       )}
 
       {/* Agreement Terms Scrollable Dialog Modal */}
@@ -724,3 +756,15 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
     </div>
   );
 }
+
+// Custom date formatting helper
+const formatDate12h = (dateStr: string) => {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  const day = date.getDate();
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day} ${month} ${year}`;
+};
+

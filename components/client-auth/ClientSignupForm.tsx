@@ -42,8 +42,10 @@ const signupSchema = z
       .regex(/^[a-zA-Z\s]+$/, { message: "First name must contain letters only" }),
     lastName: z
       .string()
-      .min(1, { message: "Last name is required" })
-      .regex(/^[a-zA-Z\s]+$/, { message: "Last name must contain letters only" }),
+      .optional()
+      .refine((val) => !val || /^[a-zA-Z\s]+$/.test(val), {
+        message: "Last name must contain letters only",
+      }),
     dateOfBirth: z
       .string()
       .min(1, { message: "Date of birth is required" })
@@ -91,7 +93,7 @@ export default function ClientSignupForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { showModal, showLoader } = useNotifications();
+  const { showModal, removeModal } = useNotifications();
 
   const {
     register,
@@ -145,15 +147,19 @@ export default function ClientSignupForm() {
       }
 
       toast.success("Successfully registered!", { id: toastId });
+      setIsLoading(false);
 
-      // Show the global confirmation modal on successful signup
-      showModal({
+      // Show the global confirmation modal on successful signup.
+      // We capture the modalId so onConfirm can dismiss it before navigating —
+      // without removeModal the modal persists over the login page since both
+      // routes share the same NotificationProvider instance.
+      const modalId = showModal({
         title: "Account Created Successfully!",
         description: "Welcome to WanderingKite Studio! Your client account has been created. You can now log in to access your dashboard.",
         confirmText: "Log In",
         isBlocking: true,
         onConfirm: () => {
-          showLoader("Loading login screen...");
+          removeModal(modalId);
           router.push("/client/login");
         },
       });
@@ -183,7 +189,6 @@ export default function ClientSignupForm() {
                 <Label htmlFor="firstName" className="text-slate-300">First Name</Label>
                 <Input
                   id="firstName"
-                  placeholder="e.g. John"
                   {...register("firstName")}
                   disabled={isLoading}
                   className={`bg-slate-950/40 text-white border-slate-800 ${
@@ -195,10 +200,9 @@ export default function ClientSignupForm() {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName" className="text-slate-300">Last Name</Label>
+                <Label htmlFor="lastName" className="text-slate-300">Last Name <span className="text-slate-500 font-normal">(Optional)</span></Label>
                 <Input
                   id="lastName"
-                  placeholder="e.g. Doe"
                   {...register("lastName")}
                   disabled={isLoading}
                   className={`bg-slate-950/40 text-white border-slate-800 ${
@@ -228,7 +232,6 @@ export default function ClientSignupForm() {
                 <Label htmlFor="phoneNumber" className="text-slate-300">Phone Number</Label>
                 <Input
                   id="phoneNumber"
-                  placeholder="e.g. 9876543210"
                   {...register("phoneNumber")}
                   disabled={isLoading}
                   className={`bg-slate-950/40 text-white border-slate-800 ${
@@ -243,7 +246,6 @@ export default function ClientSignupForm() {
                 <Label htmlFor="address" className="text-slate-300">Address</Label>
                 <Input
                   id="address"
-                  placeholder="e.g. 123 Main St, Coimbatore"
                   {...register("address")}
                   disabled={isLoading}
                   className={`bg-slate-950/40 text-white border-slate-800 ${
@@ -257,9 +259,9 @@ export default function ClientSignupForm() {
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-slate-300">Email Address</Label>
                 <Input
-                  id="email"
+                  id="signup-email"
                   type="email"
-                  placeholder="e.g. client@example.com"
+                  autoComplete="off"
                   {...register("email")}
                   disabled={isLoading}
                   className={`bg-slate-950/40 text-white border-slate-800 ${
@@ -303,12 +305,13 @@ export default function ClientSignupForm() {
                 <Label htmlFor="password" className="text-slate-300">Password</Label>
                 <div className="relative">
                   <Input
-                    id="password"
+                    id="signup-password"
                     type={showPassword ? "text" : "password"}
                     placeholder="At least 8 chars, uppercase, digit..."
+                    autoComplete="new-password"
                     {...register("password")}
                     disabled={isLoading}
-                    className={`w-full bg-slate-950/40 text-white border-slate-800 pr-10 ${
+                    className={`w-full bg-slate-950/40 text-white border-slate-800 pr-10 placeholder:text-[10px] ${
                       errors.password ? "border-red-500 focus-visible:ring-red-500" : ""
                     }`}
                   />
@@ -333,12 +336,13 @@ export default function ClientSignupForm() {
                 <Label htmlFor="confirmPassword" className="text-slate-300">Confirm Password</Label>
                 <div className="relative">
                   <Input
-                    id="confirmPassword"
+                    id="signup-confirm-password"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Re-enter password"
+                    autoComplete="new-password"
                     {...register("confirmPassword")}
                     disabled={isLoading}
-                    className={`w-full bg-slate-950/40 text-white border-slate-800 pr-10 ${
+                    className={`w-full bg-slate-950/40 text-white border-slate-800 pr-10 placeholder:text-[10px] ${
                       errors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : ""
                     }`}
                   />

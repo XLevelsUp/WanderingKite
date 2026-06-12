@@ -43,12 +43,19 @@ export async function POST(request: Request) {
     // Fetch client details
     const { data: client, error: clientError } = await supabase
       .from('clients')
-      .select('id')
+      .select('id, is_active')
       .eq('email', session.user.email as string)
       .single();
 
     if (clientError || !client) {
       return NextResponse.json({ error: 'client_not_found' }, { status: 404 });
+    }
+
+    if (client.is_active === false) {
+      return NextResponse.json({
+        error: 'deactivated',
+        message: 'Your account has been deactivated. Please contact support.',
+      }, { status: 403 });
     }
 
     // Advanced slot scheduling: check overlaps + 30-minute turnaround buffer

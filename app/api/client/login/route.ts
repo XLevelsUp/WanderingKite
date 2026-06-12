@@ -1,4 +1,5 @@
 import { signIn } from "@/auth";
+import { adminAuthClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -8,6 +9,20 @@ export async function POST(request: Request) {
 
     if (!email || !password) {
       return NextResponse.json({ error: "invalid_credentials" }, { status: 400 });
+    }
+
+    // Fetch client record to verify active status
+    const { data: client, error: clientError } = await adminAuthClient
+      .from('clients')
+      .select('is_active')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (client && client.is_active === false) {
+      return NextResponse.json({
+        error: 'deactivated',
+        message: 'Your account has been deactivated. Please contact administration for assistance.',
+      }, { status: 403 });
     }
 
     try {

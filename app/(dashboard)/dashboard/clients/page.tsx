@@ -39,7 +39,7 @@ export default async function ClientsPage() {
   // Fetch client details with bookings count and recent activity dates via Supabase Server Client
   const { data: clients, error } = await supabase
     .from('clients')
-    .select('*, client_services(type), photography_bookings(date_time, created_at), rental_bookings(start_date, created_at), studio_bookings(date_time, created_at)')
+    .select('*, client_services(type), photography_bookings(status, date_time, created_at), rental_bookings(status, start_date, created_at), studio_bookings(status, date_time, created_at)')
     .order('createdAt', { ascending: false });
 
   if (error) {
@@ -61,15 +61,21 @@ export default async function ClientsPage() {
       dates.push(new Date(client.studio_bookings[0].created_at));
     }
     const lastActive = new Date(Math.max(...dates.map((d) => d.getTime())));
-    const totalBookings =
-      (client.photography_bookings?.length || 0) +
-      (client.rental_bookings?.length || 0) +
-      (client.studio_bookings?.length || 0);
+    const bookingRequests =
+      (client.photography_bookings?.filter((b: any) => b.status === 'PENDING').length || 0) +
+      (client.rental_bookings?.filter((b: any) => b.status === 'PENDING').length || 0) +
+      (client.studio_bookings?.filter((b: any) => b.status === 'PENDING').length || 0);
+
+    const confirmedBookings =
+      (client.photography_bookings?.filter((b: any) => b.status !== 'PENDING' && b.status !== 'CANCELLED').length || 0) +
+      (client.rental_bookings?.filter((b: any) => b.status !== 'PENDING' && b.status !== 'CANCELLED').length || 0) +
+      (client.studio_bookings?.filter((b: any) => b.status !== 'PENDING' && b.status !== 'CANCELLED').length || 0);
 
     return {
       ...client,
       lastActive,
-      totalBookings,
+      bookingRequests,
+      confirmedBookings,
     };
   });
 
@@ -101,7 +107,8 @@ export default async function ClientsPage() {
                 <TableHead className="text-slate-400">Name</TableHead>
                 <TableHead className="text-slate-400">Contact</TableHead>
                 <TableHead className="text-slate-400">Subscribed Services</TableHead>
-                <TableHead className="text-slate-400">Total Bookings</TableHead>
+                <TableHead className="text-slate-400">Booking Requests</TableHead>
+                <TableHead className="text-slate-400">Confirmed Bookings</TableHead>
                 <TableHead className="text-slate-400">Last Active</TableHead>
                 <TableHead className="text-slate-400">Account Status</TableHead>
                 <TableHead className="text-slate-400 text-right">Actions</TableHead>
@@ -150,9 +157,18 @@ export default async function ClientsPage() {
                         </div>
                       </TableCell>
                       <TableCell className="font-semibold text-slate-200">
-                        {client.totalBookings > 0 ? (
-                          <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full text-xs font-semibold">
-                            {client.totalBookings} bookings
+                        {client.bookingRequests > 0 ? (
+                          <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full text-xs font-semibold animate-pulse">
+                            {client.bookingRequests} requests
+                          </Badge>
+                        ) : (
+                          <span className="text-slate-500 text-xs">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-semibold text-slate-200">
+                        {client.confirmedBookings > 0 ? (
+                          <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                            {client.confirmedBookings} confirmed
                           </Badge>
                         ) : (
                           <span className="text-slate-500 text-xs">-</span>

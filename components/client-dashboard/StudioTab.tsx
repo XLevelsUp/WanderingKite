@@ -179,7 +179,7 @@ export default function StudioTab() {
         return (
           <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1.5 w-fit">
             <CheckCircle2 className="h-3 w-3" />
-            Completed
+            Completed & Delivered
           </Badge>
         );
       case 'CANCELLED':
@@ -206,10 +206,10 @@ export default function StudioTab() {
           <div className="flex flex-col text-xs space-y-0.5">
             <div className="flex items-center gap-1.5 text-white font-medium">
               <Calendar className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-              <span>{date.toLocaleDateString([], { dateStyle: 'medium' })}</span>
+              <span>{formatDate12h(val)}</span>
             </div>
             <div className="text-slate-400 pl-5">
-              {date.toLocaleTimeString([], { timeStyle: 'short' })} - {end.toLocaleTimeString([], { timeStyle: 'short' })} ({duration} hrs)
+              {formatTime12h(val)} - {formatTime12h(end.toISOString())} ({duration} hrs)
             </div>
           </div>
         );
@@ -234,7 +234,7 @@ export default function StudioTab() {
             {list.map((eq) => (
               <span
                 key={eq.id}
-                className="bg-slate-950 text-slate-350 border border-slate-800 px-2 py-0.5 rounded text-[10px] font-semibold shrink-0 uppercase"
+                className="bg-slate-950 text-slate-355 border border-slate-800 px-2 py-0.5 rounded text-[10px] font-semibold shrink-0 uppercase"
               >
                 {eq.name}
               </span>
@@ -249,21 +249,44 @@ export default function StudioTab() {
       cell: ({ row }) => getStatusBadge(row.getValue('status')),
     },
     {
-      accessorKey: 'amountPaid',
-      header: 'Booking Costs',
+      id: 'payments',
+      header: 'Payments & Quotation',
       cell: ({ row }) => {
-        const amount = Number(row.getValue('amountPaid') || 0);
+        const { metadata } = parseNotesMetadata(row.original.notes);
+        const quotation = metadata.quotationAmount !== undefined ? Number(metadata.quotationAmount) : null;
+        const advance = metadata.advancePaid !== undefined ? Number(metadata.advancePaid) : null;
+        const paid = Number(row.original.amountPaid || 0);
+        const balance = quotation !== null ? Math.max(0, quotation - paid) : null;
+        const paymentStatus = metadata.paymentStatus || null;
         const extra = Number(row.original.additionalCharges || 0);
+
         return (
-          <div className="text-xs space-y-0.5">
-            <div className="text-slate-300">
-              Paid: <span className="font-semibold text-white">₹{amount}</span>
+          <div className="text-xs space-y-1 py-1">
+            {quotation !== null && (
+              <div className="text-slate-300 font-medium">
+                Quotation: <span className="text-white">₹{quotation}</span>
+              </div>
+            )}
+            {advance !== null && advance > 0 && (
+              <div className="text-slate-400">
+                Advance: <span className="text-slate-300">₹{advance}</span>
+              </div>
+            )}
+            <div className="text-slate-400">
+              Paid: <span className="font-semibold text-white">₹{paid}</span>
             </div>
             {extra > 0 && (
               <div className="text-rose-400 font-medium">
                 Add-on: ₹{extra}
               </div>
             )}
+            {balance !== null && balance > 0 && (
+              <div className="text-slate-400 font-medium">
+                Balance:{' '}
+                <span className="text-amber-500 font-bold">₹{balance}</span>
+              </div>
+            )}
+
           </div>
         );
       },
@@ -283,6 +306,9 @@ export default function StudioTab() {
       },
     },
   ];
+
+  const pendingRequests = bookings.filter((b) => b.status === 'PENDING');
+  const confirmedBookings = bookings.filter((b) => b.status !== 'PENDING');
 
   return (
     <div className="space-y-6">
@@ -331,7 +357,12 @@ export default function StudioTab() {
                     id="dateTime"
                     value={dateTime}
                     onChange={(e) => setDateTime(e.target.value)}
-                    className="bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9"
+                    onClick={(e) => {
+                      try {
+                        e.currentTarget.showPicker();
+                      } catch (err) {}
+                    }}
+                    className="bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 cursor-pointer"
                     required
                   />
                 </div>
@@ -362,7 +393,6 @@ export default function StudioTab() {
                     id="purpose"
                     value={purpose}
                     onChange={(e) => setPurpose(e.target.value)}
-                    placeholder="e.g. Cyclorama Shoot, Podcast, Video Production"
                     className="bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white pl-9 rounded-lg h-9"
                     required
                   />
@@ -406,7 +436,6 @@ export default function StudioTab() {
                     id="notes"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Backdrop color preferences, acoustic requirements, etc..."
                     className="bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white pl-9 rounded-lg min-h-[70px] text-sm py-2"
                   />
                 </div>
@@ -443,8 +472,68 @@ export default function StudioTab() {
           onAction={() => setIsDialogOpen(true)}
         />
       ) : (
-        <BookingTable columns={columns} data={bookings} emptyMessage="No studio space reservations." />
+        <div className="space-y-8">
+          {pendingRequests.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold tracking-wider text-amber-400 uppercase">
+                Studio Booking Requests (Pending Approval)
+              </h3>
+              <BookingTable columns={columns} data={pendingRequests} emptyMessage="No pending studio space requests." />
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold tracking-wider text-emerald-400 uppercase">
+              Confirmed Reservations
+            </h3>
+            <BookingTable
+              columns={columns}
+              data={confirmedBookings}
+              emptyMessage={pendingRequests.length > 0 ? "No confirmed reservations yet. Your request is pending review." : "No confirmed reservations yet."}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
 }
+
+// Custom 12-hour formatting helpers
+const formatDate12h = (dateStr: string) => {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  const day = date.getDate();
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day} ${month} ${year}`;
+};
+
+const formatTime12h = (dateStr: string) => {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  let hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  return `${hours}:${minutes} ${ampm}`;
+};
+
+// Notes metadata parsing helper
+const parseNotesMetadata = (notes: string | null): { userNotes: string; metadata: any } => {
+  if (!notes) return { userNotes: '', metadata: {} };
+  const marker = '\n---METADATA---\n';
+  const parts = notes.split(marker);
+  if (parts.length > 1) {
+    try {
+      const metadata = JSON.parse(parts[1]);
+      return { userNotes: parts[0], metadata };
+    } catch (e) {
+      // Ignore parsing error
+    }
+  }
+  return { userNotes: notes, metadata: {} };
+};
+
+

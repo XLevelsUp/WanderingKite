@@ -1,12 +1,19 @@
 import ClientLoginForm from "@/components/client-auth/ClientLoginForm";
 import { Metadata } from "next";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Client Login",
   description: "Sign in to your WanderingKite client account to manage bookings and rentals.",
 };
 
-export default function ClientLoginPage() {
+export default async function ClientLoginPage() {
+  const session = await auth();
+  if (session && session.user) {
+    redirect("/client/dashboard");
+  }
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4 py-24">
       {/* Background radial glow effect */}

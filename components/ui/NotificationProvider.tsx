@@ -8,6 +8,7 @@ import { Modal, ModalProps } from './Modal';
 import { setupFetchInterceptor, restoreFetch } from '@/lib/fetch-interceptor';
 import { createClient } from '@/lib/supabase/client';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { WKLogo } from '@/components/shared/WKLogo';
 
 type OmittedToastProps = Omit<ToastProps, 'id' | 'onClose'>;
 type OmittedModalProps = Omit<ModalProps, 'id'>;
@@ -243,22 +244,40 @@ export function NotificationProvider({
       {/* Global Loader Overlay */}
       <AnimatePresence>
         {loaderMessage !== null && (
-          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm pointer-events-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="flex flex-col items-center justify-center gap-4 p-8 bg-[rgba(17,17,22,0.96)] border border-white/10 shadow-2xl rounded-2xl"
-            >
-              <div className="relative flex items-center justify-center w-12 h-12">
-                <div className="absolute inset-0 border-4 border-white/10 rounded-full" />
-                <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin" />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-zinc-950/90 backdrop-blur-sm pointer-events-auto"
+          >
+            <div className="flex flex-col items-center gap-8">
+              {/* WK Logo with spinning amber ring */}
+              <div className="relative h-24 w-24 flex items-center justify-center">
+                {/* Static faint outer ring */}
+                <div className="absolute inset-0 rounded-full border-2 border-amber-500/10" />
+                {/* Spinning amber ring */}
+                <motion.div
+                  className="absolute inset-0 rounded-full border-t-2 border-amber-500"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                />
+                {/* WK Logo */}
+                <WKLogo className="w-12 h-12 text-amber-500" />
               </div>
-              <p className="text-sm font-semibold tracking-wider text-primary uppercase">
+              {/* Message */}
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-sm font-medium tracking-widest text-zinc-400 uppercase"
+              >
                 {loaderMessage}
-              </p>
-            </motion.div>
-          </div>
+              </motion.p>
+              <span className="text-[10px] text-zinc-600 tracking-wider -mt-6">
+                Wandering Kite Studio Coimbatore
+              </span>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 

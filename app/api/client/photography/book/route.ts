@@ -34,12 +34,19 @@ export async function POST(request: Request) {
     // Fetch client details
     const { data: client, error: clientError } = await supabase
       .from('clients')
-      .select('id')
+      .select('id, is_active')
       .eq('email', session.user.email as string)
       .single();
 
     if (clientError || !client) {
       return NextResponse.json({ error: 'client_not_found' }, { status: 404 });
+    }
+
+    if (client.is_active === false) {
+      return NextResponse.json({
+        error: 'deactivated',
+        message: 'Your account has been deactivated. Please contact support.',
+      }, { status: 403 });
     }
 
     // Advanced slot scheduling: check 4-hour buffer conflicts for active bookings
@@ -58,12 +65,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'server_error' }, { status: 500 });
     }
 
-    if (conflicts && conflicts.length > 0) {
-      return NextResponse.json({
-        error: 'booking_conflict',
-        message: 'This time slot is already booked. Please choose a different date or time.',
-      }, { status: 409 });
-    }
+    const hasConflict = conflicts && conflicts.length > 0;
 
     // Save photography booking
     const { data: booking, error: insertError } = await supabase
@@ -87,7 +89,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'insert_failed' }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, bookingId: booking.id });
+    return NextResponse.json({ success: true, bookingId: booking.id, hasConflict });
   } catch (error) {
     console.error('POST /api/client/photography/book error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });

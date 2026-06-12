@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { adminAuthClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
 import ClientSignOutButton from "@/components/client-auth/ClientSignOutButton";
 import ClientDashboardWrapper from "@/components/client-dashboard/ClientDashboardWrapper";
@@ -18,9 +18,12 @@ export default async function ClientDashboardPage() {
     redirect("/client/login");
   }
 
-  // Fetch client details including selected services and ID proofs via Supabase Server Client
-  const supabase = await createClient();
-  const { data: client, error } = await supabase
+  // Fetch client details including selected services and ID proofs.
+  // adminAuthClient (service role) is used here because clients authenticate
+  // via NextAuth credentials — they are not Supabase Auth users, so auth.uid()
+  // is null and the anon client's RLS policies would block the query.
+  // Access is already guarded by the NextAuth session role check above.
+  const { data: client, error } = await adminAuthClient
     .from("clients")
     .select("*, client_services(type), client_id_proofs(*)")
     .eq("email", session.user.email)
@@ -29,6 +32,10 @@ export default async function ClientDashboardPage() {
   if (error || !client) {
     console.error("Error fetching client for dashboard:", error);
     redirect("/client/login");
+  }
+
+  if (client.is_active === false) {
+    redirect("/client/login?message=Your+account+has+been+deactivated.+Please+contact+administration+for+assistance.");
   }
 
   const clientName = client.name || `${client.first_name || ''} ${client.last_name || ''}`.trim() || "Client";
@@ -46,7 +53,14 @@ export default async function ClientDashboardPage() {
     isActive: client.is_active,
   };
 
-  const initialServices = client.client_services?.map((s: any) => s.type) || [];
+  const servicePriority: Record<string, number> = {
+    PHOTOGRAPHY: 1,
+    STUDIO_SPACE: 2,
+    RENTALS: 3,
+  };
+  const initialServices = ((client.client_services?.map((s: any) => s.type) || []) as ('PHOTOGRAPHY' | 'RENTALS' | 'STUDIO_SPACE')[]).sort(
+    (a, b) => (servicePriority[a] || 99) - (servicePriority[b] || 99)
+  );
   
   const idProofObj = Array.isArray(client.client_id_proofs) 
     ? client.client_id_proofs[0] 
