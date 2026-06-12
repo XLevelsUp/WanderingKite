@@ -40,7 +40,7 @@ export const ROUTE_ACCESS: Record<string, AppRole> = {
   // ── Admin operational pages ──────────────────────────────────────────────
   '/dashboard/equipment':     'EMPLOYEE',
   '/dashboard/fieldops':      'EMPLOYEE',
-  '/dashboard/clients':       'ADMIN',
+  '/dashboard/clients':       'SUPER_ADMIN',
   '/dashboard/audit-logs':    'ADMIN',
   '/dashboard/rentals':       'ADMIN',
   '/dashboard/categories':    'ADMIN',
@@ -84,7 +84,7 @@ export const ROLE_NAV_ACCESS = {
     canViewDeployments: true,
     canViewOwnPayslips: false,
     canViewOwnAttendance: false,
-    canViewClients: true,
+    canViewClients: false,
     canViewRentals: true,
     canViewPortfolio: true,
     canAccessHR: true,

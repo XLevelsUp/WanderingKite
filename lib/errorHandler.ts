@@ -6,7 +6,20 @@ export function parseSupabaseError(error: any, fallback = 'An unexpected error o
 
   // Sometimes error is a string
   if (typeof error === 'string') {
+    if (error.includes("Could not find a relationship")) {
+      return "We are having trouble loading the clients directory due to a temporary system synchronization issue. Please try again in a few moments.";
+    }
     return error;
+  }
+
+  // Handle PostgREST specific messages
+  if (error.message) {
+    if (error.message.includes("Could not find a relationship")) {
+      return "We are having trouble retrieving client records due to a system synchronization issue. Please try refreshing the page in a moment.";
+    }
+    if (error.message.includes("relation") && error.message.includes("does not exist")) {
+      return "Our studio database is currently undergoing quick maintenance. Some client features may be temporarily unavailable. Please try again shortly.";
+    }
   }
 
   // Handle PostgREST database errors

@@ -11,7 +11,7 @@ export async function getClients() {
 
   const { data, error } = await supabase
     .from('clients')
-    .select('*')
+    .select('*, client_services(type)')
     .order('createdAt', { ascending: false });
 
   if (error) {

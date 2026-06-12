@@ -4,8 +4,6 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 enum UserRole {
@@ -53,18 +51,48 @@ model User {
 }
 
 model Client {
-  id          String   @id @default(uuid())
-  name        String
-  email       String   @unique
-  phone       String?
-  address     String?
-  govtId      String?
-  orders      Order[]
+  id            String          @id @default(uuid())
+  name          String
+  firstName     String?         @map("first_name")
+  lastName      String?         @map("last_name")
+  dateOfBirth   DateTime?       @map("date_of_birth")
+  phone         String?
+  address       String?
+  email         String          @unique
+  gender        String?
+  passwordHash  String?         @map("password_hash")
+  isActive      Boolean         @default(true) @map("is_active")
+  govtId              String?
+  orders              Order[]
+  services            ClientService[]
+  photographyBookings PhotographyBooking[]
+  rentalBookings      RentalBooking[]
+  studioBookings      StudioBooking[]
+  idProof             ClientIdProof?
   
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt           DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@map("clients")
+}
+
+enum ServiceType {
+  PHOTOGRAPHY
+  RENTALS
+  STUDIO_SPACE
+}
+
+model ClientService {
+  id        String      @id @default(uuid())
+  clientId  String      @map("client_id")
+  client    Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type      ServiceType
+  
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([clientId, type])
+  @@map("client_services")
 }
 
 model Equipment {
@@ -96,7 +124,12 @@ model Equipment {
   condition              String?  @default("GOOD")
   categoryName           String?  @map("category_name")
   
+  availableForRental Boolean   @default(true)  @map("available_for_rental")
+  availableForStudio Boolean   @default(false) @map("available_for_studio")
+
   orderItems    OrderItem[]
+  rentalBookings RentalBooking[]
+  studioBookings StudioBooking[]
 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -277,4 +310,114 @@ model AttendanceSetting {
   updatedAt                 DateTime @updatedAt
 
   @@map("attendance_settings")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLIENT DASHBOARD (PHASE 2) MODELS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum RentalStatus {
+  PENDING
+  CONFIRMED
+  RETURNED
+  DAMAGED
+  CANCELLED
+}
+
+enum IdProofStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model ClientIdProof {
+  id             String        @id @default(uuid())
+  clientId       String        @unique @map("client_id")
+  client         Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  idType         String        @map("id_type") // e.g. "Driving License" or "Passport"
+  fileUrl        String        @map("file_url")
+  status         IdProofStatus @default(PENDING)
+  rejectReason   String?       @map("reject_reason")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("client_id_proofs")
+}
+
+model RentalBooking {
+  id                String            @id @default(uuid())
+  clientId          String            @map("client_id")
+  client            Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  startDate         DateTime          @map("start_date")
+  endDate           DateTime          @map("end_date")
+  purpose           String?
+  status            RentalStatus      @default(PENDING)
+  pickupCondition   String?           @map("pickup_condition")
+  returnCondition   String?           @map("return_condition")
+  returnedAt        DateTime?         @map("returned_at")
+  damageCost        Decimal?          @map("damage_cost")
+  damageDescription String?           @map("damage_description")
+  agreementUrl      String?           @map("agreement_url")
+  equipments        Equipment[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@map("rental_bookings")
+}
+
+model StudioBooking {
+  id                String            @id @default(uuid())
+  clientId          String            @map("client_id")
+  client            Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  dateTime          DateTime          @map("date_time")
+  durationHours     Int               @map("duration_hours")
+  purpose           String
+  status            BookingStatus     @default(PENDING)
+  amountPaid        Decimal           @default(0) @map("amount_paid")
+  additionalCharges Decimal           @default(0) @map("additional_charges")
+  notes             String?
+  equipments        Equipment[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@map("studio_bookings")
+}
+
+model PhotographyBooking {
+  id          String        @id @default(uuid())
+  clientId    String        @map("client_id")
+  client      Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  sessionType String        @map("session_type") // Portrait, Wedding, Event, Product, Other
+  dateTime    DateTime      @map("date_time")
+  location    String
+  notes       String?
+  peopleCount Int?          @map("people_count")
+  status      BookingStatus @default(PENDING)
+  amountPaid  Decimal       @default(0) @map("amount_paid")
+  advancePaid Decimal       @default(0) @map("advance_paid")
+  album       AlbumDetail?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("photography_bookings")
+}
+
+model AlbumDetail {
+  id           String             @id @default(uuid())
+  bookingId    String             @unique @map("booking_id")
+  booking      PhotographyBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  name         String
+  deliveryDate DateTime?          @map("delivery_date")
+  downloadLink String?            @map("download_link")
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@map("album_details")
 }

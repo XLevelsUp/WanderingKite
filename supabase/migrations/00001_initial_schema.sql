@@ -174,7 +174,18 @@ create index if not exists idx_audit_logs_created on public.audit_logs(created_a
 create or replace function public.handle_updated_at()
 returns trigger as $$
 begin
-  new.updated_at = now();
+  -- Try setting snake_case updated_at
+  begin
+    new.updated_at = now();
+  exception when undefined_column then
+    -- If undefined_column, try setting camelCase updatedAt
+    begin
+      new."updatedAt" = now();
+    exception when undefined_column then
+      -- If neither exists, do nothing
+      null;
+    end;
+  end;
   return new;
 end;
 $$ language plpgsql;
