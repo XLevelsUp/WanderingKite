@@ -172,6 +172,9 @@ export async function createEquipment(formData: FormData) {
     categoryName: (formData.get('category_name') as string) || '',
   };
 
+  // available_for_studio mirrors is_studio_space — the booking API reads this field
+  const availableForStudio = rawData.isStudioSpace;
+
   const parsed = equipmentSchema.safeParse(rawData);
   if (!parsed.success) {
     const errorMsg = parsed.error.issues.map((e: any) => e.message).join(', ');
@@ -215,6 +218,7 @@ export async function createEquipment(formData: FormData) {
       service_cost: validatedData.serviceCost || 0,
       repair_cost: validatedData.repairCost || 0,
       is_studio_space: validatedData.isStudioSpace,
+      available_for_studio: availableForStudio,
       is_rental: validatedData.isRental,
       category_name: validatedData.categoryName || null,
     } as any)
@@ -276,6 +280,9 @@ export async function updateEquipment(id: string, formData: FormData) {
     categoryName: (formData.get('category_name') as string) || '',
   };
 
+  // available_for_studio mirrors is_studio_space — the booking API reads this field
+  const availableForStudio = rawData.isStudioSpace;
+
   const parsed = equipmentSchema.safeParse(rawData);
   if (!parsed.success) {
     const errorMsg = parsed.error.issues.map((e: any) => e.message).join(', ');
@@ -318,6 +325,7 @@ export async function updateEquipment(id: string, formData: FormData) {
       service_cost: validatedData.serviceCost || 0,
       repair_cost: validatedData.repairCost || 0,
       is_studio_space: validatedData.isStudioSpace,
+      available_for_studio: availableForStudio,
       is_rental: validatedData.isRental,
       category_name: validatedData.categoryName || null,
     } as any)

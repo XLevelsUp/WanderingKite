@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { EmployeeDashboard } from './EmployeeDashboard';
 import { AdminOperationalHub } from '@/components/dashboard/AdminOperationalHub';
+import { getStudioBookingConflicts } from '@/actions/audit';
 
 export const metadata: Metadata = {
   title: 'Overview — Studio ERP',
@@ -206,6 +207,8 @@ export default async function DashboardPage() {
     return true;
   });
 
+  const conflictLogs = isSuperAdmin ? await getStudioBookingConflicts() : [];
+
   return (
     <div className="space-y-8">
       <div>
@@ -256,6 +259,7 @@ export default async function DashboardPage() {
             confirmedBookings={confirmedBookings}
             outstandingBookings={outstandingBookings}
             idProofs={idProofs}
+            conflictLogs={conflictLogs}
           />
         </div>
       )}

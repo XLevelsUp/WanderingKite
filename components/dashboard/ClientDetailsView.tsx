@@ -430,7 +430,75 @@ export default function ClientDetailsView({
               </span>
             ))}
           </div>
-          {userNotes && <div className="text-[10px] text-slate-500 italic max-w-sm">"{userNotes}"</div>}
+          {userNotes && <div className="text-[10px] text-slate-500 italic max-w-sm whitespace-pre-line break-words">"{userNotes}"</div>}
+
+          {/* Cost breakdown from estimatedBreakdown if available */}
+          {metadata.estimatedBreakdown && (
+            <div className="mt-3.5 p-3.5 rounded-xl border border-slate-850 bg-slate-950 text-[11px] text-slate-400 space-y-2 max-w-sm shadow-inner">
+              <div className="text-amber-500 font-bold uppercase tracking-wider text-[9px] border-b border-slate-800 pb-1 flex items-center gap-1.5">
+                <CircleDollarSign className="h-3.5 w-3.5" />
+                Estimated Price Breakdown
+              </div>
+              <div className="space-y-1">
+                {metadata.estimatedBreakdown.package && (
+                  <div className="flex justify-between items-center text-slate-300">
+                    <span>
+                      Package: {metadata.estimatedBreakdown.package.name}{' '}
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        (₹{metadata.estimatedBreakdown.package.price} x {metadata.estimatedBreakdown.packageHours} hrs)
+                      </span>
+                    </span>
+                    <span className="font-mono font-medium text-white">₹{metadata.estimatedBreakdown.packageTotal}</span>
+                  </div>
+                )}
+                {metadata.estimatedBreakdown.addOns && metadata.estimatedBreakdown.addOns.length > 0 && (
+                  <div className="space-y-1 pt-0.5">
+                    {metadata.estimatedBreakdown.addOns.map((add: any, idx: number) => (
+                      <div key={idx} className="flex justify-between items-center text-slate-300 pl-2 border-l border-slate-800">
+                        <span>
+                          {add.name}{' '}
+                          <span className="text-[10px] text-slate-500 font-mono">
+                            (₹{add.price} x {metadata.estimatedBreakdown.packageHours} hrs)
+                          </span>
+                        </span>
+                        <span className="font-mono text-slate-200">₹{add.total}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {metadata.estimatedBreakdown.equipment && metadata.estimatedBreakdown.equipment.length > 0 && (
+                  <div className="space-y-1 pt-1">
+                    <span className="text-[9.5px] font-semibold text-slate-500 block">Equipment:</span>
+                    {metadata.estimatedBreakdown.equipment.map((eq: any, idx: number) => (
+                      <div key={idx} className="flex justify-between items-center text-slate-300 pl-2 border-l border-slate-800">
+                        <span>
+                          {eq.name}{' '}
+                          <span className="text-[10px] text-slate-500 font-mono">
+                            (₹{eq.price} x {metadata.estimatedBreakdown.packageHours} hrs)
+                          </span>
+                        </span>
+                        <span className="font-mono text-slate-200">₹{eq.total}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="h-px bg-slate-800/80 my-1.5" />
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-450">Subtotal</span>
+                <span className="font-mono font-semibold text-slate-200">₹{Math.round(metadata.estimatedBreakdown.subtotal).toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-450">GST (18%)</span>
+                <span className="font-mono text-slate-300">₹{Math.round(metadata.estimatedBreakdown.gst).toLocaleString('en-IN')}</span>
+              </div>
+              <div className="h-px bg-slate-800/80 my-1.5" />
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-white">Estimated Total</span>
+                <span className="text-amber-500 font-mono">₹{Math.round(metadata.estimatedBreakdown.estimatedTotal).toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+          )}
 
           {/* Payment & Quotation details: Visible only to Super Admin */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 text-[11px] text-slate-450 bg-slate-900/40 p-2 rounded-lg border border-slate-850/50 w-full sm:w-fit">
@@ -443,7 +511,7 @@ export default function ClientDetailsView({
             <span>Total Paid: <span className="font-semibold text-slate-300">₹{booking.amountPaid || 0}</span></span>
             
             {/* Outstanding Balance */}
-            {metadata.quotationAmount !== undefined && (
+            {metadata.quotationAmount !== undefined && booking.status !== 'CANCELLED' && (
               <span className="font-medium">
                 Balance:{' '}
                 <span className={Number(metadata.quotationAmount) - Number(booking.amountPaid || 0) > 0 ? 'text-amber-500 font-bold' : 'text-emerald-500'}>
@@ -1732,7 +1800,7 @@ export default function ClientDetailsView({
             </div>
 
             {/* PENDING → Confirmation: set quotation + advance */}
-            {updateStatus === 'PENDING' && (
+            {activeBooking?.status === 'PENDING' && (
               <>
                 <div className="space-y-1">
                   <Label htmlFor="updateQuotationAmount" className="text-xs font-semibold text-slate-350">Quotation Amount (₹) *</Label>
@@ -1764,7 +1832,7 @@ export default function ClientDetailsView({
             )}
 
             {/* CONFIRMED → Update Payments: show full payment fields */}
-            {updateStatus === 'CONFIRMED' && (
+            {activeBooking?.status === 'CONFIRMED' && (
               <>
                 <div className="space-y-1">
                   <Label htmlFor="updateQuotationAmount" className="text-xs font-semibold text-slate-350">Quotation Amount (₹)</Label>
@@ -1841,7 +1909,7 @@ export default function ClientDetailsView({
             )}
 
             {/* COMPLETED — editable payment update (e.g. client pays balance later) */}
-            {updateStatus === 'COMPLETED' && (
+            {activeBooking?.status === 'COMPLETED' && (
               <>
                 <div className="space-y-1">
                   <Label htmlFor="cpl-quotation" className="text-xs font-semibold text-slate-350">Quotation Amount (₹)</Label>

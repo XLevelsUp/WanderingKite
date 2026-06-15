@@ -49,6 +49,7 @@ interface Props {
   confirmedBookings: BaseBooking[];
   outstandingBookings: BaseBooking[];
   idProofs: IdProofEntry[];
+  conflictLogs: any[];
 }
 
 const SERVICE_ICON = {
@@ -86,11 +87,12 @@ const TABS = [
   { key: 'active',    label: 'Active Bookings',   icon: CalendarCheck },
   { key: 'balances',  label: 'Outstanding Balances', icon: CreditCard },
   { key: 'idProofs',  label: 'ID Verifications',  icon: ShieldCheck },
+  { key: 'conflicts', label: 'Booking Conflicts', icon: AlertCircle },
 ] as const;
 
 type TabKey = typeof TABS[number]['key'];
 
-export function AdminOperationalHub({ pendingBookings, confirmedBookings, outstandingBookings, idProofs }: Props) {
+export function AdminOperationalHub({ pendingBookings, confirmedBookings, outstandingBookings, idProofs, conflictLogs = [] }: Props) {
   const [active, setActive] = useState<TabKey>('pending');
 
   const counts: Record<TabKey, number> = {
@@ -98,6 +100,7 @@ export function AdminOperationalHub({ pendingBookings, confirmedBookings, outsta
     active:    confirmedBookings.length,
     balances:  outstandingBookings.length,
     idProofs:  idProofs.filter((p) => p.status === 'PENDING').length,
+    conflicts: conflictLogs.filter((c) => c.status === 'blocked').length,
   };
 
   return (
@@ -236,9 +239,85 @@ export function AdminOperationalHub({ pendingBookings, confirmedBookings, outsta
               )}
             </motion.div>
           )}
+
+          {/* ─── BOOKING CONFLICTS ─── */}
+          {active === 'conflicts' && (
+            <motion.div
+              key="conflicts"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.15 }}
+            >
+              {conflictLogs.length === 0 ? (
+                <EmptyState icon={AlertCircle} message="No booking conflicts logged." />
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-3">
+                    {conflictLogs.length} conflict{conflictLogs.length !== 1 ? 's' : ''} logged ({counts.conflicts} unresolved)
+                  </p>
+                  {conflictLogs.map((conflict) => (
+                    <ConflictRow key={conflict.id} conflict={conflict} />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </div>
+  );
+}
+
+function ConflictRow({ conflict }: { conflict: any }) {
+  const isResolved = conflict.status !== 'blocked';
+  const statusColors = {
+    blocked: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+    approved: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    rejected: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+  }[conflict.status as string] || 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+
+  return (
+    <Link href="/dashboard/audit-logs?tab=studio">
+      <div className="group flex items-center gap-3 p-3 rounded-xl border border-slate-800 hover:border-amber-500/30 hover:bg-slate-800/50 transition-all cursor-pointer">
+        <div className="flex-shrink-0 p-2 rounded-lg bg-slate-800/80">
+          <AlertCircle className="h-4 w-4 text-rose-400" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold text-white truncate">{conflict.client_name}</span>
+            <span className="text-[10px] text-slate-400 font-normal">attempted</span>
+            <span className="text-[10px] text-amber-400 font-semibold">Studio Space</span>
+          </div>
+          <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+            <span className="text-[10px] text-slate-400 flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {formatDate(conflict.attempted_date_time)} {formatTime(conflict.attempted_date_time)} ({conflict.attempted_duration_hours}h)
+            </span>
+            {conflict.conflicting_booking_details && (
+              <span className="text-[10px] text-rose-400/80">
+                Clash with: {conflict.conflicting_booking_details.client_name}
+              </span>
+            )}
+          </div>
+          {isResolved && (
+            <div className="text-[10px] text-slate-500 mt-1">
+              Resolved by {conflict.resolved_by_name || 'Admin'}
+              {conflict.resolution_notes && ` — "${conflict.resolution_notes}"`}
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+          <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase ${statusColors}`}>
+            {conflict.status}
+          </span>
+        </div>
+
+        <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-amber-500 transition-colors flex-shrink-0" />
+      </div>
+    </Link>
   );
 }
 

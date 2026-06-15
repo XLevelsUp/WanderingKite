@@ -44,6 +44,8 @@ model User {
   // HR contract (1:1)
   contract      EmployeeContract?
 
+  resolvedConflicts StudioBookingConflict[] @relation("ConflictResolver")
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -69,6 +71,7 @@ model Client {
   rentalBookings      RentalBooking[]
   studioBookings      StudioBooking[]
   idProof             ClientIdProof?
+  studioBookingConflicts StudioBookingConflict[]
   
   createdAt           DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -383,7 +386,9 @@ model StudioBooking {
   amountPaid        Decimal           @default(0) @map("amount_paid")
   additionalCharges Decimal           @default(0) @map("additional_charges")
   notes             String?
+  override          Boolean           @default(false)
   equipments        Equipment[]
+  conflictingAttempts StudioBookingConflict[]
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -420,4 +425,29 @@ model AlbumDetail {
   updatedAt    DateTime           @updatedAt
 
   @@map("album_details")
+}
+
+model StudioBookingConflict {
+  id                        String         @id @default(uuid())
+  clientId                  String?        @map("client_id")
+  client                    Client?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientName                String         @map("client_name")
+  clientEmail               String         @map("client_email")
+  attemptedDateTime         DateTime       @map("attempted_date_time")
+  attemptedDurationHours    Int            @map("attempted_duration_hours")
+  attemptedPurpose          String         @map("attempted_purpose")
+  attemptedEquipmentIds     Json           @map("attempted_equipment_ids")
+  conflictingBookingId      String?        @map("conflicting_booking_id")
+  conflictingBooking        StudioBooking? @relation(fields: [conflictingBookingId], references: [id])
+  conflictingBookingDetails Json?          @map("conflicting_booking_details")
+  status                    String         @default("blocked")
+  createdBookingId          String?        @map("created_booking_id")
+  resolvedById              String?        @map("resolved_by_id")
+  resolvedBy                User?          @relation("ConflictResolver", fields: [resolvedById], references: [id])
+  resolvedAt                DateTime?      @map("resolved_at")
+  resolutionNotes           String?        @map("resolution_notes")
+  createdAt                 DateTime       @default(now()) @map("created_at")
+  updatedAt                 DateTime       @updatedAt @map("updated_at")
+
+  @@map("studio_booking_conflicts")
 }

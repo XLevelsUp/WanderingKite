@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Camera, Film, Home, User, Mail, Phone, Calendar, Shield, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,9 +49,21 @@ export default function ClientDashboardWrapper({
     initialServices[0] || 'PHOTOGRAPHY'
   );
 
+  useEffect(() => {
+    const saved = sessionStorage.getItem('client_dashboard_active_tab');
+    if (saved && initialServices.includes(saved as any)) {
+      setActiveTab(saved);
+    }
+  }, [initialServices]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    sessionStorage.setItem('client_dashboard_active_tab', tab);
+  };
+
   const handleAddServiceSuccess = (service: 'PHOTOGRAPHY' | 'RENTALS' | 'STUDIO_SPACE') => {
     setSubscribedServices((prev) => [...prev, service]);
-    setActiveTab(service);
+    handleTabChange(service);
     // Trigger Server Component re-fetch to keep everything in sync
     router.refresh();
   };
@@ -114,7 +126,7 @@ export default function ClientDashboardWrapper({
           <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-1.5 scrollbar-none">
             {subscribedServices.includes('PHOTOGRAPHY') && (
               <button
-                onClick={() => setActiveTab('PHOTOGRAPHY')}
+                onClick={() => handleTabChange('PHOTOGRAPHY')}
                 className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 shrink-0 text-left w-full ${
                   activeTab === 'PHOTOGRAPHY'
                     ? 'bg-amber-500 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.15)] scale-[1.02]'
@@ -128,7 +140,7 @@ export default function ClientDashboardWrapper({
 
             {subscribedServices.includes('RENTALS') && (
               <button
-                onClick={() => setActiveTab('RENTALS')}
+                onClick={() => handleTabChange('RENTALS')}
                 className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 shrink-0 text-left w-full ${
                   activeTab === 'RENTALS'
                     ? 'bg-amber-500 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.15)] scale-[1.02]'
@@ -142,7 +154,7 @@ export default function ClientDashboardWrapper({
 
             {subscribedServices.includes('STUDIO_SPACE') && (
               <button
-                onClick={() => setActiveTab('STUDIO_SPACE')}
+                onClick={() => handleTabChange('STUDIO_SPACE')}
                 className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 shrink-0 text-left w-full ${
                   activeTab === 'STUDIO_SPACE'
                     ? 'bg-amber-500 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.15)] scale-[1.02]'

@@ -435,7 +435,7 @@ export default async function StudioPage() {
   // Fetch live equipment summary and filter for Studio Space Rental gear
   const allEquipment = await getEquipment();
   const rentalEquipment = allEquipment.filter(
-    (eq: any) => eq.is_studio_space === true
+    (eq: any) => eq.available_for_studio === true
   );
 
   // Hardcoded equipment previews for the rental section below
