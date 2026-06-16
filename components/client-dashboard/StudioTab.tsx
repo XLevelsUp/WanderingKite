@@ -17,6 +17,13 @@ import {
   DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { BookingTable } from './BookingTable';
 import EmptyState from './EmptyState';
 import { useNotifications } from '@/components/ui/useNotifications';
@@ -134,7 +141,10 @@ export default function StudioTab() {
   const { showLoader, hideLoader } = useNotifications();
 
   // Form states
-  const [dateTime, setDateTime] = useState('');
+  const [date, setDate] = useState('');
+  const [hour, setHour] = useState('');
+  const [minute, setMinute] = useState('00');
+  const [ampm, setAmpm] = useState('');
   const [packageOption, setPackageOption] = useState<'hourly' | 'half_day' | 'full_day'>('hourly');
   const [hourlyDuration, setHourlyDuration] = useState('2');
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
@@ -241,8 +251,20 @@ export default function StudioTab() {
     e.preventDefault();
     setFormError('');
 
-    if (!dateTime) {
+    if (!date || !hour || !minute || !ampm) {
       setFormError('Please select a date and time.');
+      return;
+    }
+
+    let hourNum = parseInt(hour, 10);
+    if (ampm === 'PM' && hourNum < 12) hourNum += 12;
+    if (ampm === 'AM' && hourNum === 12) hourNum = 0;
+    const formattedHour = hourNum.toString().padStart(2, '0');
+    const dateTime = `${date}T${formattedHour}:${minute}:00`;
+    const bookingTime = new Date(dateTime);
+
+    if (isNaN(bookingTime.getTime())) {
+      setFormError('Invalid date or time selected.');
       return;
     }
 
@@ -268,7 +290,6 @@ export default function StudioTab() {
       return;
     }
 
-    const bookingTime = new Date(dateTime);
     if (bookingTime.getTime() <= Date.now()) {
       setFormError('Studio bookings must be in the future.');
       return;
@@ -331,7 +352,7 @@ export default function StudioTab() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          dateTime,
+          dateTime: bookingTime.toISOString(),
           durationHours: duration,
           purpose,
           notes: combinedNotes,
@@ -355,7 +376,10 @@ export default function StudioTab() {
       toast.success('Studio slot reserved successfully!');
       setIsDialogOpen(false);
       // Reset form
-      setDateTime('');
+      setDate('');
+      setHour('');
+      setMinute('');
+      setAmpm('');
       setPackageOption('hourly');
       setHourlyDuration('2');
       setSelectedAddOns([]);
@@ -398,7 +422,7 @@ export default function StudioTab() {
         return (
           <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1.5 w-fit">
             <CheckCircle2 className="h-3 w-3" />
-            Completed & Delivered
+            Shoot Completed & Delivered
           </Badge>
         );
       case 'CANCELLED':
@@ -611,37 +635,92 @@ export default function StudioTab() {
                 </div>
               )}
               <div className="space-y-4">
+                {/* Date & Time */}
+                <style>{`
+                  input[type="date"]::-webkit-calendar-picker-indicator {
+                    display: block !important;
+                    opacity: 0.85 !important;
+                    cursor: pointer;
+                    filter: invert(62%) sepia(93%) saturate(1682%) hue-rotate(15deg) brightness(102%) contrast(101%) !important;
+                  }
+                  input[type="date"]::-webkit-calendar-picker-indicator:hover {
+                    opacity: 1 !important;
+                    filter: invert(72%) sepia(61%) saturate(3033%) hue-rotate(5deg) brightness(101%) contrast(97%) !important;
+                  }
+                `}</style>
                 <div className="space-y-1">
-                  <Label htmlFor="dateTime" className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                  <Label htmlFor="shootDate" className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5 text-amber-500" />
                     Date & Start Time *
                   </Label>
-                  <Input
-                    type="datetime-local"
-                    id="dateTime"
-                    value={dateTime}
-                    min={minDateTime}
-                    onChange={(e) => {
-                      setDateTime(e.target.value);
-                      // Clear any conflict error when user picks a new time
-                      if (formError) setFormError('');
-                    }}
-                    onClick={(e) => {
-                      try {
-                        e.currentTarget.showPicker();
-                      } catch (err) {}
-                    }}
-                    className="bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 cursor-pointer"
-                    required
-                  />
-                  {dateTime && (
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-amber-500 pointer-events-none" />
+                    <input
+                      type="date"
+                      id="shootDate"
+                      value={date}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => {
+                        setDate(e.target.value);
+                        if (formError) setFormError('');
+                      }}
+                      onClick={(e) => {
+                        try {
+                          e.currentTarget.showPicker();
+                        } catch (err) {}
+                      }}
+                      style={{ colorScheme: 'dark' }}
+                      className="flex h-9 w-full rounded-lg border border-slate-800 bg-slate-950 pl-10 pr-3 py-1 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500/50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Select value={hour} onValueChange={(val) => { setHour(val); if(formError) setFormError(''); }}>
+                        <SelectTrigger className="w-full bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 text-xs">
+                          <SelectValue placeholder="Hour" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-950 border border-slate-800 text-white max-h-[200px]">
+                          {Array.from({ length: 12 }, (_, i) => {
+                            const h = (i + 1).toString().padStart(2, '0');
+                            return <SelectItem key={h} value={h}>{h}</SelectItem>;
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex-1">
+                      <Select value={minute} onValueChange={setMinute}>
+                        <SelectTrigger className="w-full bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 text-xs">
+                          <SelectValue placeholder="Min" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-950 border border-slate-800 text-white max-h-[200px]">
+                          {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map((m) => (
+                            <SelectItem key={m} value={m}>{m}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="w-[84px] shrink-0">
+                      <Select value={ampm} onValueChange={(val) => { setAmpm(val); if(formError) setFormError(''); }}>
+                        <SelectTrigger className="w-full bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 text-xs">
+                          <SelectValue placeholder="AM/PM" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-950 border border-slate-800 text-white">
+                          <SelectItem value="AM">AM</SelectItem>
+                          <SelectItem value="PM">PM</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  {date && hour && ampm && (
                     <div className="text-[10px] text-amber-400 mt-1 pl-1 font-medium flex flex-col gap-0.5">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3 text-amber-500 shrink-0" />
-                        Selected: {formatDate12h(dateTime)} at {formatTime12h(dateTime)}
-                      </span>
-                      <span className="text-slate-400 pl-4.5 text-[9.5px]">
-                        Session details: {packageOption === 'hourly' ? `${hourlyDuration} hours` : packageOption === 'half_day' ? '4 hours (Half Day)' : '8 hours (Full Day)'}
+                      <span className="text-slate-400 text-[9.5px]">
+                        Session duration: {packageOption === 'hourly' ? `${hourlyDuration} hours` : packageOption === 'half_day' ? '4 hours (Half Day)' : '8 hours (Full Day)'}
                         {selectedAddOns.length > 0 && ` • with ${selectedAddOns.map(id => ADD_ONS.find(a => a.id === id)?.name).join(', ')}`}
                       </span>
                     </div>

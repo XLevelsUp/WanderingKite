@@ -32,10 +32,34 @@ export async function POST(request: Request) {
       // Optional album fields for photography shoots
       albumName,
       downloadLink,
+      deliveryLink, // Added for new workflow
     } = body;
 
     if (!bookingType || !bookingId || !status) {
       return NextResponse.json({ error: 'missing_fields' }, { status: 400 });
+    }
+
+    const MAX_INT = 2147483647; // fits in standard signed 32-bit integer
+
+    const validateAndRound = (val: any) => {
+      if (val === undefined || val === null) return undefined;
+      const num = Number(val);
+      if (isNaN(num) || num < 0 || num > MAX_INT) {
+        throw new Error('invalid_amount');
+      }
+      return Math.round(num);
+    };
+
+    let roundedAmountPaid: number | undefined;
+    let roundedAdvancePaid: number | undefined;
+    let roundedQuotationAmount: number | undefined;
+
+    try {
+      roundedAmountPaid = validateAndRound(amountPaid);
+      roundedAdvancePaid = validateAndRound(advancePaid);
+      roundedQuotationAmount = validateAndRound(quotationAmount);
+    } catch (err) {
+      return NextResponse.json({ error: 'invalid_amount_range' }, { status: 400 });
     }
 
     if (bookingType === 'PHOTOGRAPHY') {
@@ -53,9 +77,13 @@ export async function POST(request: Request) {
 
       const { userNotes, metadata } = parseNotesMetadata(booking.notes || '');
 
-      if (quotationAmount !== undefined) metadata.quotationAmount = quotationAmount;
+      if (roundedQuotationAmount !== undefined) metadata.quotationAmount = roundedQuotationAmount;
       if (paymentStatus !== undefined) metadata.paymentStatus = paymentStatus;
 
+      if (status === 'COMPLETED' && !metadata.completedAt) metadata.completedAt = new Date().toISOString();
+      if (status === 'IN_EDITING' && !metadata.inEditingAt) metadata.inEditingAt = new Date().toISOString();
+      if (status === 'HANDED_OVER' && !metadata.handedOverAt) metadata.handedOverAt = new Date().toISOString();
+      
       const serializedNotes = serializeNotesMetadata(userNotes, metadata);
 
       const updatePayload: any = {
@@ -64,11 +92,13 @@ export async function POST(request: Request) {
         notes: serializedNotes,
       };
 
-      if (amountPaid !== undefined) {
-        updatePayload.amount_paid = amountPaid;
+      if (deliveryLink !== undefined) updatePayload.delivery_link = deliveryLink;
+
+      if (roundedAmountPaid !== undefined) {
+        updatePayload.amount_paid = roundedAmountPaid;
       }
-      if (advancePaid !== undefined) {
-        updatePayload.advance_paid = advancePaid;
+      if (roundedAdvancePaid !== undefined) {
+        updatePayload.advance_paid = roundedAdvancePaid;
       }
 
       const { data: updated, error: updateError } = await supabase
@@ -128,9 +158,13 @@ export async function POST(request: Request) {
 
       const { userNotes, metadata } = parseNotesMetadata(booking.notes || '');
 
-      if (quotationAmount !== undefined) metadata.quotationAmount = quotationAmount;
+      if (roundedQuotationAmount !== undefined) metadata.quotationAmount = roundedQuotationAmount;
       if (paymentStatus !== undefined) metadata.paymentStatus = paymentStatus;
-      if (advancePaid !== undefined) metadata.advancePaid = advancePaid;
+      if (roundedAdvancePaid !== undefined) metadata.advancePaid = roundedAdvancePaid;
+
+      if (status === 'COMPLETED' && !metadata.completedAt) metadata.completedAt = new Date().toISOString();
+      if (status === 'IN_EDITING' && !metadata.inEditingAt) metadata.inEditingAt = new Date().toISOString();
+      if (status === 'HANDED_OVER' && !metadata.handedOverAt) metadata.handedOverAt = new Date().toISOString();
 
       const serializedNotes = serializeNotesMetadata(userNotes, metadata);
 
@@ -140,8 +174,10 @@ export async function POST(request: Request) {
         notes: serializedNotes,
       };
 
-      if (amountPaid !== undefined) {
-        updatePayload.amount_paid = amountPaid;
+      if (deliveryLink !== undefined) updatePayload.delivery_link = deliveryLink;
+
+      if (roundedAmountPaid !== undefined) {
+        updatePayload.amount_paid = roundedAmountPaid;
       }
 
       const { data: updated, error: updateError } = await supabase
@@ -153,6 +189,29 @@ export async function POST(request: Request) {
 
       if (updateError) {
         console.error('Studio update error:', updateError);
+        return NextResponse.json({ error: updateError.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, booking: updated });
+    } else if (bookingType === 'RENTAL') {
+      const updatePayload: any = {
+        status,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (status === 'RETURNED' && body.returnedAt !== undefined) {
+        updatePayload.returned_at = body.returnedAt;
+      }
+
+      const { data: updated, error: updateError } = await supabase
+        .from('rental_bookings')
+        .update(updatePayload)
+        .eq('id', bookingId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Rental update error:', updateError);
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
 

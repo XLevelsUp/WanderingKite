@@ -132,6 +132,12 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
       )}
 
       {/* Admin-only operational pages */}
+      {profile?.role === 'SUPER_ADMIN' && (
+        <Link href='/admin/bookings' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+          <Calendar className='w-4 h-4 opacity-75' />
+          Central Bookings
+        </Link>
+      )}
       {access.canViewPortfolio && (
         <Link href='/dashboard/portfolio' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
           <FolderKanban className='w-4 h-4 opacity-75' />

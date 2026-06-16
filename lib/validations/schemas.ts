@@ -45,14 +45,17 @@ export const equipmentSchema = z.object({
     });
   }
 });
-
 export type EquipmentFormData = z.infer<typeof equipmentSchema>;
 
 // Client Validation
 export const clientSchema = z.object({
   name: z.string().min(1, 'Client name is required'),
   email: z.string().email('Invalid email address'),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .regex(/^\+?[0-9\s\-\(\).]{7,15}$/, 'Invalid phone number format')
+    .optional()
+    .or(z.literal('')),
   address: z.string().optional(),
   govtId: z.string().optional(),
 });

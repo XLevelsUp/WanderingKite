@@ -58,7 +58,7 @@ export const unifiedOnboardingSchema = z.object({
   }, 'Employee must be at least 18 years old (Indian Labour Law)'),
   phone: z
     .string()
-    .regex(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits (no spaces or code)'),
+    .regex(/^\+?[0-9\s\-\(\).]{7,15}$/, 'Invalid phone number format'),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY'], {
     message: 'Gender is required',
   }),
@@ -98,7 +98,7 @@ export const personalDetailsSchema = z.object({
   }, 'Employee must be at least 18 years old'),
   phone: z
     .string()
-    .regex(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits (no spaces or code)'),
+    .regex(/^\+?[0-9\s\-\(\).]{7,15}$/, 'Invalid phone number format'),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY'], {
     message: 'Gender is required',
   }),

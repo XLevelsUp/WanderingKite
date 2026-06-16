@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   XCircle,
   User,
+  Activity,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,8 @@ interface BaseBooking {
   quotation: number;
   amountPaid: number;
   paymentStatus: PaymentStatus;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface IdProofEntry {
@@ -45,11 +48,14 @@ interface IdProofEntry {
 }
 
 interface Props {
+  allBookings?: BaseBooking[];
   pendingBookings: BaseBooking[];
   confirmedBookings: BaseBooking[];
   outstandingBookings: BaseBooking[];
   idProofs: IdProofEntry[];
   conflictLogs: any[];
+  todaysBookingsCount?: number;
+  recentActivity?: BaseBooking[];
 }
 
 const SERVICE_ICON = {
@@ -83,22 +89,35 @@ function formatTime(dt: string) {
 }
 
 const TABS = [
+  { key: 'allBookings', label: 'All Bookings', icon: CalendarCheck },
   { key: 'pending',   label: 'Pending Requests', icon: Bell },
-  { key: 'active',    label: 'Active Bookings',   icon: CalendarCheck },
   { key: 'balances',  label: 'Outstanding Balances', icon: CreditCard },
+  { key: 'activity',  label: 'Activity Feed', icon: Activity },
   { key: 'idProofs',  label: 'ID Verifications',  icon: ShieldCheck },
   { key: 'conflicts', label: 'Booking Conflicts', icon: AlertCircle },
 ] as const;
 
 type TabKey = typeof TABS[number]['key'];
+type FilterChip = 'All' | 'Pending Request' | 'Confirmed' | 'Shoot Completed';
 
-export function AdminOperationalHub({ pendingBookings, confirmedBookings, outstandingBookings, idProofs, conflictLogs = [] }: Props) {
-  const [active, setActive] = useState<TabKey>('pending');
+export function AdminOperationalHub({ 
+  allBookings = [],
+  pendingBookings, 
+  confirmedBookings, 
+  outstandingBookings, 
+  idProofs, 
+  conflictLogs = [],
+  todaysBookingsCount = 0,
+  recentActivity = []
+}: Props) {
+  const [active, setActive] = useState<TabKey>('allBookings');
+  const [bookingFilter, setBookingFilter] = useState<FilterChip>('All');
 
   const counts: Record<TabKey, number> = {
+    allBookings: allBookings.length,
     pending:   pendingBookings.length,
-    active:    confirmedBookings.length,
     balances:  outstandingBookings.length,
+    activity:  recentActivity.length,
     idProofs:  idProofs.filter((p) => p.status === 'PENDING').length,
     conflicts: conflictLogs.filter((c) => c.status === 'blocked').length,
   };
@@ -141,9 +160,89 @@ export function AdminOperationalHub({ pendingBookings, confirmedBookings, outsta
         })}
       </div>
 
+      {/* Top Cards for Today's Bookings */}
+      <div className="p-4 border-b border-slate-800 bg-slate-900/30 flex items-center">
+        <div className="px-5 py-3 rounded-xl border border-slate-800 bg-slate-900/60 flex items-center gap-4 hover:border-amber-500/30 transition-colors">
+          <div className="flex flex-col">
+            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Today's Bookings</span>
+          </div>
+          <span className="text-2xl font-bold text-amber-400">{todaysBookingsCount}</span>
+        </div>
+      </div>
+
       {/* Tab Content */}
       <div className="p-4 min-h-[320px]">
         <AnimatePresence mode="wait">
+          {/* ─── ALL BOOKINGS ─── */}
+          {active === 'allBookings' && (
+            <motion.div
+              key="allBookings"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.15 }}
+            >
+              {/* Quick Filter Chips */}
+              <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2">
+                {(['All', 'Pending Request', 'Confirmed', 'Shoot Completed'] as FilterChip[]).map((chip) => (
+                  <button
+                    key={chip}
+                    onClick={() => setBookingFilter(chip)}
+                    className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
+                      bookingFilter === chip
+                        ? 'bg-amber-500 text-slate-950 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
+                        : 'bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700'
+                    }`}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+
+              {allBookings.length === 0 ? (
+                <EmptyState icon={CalendarCheck} message="No bookings found." />
+              ) : (
+                <div className="space-y-6">
+                  {bookingFilter === 'All' ? (
+                    <>
+                      <BookingGroup 
+                        title="Pending Requests" 
+                        bookings={allBookings.filter(b => b.status === 'PENDING')} 
+                      />
+                      <BookingGroup 
+                        title="Active & Confirmed" 
+                        bookings={allBookings.filter(b => b.status === 'CONFIRMED')} 
+                      />
+                      <BookingGroup 
+                        title="Shoot Completed" 
+                        bookings={allBookings.filter(b => b.status === 'COMPLETED')} 
+                      />
+                      <BookingGroup 
+                        title="Cancelled" 
+                        bookings={allBookings.filter(b => b.status === 'CANCELLED')} 
+                      />
+                    </>
+                  ) : (
+                    <div className="space-y-2">
+                      {allBookings
+                        .filter(b => {
+                          if (bookingFilter === 'Pending Request') return b.status === 'PENDING';
+                          if (bookingFilter === 'Confirmed') return b.status === 'CONFIRMED';
+                          if (bookingFilter === 'Shoot Completed') return b.status === 'COMPLETED';
+                          return true;
+                        })
+                        .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime())
+                        .map((b) => (
+                          <BookingRow key={b.id} booking={b} showPayment />
+                        ))
+                      }
+                    </div>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          )}
+
           {/* ─── PENDING ─── */}
           {active === 'pending' && (
             <motion.div
@@ -154,39 +253,17 @@ export function AdminOperationalHub({ pendingBookings, confirmedBookings, outsta
               transition={{ duration: 0.15 }}
             >
               {pendingBookings.length === 0 ? (
-                <EmptyState icon={Bell} message="No pending booking requests." />
+                <EmptyState icon={Bell} message="No pending requests at the moment." />
               ) : (
                 <div className="space-y-2">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-3">
-                    {pendingBookings.length} request{pendingBookings.length !== 1 ? 's' : ''} awaiting confirmation
+                    {pendingBookings.length} request{pendingBookings.length !== 1 ? 's' : ''} awaiting approval
                   </p>
-                  {pendingBookings.map((b) => (
-                    <BookingRow key={b.id} booking={b} showPayment={false} />
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {/* ─── ACTIVE ─── */}
-          {active === 'active' && (
-            <motion.div
-              key="active"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.15 }}
-            >
-              {confirmedBookings.length === 0 ? (
-                <EmptyState icon={CalendarCheck} message="No confirmed bookings at the moment." />
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-3">
-                    {confirmedBookings.length} confirmed booking{confirmedBookings.length !== 1 ? 's' : ''}
-                  </p>
-                  {confirmedBookings.map((b) => (
-                    <BookingRow key={b.id} booking={b} showPayment />
-                  ))}
+                  {pendingBookings
+                    .sort((a, b) => new Date(a.createdAt || a.dateTime).getTime() - new Date(b.createdAt || b.dateTime).getTime())
+                    .map((b) => (
+                      <BookingRow key={b.id} booking={b} showPayment />
+                    ))}
                 </div>
               )}
             </motion.div>
@@ -210,6 +287,30 @@ export function AdminOperationalHub({ pendingBookings, confirmedBookings, outsta
                   </p>
                   {outstandingBookings.map((b) => (
                     <BalanceRow key={b.id} booking={b} />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* ─── ACTIVITY FEED ─── */}
+          {active === 'activity' && (
+            <motion.div
+              key="activity"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.15 }}
+            >
+              {recentActivity.length === 0 ? (
+                <EmptyState icon={Activity} message="No recent activity found." />
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-3">
+                    Last 5 status changes
+                  </p>
+                  {recentActivity.map((b) => (
+                    <BookingRow key={b.id} booking={b} showPayment />
                   ))}
                 </div>
               )}
@@ -334,13 +435,39 @@ function EmptyState({ icon: Icon, message }: { icon: React.ElementType; message:
   );
 }
 
+function BookingGroup({ title, bookings }: { title: string; bookings: BaseBooking[] }) {
+  if (bookings.length === 0) return null;
+  return (
+    <div className="space-y-2">
+      <h3 className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold pb-1 border-b border-slate-800">
+        {title} ({bookings.length})
+      </h3>
+      <div className="space-y-2">
+        {bookings
+          .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime())
+          .map((b) => (
+            <BookingRow key={b.id} booking={b} showPayment />
+          ))
+        }
+      </div>
+    </div>
+  );
+}
+
 function BookingRow({ booking, showPayment }: { booking: BaseBooking; showPayment: boolean }) {
   const ServiceIcon = SERVICE_ICON[booking.type] ?? Package;
   const serviceColor = SERVICE_COLOR[booking.type] ?? 'text-slate-400';
   const payInfo = PAYMENT_LABEL[booking.paymentStatus];
 
+  const statusColors = {
+    PENDING: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    CONFIRMED: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    COMPLETED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    CANCELLED: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+  }[booking.status] || 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+
   return (
-    <Link href={`/dashboard/clients/${booking.clientId}`}>
+    <Link href="/admin/bookings">
       <div className="group flex items-center gap-3 p-3 rounded-xl border border-slate-800 hover:border-amber-500/30 hover:bg-slate-800/50 transition-all cursor-pointer">
         {/* Service icon */}
         <div className={`flex-shrink-0 p-2 rounded-lg bg-slate-800/80 ${serviceColor}`}>
@@ -353,6 +480,9 @@ function BookingRow({ booking, showPayment }: { booking: BaseBooking; showPaymen
             <span className="text-xs font-semibold text-white truncate">{booking.clientName}</span>
             <span className={`text-[10px] font-bold uppercase ${serviceColor}`}>
               {booking.type === 'PHOTOGRAPHY' ? 'Photo' : booking.type === 'STUDIO' ? 'Studio' : 'Rental'}
+            </span>
+            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase ${statusColors}`}>
+              {booking.status}
             </span>
           </div>
           <div className="flex items-center gap-3 mt-0.5">

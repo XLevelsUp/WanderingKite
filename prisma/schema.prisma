@@ -31,6 +31,7 @@ model User {
   email         String    @unique
   fullName      String?
   role          UserRole  @default(EMPLOYEE)
+  phone         String?   @db.VarChar(15)
   
   // Self-relation: Manager -> Subordinates
   managerId     String?
@@ -58,7 +59,7 @@ model Client {
   firstName     String?         @map("first_name")
   lastName      String?         @map("last_name")
   dateOfBirth   DateTime?       @map("date_of_birth")
-  phone         String?
+  phone         String?         @db.VarChar(15)
   address       String?
   email         String          @unique
   gender        String?
@@ -365,7 +366,7 @@ model RentalBooking {
   pickupCondition   String?           @map("pickup_condition")
   returnCondition   String?           @map("return_condition")
   returnedAt        DateTime?         @map("returned_at")
-  damageCost        Decimal?          @map("damage_cost")
+  damageCost        Int?              @map("damage_cost")
   damageDescription String?           @map("damage_description")
   agreementUrl      String?           @map("agreement_url")
   equipments        Equipment[]
@@ -383,8 +384,8 @@ model StudioBooking {
   durationHours     Int               @map("duration_hours")
   purpose           String
   status            BookingStatus     @default(PENDING)
-  amountPaid        Decimal           @default(0) @map("amount_paid")
-  additionalCharges Decimal           @default(0) @map("additional_charges")
+  amountPaid        Int               @default(0) @map("amount_paid")
+  additionalCharges Int               @default(0) @map("additional_charges")
   notes             String?
   override          Boolean           @default(false)
   equipments        Equipment[]
@@ -405,8 +406,8 @@ model PhotographyBooking {
   notes       String?
   peopleCount Int?          @map("people_count")
   status      BookingStatus @default(PENDING)
-  amountPaid  Decimal       @default(0) @map("amount_paid")
-  advancePaid Decimal       @default(0) @map("advance_paid")
+  amountPaid  Int           @default(0) @map("amount_paid")
+  advancePaid Int           @default(0) @map("advance_paid")
   album       AlbumDetail?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt

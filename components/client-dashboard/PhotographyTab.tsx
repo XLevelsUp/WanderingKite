@@ -208,7 +208,7 @@ export default function PhotographyTab() {
         return (
           <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1.5 w-fit">
             <CheckCircle2 className="h-3 w-3" />
-            Completed & Delivered
+            Shoot Completed
           </Badge>
         );
       case 'CANCELLED':
@@ -436,7 +436,7 @@ export default function PhotographyTab() {
                     onClick={(e) => {
                       try {
                         e.currentTarget.showPicker();
-                      } catch (err) {}
+                      } catch (err) { }
                     }}
                     style={{ colorScheme: 'dark' }}
                     className="flex h-9 w-full rounded-lg border border-slate-800 bg-slate-950 pl-10 pr-3 py-1 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500/50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
@@ -444,7 +444,7 @@ export default function PhotographyTab() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-1">
                 <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5 text-slate-400" />
