@@ -43,6 +43,7 @@ export default function LoginPage() {
         setError(signInError.message);
         toast.error(signInError.message, { id: toastId });
         hideLoader();
+        setIsLoading(false);
         return;
       }
 
@@ -50,16 +51,15 @@ export default function LoginPage() {
         toast.success('Successfully signed in!', { id: toastId });
         router.push('/dashboard');
         router.refresh();
+        // Do not set isLoading to false here, so the loader persists during redirect
+        return;
       }
     } catch (err) {
       setError('An unexpected error occurred');
       toast.error('An unexpected error occurred', { id: toastId });
       logger.error('[Login]', err);
       hideLoader();
-    } finally {
       setIsLoading(false);
-      // NOTE: We don't hideLoader() here on success because the redirect will handle tearing down the client state,
-      // and we want the loader to persist through the Next.js page transition.
     }
   };
 

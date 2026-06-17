@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import ClientBackButton from '@/components/dashboard/ClientBackButton';
+import { logger } from '@/lib/logger';
 
 export default async function ClientDetailPage({
   params,
@@ -38,7 +39,7 @@ export default async function ClientDetailPage({
     .single();
 
   if (clientError || !client) {
-    console.error('Fetch client details error:', clientError);
+    logger.error('Fetch client details error:', clientError);
     redirect('/dashboard/clients');
   }
 

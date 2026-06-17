@@ -6,6 +6,7 @@ import { equipmentSchema } from '@/lib/validations/schemas';
 import type { Database } from '@/lib/database.types';
 import { redirect } from 'next/navigation';
 import { parseSupabaseError } from '@/lib/errorHandler';
+import { logger } from '@/lib/logger';
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -535,7 +536,7 @@ export async function getMaintenanceRecords(equipmentId: string) {
     .order('date', { ascending: false });
 
   if (error) {
-    console.error('Error fetching maintenance records for equipment:', equipmentId, error);
+    logger.error('Error fetching maintenance records for equipment:', equipmentId, error);
     return [];
   }
 

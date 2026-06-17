@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { adminAuthClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
         .eq('B', eqItem.id);
 
       if (joinError) {
-        console.error(`Error querying join table for ${eqItem.name}:`, joinError);
+        logger.error(`Error querying join table for ${eqItem.name}:`, joinError);
         return NextResponse.json({ error: 'server_error' }, { status: 500 });
       }
 
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
           .gt('end_date', start.toISOString());
 
         if (overlapError) {
-          console.error(`Overlapping rentals check failed for ${eqItem.name}:`, overlapError);
+          logger.error(`Overlapping rentals check failed for ${eqItem.name}:`, overlapError);
           return NextResponse.json({ error: 'server_error' }, { status: 500 });
         }
 
@@ -135,7 +136,7 @@ export async function POST(request: Request) {
       .single();
 
     if (insertError || !booking) {
-      console.error('Rental insert failed:', insertError);
+      logger.error('Rental insert failed:', insertError);
       return NextResponse.json({ error: 'insert_failed' }, { status: 500 });
     }
 
@@ -150,7 +151,7 @@ export async function POST(request: Request) {
       .insert(joinRows);
 
     if (joinError) {
-      console.error('Rental join insertion failed:', joinError);
+      logger.error('Rental join insertion failed:', joinError);
       // Rollback booking if join fails to prevent orphaned items
       await supabase.from('rental_bookings').delete().eq('id', booking.id);
       return NextResponse.json({ error: 'join_failed' }, { status: 500 });
@@ -158,7 +159,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, bookingId: booking.id });
   } catch (error) {
-    console.error('POST /api/client/rentals/book error:', error);
+    logger.error('POST /api/client/rentals/book error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

@@ -422,7 +422,7 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
             >
               <h3 className="text-base font-semibold text-white/90 mb-1 flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-amber-500" />
-                Resolve Booking Conflict
+                Resolve Studio Booking Conflict
               </h3>
               <p className="text-xs text-slate-400 mb-4">
                 Update status of attempt by <strong className="text-white">{selectedConflict.client_name}</strong> for slot <strong className="text-white">{formatDateTime(selectedConflict.attempted_date_time)}</strong>.

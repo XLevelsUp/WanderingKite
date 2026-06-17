@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { adminAuthClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
       });
 
     if (uploadError) {
-      console.error('ID proof upload storage error:', uploadError);
+      logger.error('ID proof upload storage error:', uploadError);
       return NextResponse.json({
         error: 'upload_failed',
         message: `Upload failed: ${uploadError.message}. Please check your connection and ensure the file is valid.`,
@@ -80,7 +81,7 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (checkError) {
-      console.error('Check ID proof error:', checkError);
+      logger.error('Check ID proof error:', checkError);
       return NextResponse.json({ error: 'server_error' }, { status: 500 });
     }
 
@@ -110,7 +111,7 @@ export async function POST(request: Request) {
     }
 
     if (queryError) {
-      console.error('Save ID proof database error:', queryError);
+      logger.error('Save ID proof database error:', queryError);
       return NextResponse.json({
         error: 'database_failed',
         message: 'Failed to register your uploaded document in our database.',
@@ -119,7 +120,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('POST /api/client/rentals/id-proof error:', error);
+    logger.error('POST /api/client/rentals/id-proof error:', error);
     return NextResponse.json({
       error: 'server_error',
       message: 'Something went wrong on our end. Please try again in a moment.',

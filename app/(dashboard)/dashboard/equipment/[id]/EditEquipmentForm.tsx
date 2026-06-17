@@ -33,6 +33,7 @@ import { ImageUpload } from '@/components/shared/ImageUpload';
 import { Pencil, CheckCircle2, Plus, Trash2, RefreshCw, Loader2 } from 'lucide-react';
 import { useNotify } from '@/hooks/useNotify';
 import { PricingPlansManager, type PricingPlan } from '@/components/dashboard/PricingPlansManager';
+import { logger } from '@/lib/logger';
 
 // ── ImageUploadField ──────────────────────────────────────────────────────────
 function ImageUploadField({
@@ -413,7 +414,7 @@ function EditEquipmentFormContent({
       const fetchedMaint = await getMaintenanceRecords(equipment.id);
       setMaintRecords(fetchedMaint);
     } catch (err) {
-      console.error('Failed to refresh maintenance records:', err);
+      logger.error('Failed to refresh maintenance records:', err);
     }
   };
 
@@ -431,7 +432,7 @@ function EditEquipmentFormContent({
           setLogs(fetchedLogs);
         }
       } catch (err) {
-        console.error('Failed to load maintenance data:', err);
+        logger.error('Failed to load maintenance data:', err);
       } finally {
         if (active) {
           setFetchingData(false);

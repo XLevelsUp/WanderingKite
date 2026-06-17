@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
       .single();
 
     if (updateError) {
-      console.error('Toggle active status error:', updateError);
+      logger.error('Toggle active status error:', updateError);
       return NextResponse.json({ error: 'update_failed' }, { status: 500 });
     }
 
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error('POST /api/admin/clients/toggle-active error:', error);
+    logger.error('POST /api/admin/clients/toggle-active error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

@@ -25,10 +25,14 @@ export const logger = {
     }
   },
 
-  error(message: string, error?: any, ...args: any[]): void {
+  error(message: string | any, error?: any, ...args: any[]): void {
     // Errors are genuinely tracked in both development and production.
     // They are printed to console.error in all environments.
-    console.error(`[ERROR] ${message}`, error, ...args);
+    if (typeof message === 'string') {
+      console.error(`[ERROR] ${message}`, error, ...args);
+    } else {
+      console.error(`[ERROR]`, message, error, ...args);
+    }
 
     // --- Production Error Monitoring Service Integration (e.g. Sentry) ---
     // If you add Sentry, Bugsnag, or another monitoring service in the future,

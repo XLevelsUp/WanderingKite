@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 export default function RentalsError({
   error,
@@ -13,7 +14,7 @@ export default function RentalsError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('[Rentals Boundary Error]:', error);
+    logger.error('[Rentals Boundary Error]:', error);
   }, [error]);
 
   return (

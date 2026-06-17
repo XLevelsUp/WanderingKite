@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { adminAuthClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -28,7 +29,7 @@ export async function GET() {
       .order('date_time', { ascending: false });
 
     if (bookingsError) {
-      console.error('Fetch photography list failed:', bookingsError);
+      logger.error('Fetch photography list failed:', bookingsError);
       return NextResponse.json({ error: 'server_error' }, { status: 500 });
     }
 
@@ -48,7 +49,7 @@ export async function GET() {
             if (!error && data) {
               signedUrl = data.signedUrl;
             } else {
-              console.error('Failed to generate signed URL for album:', error);
+              logger.error('Failed to generate signed URL for album:', error);
               signedUrl = albumObj.download_link; // fallback to raw path if signing fails
             }
           }
@@ -78,7 +79,7 @@ export async function GET() {
 
     return NextResponse.json({ bookings: formattedBookings });
   } catch (error) {
-    console.error('GET /api/client/photography/list error:', error);
+    logger.error('GET /api/client/photography/list error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

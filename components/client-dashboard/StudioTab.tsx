@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { ColumnDef } from '@tanstack/react-table';
 import { Home, Calendar, Clock, CheckCircle2, AlertCircle, FileText, Sparkles, MapPin, Clapperboard, ClipboardList, Package, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ import { BookingTable } from './BookingTable';
 import EmptyState from './EmptyState';
 import { useNotifications } from '@/components/ui/useNotifications';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface StudioEquipment {
   id: string;
@@ -137,6 +139,7 @@ export default function StudioTab() {
   const [bookings, setBookings] = useState<StudioBooking[]>([]);
   const [equipmentCatalog, setEquipmentCatalog] = useState<StudioEquipment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { showLoader, hideLoader } = useNotifications();
 
@@ -210,7 +213,7 @@ export default function StudioTab() {
       const data = await res.json();
       setBookings(data.bookings || []);
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       toast.error('Could not load studio bookings');
     } finally {
       setIsLoading(false);
@@ -224,7 +227,7 @@ export default function StudioTab() {
         const data = await res.json();
         const items = data.equipment || [];
         if (items.length === 0) {
-          console.log('No active studio accessories found. Triggering auto-seed...');
+          logger.debug('No active studio accessories found. Triggering auto-seed...');
           const seedRes = await fetch('/api/seed-equipment');
           if (seedRes.ok) {
             const retryRes = await fetch('/api/client/studio/equipment', { cache: 'no-store' });
@@ -238,18 +241,33 @@ export default function StudioTab() {
         setEquipmentCatalog(items);
       }
     } catch (error) {
-      console.error('Failed to load studio accessories:', error);
+      logger.error('Failed to load studio accessories:', error);
     }
   };
 
   useEffect(() => {
     fetchBookings();
     fetchCatalog();
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel('client-studio-updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'studio_bookings' }, () => {
+        fetchBookings();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleBookStudio = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
+
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     if (!date || !hour || !minute || !ampm) {
       setFormError('Please select a date and time.');
@@ -388,11 +406,12 @@ export default function StudioTab() {
       setSelectedEquipmentIds([]);
       fetchBookings();
     } catch (error: any) {
-      console.error('Unexpected booking error:', error);
+      logger.error('Unexpected booking error:', error);
       setFormError('An unexpected error occurred while reserving the slot.');
       toast.error('Could not reserve studio slot.');
     } finally {
       hideLoader();
+      setIsSubmitting(false);
     }
   };
 
@@ -950,7 +969,7 @@ export default function StudioTab() {
                     Cancel
                   </Button>
                 </DialogClose>
-                <Button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-lg">
+                <Button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-lg">
                   Confirm Booking
                 </Button>
               </div>

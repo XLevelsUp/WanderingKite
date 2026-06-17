@@ -1,6 +1,7 @@
 import { signIn } from "@/auth";
 import { adminAuthClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -44,11 +45,11 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true });
       }
 
-      console.error("Auth helper threw error:", authError);
+      logger.error("Auth helper threw error:", authError);
       return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });
     }
   } catch (error) {
-    console.error("Client login route unexpected error:", error);
+    logger.error("Client login route unexpected error:", error);
     return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 }

@@ -111,7 +111,7 @@ export function Testimonials({
                     key={index} 
                     className="pl-6 min-w-0 flex-[0_0_100%] md:flex-[0_0_50%] lg:flex-[0_0_33.333%]"
                   >
-                    <div className="flex flex-col h-full rounded-3xl border border-border bg-card p-8 shadow-sm transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:shadow-xl hover:border-zinc-700/50">
+                    <div className="flex flex-col h-full rounded-3xl border border-border bg-card p-8 shadow-sm transition-all duration-500 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:shadow-xl hover:border-zinc-700/50">
                       <Quote
                         className={`mb-6 h-10 w-10 ${accentColors[accentColor]} opacity-20`}
                       />

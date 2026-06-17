@@ -94,7 +94,7 @@ const TABS = [
   { key: 'balances',  label: 'Outstanding Balances', icon: CreditCard },
   { key: 'activity',  label: 'Activity Feed', icon: Activity },
   { key: 'idProofs',  label: 'ID Verifications',  icon: ShieldCheck },
-  { key: 'conflicts', label: 'Booking Conflicts', icon: AlertCircle },
+  { key: 'conflicts', label: 'Studio Booking Conflicts', icon: AlertCircle },
 ] as const;
 
 type TabKey = typeof TABS[number]['key'];
@@ -125,7 +125,10 @@ export function AdminOperationalHub({
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-sm overflow-hidden">
       {/* Tab Bar */}
-      <div className="flex items-center border-b border-slate-800 bg-slate-950/50 overflow-x-auto">
+      <div 
+        className="flex items-center border-b border-slate-800 bg-slate-950/50 overflow-x-auto scrollbar-none"
+        style={{ WebkitMaskImage: 'linear-gradient(to right, black 85%, transparent 100%)', maskImage: 'linear-gradient(to right, black 85%, transparent 100%)' }}
+      >
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = active === tab.key;
@@ -351,7 +354,7 @@ export function AdminOperationalHub({
               transition={{ duration: 0.15 }}
             >
               {conflictLogs.length === 0 ? (
-                <EmptyState icon={AlertCircle} message="No booking conflicts logged." />
+                <EmptyState icon={AlertCircle} message="No studio booking conflicts logged." />
               ) : (
                 <div className="space-y-2">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-3">

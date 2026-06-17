@@ -4,6 +4,7 @@ import { adminAuthClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
 import ClientSignOutButton from "@/components/client-auth/ClientSignOutButton";
 import ClientDashboardWrapper from "@/components/client-dashboard/ClientDashboardWrapper";
+import { logger } from '@/lib/logger';
 
 export const metadata = {
   title: "Client Dashboard — WanderingKite Studio",
@@ -30,7 +31,7 @@ export default async function ClientDashboardPage() {
     .single();
 
   if (error || !client) {
-    console.error("Error fetching client for dashboard:", error);
+    logger.error("Error fetching client for dashboard:", error);
     redirect("/client/login");
   }
 
