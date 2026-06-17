@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NotificationContext } from '@/components/ui/NotificationProvider';
+import { Modal } from '@/components/ui/Modal';
 
 interface Notification {
   id: string;
@@ -22,6 +23,17 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: () => {},
+  });
   const router = useRouter();
   const supabase = createClient();
   const notificationCtx = useContext(NotificationContext);
@@ -124,7 +136,11 @@ export function NotificationBell() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  const markAllAsRead = async () => {
+  const confirmAction = (title: string, description: string, onConfirm: () => void) => {
+    setModalConfig({ isOpen: true, title, description, onConfirm });
+  };
+
+  const executeMarkAllAsRead = async () => {
     // Optimistically update
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     // Persist to DB
@@ -132,13 +148,31 @@ export function NotificationBell() {
     if (unreadIds.length > 0) {
       await supabase.from('admin_notifications').update({ is_read: true }).in('id', unreadIds);
     }
+    setModalConfig((prev) => ({ ...prev, isOpen: false }));
   };
 
-  const handleMarkAsRead = async (notifId: string) => {
+  const markAllAsRead = () => {
+    confirmAction(
+      'Mark All as Read',
+      'Are you sure you want to mark all notifications as read?',
+      executeMarkAllAsRead
+    );
+  };
+
+  const executeMarkAsRead = async (notifId: string) => {
     // Optimistic update
     setNotifications((prev) => prev.map((n) => (n.id === notifId ? { ...n, is_read: true } : n)));
     // Persist to DB
-    supabase.from('admin_notifications').update({ is_read: true }).eq('id', notifId).then();
+    await supabase.from('admin_notifications').update({ is_read: true }).eq('id', notifId);
+    setModalConfig((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const handleMarkAsRead = (notifId: string) => {
+    confirmAction(
+      'Mark as Read',
+      'Are you sure you want to mark this notification as read?',
+      () => executeMarkAsRead(notifId)
+    );
   };
 
   const handleView = async (clientId: string, notifId: string) => {
@@ -245,6 +279,20 @@ export function NotificationBell() {
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {modalConfig.isOpen && (
+          <Modal
+            id="notification-confirm-modal"
+            title={modalConfig.title}
+            description={modalConfig.description}
+            confirmText="Confirm"
+            cancelText="Cancel"
+            onConfirm={modalConfig.onConfirm}
+            onCancel={() => setModalConfig((prev) => ({ ...prev, isOpen: false }))}
+          />
         )}
       </AnimatePresence>
     </div>

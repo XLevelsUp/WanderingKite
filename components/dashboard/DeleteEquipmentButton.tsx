@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Modal } from '@/components/ui/Modal';
+import { AnimatePresence } from 'framer-motion';
 import { logger } from '@/lib/logger';
 import { useNotify } from '@/hooks/useNotify';
 
@@ -15,19 +17,13 @@ export function DeleteEquipmentButton({
   equipmentName: string;
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const router = useRouter();
   const { showError, showSuccess } = useNotify();
 
   const handleDelete = async () => {
-    if (
-      !confirm(
-        `Are you sure you want to delete ${equipmentName}? This action cannot be undone.`
-      )
-    ) {
-      return;
-    }
-
     setIsDeleting(true);
+    setShowModal(false);
     try {
       const res = await fetch(`/api/equipment/${equipmentId}`, {
         method: 'DELETE',
@@ -48,14 +44,30 @@ export function DeleteEquipmentButton({
   };
 
   return (
-    <Button
-      variant="destructive"
-      size="sm"
-      onClick={handleDelete}
-      disabled={isDeleting}
-      className="ml-2"
-    >
-      <Trash2 className="h-4 w-4" />
-    </Button>
+    <>
+      <Button
+        variant="destructive"
+        size="sm"
+        onClick={() => setShowModal(true)}
+        disabled={isDeleting}
+        className="ml-2"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+
+      <AnimatePresence>
+        {showModal && (
+          <Modal
+            id={`delete-equipment-${equipmentId}`}
+            title="Delete Equipment"
+            description={`Are you sure you want to delete ${equipmentName}? This action cannot be undone.`}
+            confirmText="Delete"
+            cancelText="Cancel"
+            onConfirm={handleDelete}
+            onCancel={() => setShowModal(false)}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }

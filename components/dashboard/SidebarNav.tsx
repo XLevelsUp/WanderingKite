@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Briefcase,
@@ -32,6 +32,20 @@ interface SidebarNavProps {
 export function SidebarNav({ profile, email }: SidebarNavProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isActive = (path: string) => {
+    if (path === '/dashboard') return pathname === '/dashboard';
+    return pathname === path || pathname.startsWith(`${path}/`);
+  };
+
+  const getLinkClasses = (path: string) => {
+    return `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all duration-150 ${
+      isActive(path)
+        ? 'text-primary bg-primary/10 font-medium'
+        : 'text-foreground/60 hover:text-primary hover:bg-primary/8'
+    }`;
+  };
 
   const access = getNavAccess(profile?.role ?? 'EMPLOYEE');
 
@@ -46,7 +60,7 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
     return (
       <nav className='space-y-1.5 animate-in fade-in duration-200'>
         <div className='mb-8'>
-          <Image src="/wkfulllogo.png" alt="Wandering Kite Logo" width={160} height={40} className="mb-6 object-contain" />
+          <h1 className='text-xl font-bold text-gradient-brand'>HR & Payroll</h1>
         </div>
         <button
           onClick={() => setIsExpanded(false)}
@@ -66,7 +80,7 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
               <Link
                 key={sub.href}
                 href={sub.href}
-                className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/70 hover:text-primary hover:bg-primary/8 transition-all duration-150'
+                className={getLinkClasses(sub.href)}
               >
                 <SubIcon className='w-4 h-4 opacity-75' />
                 {sub.label}
@@ -81,13 +95,12 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
   return (
     <nav className='space-y-1.5 animate-in fade-in duration-200'>
       <div className='mb-8'>
-        <Image src="/wkfulllogo.png" alt="Wandering Kite Logo" width={160} height={40} className="mb-6 object-contain" />
         <h1 className='text-xl font-bold text-gradient-brand'>Main Menu</h1>
       </div>
       {/* Always visible: Overview */}
       <Link
         href='/dashboard'
-        className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
+        className={getLinkClasses('/dashboard')}
       >
         <LayoutDashboard className='w-4 h-4 opacity-75' />
         Dashboard
@@ -97,7 +110,7 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
       {access.canViewEmployees && (
         <Link
           href='/dashboard/employees'
-          className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
+          className={getLinkClasses('/dashboard/employees')}
         >
           <Users className='w-4 h-4 opacity-75' />
           Employees
@@ -108,7 +121,7 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
       {access.canViewOwnAttendance && (
         <Link
           href='/dashboard/attendance'
-          className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
+          className={getLinkClasses('/dashboard/attendance')}
         >
           <Calendar className='w-4 h-4 opacity-75' />
           My Attendance
@@ -117,7 +130,7 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
       {access.canViewOwnPayslips && (
         <Link
           href='/dashboard/payslips'
-          className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
+          className={getLinkClasses('/dashboard/payslips')}
         >
           <Wallet className='w-4 h-4 opacity-75' />
           My Payslips
@@ -125,7 +138,7 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
       )}
 
       {access.canViewAuditLogs && (
-        <Link href='/dashboard/audit-logs' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+        <Link href='/dashboard/audit-logs' className={getLinkClasses('/dashboard/audit-logs')}>
           <ShieldAlert className='w-4 h-4 opacity-75' />
           Audit Logs
         </Link>
@@ -133,31 +146,31 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
 
       {/* Admin-only operational pages */}
       {profile?.role === 'SUPER_ADMIN' && (
-        <Link href='/admin/bookings' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+        <Link href='/admin/bookings' className={getLinkClasses('/admin/bookings')}>
           <Calendar className='w-4 h-4 opacity-75' />
           Central Bookings
         </Link>
       )}
       {access.canViewPortfolio && (
-        <Link href='/dashboard/portfolio' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+        <Link href='/dashboard/portfolio' className={getLinkClasses('/dashboard/portfolio')}>
           <FolderKanban className='w-4 h-4 opacity-75' />
           Portfolio
         </Link>
       )}
       {access.canViewEquipment && (
-        <Link href='/dashboard/equipment' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+        <Link href='/dashboard/equipment' className={getLinkClasses('/dashboard/equipment')}>
           <Briefcase className='w-4 h-4 opacity-75' />
           Equipment
         </Link>
       )}
       {access.canViewRentalSettings && (
-        <Link href='/dashboard/rental-settings' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+        <Link href='/dashboard/rental-settings' className={getLinkClasses('/dashboard/rental-settings')}>
           <Wrench className='w-4 h-4 opacity-75' />
           Rental Settings
         </Link>
       )}
       {access.canViewClients && (
-        <Link href='/dashboard/clients' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+        <Link href='/dashboard/clients' className={getLinkClasses('/dashboard/clients')}>
           <Users className='w-4 h-4 opacity-75' />
           Clients
         </Link>
@@ -171,7 +184,7 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
       )}
       */}
       {access.canViewDeployments && (
-        <Link href='/dashboard/fieldops' className='flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'>
+        <Link href='/dashboard/fieldops' className={getLinkClasses('/dashboard/fieldops')}>
           <Activity className='w-4 h-4 opacity-75' />
           Field Ops
         </Link>
@@ -210,7 +223,7 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
           <Link
             href="/admin/employees"
             onClick={() => setIsExpanded(true)}
-            className='w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm text-foreground/60 hover:text-primary hover:bg-primary/8 transition-all duration-150'
+            className={getLinkClasses('/admin/employees')}
           >
             <span className='flex items-center gap-3'>
               <Users className='w-4 h-4 opacity-75' />
