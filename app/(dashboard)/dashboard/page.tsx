@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { EmployeeDashboard } from './EmployeeDashboard';
 import { AdminOperationalHub } from '@/components/dashboard/AdminOperationalHub';
+import { getStudioBookingConflicts } from '@/actions/audit';
 
 export const metadata: Metadata = {
   title: 'Overview — Studio ERP',
@@ -82,14 +83,14 @@ export default async function DashboardPage() {
     idProofsRes,
     clientsRes,
   ] = await Promise.all([
-    supabase.from('photography_bookings').select('id, client_id, status, date_time, notes, amount_paid, advance_paid').eq('status', 'PENDING'),
-    supabase.from('photography_bookings').select('id, client_id, status, date_time, notes, amount_paid, advance_paid').eq('status', 'CONFIRMED'),
-    supabase.from('photography_bookings').select('id, client_id, status, date_time, notes, amount_paid, advance_paid').eq('status', 'COMPLETED'),
-    supabase.from('studio_bookings').select('id, client_id, status, date_time, notes, amount_paid').eq('status', 'PENDING'),
-    supabase.from('studio_bookings').select('id, client_id, status, date_time, notes, amount_paid').eq('status', 'CONFIRMED'),
-    supabase.from('studio_bookings').select('id, client_id, status, date_time, notes, amount_paid').eq('status', 'COMPLETED'),
-    supabase.from('rental_bookings').select('id, client_id, status, start_date').eq('status', 'PENDING'),
-    supabase.from('rental_bookings').select('id, client_id, status, start_date').eq('status', 'CONFIRMED'),
+    supabase.from('photography_bookings').select('id, client_id, status, date_time, notes, amount_paid, advance_paid, created_at, updated_at').eq('status', 'PENDING'),
+    supabase.from('photography_bookings').select('id, client_id, status, date_time, notes, amount_paid, advance_paid, created_at, updated_at').eq('status', 'CONFIRMED'),
+    supabase.from('photography_bookings').select('id, client_id, status, date_time, notes, amount_paid, advance_paid, created_at, updated_at').eq('status', 'COMPLETED'),
+    supabase.from('studio_bookings').select('id, client_id, status, date_time, notes, amount_paid, created_at, updated_at').eq('status', 'PENDING'),
+    supabase.from('studio_bookings').select('id, client_id, status, date_time, notes, amount_paid, created_at, updated_at').eq('status', 'CONFIRMED'),
+    supabase.from('studio_bookings').select('id, client_id, status, date_time, notes, amount_paid, created_at, updated_at').eq('status', 'COMPLETED'),
+    supabase.from('rental_bookings').select('id, client_id, status, start_date, created_at, updated_at').eq('status', 'PENDING'),
+    supabase.from('rental_bookings').select('id, client_id, status, start_date, created_at, updated_at').eq('status', 'CONFIRMED'),
     supabase.from('client_id_proofs').select('client_id, id_type, status, file_url'),
     supabase.from('clients').select('id, name'),
   ]);
@@ -115,6 +116,8 @@ export default async function DashboardPage() {
       quotation,
       amountPaid: Number(b.amount_paid ?? 0),
       paymentStatus: paymentStatus as PaymentStatus,
+      createdAt: b.created_at,
+      updatedAt: b.updated_at,
     };
   }
 
@@ -122,13 +125,13 @@ export default async function DashboardPage() {
     ...(photoPendingRes.data ?? []).map((b) => mapBooking(b, 'PHOTOGRAPHY')),
     ...(studioPendingRes.data ?? []).map((b) => mapBooking(b, 'STUDIO')),
     ...(rentalPendingRes.data ?? []).map((b) => mapBooking(b, 'RENTAL')),
-  ].sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const confirmedBookings = [
     ...(photoConfirmedRes.data ?? []).map((b) => mapBooking(b, 'PHOTOGRAPHY')),
     ...(studioConfirmedRes.data ?? []).map((b) => mapBooking(b, 'STUDIO')),
     ...(rentalConfirmedRes.data ?? []).map((b) => mapBooking(b, 'RENTAL')),
-  ].sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const idProofs = (idProofsRes.data ?? []).map((p: any) => ({
     clientId: p.client_id,
@@ -149,7 +152,40 @@ export default async function DashboardPage() {
     ...(studioCompletedRes.data ?? [])
       .map((b: any) => mapBooking(b, 'STUDIO'))
       .filter((b: any) => b.paymentStatus !== 'COMPLETED'),
-  ].sort((a: any, b: any) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+  ].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  // ─── Phase 2 Widget Calculations ──────────────────────────────────────────
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  const startOfWeek = new Date(startOfDay);
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Sunday as start of week
+  
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  let todaysBookingsCount = 0;
+
+  const allBookings = [
+    ...(photoPendingRes.data ?? []).map((b) => mapBooking(b, 'PHOTOGRAPHY')),
+    ...(photoConfirmedRes.data ?? []).map((b) => mapBooking(b, 'PHOTOGRAPHY')),
+    ...(photoCompletedRes.data ?? []).map((b) => mapBooking(b, 'PHOTOGRAPHY')),
+    ...(studioPendingRes.data ?? []).map((b) => mapBooking(b, 'STUDIO')),
+    ...(studioConfirmedRes.data ?? []).map((b) => mapBooking(b, 'STUDIO')),
+    ...(studioCompletedRes.data ?? []).map((b) => mapBooking(b, 'STUDIO')),
+    ...(rentalPendingRes.data ?? []).map((b) => mapBooking(b, 'RENTAL')),
+    ...(rentalConfirmedRes.data ?? []).map((b) => mapBooking(b, 'RENTAL')),
+  ];
+
+  allBookings.forEach((b) => {
+    const d = new Date(b.dateTime);
+    if (d >= startOfDay && d < new Date(startOfDay.getTime() + 86400000)) {
+      todaysBookingsCount++;
+    }
+  });
+
+  const recentActivity = [...allBookings]
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 5);
 
   // ─── Stat cards ────────────────────────────────────────────────────────────
   const statCards = [
@@ -206,6 +242,8 @@ export default async function DashboardPage() {
     return true;
   });
 
+  const conflictLogs = isSuperAdmin ? await getStudioBookingConflicts() : [];
+
   return (
     <div className="space-y-8">
       <div>
@@ -252,10 +290,14 @@ export default async function DashboardPage() {
             <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-widest">Operational Hub</h2>
           </div>
           <AdminOperationalHub
+            allBookings={allBookings}
             pendingBookings={pendingBookings}
             confirmedBookings={confirmedBookings}
             outstandingBookings={outstandingBookings}
             idProofs={idProofs}
+            conflictLogs={conflictLogs}
+            todaysBookingsCount={todaysBookingsCount}
+            recentActivity={recentActivity}
           />
         </div>
       )}

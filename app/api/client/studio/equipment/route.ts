@@ -2,6 +2,8 @@ import { auth } from '@/auth';
 import { adminAuthClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const session = await auth();
@@ -13,8 +15,9 @@ export async function GET() {
 
     const { data: equipment, error } = await supabase
       .from('equipment')
-      .select('*')
+      .select('*, categories(name)')
       .eq('available_for_studio', true)
+      .is('deletedAt', null)
       .neq('status', 'RETIRED')
       .order('name', { ascending: true });
 

@@ -41,7 +41,7 @@ export const ROUTE_ACCESS: Record<string, AppRole> = {
   '/dashboard/equipment':     'EMPLOYEE',
   '/dashboard/fieldops':      'EMPLOYEE',
   '/dashboard/clients':       'SUPER_ADMIN',
-  '/dashboard/audit-logs':    'ADMIN',
+  '/dashboard/audit-logs':    'SUPER_ADMIN',
   '/dashboard/rentals':       'ADMIN',
   '/dashboard/categories':    'ADMIN',
   '/dashboard/branches':      'ADMIN',

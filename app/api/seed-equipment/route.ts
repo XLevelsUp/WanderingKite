@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { adminAuthClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
 
 const initialRentalEquipment = [
@@ -54,7 +54,7 @@ const initialStudioEquipment = [
 export async function GET() {
   try {
     const results: string[] = [];
-    const supabase = await createClient();
+    const supabase = adminAuthClient;
 
     // Seed Rental Equipment
     for (const item of initialRentalEquipment) {

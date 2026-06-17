@@ -7,6 +7,7 @@ import { Camera, Video, Building2, MessageCircle, User } from 'lucide-react';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { siteConfig } from '@/config/site';
 import { usePathname } from 'next/navigation';
+import { NotificationBell } from '@/components/dashboard/NotificationBell';
 
 const navItems = [
   { label: 'Photography', href: '/photography', icon: Camera },
@@ -61,7 +62,11 @@ export function MainNav() {
         </Link>
 
         {/* Nav links */}
-        {!isDashboardOrAdmin && (
+        {isDashboardOrAdmin ? (
+          <div className="flex items-center gap-4 shrink-0">
+            <NotificationBell />
+          </div>
+        ) : (
           <>
             <ul className="hidden items-center gap-8 md:flex">
               {navItems.map((item) => (

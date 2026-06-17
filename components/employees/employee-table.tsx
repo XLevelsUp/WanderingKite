@@ -9,7 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Trash } from 'lucide-react';
+import { Trash, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { deleteEmployee } from '@/actions/employees';
 import { useState } from 'react';
@@ -44,6 +44,7 @@ export function EmployeeTable({
 }: EmployeeTableProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [viewingId, setViewingId] = useState<string | null>(null);
   const { showModal, removeModal, showError, showSuccess } = useNotifications();
 
   const handleDelete = (id: string, name: string | null) => {
@@ -134,9 +135,18 @@ export function EmployeeTable({
                         variant="outline"
                         size="sm"
                         className="h-8 px-3 hidden sm:flex text-xs font-medium"
-                        onClick={() => router.push(`/admin/employees/${employee.id}?from=dashboard`)}
+                        onClick={() => {
+                          setViewingId(employee.id);
+                          router.push(`/admin/employees/${employee.id}?from=dashboard`);
+                        }}
+                        disabled={viewingId === employee.id}
                       >
-                        View
+                        {viewingId === employee.id ? (
+                          <>
+                            <Loader2 className="animate-spin h-3 w-3 mr-1.5" />
+                            Loading...
+                          </>
+                        ) : 'View'}
                       </Button>
                       <Button
                         variant="ghost"

@@ -46,6 +46,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'booking_not_found' }, { status: 404 });
     }
 
+    let roundedDamageCost: number | undefined | null = undefined;
+    if (damageCost !== undefined && damageCost !== null) {
+      const num = Number(damageCost);
+      const MAX_INT = 2147483647;
+      if (isNaN(num) || num < 0 || num > MAX_INT) {
+        return NextResponse.json({ error: 'invalid_amount_range' }, { status: 400 });
+      }
+      roundedDamageCost = Math.round(num);
+    } else if (damageCost === null) {
+      roundedDamageCost = null;
+    }
+
     // Update rental record
     const { data: updated, error: updateError } = await supabase
       .from('rental_bookings')
@@ -54,7 +66,7 @@ export async function POST(request: Request) {
         pickup_condition: pickupCondition !== undefined ? pickupCondition : undefined,
         return_condition: returnCondition !== undefined ? returnCondition : undefined,
         returned_at: status === 'RETURNED' || status === 'DAMAGED' ? new Date().toISOString() : undefined,
-        damage_cost: damageCost !== undefined && damageCost !== null ? parseFloat(damageCost) : undefined,
+        damage_cost: roundedDamageCost !== undefined ? roundedDamageCost : undefined,
         damage_description: damageDescription !== undefined ? damageDescription : undefined,
         agreement_url: agreementUrl !== undefined ? agreementUrl : undefined,
         updated_at: new Date().toISOString(),

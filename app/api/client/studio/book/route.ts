@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     // Fetch client details
     const { data: client, error: clientError } = await supabase
       .from('clients')
-      .select('id, is_active')
+      .select('id, name, email, is_active')
       .eq('email', session.user.email as string)
       .single();
 
@@ -87,9 +87,55 @@ export async function POST(request: Request) {
     });
 
     if (hasOverlap) {
+      const conflictingBooking = (bookingsInWindow || []).find((b: any) => {
+        const bStart = new Date(b.date_time).getTime();
+        const bEnd = bStart + b.duration_hours * 60 * 60 * 1000 + 30 * 60 * 1000;
+        const pStart = start.getTime();
+        const pEnd = end.getTime();
+
+        return pStart < bEnd && pEnd > bStart;
+      });
+
+      let conflictingBookingDetails = null;
+      if (conflictingBooking) {
+        const { data: confClient } = await supabase
+          .from('clients')
+          .select('name')
+          .eq('id', conflictingBooking.client_id)
+          .single();
+
+        conflictingBookingDetails = {
+          id: conflictingBooking.id,
+          client_id: conflictingBooking.client_id,
+          client_name: confClient?.name || 'Unknown Client',
+          date_time: conflictingBooking.date_time,
+          duration_hours: conflictingBooking.duration_hours,
+          purpose: conflictingBooking.purpose,
+        };
+      }
+
+      const { error: auditError } = await supabase
+        .from('studio_booking_conflicts')
+        .insert({
+          client_id: client.id,
+          client_name: client.name || 'Unknown Client',
+          client_email: client.email || (session.user.email as string),
+          attempted_date_time: start.toISOString(),
+          attempted_duration_hours: duration,
+          attempted_purpose: purpose,
+          attempted_equipment_ids: equipmentIds,
+          conflicting_booking_id: conflictingBooking?.id || null,
+          conflicting_booking_details: conflictingBookingDetails,
+          status: 'blocked',
+        });
+
+      if (auditError) {
+        console.error('Failed to log booking conflict:', auditError);
+      }
+
       return NextResponse.json({
         error: 'booking_conflict',
-        message: 'This time slot is already booked. Please choose a different date or time.',
+        message: 'This time slot is already reserved by another booking. Please choose a different date or time. Your request has been logged and our team may reach out if we can adjust scheduling.',
       }, { status: 409 });
     }
 

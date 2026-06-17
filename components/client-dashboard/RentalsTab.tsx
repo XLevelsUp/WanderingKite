@@ -81,7 +81,15 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
 
   // Rental Booking Form States
   const [startDate, setStartDate] = useState('');
+  const [startHour, setStartHour] = useState('');
+  const [startMinute, setStartMinute] = useState('');
+  const [startAmpm, setStartAmpm] = useState('');
+  
   const [endDate, setEndDate] = useState('');
+  const [endHour, setEndHour] = useState('');
+  const [endMinute, setEndMinute] = useState('');
+  const [endAmpm, setEndAmpm] = useState('');
+
   const [purpose, setPurpose] = useState('');
   const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<string[]>([]);
   const [bookingError, setBookingError] = useState('');
@@ -170,8 +178,12 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
     e.preventDefault();
     setBookingError('');
 
-    if (!startDate || !endDate) {
-      setBookingError('Please enter start and end dates.');
+    if (!startDate || !startHour || !startMinute || !startAmpm) {
+      setBookingError('Please enter complete start date and time.');
+      return;
+    }
+    if (!endDate || !endHour || !endMinute || !endAmpm) {
+      setBookingError('Please enter complete end date and time.');
       return;
     }
     if (selectedEquipmentIds.length === 0) {
@@ -179,8 +191,24 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
       return;
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const formatDateTime = (dateStr: string, hourStr: string, minStr: string, ampmStr: string) => {
+      let hourNum = parseInt(hourStr, 10);
+      if (ampmStr === 'PM' && hourNum < 12) hourNum += 12;
+      if (ampmStr === 'AM' && hourNum === 12) hourNum = 0;
+      const h = hourNum.toString().padStart(2, '0');
+      return `${dateStr}T${h}:${minStr}:00`;
+    };
+
+    const startDateTimeStr = formatDateTime(startDate, startHour, startMinute, startAmpm);
+    const endDateTimeStr = formatDateTime(endDate, endHour, endMinute, endAmpm);
+
+    const start = new Date(startDateTimeStr);
+    const end = new Date(endDateTimeStr);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      setBookingError('Invalid date or time selected.');
+      return;
+    }
 
     if (start.getTime() <= Date.now()) {
       setBookingError('Rental start date must be in the future.');
@@ -197,8 +225,8 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          startDate,
-          endDate,
+          startDate: startDateTimeStr,
+          endDate: endDateTimeStr,
           purpose,
           equipmentIds: selectedEquipmentIds,
         }),
@@ -213,7 +241,13 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
       setIsBookDialogOpen(false);
       // Reset form
       setStartDate('');
+      setStartHour('');
+      setStartMinute('');
+      setStartAmpm('');
       setEndDate('');
+      setEndHour('');
+      setEndMinute('');
+      setEndAmpm('');
       setPurpose('');
       setSelectedEquipmentIds([]);
       fetchBookings();
@@ -302,7 +336,8 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
             {list.map((eq) => (
               <span
                 key={eq.id}
-                className="bg-slate-950 text-slate-300 border border-slate-800/80 px-2 py-0.5 rounded text-[10px] uppercase font-semibold shrink-0"
+                className="bg-slate-950 text-slate-300 border border-slate-800/80 px-2 py-0.5 rounded text-[10px] uppercase font-semibold truncate max-w-full inline-block"
+                title={eq.name}
               >
                 {eq.name}
               </span>
@@ -447,6 +482,17 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
         </div>
       )}
 
+      {/* Show rental terms/bill back image only after uploading an ID (pending or verified) */}
+      {idProof && !isRejected && (
+        <div className="mt-6 mb-8 bg-slate-900/50 rounded-2xl overflow-hidden border border-slate-800 shadow-lg">
+          <img 
+            src="/rental-bill-back.webp" 
+            alt="Wandering Kite Rental Terms and Conditions" 
+            className="w-full h-auto object-cover opacity-90 hover:opacity-100 transition-opacity"
+          />
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
@@ -460,14 +506,6 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
 
         {isVerified && (
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-            <Button
-              variant="outline"
-              onClick={() => setIsAgreementOpen(true)}
-              className="border-slate-800 hover:bg-slate-900 text-slate-350 hover:text-white rounded-full w-full sm:w-auto"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              View Standard Agreement
-            </Button>
             <Dialog open={isBookDialogOpen} onOpenChange={setIsBookDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-full shadow-[0_0_20px_rgba(245,158,11,0.1)] hover:scale-[1.02] transition-all duration-200 w-full sm:w-auto">
@@ -495,37 +533,142 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label htmlFor="startDate" className="text-xs font-semibold text-slate-300">Start Date *</Label>
-                      <Input
-                        type="datetime-local"
-                        id="startDate"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        onClick={(e) => {
-                          try {
-                            e.currentTarget.showPicker();
-                          } catch (err) {}
-                        }}
-                        className="bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 cursor-pointer"
-                        required
-                      />
+                    <style>{`
+                      input[type="date"]::-webkit-calendar-picker-indicator {
+                        display: block !important;
+                        opacity: 0.85 !important;
+                        cursor: pointer;
+                        filter: invert(62%) sepia(93%) saturate(1682%) hue-rotate(15deg) brightness(102%) contrast(101%) !important;
+                      }
+                      input[type="date"]::-webkit-calendar-picker-indicator:hover {
+                        opacity: 1 !important;
+                        filter: invert(72%) sepia(61%) saturate(3033%) hue-rotate(5deg) brightness(101%) contrast(97%) !important;
+                      }
+                    `}</style>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5 text-amber-500" />
+                        Start Date & Time *
+                      </Label>
+                      <div className="relative mb-2">
+                        <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-amber-500 pointer-events-none" />
+                        <input
+                          type="date"
+                          value={startDate}
+                          min={new Date().toISOString().split('T')[0]}
+                          onChange={(e) => {
+                            setStartDate(e.target.value);
+                            if (bookingError) setBookingError('');
+                          }}
+                          onClick={(e) => {
+                            try { e.currentTarget.showPicker(); } catch (err) {}
+                          }}
+                          style={{ colorScheme: 'dark' }}
+                          className="flex h-9 w-full rounded-lg border border-slate-800 bg-slate-950 pl-10 pr-3 py-1 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500/50 cursor-pointer"
+                          required
+                        />
+                      </div>
+                      <div className="flex gap-1.5">
+                        <div className="flex-1">
+                          <Select value={startHour} onValueChange={(val) => { setStartHour(val); if(bookingError) setBookingError(''); }}>
+                            <SelectTrigger className="w-full bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 text-xs">
+                              <SelectValue placeholder="Hour" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-950 border border-slate-800 text-white max-h-[200px]">
+                              {Array.from({ length: 12 }, (_, i) => {
+                                const h = (i + 1).toString().padStart(2, '0');
+                                return <SelectItem key={h} value={h}>{h}</SelectItem>;
+                              })}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex-1">
+                          <Select value={startMinute} onValueChange={setStartMinute}>
+                            <SelectTrigger className="w-full bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 text-xs">
+                              <SelectValue placeholder="Min" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-950 border border-slate-800 text-white max-h-[200px]">
+                              {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map((m) => (
+                                <SelectItem key={m} value={m}>{m}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="w-[72px] shrink-0">
+                          <Select value={startAmpm} onValueChange={(val) => { setStartAmpm(val); if(bookingError) setBookingError(''); }}>
+                            <SelectTrigger className="w-full bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 text-xs">
+                              <SelectValue placeholder="AM/PM" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-950 border border-slate-800 text-white">
+                              <SelectItem value="AM">AM</SelectItem>
+                              <SelectItem value="PM">PM</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="endDate" className="text-xs font-semibold text-slate-300">End Date *</Label>
-                      <Input
-                        type="datetime-local"
-                        id="endDate"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        onClick={(e) => {
-                          try {
-                            e.currentTarget.showPicker();
-                          } catch (err) {}
-                        }}
-                        className="bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 cursor-pointer"
-                        required
-                      />
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5 text-amber-500" />
+                        End Date & Time *
+                      </Label>
+                      <div className="relative mb-2">
+                        <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-amber-500 pointer-events-none" />
+                        <input
+                          type="date"
+                          value={endDate}
+                          min={startDate || new Date().toISOString().split('T')[0]}
+                          onChange={(e) => {
+                            setEndDate(e.target.value);
+                            if (bookingError) setBookingError('');
+                          }}
+                          onClick={(e) => {
+                            try { e.currentTarget.showPicker(); } catch (err) {}
+                          }}
+                          style={{ colorScheme: 'dark' }}
+                          className="flex h-9 w-full rounded-lg border border-slate-800 bg-slate-950 pl-10 pr-3 py-1 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500/50 cursor-pointer"
+                          required
+                        />
+                      </div>
+                      <div className="flex gap-1.5">
+                        <div className="flex-1">
+                          <Select value={endHour} onValueChange={(val) => { setEndHour(val); if(bookingError) setBookingError(''); }}>
+                            <SelectTrigger className="w-full bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 text-xs">
+                              <SelectValue placeholder="Hour" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-950 border border-slate-800 text-white max-h-[200px]">
+                              {Array.from({ length: 12 }, (_, i) => {
+                                const h = (i + 1).toString().padStart(2, '0');
+                                return <SelectItem key={h} value={h}>{h}</SelectItem>;
+                              })}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex-1">
+                          <Select value={endMinute} onValueChange={setEndMinute}>
+                            <SelectTrigger className="w-full bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 text-xs">
+                              <SelectValue placeholder="Min" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-950 border border-slate-800 text-white max-h-[200px]">
+                              {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map((m) => (
+                                <SelectItem key={m} value={m}>{m}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="w-[72px] shrink-0">
+                          <Select value={endAmpm} onValueChange={(val) => { setEndAmpm(val); if(bookingError) setBookingError(''); }}>
+                            <SelectTrigger className="w-full bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 text-xs">
+                              <SelectValue placeholder="AM/PM" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-950 border border-slate-800 text-white">
+                              <SelectItem value="AM">AM</SelectItem>
+                              <SelectItem value="PM">PM</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -615,8 +758,6 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
                   <SelectContent className="bg-slate-950 border border-slate-800 text-white">
                     <SelectItem value="Driving License">Driving License</SelectItem>
                     <SelectItem value="Passport">Passport</SelectItem>
-                    <SelectItem value="Aadhaar Card">Aadhaar Card</SelectItem>
-                    <SelectItem value="National ID">Other National ID</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

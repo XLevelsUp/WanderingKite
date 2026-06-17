@@ -23,6 +23,8 @@ import {
   AlertTriangle,
   MapPin,
   CircleDollarSign,
+  Image as ImageIcon,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -39,13 +41,8 @@ import {
   DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNotifications } from '@/components/ui/useNotifications';
 
 interface AlbumDetail {
@@ -65,6 +62,7 @@ interface PhotographyBooking {
   status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
   amountPaid: number | string;
   advancePaid: number | string;
+  createdAt?: string;
   album?: AlbumDetail | null;
 }
 
@@ -85,6 +83,7 @@ interface RentalBooking {
   damageCost: number | string | null;
   damageDescription: string | null;
   agreementUrl: string | null;
+  createdAt?: string;
   equipments: Equipment[];
 }
 
@@ -97,6 +96,7 @@ interface StudioBooking {
   amountPaid: number | string;
   additionalCharges: number | string;
   notes: string | null;
+  createdAt?: string;
   equipments: Equipment[];
 }
 
@@ -143,6 +143,10 @@ export default function ClientDetailsView({
   const { showLoader, hideLoader } = useNotifications();
 
   // Local state for toggling views and tracking operations
+  const [activeTab, setActiveTab] = useState<'pending' | 'active' | 'completed' | 'editing' | 'handed_over'>('pending');
+  const [visibleCompleted, setVisibleCompleted] = useState(5);
+  const [mobileActionsBooking, setMobileActionsBooking] = useState<{ id: string, type: 'PHOTOGRAPHY' | 'STUDIO' | 'RENTAL', status: string, data: any } | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean, title: string, desc: string, onConfirm: () => void, isDestructive: boolean }>({ isOpen: false, title: '', desc: '', onConfirm: () => {}, isDestructive: false });
   const [client, setClient] = useState<ClientProfile>(initialClient);
   const [idProof, setIdProof] = useState<IdProof | null>(initialIdProof);
   const [photographyBookings, setPhotographyBookings] = useState<PhotographyBooking[]>(initialPhotographyBookings);
@@ -185,613 +189,400 @@ export default function ClientDetailsView({
     ? photographyBookings.find((b) => b.id === activeBookingId)
     : studioBookings.find((b) => b.id === activeBookingId);
 
-  const pendingPhotography = photographyBookings.filter((b) => b.status === 'PENDING');
-  const confirmedPhotography = photographyBookings.filter((b) => b.status !== 'PENDING');
+  type UnifiedBooking = {
+    id: string;
+    type: 'PHOTOGRAPHY' | 'STUDIO' | 'RENTAL';
+    status: string;
+    sortDate: number;
+    data: any;
+  };
 
-  const pendingStudio = studioBookings.filter((b) => b.status === 'PENDING');
-  const confirmedStudio = studioBookings.filter((b) => b.status !== 'PENDING');
+  const allBookings: UnifiedBooking[] = [
+    ...photographyBookings.map(b => ({ id: b.id, type: 'PHOTOGRAPHY' as const, status: b.status, sortDate: new Date(b.createdAt || b.dateTime || 0).getTime(), data: b })),
+    ...studioBookings.map(b => ({ id: b.id, type: 'STUDIO' as const, status: b.status, sortDate: new Date(b.createdAt || b.dateTime || 0).getTime(), data: b })),
+    ...rentalBookings.map(b => ({ id: b.id, type: 'RENTAL' as const, status: b.status, sortDate: new Date(b.createdAt || b.startDate || 0).getTime(), data: b })),
+  ].sort((a, b) => b.sortDate - a.sortDate);
 
-  const pendingRentals = rentalBookings.filter((b) => b.status === 'PENDING');
-  const confirmedRentals = rentalBookings.filter((b) => b.status !== 'PENDING');
+  const pendingBookings = allBookings.filter(b => b.status === 'PENDING');
+  const activeBookings = allBookings.filter(b => b.status === 'CONFIRMED');
+  const editingBookings = allBookings.filter(b => b.status === 'IN_EDITING');
+  const handedOverBookings = allBookings.filter(b => b.status === 'HANDED_OVER');
+  const completedBookings = allBookings.filter(b => ['COMPLETED', 'RETURNED', 'DAMAGED', 'CANCELLED'].includes(b.status));
 
-  const renderPhotographyBookingItem = (booking: any) => {
+
+  const handleSimpleStatusUpdate = async (bookingId: string, bookingType: string, newStatus: string, booking?: any) => {
+    if (newStatus === 'HANDED_OVER' && booking && !booking.delivery_link) {
+      toast.error('Please add a delivery link from the main dashboard workflow first.');
+      return;
+    }
+    showLoader('Updating status...');
+    try {
+      const res = await fetch('/api/admin/bookings/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId, bookingType, status: newStatus }),
+      });
+      if (!res.ok) throw new Error('Failed to update status');
+      toast.success('Status updated successfully');
+      router.refresh();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      hideLoader();
+    }
+  };
+
+  const renderActions = (bookingType: 'PHOTOGRAPHY' | 'STUDIO' | 'RENTAL', status: string, booking: any, isMobileSheet = false) => {
+    const btnClass = isMobileSheet 
+      ? "w-full justify-start text-sm h-10 px-4 mb-2 rounded-xl" 
+      : "text-xs h-8 py-1 px-3 rounded-lg shadow-sm font-medium";
+
+    if (status === 'PENDING') {
+      const idNotVerified = bookingType === 'RENTAL' && (!idProof || idProof.status !== 'VERIFIED');
+      return (
+        <div className={`flex ${isMobileSheet ? 'flex-col' : 'items-center gap-2'}`}>
+          <Button 
+            variant="outline" 
+            className={`border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 ${btnClass} ${idNotVerified ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={() => {
+              if (idNotVerified) {
+                if(isMobileSheet) toast.error('Verify client ID before confirming rental');
+                return;
+              }
+              if (isMobileSheet) setMobileActionsBooking(null);
+              if (bookingType === 'RENTAL') {
+                handleConfirmRental(booking.id);
+              } else {
+                setActiveBookingId(booking.id);
+                setActiveBookingType(bookingType as 'PHOTOGRAPHY' | 'STUDIO');
+                setUpdateStatus('CONFIRMED');
+                const { metadata: meta } = parseNotesMetadata(booking.notes);
+                setUpdateQuotationAmount(String(meta.quotationAmount || meta.estimatedBreakdown?.estimatedTotal || ''));
+                setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                setUpdateAdvancePaid(String(booking.advancePaid || meta.advancePaid || '0'));
+                setBookingUpdateError('');
+                setIsBookingUpdateOpen(true);
+              }
+            }}
+            title={idNotVerified ? 'Verify client ID before confirming rental' : undefined}
+          >
+            {idNotVerified ? (
+              <><Shield className="h-3 w-3 mr-1.5 text-amber-400" /> ID Not Verified</>
+            ) : (
+              <><Check className="h-3 w-3 mr-1.5" /> Approve</>
+            )}
+          </Button>
+          <Button 
+            variant="outline" 
+            className={`border-rose-500/30 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 ${btnClass}`}
+            onClick={() => {
+              if (isMobileSheet) setMobileActionsBooking(null);
+              setConfirmDialog({
+                isOpen: true,
+                title: 'Reject Request',
+                desc: 'Are you sure you want to reject this booking request? This action cannot be undone.',
+                isDestructive: true,
+                onConfirm: () => {
+                  if (bookingType === 'RENTAL') {
+                    // Assuming we have a way to cancel rental
+                  } else {
+                    setActiveBookingId(booking.id);
+                    setActiveBookingType(bookingType as 'PHOTOGRAPHY' | 'STUDIO');
+                    setUpdateStatus('CANCELLED');
+                    const { metadata: meta } = parseNotesMetadata(booking.notes);
+                    setUpdateQuotationAmount(String(meta.quotationAmount || meta.estimatedBreakdown?.estimatedTotal || ''));
+                    setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                    setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                    setUpdateAdvancePaid(String(booking.advancePaid || meta.advancePaid || '0'));
+                    setBookingUpdateError('');
+                    setIsBookingUpdateOpen(true);
+                  }
+                }
+              });
+            }}
+          >
+            <X className="h-3 w-3 mr-1.5" /> Reject
+          </Button>
+        </div>
+      );
+    }
+
+    if (status === 'CONFIRMED') {
+      return (
+        <div className={`flex ${isMobileSheet ? 'flex-col' : 'items-center gap-2'}`}>
+          <Button 
+            variant="outline" 
+            className={`border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 ${btnClass}`}
+            onClick={() => {
+              if (isMobileSheet) setMobileActionsBooking(null);
+              if (bookingType === 'RENTAL') {
+                setActiveRentalBooking(booking);
+                setRentalStatus('RETURNED');
+                setIsRentalUpdateOpen(true);
+              } else {
+                setActiveBookingId(booking.id);
+                setActiveBookingType(bookingType as 'PHOTOGRAPHY' | 'STUDIO');
+                setUpdateStatus('CONFIRMED');
+                const { metadata: meta } = parseNotesMetadata(booking.notes);
+                setUpdateQuotationAmount(String(meta.quotationAmount || meta.estimatedBreakdown?.estimatedTotal || ''));
+                setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                setUpdateAdvancePaid(String(booking.advancePaid || meta.advancePaid || '0'));
+                setBookingUpdateError('');
+                setIsBookingUpdateOpen(true);
+              }
+            }}
+          >
+            <CircleDollarSign className="h-3 w-3 mr-1.5" /> {bookingType === 'RENTAL' ? 'Process Return' : 'Update Payments'}
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className={`border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 ${btnClass}`}
+            onClick={() => {
+              if (isMobileSheet) setMobileActionsBooking(null);
+              if (bookingType === 'PHOTOGRAPHY') {
+                setActivePhotoBookingId(booking.id);
+                const { metadata: meta } = parseNotesMetadata(booking.notes);
+                setUpdateQuotationAmount(String(meta.quotationAmount || ''));
+                setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                setUpdateAdvancePaid(String(booking.advancePaid || '0'));
+                setAlbumName(booking.album?.name || '');
+                setAlbumLink(booking.album?.downloadLink || '');
+                setPhotoError('');
+                setIsPhotoCompleteOpen(true);
+              } else if (bookingType === 'STUDIO') {
+                setActiveBookingId(booking.id);
+                setActiveBookingType(bookingType as 'PHOTOGRAPHY' | 'STUDIO');
+                setUpdateStatus('COMPLETED');
+                const { metadata: meta } = parseNotesMetadata(booking.notes);
+                setUpdateQuotationAmount(String(meta.quotationAmount || meta.estimatedBreakdown?.estimatedTotal || ''));
+                setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                setUpdateAdvancePaid(String(booking.advancePaid || meta.advancePaid || '0'));
+                setBookingUpdateError('');
+                setIsBookingUpdateOpen(true);
+              } else {
+                 // For Rental, damage is a constructive action in a way
+                 setActiveRentalBooking(booking);
+                 setRentalStatus('DAMAGED');
+                 setIsRentalUpdateOpen(true);
+              }
+            }}
+          >
+            <Check className="h-3 w-3 mr-1.5" /> {bookingType === 'RENTAL' ? 'Mark Damaged' : 'Mark Complete'}
+          </Button>
+
+          <Button 
+            variant="outline" 
+            className={`border-rose-500/30 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 ${btnClass}`}
+            onClick={() => {
+              if (isMobileSheet) setMobileActionsBooking(null);
+              setConfirmDialog({
+                isOpen: true,
+                title: 'Cancel Booking',
+                desc: 'Are you sure you want to cancel this booking? This action cannot be undone.',
+                isDestructive: true,
+                onConfirm: () => {
+                  setActiveBookingId(booking.id);
+                  setActiveBookingType(bookingType as 'PHOTOGRAPHY' | 'STUDIO');
+                  setUpdateStatus('CANCELLED');
+                  const { metadata: meta } = parseNotesMetadata(booking.notes);
+                  setUpdateQuotationAmount(String(meta.quotationAmount || meta.estimatedBreakdown?.estimatedTotal || ''));
+                  setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                  setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                  setUpdateAdvancePaid(String(booking.advancePaid || meta.advancePaid || '0'));
+                  setBookingUpdateError('');
+                  setIsBookingUpdateOpen(true);
+                }
+              });
+            }}
+          >
+            <X className="h-3 w-3 mr-1.5" /> Cancel
+          </Button>
+        </div>
+      );
+    }
+
+    if (['COMPLETED', 'IN_EDITING', 'HANDED_OVER', 'RETURNED', 'DAMAGED', 'CANCELLED'].includes(status)) {
+       // Completed usually only has "View Details" or "Update Payments" if there is an outstanding balance
+       // We can allow "Update Payments" for completed bookings if needed.
+       return (
+        <div className={`flex ${isMobileSheet ? 'flex-col' : 'items-center gap-2'}`}>
+          {bookingType !== 'RENTAL' && status === 'COMPLETED' && (
+             <Button 
+              variant="outline" 
+              className={`border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300 ${btnClass}`}
+              onClick={() => {
+                if (isMobileSheet) setMobileActionsBooking(null);
+                handleSimpleStatusUpdate(booking.id, bookingType, 'IN_EDITING');
+              }}
+            >
+              <Check className="h-3 w-3 mr-1.5" /> Set Editing
+            </Button>
+          )}
+          {bookingType !== 'RENTAL' && status === 'IN_EDITING' && (
+             <Button 
+              variant="outline" 
+              className={`border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-300 ${btnClass}`}
+              onClick={() => {
+                if (isMobileSheet) setMobileActionsBooking(null);
+                handleSimpleStatusUpdate(booking.id, bookingType, 'HANDED_OVER', booking);
+              }}
+            >
+              <Check className="h-3 w-3 mr-1.5" /> Handed Over
+            </Button>
+          )}
+          {bookingType !== 'RENTAL' && status !== 'CANCELLED' && (
+             <Button 
+              variant="outline" 
+              className={`border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white ${btnClass}`}
+              onClick={() => {
+                if (isMobileSheet) setMobileActionsBooking(null);
+                setActiveBookingId(booking.id);
+                setActiveBookingType(bookingType as 'PHOTOGRAPHY' | 'STUDIO');
+                setUpdateStatus('COMPLETED');
+                const { metadata: meta } = parseNotesMetadata(booking.notes);
+                setUpdateQuotationAmount(String(meta.quotationAmount || meta.estimatedBreakdown?.estimatedTotal || ''));
+                setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
+                setUpdateAmountPaid(String(booking.amountPaid || '0'));
+                setUpdateAdvancePaid(String(booking.advancePaid || meta.advancePaid || '0'));
+                setBookingUpdateError('');
+                setIsBookingUpdateOpen(true);
+              }}
+            >
+              <CircleDollarSign className="h-3 w-3 mr-1.5" /> Update Payments
+            </Button>
+          )}
+        </div>
+       );
+    }
+    
+    return null;
+  };
+
+  const renderUnifiedBooking = (unified: UnifiedBooking) => {
+    const { type, status, data: booking } = unified;
     const { userNotes, metadata } = parseNotesMetadata(booking.notes);
+    
+    const Icon = type === 'PHOTOGRAPHY' ? Camera : type === 'STUDIO' ? Home : Film;
     
     return (
       <div
-        key={booking.id}
-        className="p-3.5 bg-slate-950/60 border border-slate-850 hover:border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-start justify-between gap-4 transition-all duration-200 text-xs w-full"
+        key={`${type}-${booking.id}`}
+        className="p-3.5 bg-slate-950/60 border border-slate-850 hover:border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-start justify-between gap-4 transition-all duration-200 text-xs w-full relative"
       >
+        <div className="absolute top-3.5 right-3.5 sm:hidden">
+           <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-white" onClick={() => setMobileActionsBooking({ id: booking.id, type, status, data: booking })}>
+             <ChevronDown className="h-4 w-4" />
+           </Button>
+        </div>
+
         <div className="space-y-1 w-full sm:max-w-[70%]">
-          <div className="font-semibold text-white">
-            {formatDateTime12h(booking.dateTime)}
+          <div className="flex items-center gap-2 font-semibold text-white">
+            <Icon className="h-3.5 w-3.5 text-amber-500" />
+            <span className="uppercase text-[10px] tracking-wider text-amber-500 font-bold">{type === 'PHOTOGRAPHY' ? 'Photography' : type === 'STUDIO' ? 'Studio Space' : 'Equipment Rental'}</span>
+            <span className="text-slate-500 px-1">•</span>
+            {type === 'RENTAL' ? `Out: ${formatDateTime12h(booking.startDate)}` : `${formatDateTime12h(booking.dateTime || booking.createdAt)} ${type === 'STUDIO' ? `(${booking.durationHours} hrs)` : ''}`}
           </div>
-          <div className="text-slate-400">
-            Type: <span className="text-slate-200">{booking.sessionType}</span> | Location:{' '}
-            <span className="text-slate-200">{booking.location}</span>
-          </div>
-          {userNotes && <div className="text-[10px] text-slate-500 italic max-w-sm">"{userNotes}"</div>}
           
-          {/* Payment & Quotation details: Visible only to Super Admin */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-1.5 text-[11px] text-slate-450 bg-slate-900/40 p-2 rounded-lg border border-slate-850/50 w-full sm:w-fit">
-            {metadata.quotationAmount !== undefined && (
-              <span>Quotation: <span className="font-semibold text-white">₹{metadata.quotationAmount}</span></span>
-            )}
-            {booking.advancePaid !== undefined && Number(booking.advancePaid) > 0 && (
-              <span>Advance Recd: <span className="font-semibold text-slate-300">₹{booking.advancePaid}</span></span>
-            )}
-            <span>Total Paid: <span className="font-semibold text-slate-300">₹{booking.amountPaid || 0}</span></span>
-            
-            {/* Outstanding Balance */}
-            {metadata.quotationAmount !== undefined && (
-              <span className="font-medium">
-                Balance:{' '}
-                <span className={Number(metadata.quotationAmount) - Number(booking.amountPaid || 0) > 0 ? 'text-amber-500 font-bold' : 'text-emerald-500'}>
-                  ₹{Math.max(0, Number(metadata.quotationAmount) - Number(booking.amountPaid || 0))}
-                </span>
-              </span>
-            )}
-
-            {metadata.paymentStatus && (
-              <Badge className={`py-0.5 px-1.5 text-[9px] uppercase font-bold rounded ${
-                booking.status === 'CANCELLED' && (Number(booking.advancePaid || 0) > 0 || Number(booking.amountPaid || 0) > 0)
-                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                  : metadata.paymentStatus === 'COMPLETED'
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : metadata.paymentStatus === 'PENDING'
-                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-              }`}>
-                {booking.status === 'CANCELLED' && (Number(booking.advancePaid || 0) > 0 || Number(booking.amountPaid || 0) > 0)
-                  ? 'Cancelled (Retained Advance)'
-                  : metadata.paymentStatus === 'COMPLETED'
-                  ? 'Paid Fully'
-                  : metadata.paymentStatus === 'PENDING'
-                  ? 'Payment Pending'
-                  : 'Partial'}
-              </Badge>
-            )}
+          <div className="text-slate-400">
+            {type === 'PHOTOGRAPHY' && <><span className="text-slate-200">{booking.sessionType}</span> | Location: <span className="text-slate-200">{booking.location}</span></>}
+            {type === 'STUDIO' && <>Purpose: <span className="text-slate-200">{booking.purpose}</span></>}
+            {type === 'RENTAL' && <>In: <span className="text-slate-200">{formatDateTime12h(booking.endDate)}</span></>}
           </div>
 
-          {booking.album && (
+          {(type === 'STUDIO' || type === 'RENTAL') && (
+            <div className="flex flex-wrap gap-1 pt-1">
+              {booking.equipments?.map((eq: any) => (
+                <span key={eq.id} className="bg-slate-900 text-slate-355 border border-slate-800 px-1.5 py-0.5 rounded text-[9px] uppercase font-semibold shrink-0">
+                  {eq.name || eq.equipment?.name || 'Unknown Item'}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {booking.delivery_link && (
+            <div className="pt-2">
+              <a href={booking.delivery_link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 px-2 py-1 rounded-md border border-indigo-500/20 transition-colors">
+                <LinkIcon className="h-3 w-3" /> View Deliverables
+              </a>
+            </div>
+          )}
+          
+          {type === 'RENTAL' && booking.purpose && (
+            <div className="text-slate-400 pt-0.5">Purpose: <span className="text-slate-200">{booking.purpose}</span></div>
+          )}
+
+          {userNotes && <div className="text-[10px] text-slate-500 italic max-w-sm whitespace-pre-line break-words">"{userNotes}"</div>}
+          
+          {/* Payment Details for Studio and Photo */}
+          {(type === 'PHOTOGRAPHY' || type === 'STUDIO') && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 text-[11px] text-slate-450 bg-slate-900/40 p-2 rounded-lg border border-slate-850/50 w-full sm:w-fit">
+              {metadata.quotationAmount !== undefined && (
+                <span>Quotation: <span className="font-semibold text-white">₹{metadata.quotationAmount}</span></span>
+              )}
+              <span>Total Paid: <span className="font-semibold text-slate-300">₹{booking.amountPaid || 0}</span></span>
+              {metadata.quotationAmount !== undefined && booking.status !== 'CANCELLED' && (
+                <span className="font-medium">
+                  Balance: <span className={Number(metadata.quotationAmount) - Number(booking.amountPaid || 0) > 0 ? 'text-amber-500 font-bold' : 'text-emerald-500'}>
+                    ₹{Math.max(0, Number(metadata.quotationAmount) - Number(booking.amountPaid || 0))}
+                  </span>
+                </span>
+              )}
+            </div>
+          )}
+          
+          {type === 'PHOTOGRAPHY' && booking.album && (
             <div className="pt-1.5 flex items-center gap-1.5">
               <FileText className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-              <a
-                href={booking.album.downloadLink || ''}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-amber-500 hover:text-amber-400 font-semibold inline-flex items-center gap-0.5"
-              >
-                Album: {booking.album.name}
-                <ExternalLink className="h-2.5 w-2.5" />
+              <a href={booking.album.downloadLink || ''} target="_blank" rel="noopener noreferrer" className="text-amber-500 hover:text-amber-400 font-semibold inline-flex items-center gap-0.5">
+                Album: {booking.album.name} <ExternalLink className="h-2.5 w-2.5" />
               </a>
             </div>
           )}
-        </div>
 
-        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2.5 shrink-0 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-850/50 w-full sm:w-auto">
-          <div>
-            {booking.status === 'PENDING' && (
-              <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px]">
-                Pending
-              </Badge>
-            )}
-            {booking.status === 'CONFIRMED' && (
-              <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-[10px]">
-                Confirmed
-              </Badge>
-            )}
-            {booking.status === 'COMPLETED' && (
-              <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px]">
-                Completed & Delivered
-              </Badge>
-            )}
-            {booking.status === 'CANCELLED' && (
-              <Badge className="bg-slate-800 text-slate-450 border border-slate-700 px-2 py-0.5 rounded text-[10px]">
-                Cancelled
-              </Badge>
-            )}
-          </div>
-
-          {booking.status !== 'CANCELLED' && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="border-slate-800 hover:bg-slate-900 text-[10px] h-6 py-0.5 px-2 rounded">
-                  Update
-                  <ChevronDown className="h-3 w-3 ml-1" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-slate-950 border border-slate-855 text-white text-xs">
-                {booking.status !== 'COMPLETED' ? (
-                  <>
-                    {booking.status === 'PENDING' && (
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setActiveBookingId(booking.id);
-                          setActiveBookingType('PHOTOGRAPHY');
-                          setUpdateStatus('CONFIRMED');
-                          
-                          const { metadata: meta } = parseNotesMetadata(booking.notes);
-                          setUpdateQuotationAmount(String(meta.quotationAmount || ''));
-                          setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
-                          setUpdateAmountPaid(String(booking.amountPaid || '0'));
-                          setUpdateAdvancePaid(String(booking.advancePaid || '0'));
-                          setBookingUpdateError('');
-                          setIsBookingUpdateOpen(true);
-                        }}
-                      >
-                        Confirm & Collect Advance
-                      </DropdownMenuItem>
-                    )}
-                    {booking.status === 'CONFIRMED' && (
-                      <>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setActiveBookingId(booking.id);
-                            setActiveBookingType('PHOTOGRAPHY');
-                            setUpdateStatus('CONFIRMED');
-                            const { metadata: meta } = parseNotesMetadata(booking.notes);
-                            setUpdateQuotationAmount(String(meta.quotationAmount || ''));
-                            setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
-                            setUpdateAmountPaid(String(booking.amountPaid || '0'));
-                            setUpdateAdvancePaid(String(booking.advancePaid || '0'));
-                            setBookingUpdateError('');
-                            setIsBookingUpdateOpen(true);
-                          }}
-                        >
-                          Update Payments
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setActivePhotoBookingId(booking.id);
-                            const { metadata: meta } = parseNotesMetadata(booking.notes);
-                            setUpdateQuotationAmount(String(meta.quotationAmount || ''));
-                            setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
-                            setUpdateAmountPaid(String(booking.amountPaid || '0'));
-                            setUpdateAdvancePaid(String(booking.advancePaid || '0'));
-                            setAlbumName(booking.album?.name || '');
-                            setAlbumLink(booking.album?.downloadLink || '');
-                            setPhotoError('');
-                            setIsPhotoCompleteOpen(true);
-                          }}
-                        >
-                          Mark Completed (Deliver Album)
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setActiveBookingId(booking.id);
-                        setActiveBookingType('PHOTOGRAPHY');
-                        setUpdateStatus('CANCELLED');
-                        
-                        const { metadata: meta } = parseNotesMetadata(booking.notes);
-                        setUpdateQuotationAmount(String(meta.quotationAmount || ''));
-                        setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
-                        setUpdateAmountPaid(String(booking.amountPaid || '0'));
-                        setUpdateAdvancePaid(String(booking.advancePaid || '0'));
-                        setBookingUpdateError('');
-                        setIsBookingUpdateOpen(true);
-                      }}
-                      className="text-rose-400 hover:bg-rose-500/10"
-                    >
-                      Cancel Session
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setActiveBookingId(booking.id);
-                      setActiveBookingType('PHOTOGRAPHY');
-                      setUpdateStatus('COMPLETED');
-                      
-                      const { metadata: meta } = parseNotesMetadata(booking.notes);
-                      setUpdateQuotationAmount(String(meta.quotationAmount || ''));
-                      setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
-                      setUpdateAmountPaid(String(booking.amountPaid || '0'));
-                      setUpdateAdvancePaid(String(booking.advancePaid || '0'));
-                      setBookingUpdateError('');
-                      setIsBookingUpdateOpen(true);
-                    }}
-                  >
-                    Update Payments
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderStudioBookingItem = (booking: any) => {
-    const { userNotes, metadata } = parseNotesMetadata(booking.notes);
-
-    return (
-      <div
-        key={booking.id}
-        className="p-3.5 bg-slate-950/60 border border-slate-850 hover:border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-start justify-between gap-4 transition-all duration-200 text-xs w-full"
-      >
-        <div className="space-y-1 w-full sm:max-w-[70%]">
-          <div className="font-semibold text-white">
-            {formatDateTime12h(booking.dateTime)} ({booking.durationHours} hrs)
-          </div>
-          <div className="text-slate-400">
-            Purpose: <span className="text-slate-200">{booking.purpose}</span>
-          </div>
-          <div className="flex flex-wrap gap-1 pt-1">
-            {booking.equipments.map((eq: any) => (
-              <span
-                key={eq.id}
-                className="bg-slate-900 text-slate-355 border border-slate-800 px-1.5 py-0.5 rounded text-[9px] uppercase font-semibold shrink-0"
-              >
-                {eq.name}
-              </span>
-            ))}
-          </div>
-          {userNotes && <div className="text-[10px] text-slate-500 italic max-w-sm">"{userNotes}"</div>}
-
-          {/* Payment & Quotation details: Visible only to Super Admin */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 text-[11px] text-slate-450 bg-slate-900/40 p-2 rounded-lg border border-slate-850/50 w-full sm:w-fit">
-            {metadata.quotationAmount !== undefined && (
-              <span>Quotation: <span className="font-semibold text-white">₹{metadata.quotationAmount}</span></span>
-            )}
-            {metadata.advancePaid !== undefined && Number(metadata.advancePaid) > 0 && (
-              <span>Advance Recd: <span className="font-semibold text-slate-300">₹{metadata.advancePaid}</span></span>
-            )}
-            <span>Total Paid: <span className="font-semibold text-slate-300">₹{booking.amountPaid || 0}</span></span>
-            
-            {/* Outstanding Balance */}
-            {metadata.quotationAmount !== undefined && (
-              <span className="font-medium">
-                Balance:{' '}
-                <span className={Number(metadata.quotationAmount) - Number(booking.amountPaid || 0) > 0 ? 'text-amber-500 font-bold' : 'text-emerald-500'}>
-                  ₹{Math.max(0, Number(metadata.quotationAmount) - Number(booking.amountPaid || 0))}
-                </span>
-              </span>
-            )}
-
-            {metadata.paymentStatus && (
-              <Badge className={`py-0.5 px-1.5 text-[9px] uppercase font-bold rounded ${
-                booking.status === 'CANCELLED' && (Number(metadata.advancePaid || 0) > 0 || Number(booking.amountPaid || 0) > 0)
-                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                  : metadata.paymentStatus === 'COMPLETED'
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : metadata.paymentStatus === 'PENDING'
-                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-              }`}>
-                {booking.status === 'CANCELLED' && (Number(metadata.advancePaid || 0) > 0 || Number(booking.amountPaid || 0) > 0)
-                  ? 'Cancelled (Retained Advance)'
-                  : metadata.paymentStatus === 'COMPLETED'
-                  ? 'Paid Fully'
-                  : metadata.paymentStatus === 'PENDING'
-                  ? 'Payment Pending'
-                  : 'Partial'}
-              </Badge>
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2.5 shrink-0 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-850/50 w-full sm:w-auto">
-          <div>
-            {booking.status === 'PENDING' && (
-              <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px]">
-                Pending
-              </Badge>
-            )}
-            {booking.status === 'CONFIRMED' && (
-              <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-[10px]">
-                Confirmed
-              </Badge>
-            )}
-            {booking.status === 'COMPLETED' && (
-              <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px]">
-                Completed & Delivered
-              </Badge>
-            )}
-            {booking.status === 'CANCELLED' && (
-              <Badge className="bg-slate-800 text-slate-450 border border-slate-700 px-2 py-0.5 rounded text-[10px]">
-                Cancelled
-              </Badge>
-            )}
-          </div>
-
-          {booking.status !== 'CANCELLED' && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="border-slate-800 hover:bg-slate-900 text-[10px] h-6 py-0.5 px-2 rounded">
-                  Update
-                  <ChevronDown className="h-3 w-3 ml-1" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-slate-950 border border-slate-855 text-white text-xs">
-                {booking.status !== 'COMPLETED' ? (
-                  <>
-                    {booking.status === 'PENDING' && (
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setActiveBookingId(booking.id);
-                          setActiveBookingType('STUDIO');
-                          setUpdateStatus('CONFIRMED');
-                          
-                          const { metadata: meta } = parseNotesMetadata(booking.notes);
-                          setUpdateQuotationAmount(String(meta.quotationAmount || ''));
-                          setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
-                          setUpdateAmountPaid(String(booking.amountPaid || '0'));
-                          setUpdateAdvancePaid(String(meta.advancePaid || '0'));
-                          setBookingUpdateError('');
-                          setIsBookingUpdateOpen(true);
-                        }}
-                      >
-                        Confirm & Collect Advance
-                      </DropdownMenuItem>
-                    )}
-                    {booking.status === 'CONFIRMED' && (
-                      <>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setActiveBookingId(booking.id);
-                            setActiveBookingType('STUDIO');
-                            setUpdateStatus('CONFIRMED');
-                            const { metadata: meta } = parseNotesMetadata(booking.notes);
-                            setUpdateQuotationAmount(String(meta.quotationAmount || ''));
-                            setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
-                            setUpdateAmountPaid(String(booking.amountPaid || '0'));
-                            setUpdateAdvancePaid(String(meta.advancePaid || '0'));
-                            setBookingUpdateError('');
-                            setIsBookingUpdateOpen(true);
-                          }}
-                        >
-                          Update Payments
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setActiveBookingId(booking.id);
-                            setActiveBookingType('STUDIO');
-                            setUpdateStatus('COMPLETED');
-                            const { metadata: meta } = parseNotesMetadata(booking.notes);
-                            setUpdateQuotationAmount(String(meta.quotationAmount || ''));
-                            setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
-                            setUpdateAmountPaid(String(booking.amountPaid || '0'));
-                            setUpdateAdvancePaid(String(meta.advancePaid || '0'));
-                            setBookingUpdateError('');
-                            setIsBookingUpdateOpen(true);
-                          }}
-                        >
-                          Mark Completed
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setActiveBookingId(booking.id);
-                        setActiveBookingType('STUDIO');
-                        setUpdateStatus('CANCELLED');
-                        
-                        const { metadata: meta } = parseNotesMetadata(booking.notes);
-                        setUpdateQuotationAmount(String(meta.quotationAmount || ''));
-                        setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
-                        setUpdateAmountPaid(String(booking.amountPaid || '0'));
-                        setUpdateAdvancePaid(String(meta.advancePaid || '0'));
-                        setBookingUpdateError('');
-                        setIsBookingUpdateOpen(true);
-                      }}
-                      className="text-rose-400 hover:bg-rose-500/10"
-                    >
-                      Cancel Booking
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setActiveBookingId(booking.id);
-                      setActiveBookingType('STUDIO');
-                      setUpdateStatus('COMPLETED');
-                      
-                      const { metadata: meta } = parseNotesMetadata(booking.notes);
-                      setUpdateQuotationAmount(String(meta.quotationAmount || ''));
-                      setUpdatePaymentStatus(meta.paymentStatus || 'PARTIALLY_COMPLETED');
-                      setUpdateAmountPaid(String(booking.amountPaid || '0'));
-                      setUpdateAdvancePaid(String(meta.advancePaid || '0'));
-                      setBookingUpdateError('');
-                      setIsBookingUpdateOpen(true);
-                    }}
-                  >
-                    Update Payments
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderRentalBookingItem = (booking: any) => {
-    const idNotVerified = !idProof || idProof.status !== 'VERIFIED';
-    return (
-      <div
-        key={booking.id}
-        className="p-3.5 bg-slate-950/60 border border-slate-850 rounded-xl flex flex-col sm:flex-row sm:items-start justify-between gap-4 text-xs w-full"
-      >
-        <div className="space-y-1 w-full sm:max-w-[70%]">
-          <div className="font-semibold text-white">
-            Out: {formatDateTime12h(booking.startDate)}
-          </div>
-          <div className="text-slate-400">
-            In: {formatDateTime12h(booking.endDate)}
-          </div>
-          <div className="flex flex-wrap gap-1 pt-1">
-            {booking.equipments.map((eq: any) => (
-              <span
-                key={eq.id}
-                className="bg-slate-900 text-slate-355 border border-slate-800 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold shrink-0"
-              >
-                {eq.name}
-              </span>
-            ))}
-          </div>
-          {booking.purpose && (
-            <div className="text-slate-400 pt-0.5">
-              Purpose: <span className="text-slate-200">{booking.purpose}</span>
+          {booking.delivery_link && (
+            <div className="pt-1.5 flex items-center gap-1.5">
+              <FileText className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+              <a href={booking.delivery_link} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 font-semibold inline-flex items-center gap-0.5">
+                Delivery Link <ExternalLink className="h-2.5 w-2.5" />
+              </a>
             </div>
           )}
-          {booking.pickupCondition && (
-            <div className="text-[10px] text-slate-400 mt-1">
-              Condition: Out = <span className="text-slate-300">{booking.pickupCondition}</span>
-              {booking.returnCondition && (
-                <>
-                  , In = <span className={booking.status === 'DAMAGED' ? 'text-rose-400 font-bold' : 'text-slate-300'}>{booking.returnCondition}</span>
-                </>
-              )}
-            </div>
-          )}
-          {booking.returnedAt && (
-            <div className="text-[10px] text-slate-450 mt-0.5">
-              Returned at: <span className="text-slate-300">{formatDateTime12h(booking.returnedAt)}</span>
-            </div>
-          )}
-          {booking.status === 'DAMAGED' && (
-            <div className="text-[10px] text-rose-400 font-medium">
-              Damage assessment charge: ₹{booking.damageCost} ({booking.damageDescription})
-            </div>
-          )}
-          {booking.agreementUrl && (
+          
+          {type === 'RENTAL' && booking.agreementUrl && (
             <div className="pt-1 flex items-center gap-1.5">
               <FileText className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-              <a
-                href={booking.agreementUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-amber-500 hover:text-amber-400 font-semibold inline-flex items-center gap-0.5 text-[10px]"
-              >
-                Signed Agreement File
-                <ExternalLink className="h-2.5 w-2.5" />
+              <a href={booking.agreementUrl} target="_blank" rel="noopener noreferrer" className="text-amber-500 hover:text-amber-400 font-semibold inline-flex items-center gap-0.5 text-[10px]">
+                Signed Agreement File <ExternalLink className="h-2.5 w-2.5" />
               </a>
-            </div>
-          )}
-          {/* ID Verification indicator for PENDING/unconfirmed rentals */}
-          {booking.status === 'PENDING' && idNotVerified && (
-            <div className="mt-2 flex items-center gap-1.5 p-2 rounded-lg bg-amber-500/5 border border-amber-500/15">
-              <Shield className="h-3 w-3 text-amber-500 shrink-0" />
-              <span className="text-[10px] text-amber-400 font-medium">
-                {!idProof ? 'No ID uploaded — verify before confirming.' : 'ID under review — verify before confirming.'}
-              </span>
             </div>
           )}
         </div>
 
-        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2.5 shrink-0 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-850/50 w-full sm:w-auto">
-          {/* ID proof badge */}
-          {booking.status === 'PENDING' && (
-            <div>
-              {!idProof && (
-                <Badge className="bg-slate-800 text-slate-450 border border-slate-700 px-2 py-0.5 rounded text-[9px] flex items-center gap-1">
-                  <Shield className="h-2.5 w-2.5" /> No ID
-                </Badge>
-              )}
-              {idProof?.status === 'PENDING' && (
-                <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[9px] flex items-center gap-1">
-                  <Shield className="h-2.5 w-2.5" /> ID Pending
-                </Badge>
-              )}
-              {idProof?.status === 'VERIFIED' && (
-                <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[9px] flex items-center gap-1">
-                  <Shield className="h-2.5 w-2.5" /> ID Verified
-                </Badge>
-              )}
-              {idProof?.status === 'REJECTED' && (
-                <Badge className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded text-[9px] flex items-center gap-1">
-                  <Shield className="h-2.5 w-2.5" /> ID Rejected
-                </Badge>
-              )}
-            </div>
-          )}
-
+        <div className="flex flex-col items-end justify-between gap-2.5 shrink-0 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-850/50 w-full sm:w-auto">
           <div>
-            {booking.status === 'PENDING' && (
-              <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px]">
-                Pending Review
-              </Badge>
-            )}
-            {booking.status === 'CONFIRMED' && (
-              <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-[10px]">
-                Leased Out
-              </Badge>
-            )}
-            {booking.status === 'RETURNED' && (
-              <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px]">
-                Returned
-              </Badge>
-            )}
-            {booking.status === 'DAMAGED' && (
-              <Badge className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded text-[10px]">
-                Damaged
-              </Badge>
-            )}
-            {booking.status === 'CANCELLED' && (
-              <Badge className="bg-slate-800 text-slate-450 border border-slate-700 px-2 py-0.5 rounded text-[10px]">
-                Cancelled
-              </Badge>
-            )}
+            {status === 'PENDING' && <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px]">Pending Review</Badge>}
+            {status === 'CONFIRMED' && <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-[10px]">{type === 'RENTAL' ? 'Leased Out' : 'Confirmed'}</Badge>}
+            {status === 'COMPLETED' && <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px]">Shoot Completed</Badge>}
+            {status === 'IN_EDITING' && <Badge className="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded text-[10px]">In Editing</Badge>}
+            {status === 'HANDED_OVER' && <Badge className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded text-[10px]">Handed Over</Badge>}
+            {status === 'RETURNED' && <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px]">Returned Clean</Badge>}
+            {status === 'DAMAGED' && <Badge className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded text-[10px]">Damaged</Badge>}
+            {status === 'CANCELLED' && <Badge className="bg-slate-800 text-slate-450 border border-slate-700 px-2 py-0.5 rounded text-[10px]">Cancelled</Badge>}
           </div>
 
-          {booking.status !== 'RETURNED' && booking.status !== 'DAMAGED' && booking.status !== 'CANCELLED' && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="border-slate-800 hover:bg-slate-900 text-[10px] h-6 py-0.5 px-2 rounded">
-                  Update
-                  <ChevronDown className="h-3 w-3 ml-1" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-slate-950 border border-slate-850 text-white text-xs">
-                {booking.status === 'PENDING' && (
-                  <DropdownMenuItem
-                    onClick={() => handleConfirmRental(booking.id)}
-                    disabled={idNotVerified}
-                    className={idNotVerified ? 'opacity-50 cursor-not-allowed' : ''}
-                    title={idNotVerified ? 'Verify client ID before confirming rental' : undefined}
-                  >
-                    <Shield className={`h-3 w-3 mr-1.5 ${idNotVerified ? 'text-amber-400' : 'text-emerald-400'}`} />
-                    {idNotVerified ? 'ID Not Verified — Cannot Confirm' : 'Mark Picked Up (Confirm)'}
-                  </DropdownMenuItem>
-                )}
-                {booking.status === 'CONFIRMED' && (
-                  <>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setActiveRentalBooking(booking);
-                        setRentalStatus('RETURNED');
-                        setIsRentalUpdateOpen(true);
-                      }}
-                    >
-                      Mark Returned
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setActiveRentalBooking(booking);
-                        setRentalStatus('DAMAGED');
-                        setIsRentalUpdateOpen(true);
-                      }}
-                      className="text-rose-400 hover:bg-rose-500/10"
-                    >
-                      Mark Returned Damaged
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          <div className="hidden sm:block">
+            {renderActions(type, status, booking)}
+          </div>
         </div>
       </div>
     );
   };
 
-
-  // Account Toggle
   const handleToggleAccount = async () => {
     const nextActiveState = !client.isActive;
     showLoader(nextActiveState ? 'Activating account...' : 'Deactivating account...');
@@ -918,6 +709,20 @@ export default function ClientDetailsView({
     }
     // For CONFIRMED or COMPLETED "Update Payments", use the admin's entered amount as-is
 
+    const roundedQuotation = Math.round(parsedQuotation);
+    const roundedAdvance = Math.round(parsedAdvance);
+    const roundedAmount = Math.round(parsedAmount);
+
+    console.log('Pre-submit booking update payload:', {
+      bookingType: activeBookingType,
+      bookingId: activeBookingId,
+      status: updateStatus,
+      amountPaid: roundedAmount,
+      advancePaid: roundedAdvance,
+      quotationAmount: roundedQuotation,
+      paymentStatus: finalPaymentStatus,
+    });
+
     showLoader('Updating booking details...');
     try {
       const res = await fetch('/api/admin/bookings/update', {
@@ -927,9 +732,9 @@ export default function ClientDetailsView({
           bookingType: activeBookingType,
           bookingId: activeBookingId,
           status: updateStatus,
-          amountPaid: parsedAmount,
-          advancePaid: parsedAdvance,
-          quotationAmount: parsedQuotation,
+          amountPaid: roundedAmount,
+          advancePaid: roundedAdvance,
+          quotationAmount: roundedQuotation,
           paymentStatus: finalPaymentStatus,
         }),
       });
@@ -952,8 +757,8 @@ export default function ClientDetailsView({
               ? {
                   ...b,
                   status: updateStatus,
-                  amountPaid: parsedAmount,
-                  advancePaid: parsedAdvance,
+                  amountPaid: roundedAmount,
+                  advancePaid: roundedAdvance,
                   notes: updatedBooking?.notes || b.notes
                 }
               : b
@@ -966,7 +771,7 @@ export default function ClientDetailsView({
               ? {
                   ...b,
                   status: updateStatus,
-                  amountPaid: parsedAmount,
+                  amountPaid: roundedAmount,
                   notes: updatedBooking?.notes || b.notes
                 }
               : b
@@ -1006,6 +811,22 @@ export default function ClientDetailsView({
       parsedAmount = parsedQuotation; // Fully Paid: amountPaid is set to quotation
     }
 
+    const roundedQuotation = Math.round(parsedQuotation);
+    const roundedAdvance = Math.round(parsedAdvance);
+    const roundedAmount = Math.round(parsedAmount);
+
+    console.log('Pre-submit photography booking complete payload:', {
+      bookingType: 'PHOTOGRAPHY',
+      bookingId: activePhotoBookingId,
+      status: 'COMPLETED',
+      albumName,
+      downloadLink: albumLink || null,
+      amountPaid: roundedAmount,
+      advancePaid: roundedAdvance,
+      quotationAmount: roundedQuotation,
+      paymentStatus: finalPaymentStatus,
+    });
+
     showLoader('Completing shoot & delivering album...');
     try {
       const res = await fetch('/api/admin/bookings/update', {
@@ -1017,9 +838,9 @@ export default function ClientDetailsView({
           status: 'COMPLETED',
           albumName,
           downloadLink: albumLink || null,
-          amountPaid: parsedAmount,
-          advancePaid: parsedAdvance,
-          quotationAmount: parsedQuotation,
+          amountPaid: roundedAmount,
+          advancePaid: roundedAdvance,
+          quotationAmount: roundedQuotation,
           paymentStatus: finalPaymentStatus,
         }),
       });
@@ -1039,8 +860,8 @@ export default function ClientDetailsView({
             ? {
                 ...b,
                 status: 'COMPLETED',
-                amountPaid: parsedAmount,
-                advancePaid: parsedAdvance,
+                amountPaid: roundedAmount,
+                advancePaid: roundedAdvance,
                 notes: updatedBooking?.notes || b.notes,
                 album: {
                   id: '',
@@ -1110,6 +931,17 @@ export default function ClientDetailsView({
       }
     }
 
+    const parsedDamageCost = rentalStatus === 'DAMAGED' && damageCost ? Math.round(parseFloat(damageCost)) : null;
+
+    console.log('Pre-submit rental return payload:', {
+      bookingId: activeRentalBooking?.id,
+      status: rentalStatus,
+      returnCondition,
+      damageCost: parsedDamageCost,
+      damageDescription: rentalStatus === 'DAMAGED' ? damageDescription : null,
+      agreementUrl: agreementUrlInput || undefined,
+    });
+
     showLoader('Saving return assessment...');
     try {
       const res = await fetch('/api/admin/rentals/update', {
@@ -1119,7 +951,7 @@ export default function ClientDetailsView({
           bookingId: activeRentalBooking?.id,
           status: rentalStatus,
           returnCondition,
-          damageCost: rentalStatus === 'DAMAGED' ? damageCost : null,
+          damageCost: parsedDamageCost,
           damageDescription: rentalStatus === 'DAMAGED' ? damageDescription : null,
           agreementUrl: agreementUrlInput || undefined,
         }),
@@ -1142,7 +974,7 @@ export default function ClientDetailsView({
                 ...b,
                 status: rentalStatus,
                 returnCondition,
-                damageCost: rentalStatus === 'DAMAGED' ? Number(damageCost) : null,
+                damageCost: parsedDamageCost,
                 damageDescription: rentalStatus === 'DAMAGED' ? damageDescription : null,
                 agreementUrl: agreementUrlInput || b.agreementUrl,
                 returnedAt: new Date().toISOString(),
@@ -1235,14 +1067,24 @@ export default function ClientDetailsView({
                   <span className="capitalize">Gender: {client.gender.toLowerCase()}</span>
                 </div>
               )}
-              <div className="pt-2 border-t border-slate-800">
-                <div className="text-xs text-slate-500 font-semibold uppercase">Interested Services</div>
-                <div className="flex flex-wrap gap-1 mt-2">
+              <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-800">
+                <div className="bg-slate-950 rounded-xl p-3 border border-slate-800/60">
+                  <div className="text-[10px] text-slate-500 font-semibold uppercase mb-1">Total Bookings</div>
+                  <div className="text-xl font-bold text-white">{allBookings.length}</div>
+                </div>
+                <div className="bg-slate-950 rounded-xl p-3 border border-slate-800/60">
+                  <div className="text-[10px] text-slate-500 font-semibold uppercase mb-1">Lifetime Spent</div>
+                  <div className="text-xl font-bold text-emerald-500">₹{allBookings.reduce((sum, b) => sum + Number(b.data.amountPaid || 0), 0)}</div>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-slate-800">
+                <div className="text-xs text-slate-500 font-semibold uppercase mb-2">Interested Services</div>
+                <div className="flex flex-wrap gap-1.5">
                   {services.map((svc) => (
                     <Badge
                       key={svc}
                       variant="outline"
-                      className="text-[10px] uppercase border-slate-800 bg-slate-950 text-slate-400 px-2 py-0.5 rounded"
+                      className="text-[10px] uppercase border-slate-800 bg-slate-950 text-slate-400 px-2 py-0.5 rounded-md"
                     >
                       {svc.replace('_', ' ')}
                     </Badge>
@@ -1364,116 +1206,87 @@ export default function ClientDetailsView({
           </Card>
         </div>
 
-        {/* Right column: Grids of photography, studio, rentals activity logs */}
+        {/* Right column: Tabs */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Photography section */}
-          <Card className="bg-slate-900/40 border-slate-800 backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base font-bold text-white flex items-center gap-2">
-                <Camera className="h-5 w-5 text-amber-500" />
-                Photography Shoots
-              </CardTitle>
+          <Card className="bg-slate-900/40 border-slate-800 backdrop-blur-sm min-h-[500px]">
+            <CardHeader className="border-b border-slate-800 pb-0 pt-4 px-4">
+              <div className="flex gap-6 overflow-x-auto hide-scrollbar">
+                <button
+                  onClick={() => { setActiveTab('pending'); setVisibleCompleted(5); }}
+                  className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${activeTab === 'pending' ? 'border-amber-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+                >
+                  Pending Requests {pendingBookings.length > 0 && <span className="ml-1.5 bg-amber-500/20 text-amber-500 py-0.5 px-2 rounded-full text-[10px]">{pendingBookings.length}</span>}
+                </button>
+                <button
+                  onClick={() => { setActiveTab('active'); setVisibleCompleted(5); }}
+                  className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${activeTab === 'active' ? 'border-blue-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+                >
+                  Active & Ongoing {activeBookings.length > 0 && <span className="ml-1.5 bg-blue-500/20 text-blue-400 py-0.5 px-2 rounded-full text-[10px]">{activeBookings.length}</span>}
+                </button>
+                <button
+                  onClick={() => setActiveTab('completed')}
+                  className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${activeTab === 'completed' ? 'border-emerald-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+                >
+                  Shoot Completed & Archived {completedBookings.length > 0 && <span className="ml-1.5 bg-slate-800 text-slate-400 py-0.5 px-2 rounded-full text-[10px]">{completedBookings.length}</span>}
+                </button>
+                <button
+                  onClick={() => { setActiveTab('editing'); setVisibleCompleted(5); }}
+                  className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${activeTab === 'editing' ? 'border-purple-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+                >
+                  In Editing {editingBookings.length > 0 && <span className="ml-1.5 bg-purple-500/20 text-purple-400 py-0.5 px-2 rounded-full text-[10px]">{editingBookings.length}</span>}
+                </button>
+                <button
+                  onClick={() => { setActiveTab('handed_over'); setVisibleCompleted(5); }}
+                  className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${activeTab === 'handed_over' ? 'border-indigo-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+                >
+                  Handed Over {handedOverBookings.length > 0 && <span className="ml-1.5 bg-indigo-500/20 text-indigo-400 py-0.5 px-2 rounded-full text-[10px]">{handedOverBookings.length}</span>}
+                </button>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {photographyBookings.length === 0 ? (
-                <p className="text-xs text-slate-500 italic py-2">No photo session logs.</p>
-              ) : (
-                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
-                  {pendingPhotography.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/5 px-2.5 py-1 rounded border border-amber-500/10">
-                        Booking Requests (Pending Approval)
-                      </div>
-                      <div className="space-y-2">
-                        {pendingPhotography.map((booking) => renderPhotographyBookingItem(booking))}
-                      </div>
-                    </div>
-                  )}
-                  {confirmedPhotography.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-500 bg-emerald-500/5 px-2.5 py-1 rounded border border-emerald-500/10">
-                        Confirmed Bookings
-                      </div>
-                      <div className="space-y-2">
-                        {confirmedPhotography.map((booking) => renderPhotographyBookingItem(booking))}
-                      </div>
-                    </div>
-                  )}
+            <CardContent className="pt-6">
+              {activeTab === 'pending' && (
+                <div className="space-y-3">
+                  {pendingBookings.length === 0 ? (
+                     <div className="text-center py-12 text-slate-500 text-sm">No pending requests right now.</div>
+                  ) : pendingBookings.map(renderUnifiedBooking)}
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          {/* Rentals section */}
-          <Card className="bg-slate-900/40 border-slate-800 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold text-white flex items-center gap-2">
-                <Film className="h-5 w-5 text-amber-500" />
-                Equipment Rentals
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {rentalBookings.length === 0 ? (
-                <p className="text-xs text-slate-500 italic py-2">No equipment lease logs.</p>
-              ) : (
-                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
-                  {pendingRentals.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/5 px-2.5 py-1 rounded border border-amber-500/10">
-                        Booking Requests (Pending Approval)
-                      </div>
-                      <div className="space-y-2">
-                        {pendingRentals.map((booking) => renderRentalBookingItem(booking))}
-                      </div>
-                    </div>
-                  )}
-                  {confirmedRentals.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-500 bg-emerald-500/5 px-2.5 py-1 rounded border border-emerald-500/10">
-                        Confirmed Bookings
-                      </div>
-                      <div className="space-y-2">
-                        {confirmedRentals.map((booking) => renderRentalBookingItem(booking))}
-                      </div>
-                    </div>
-                  )}
+              {activeTab === 'active' && (
+                <div className="space-y-3">
+                  {activeBookings.length === 0 ? (
+                     <div className="text-center py-12 text-slate-500 text-sm">No active bookings right now.</div>
+                  ) : activeBookings.map(renderUnifiedBooking)}
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          {/* Studio section */}
-          <Card className="bg-slate-900/40 border-slate-800 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold text-white flex items-center gap-2">
-                <Home className="h-5 w-5 text-amber-500" />
-                Studio Reservations
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {studioBookings.length === 0 ? (
-                <p className="text-xs text-slate-500 italic py-2">No studio space logs.</p>
-              ) : (
-                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
-                  {pendingStudio.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/5 px-2.5 py-1 rounded border border-amber-500/10">
-                        Booking Requests (Pending Approval)
-                      </div>
-                      <div className="space-y-2">
-                        {pendingStudio.map((booking) => renderStudioBookingItem(booking))}
-                      </div>
-                    </div>
-                  )}
-                  {confirmedStudio.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-500 bg-emerald-500/5 px-2.5 py-1 rounded border border-emerald-500/10">
-                        Confirmed Bookings
-                      </div>
-                      <div className="space-y-2">
-                        {confirmedStudio.map((booking) => renderStudioBookingItem(booking))}
-                      </div>
-                    </div>
+              {activeTab === 'editing' && (
+                <div className="space-y-3">
+                  {editingBookings.length === 0 ? (
+                     <div className="text-center py-12 text-slate-500 text-sm">No bookings in editing right now.</div>
+                  ) : editingBookings.map(renderUnifiedBooking)}
+                </div>
+              )}
+              {activeTab === 'handed_over' && (
+                <div className="space-y-3">
+                  {handedOverBookings.length === 0 ? (
+                     <div className="text-center py-12 text-slate-500 text-sm">No handed over bookings right now.</div>
+                  ) : handedOverBookings.map(renderUnifiedBooking)}
+                </div>
+              )}
+              {activeTab === 'completed' && (
+                <div className="space-y-3">
+                  {completedBookings.length === 0 ? (
+                     <div className="text-center py-12 text-slate-500 text-sm">No history found.</div>
+                  ) : (
+                    <>
+                      {completedBookings.slice(0, visibleCompleted).map(renderUnifiedBooking)}
+                      {visibleCompleted < completedBookings.length && (
+                        <div className="pt-4 text-center">
+                          <Button variant="outline" className="border-slate-800 text-slate-400 hover:text-white" onClick={() => setVisibleCompleted(v => v + 5)}>
+                            Show More
+                          </Button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -1583,7 +1396,7 @@ export default function ClientDetailsView({
                 </Button>
               </DialogClose>
               <Button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-lg">
-                Mark Completed
+                Mark Shoot Completed
               </Button>
             </div>
           </form>
@@ -1727,12 +1540,12 @@ export default function ClientDetailsView({
               }`}>
                 {updateStatus === 'PENDING' ? 'Pending Review' :
                  updateStatus === 'CONFIRMED' ? 'Confirmed' :
-                 updateStatus === 'COMPLETED' ? 'Completed & Delivered' : 'Cancelled'}
+                 updateStatus === 'COMPLETED' ? 'Shoot Completed & Delivered' : 'Cancelled'}
               </div>
             </div>
 
             {/* PENDING → Confirmation: set quotation + advance */}
-            {updateStatus === 'PENDING' && (
+            {activeBooking?.status === 'PENDING' && (
               <>
                 <div className="space-y-1">
                   <Label htmlFor="updateQuotationAmount" className="text-xs font-semibold text-slate-350">Quotation Amount (₹) *</Label>
@@ -1741,9 +1554,10 @@ export default function ClientDetailsView({
                     id="updateQuotationAmount"
                     value={updateQuotationAmount}
                     onChange={(e) => setUpdateQuotationAmount(cleanNumberInput(e.target.value))}
+                    disabled={activeBookingType === 'STUDIO'}
                     placeholder="e.g. 15000"
                     min="0"
-                    className="bg-slate-950 border-slate-800 text-white rounded-lg h-9 text-xs"
+                    className="bg-slate-950 border-slate-800 text-white rounded-lg h-9 text-xs disabled:opacity-75 disabled:cursor-not-allowed"
                     required
                   />
                 </div>
@@ -1764,7 +1578,7 @@ export default function ClientDetailsView({
             )}
 
             {/* CONFIRMED → Update Payments: show full payment fields */}
-            {updateStatus === 'CONFIRMED' && (
+            {activeBooking?.status === 'CONFIRMED' && (
               <>
                 <div className="space-y-1">
                   <Label htmlFor="updateQuotationAmount" className="text-xs font-semibold text-slate-350">Quotation Amount (₹)</Label>
@@ -1841,7 +1655,7 @@ export default function ClientDetailsView({
             )}
 
             {/* COMPLETED — editable payment update (e.g. client pays balance later) */}
-            {updateStatus === 'COMPLETED' && (
+            {activeBooking?.status === 'COMPLETED' && (
               <>
                 <div className="space-y-1">
                   <Label htmlFor="cpl-quotation" className="text-xs font-semibold text-slate-350">Quotation Amount (₹)</Label>
@@ -1928,6 +1742,56 @@ export default function ClientDetailsView({
           </form>
         </DialogContent>
       </Dialog>
+
+      <AnimatePresence>
+        {mobileActionsBooking && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 z-[100] sm:hidden"
+              onClick={() => setMobileActionsBooking(null)}
+            />
+            <motion.div
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 p-4 rounded-t-2xl z-[101] sm:hidden pb-8"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-white">Booking Actions</h3>
+                <Button variant="ghost" size="icon" onClick={() => setMobileActionsBooking(null)} className="h-8 w-8 text-slate-400">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {renderActions(mobileActionsBooking.type, mobileActionsBooking.status, mobileActionsBooking.data, true)}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <Dialog open={confirmDialog.isOpen} onOpenChange={(open) => !open && setConfirmDialog(prev => ({...prev, isOpen: false}))}>
+        <DialogContent className="bg-slate-900 border border-slate-800 text-white rounded-xl">
+          <DialogHeader>
+            <DialogTitle>{confirmDialog.title}</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              {confirmDialog.desc}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" className="border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white" onClick={() => setConfirmDialog(prev => ({...prev, isOpen: false}))}>
+              Cancel
+            </Button>
+            <Button 
+              className={confirmDialog.isDestructive ? "bg-rose-500 hover:bg-rose-600 text-white" : "bg-emerald-500 hover:bg-emerald-600 text-white"}
+              onClick={() => { confirmDialog.onConfirm(); setConfirmDialog(prev => ({...prev, isOpen: false})); }}
+            >
+              Confirm
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

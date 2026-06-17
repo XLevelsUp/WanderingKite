@@ -48,7 +48,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'client_not_found' }, { status: 404 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
     const ext = file.name.split('.').pop() ?? 'pdf';
     const timestamp = Date.now();
     const safeName = file.name
@@ -60,7 +59,7 @@ export async function POST(request: Request) {
 
     const { error: uploadError } = await adminAuthClient.storage
       .from('id-proofs')
-      .upload(filePath, buffer, {
+      .upload(filePath, file, {
         contentType: file.type,
         upsert: true,
       });
@@ -69,7 +68,7 @@ export async function POST(request: Request) {
       console.error('ID proof upload storage error:', uploadError);
       return NextResponse.json({
         error: 'upload_failed',
-        message: "We couldn't upload your file to storage. Please try again.",
+        message: `Upload failed: ${uploadError.message}. Please check your connection and ensure the file is valid.`,
       }, { status: 500 });
     }
 

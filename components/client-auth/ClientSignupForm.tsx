@@ -56,10 +56,11 @@ const signupSchema = z
         eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
         return date <= eighteenYearsAgo;
       }, { message: "You must be at least 18 years old to sign up" }),
+
     phoneNumber: z
       .string()
       .min(1, { message: "Phone number is required" })
-      .regex(/^[0-9]{10}$/, { message: "Please enter a valid 10-digit phone number" }),
+      .regex(/^\+?[0-9\s\-\(\).]{7,15}$/, { message: "Please enter a valid phone number" }),
     address: z.string().min(1, { message: "Address is required" }),
     email: z
       .string()

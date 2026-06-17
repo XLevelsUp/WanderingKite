@@ -31,6 +31,7 @@ model User {
   email         String    @unique
   fullName      String?
   role          UserRole  @default(EMPLOYEE)
+  phone         String?   @db.VarChar(15)
   
   // Self-relation: Manager -> Subordinates
   managerId     String?
@@ -44,6 +45,8 @@ model User {
   // HR contract (1:1)
   contract      EmployeeContract?
 
+  resolvedConflicts StudioBookingConflict[] @relation("ConflictResolver")
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -56,7 +59,7 @@ model Client {
   firstName     String?         @map("first_name")
   lastName      String?         @map("last_name")
   dateOfBirth   DateTime?       @map("date_of_birth")
-  phone         String?
+  phone         String?         @db.VarChar(15)
   address       String?
   email         String          @unique
   gender        String?
@@ -69,6 +72,7 @@ model Client {
   rentalBookings      RentalBooking[]
   studioBookings      StudioBooking[]
   idProof             ClientIdProof?
+  studioBookingConflicts StudioBookingConflict[]
   
   createdAt           DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -362,7 +366,7 @@ model RentalBooking {
   pickupCondition   String?           @map("pickup_condition")
   returnCondition   String?           @map("return_condition")
   returnedAt        DateTime?         @map("returned_at")
-  damageCost        Decimal?          @map("damage_cost")
+  damageCost        Int?              @map("damage_cost")
   damageDescription String?           @map("damage_description")
   agreementUrl      String?           @map("agreement_url")
   equipments        Equipment[]
@@ -380,10 +384,12 @@ model StudioBooking {
   durationHours     Int               @map("duration_hours")
   purpose           String
   status            BookingStatus     @default(PENDING)
-  amountPaid        Decimal           @default(0) @map("amount_paid")
-  additionalCharges Decimal           @default(0) @map("additional_charges")
+  amountPaid        Int               @default(0) @map("amount_paid")
+  additionalCharges Int               @default(0) @map("additional_charges")
   notes             String?
+  override          Boolean           @default(false)
   equipments        Equipment[]
+  conflictingAttempts StudioBookingConflict[]
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -400,8 +406,8 @@ model PhotographyBooking {
   notes       String?
   peopleCount Int?          @map("people_count")
   status      BookingStatus @default(PENDING)
-  amountPaid  Decimal       @default(0) @map("amount_paid")
-  advancePaid Decimal       @default(0) @map("advance_paid")
+  amountPaid  Int           @default(0) @map("amount_paid")
+  advancePaid Int           @default(0) @map("advance_paid")
   album       AlbumDetail?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -420,4 +426,29 @@ model AlbumDetail {
   updatedAt    DateTime           @updatedAt
 
   @@map("album_details")
+}
+
+model StudioBookingConflict {
+  id                        String         @id @default(uuid())
+  clientId                  String?        @map("client_id")
+  client                    Client?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientName                String         @map("client_name")
+  clientEmail               String         @map("client_email")
+  attemptedDateTime         DateTime       @map("attempted_date_time")
+  attemptedDurationHours    Int            @map("attempted_duration_hours")
+  attemptedPurpose          String         @map("attempted_purpose")
+  attemptedEquipmentIds     Json           @map("attempted_equipment_ids")
+  conflictingBookingId      String?        @map("conflicting_booking_id")
+  conflictingBooking        StudioBooking? @relation(fields: [conflictingBookingId], references: [id])
+  conflictingBookingDetails Json?          @map("conflicting_booking_details")
+  status                    String         @default("blocked")
+  createdBookingId          String?        @map("created_booking_id")
+  resolvedById              String?        @map("resolved_by_id")
+  resolvedBy                User?          @relation("ConflictResolver", fields: [resolvedById], references: [id])
+  resolvedAt                DateTime?      @map("resolved_at")
+  resolutionNotes           String?        @map("resolution_notes")
+  createdAt                 DateTime       @default(now()) @map("created_at")
+  updatedAt                 DateTime       @updatedAt @map("updated_at")
+
+  @@map("studio_booking_conflicts")
 }

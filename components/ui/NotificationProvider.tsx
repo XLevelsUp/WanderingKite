@@ -286,7 +286,7 @@ export function NotificationProvider({
       {/* Toasts */}
       <div
         aria-live="assertive"
-        className="pointer-events-none fixed inset-0 z-[100] flex px-4 py-6 sm:p-6 flex-col items-center justify-start sm:items-end sm:justify-end gap-2"
+        className="pointer-events-none fixed inset-0 z-[100] flex px-4 py-6 sm:p-6 flex-col items-center justify-start gap-2"
       >
         <AnimatePresence>
           {toasts.map((toast) => (

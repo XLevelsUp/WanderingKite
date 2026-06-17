@@ -6,6 +6,7 @@ import ClientDetailsView from '@/components/dashboard/ClientDetailsView';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
+import ClientBackButton from '@/components/dashboard/ClientBackButton';
 
 export default async function ClientDetailPage({
   params,
@@ -105,6 +106,7 @@ export default async function ClientDetailPage({
         status: b.status,
         amountPaid: b.amount_paid ? b.amount_paid.toString() : '0',
         advancePaid: b.advance_paid ? b.advance_paid.toString() : '0',
+        createdAt: b.created_at,
         album: albumObj
           ? {
               id: albumObj.id,
@@ -115,7 +117,7 @@ export default async function ClientDetailPage({
           : null,
       };
     })
-    .sort((a: any, b: any) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime());
+    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   // Format rentals
   const rentalBookingsSerialized = (client.rental_bookings || [])
@@ -131,9 +133,10 @@ export default async function ClientDetailPage({
       damageCost: b.damage_cost ? b.damage_cost.toString() : null,
       damageDescription: b.damage_description,
       agreementUrl: b.agreement_url,
+      createdAt: b.created_at,
       equipments: (b.equipment || []).map((eq: any) => ({ id: eq.id, name: eq.name })),
     }))
-    .sort((a: any, b: any) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   // Format studio bookings
   const studioBookingsSerialized = (client.studio_bookings || [])
@@ -146,19 +149,15 @@ export default async function ClientDetailPage({
       amountPaid: b.amount_paid ? b.amount_paid.toString() : '0',
       additionalCharges: b.additional_charges ? b.additional_charges.toString() : '0',
       notes: b.notes,
+      createdAt: b.created_at,
       equipments: (b.equipment || []).map((eq: any) => ({ id: eq.id, name: eq.name })),
     }))
-    .sort((a: any, b: any) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime());
+    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link href="/dashboard/clients">
-          <Button variant="outline" size="sm" className="border-slate-800 hover:bg-slate-900 text-slate-350 hover:text-white rounded-lg">
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Back to clients
-          </Button>
-        </Link>
+        <ClientBackButton />
       </div>
 
       <ClientDetailsView
