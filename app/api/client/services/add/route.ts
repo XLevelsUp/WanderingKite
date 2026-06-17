@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { adminAuthClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -38,13 +39,13 @@ export async function POST(request: Request) {
       });
 
     if (insertError) {
-      console.error('Add service insert error:', insertError);
+      logger.error('Add service insert error:', insertError);
       return NextResponse.json({ error: 'insert_failed' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('POST /api/client/services/add error:', error);
+    logger.error('POST /api/client/services/add error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

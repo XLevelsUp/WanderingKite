@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useOptimistic, startTransition } from 'react';
 import { Camera, Film, Home, FileText, User, ArrowRight, Loader2, LinkIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,11 @@ export default function BookingsList({
     }
 
     if (updatingState) return;
+    
+    // Optimistically update UI immediately
+    startTransition(() => {
+      addOptimisticBooking({ id: bookingId, status: newStatus });
+    });
     setUpdatingState({ id: bookingId, status: newStatus });
     
     try {
@@ -57,7 +62,9 @@ export default function BookingsList({
         setActiveDrawerBooking({ id: bookingId, type: bookingType as any, data: { ...booking, status: newStatus }, tab: 'WORKFLOW' });
       }
       
-      router.refresh();
+      startTransition(() => {
+        router.refresh();
+      });
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -74,10 +81,17 @@ export default function BookingsList({
     return list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [photographyBookings, studioBookings, rentalBookings]);
 
+  const [optimisticBookings, addOptimisticBooking] = useOptimistic(
+    allBookings,
+    (state, updatedBooking: { id: string; status: string }) => {
+      return state.map(b => b.id === updatedBooking.id ? { ...b, status: updatedBooking.status } : b);
+    }
+  );
+
   const filteredBookings = useMemo(() => {
-    if (activeTab === 'ALL') return allBookings;
-    return allBookings.filter(b => b.status === activeTab);
-  }, [allBookings, activeTab]);
+    if (activeTab === 'ALL') return optimisticBookings;
+    return optimisticBookings.filter(b => b.status === activeTab);
+  }, [optimisticBookings, activeTab]);
 
   const tabs = [
     { id: 'ALL', label: 'All' },

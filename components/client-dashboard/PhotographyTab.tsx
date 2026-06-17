@@ -29,6 +29,7 @@ import { BookingTable } from './BookingTable';
 import EmptyState from './EmptyState';
 import { useNotifications } from '@/components/ui/useNotifications';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface AlbumDetail {
   id: string;
@@ -79,7 +80,7 @@ export default function PhotographyTab() {
       const data = await res.json();
       setBookings(data.bookings || []);
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       toast.error('Could not load photography bookings');
     } finally {
       setIsLoading(false);
@@ -177,7 +178,7 @@ export default function PhotographyTab() {
       resetForm();
       fetchBookings();
     } catch (error: any) {
-      console.error(error);
+      logger.error(error);
       setFormError(error.message || 'An error occurred while booking. Please try again.');
       toast.error(error.message || 'Could not schedule booking.');
     } finally {

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 export default function StudioSpaceError({
   error,
@@ -13,7 +14,7 @@ export default function StudioSpaceError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('[Studio Space Boundary Error]:', error);
+    logger.error('[Studio Space Boundary Error]:', error);
   }, [error]);
 
   return (

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/card';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 export default function DashboardError({
   error,
@@ -22,7 +23,7 @@ export default function DashboardError({
 }) {
   useEffect(() => {
     // Log the error to an analytics or error tracking service
-    console.error('[Dashboard Boundary Error]:', error);
+    logger.error('[Dashboard Boundary Error]:', error);
   }, [error]);
 
   return (

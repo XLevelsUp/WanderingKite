@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -51,13 +52,13 @@ export async function POST(request: Request) {
       .single();
 
     if (updateError) {
-      console.error('ID verification update error:', updateError);
+      logger.error('ID verification update error:', updateError);
       return NextResponse.json({ error: 'update_failed' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, idProof: updated });
   } catch (error) {
-    console.error('POST /api/admin/id-proof/verify error:', error);
+    logger.error('POST /api/admin/id-proof/verify error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

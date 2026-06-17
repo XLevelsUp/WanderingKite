@@ -2,6 +2,7 @@
 
 import { useNotifications } from '@/components/ui/useNotifications';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface AddServiceModalProps {
   onSuccess: (service: 'PHOTOGRAPHY' | 'RENTALS' | 'STUDIO_SPACE') => void;
@@ -40,7 +41,7 @@ export function useAddServiceModal({ onSuccess }: AddServiceModalProps) {
           toast.success(`${serviceName} has been added to your account`);
           onSuccess(serviceType);
         } catch (error) {
-          console.error(error);
+          logger.error(error);
           toast.error('Could not add service. Please try again.');
         } finally {
           hideLoader();

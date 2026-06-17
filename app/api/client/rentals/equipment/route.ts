@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { adminAuthClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -19,13 +20,13 @@ export async function GET() {
       .order('name', { ascending: true });
 
     if (error) {
-      console.error('Fetch rental equipment failed:', error);
+      logger.error('Fetch rental equipment failed:', error);
       return NextResponse.json({ error: 'server_error' }, { status: 500 });
     }
 
     return NextResponse.json({ equipment });
   } catch (error) {
-    console.error('GET /api/client/rentals/equipment error:', error);
+    logger.error('GET /api/client/rentals/equipment error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

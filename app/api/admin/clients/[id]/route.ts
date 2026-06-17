@@ -1,6 +1,7 @@
 import { adminAuthClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function GET(
   request: Request,
@@ -34,7 +35,7 @@ export async function GET(
       .single();
 
     if (clientError || !client) {
-      console.error('Fetch admin client detail error:', clientError);
+      logger.error('Fetch admin client detail error:', clientError);
       return NextResponse.json({ error: 'client_not_found' }, { status: 404 });
     }
 
@@ -54,7 +55,7 @@ export async function GET(
             if (!error && data) {
               signedUrl = data.signedUrl;
             } else {
-              console.error('Failed to generate signed URL for admin album download:', error);
+              logger.error('Failed to generate signed URL for admin album download:', error);
               signedUrl = albumObj.download_link;
             }
           }
@@ -167,7 +168,7 @@ export async function GET(
       studioBookings,
     });
   } catch (error) {
-    console.error('GET /api/admin/clients/[id] error:', error);
+    logger.error('GET /api/admin/clients/[id] error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

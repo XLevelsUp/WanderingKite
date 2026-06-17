@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { adminAuthClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
       .lte('date_time', bufferEnd.toISOString());
 
     if (conflictError) {
-      console.error('Buffer conflict check failed:', conflictError);
+      logger.error('Buffer conflict check failed:', conflictError);
       return NextResponse.json({ error: 'server_error' }, { status: 500 });
     }
 
@@ -85,13 +86,13 @@ export async function POST(request: Request) {
       .single();
 
     if (insertError || !booking) {
-      console.error('Photography insert failed:', insertError);
+      logger.error('Photography insert failed:', insertError);
       return NextResponse.json({ error: 'insert_failed' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, bookingId: booking.id, hasConflict });
   } catch (error) {
-    console.error('POST /api/client/photography/book error:', error);
+    logger.error('POST /api/client/photography/book error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

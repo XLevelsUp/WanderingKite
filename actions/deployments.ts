@@ -10,6 +10,7 @@ import type {
   EmployeeDeploymentGroup,
 } from '@/lib/types/deployments';
 import { parseSupabaseError } from '@/lib/errorHandler';
+import { logger } from '@/lib/logger';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // READ: Form data for Create Assignment modal
@@ -215,7 +216,7 @@ export async function quickReturnAction(
     .eq('id', parsed.data.assignmentId);
 
   if (error) {
-    console.error('[quickReturnAction] Update failed:', error.message);
+    logger.error('[quickReturnAction] Update failed:', error.message);
     return { success: false, error: 'Failed to mark equipment as returned' };
   }
 
@@ -284,7 +285,7 @@ export async function createAssignmentAction(
     }));
     const { error: auditError } = await adminAuthClient.from('audit_clash_logs').insert(clashPayload);
     if (auditError) {
-      console.error('[createAssignmentAction] Audit log insert failed:', auditError.message);
+      logger.error('[createAssignmentAction] Audit log insert failed:', auditError.message);
     }
 
     return {
@@ -317,7 +318,7 @@ export async function createAssignmentAction(
         error: 'This equipment is already booked for the selected dates. Please choose different dates or a different item.',
       };
     }
-    console.error('[createAssignmentAction] Insert failed:', error.message);
+    logger.error('[createAssignmentAction] Insert failed:', error.message);
     return { success: false, error: `Unable to create assignment. Please try again or contact your admin. (${error.code || 'UNKNOWN'})` };
   }
 

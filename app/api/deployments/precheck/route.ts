@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: Request) {
   try {
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
       .gt('expectedReturn', startDate);
 
     if (error) {
-      console.error('[Precheck API] Database Error:', error.message);
+      logger.error('[Precheck API] Database Error:', error.message);
       return NextResponse.json({ error: 'Database check failed' }, { status: 500 });
     }
 
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
     const { data: strictConflicts, error: strictError } = await query;
 
     if (strictError) {
-      console.error('[Precheck API] Strict DB Error:', strictError.message);
+      logger.error('[Precheck API] Strict DB Error:', strictError.message);
       return NextResponse.json({ error: 'Database check failed' }, { status: 500 });
     }
 
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ available: true, conflicts: [] });
   } catch (error: any) {
-    console.error('[Precheck API] Unexpected Error:', error);
+    logger.error('[Precheck API] Unexpected Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

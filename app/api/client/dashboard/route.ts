@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { adminAuthClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -51,7 +52,7 @@ export async function GET() {
         : null,
     });
   } catch (error) {
-    console.error('GET /api/client/dashboard error:', error);
+    logger.error('GET /api/client/dashboard error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

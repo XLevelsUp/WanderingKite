@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
         .single();
 
       if (fetchErr) {
-        console.error('Fetch photography booking error:', fetchErr);
+        logger.error('Fetch photography booking error:', fetchErr);
         return NextResponse.json({ error: 'booking_not_found' }, { status: 404 });
       }
 
@@ -109,7 +110,7 @@ export async function POST(request: Request) {
         .single();
 
       if (updateError) {
-        console.error('Photography update error:', updateError);
+        logger.error('Photography update error:', updateError);
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
 
@@ -152,7 +153,7 @@ export async function POST(request: Request) {
         .single();
 
       if (fetchErr) {
-        console.error('Fetch studio booking error:', fetchErr);
+        logger.error('Fetch studio booking error:', fetchErr);
         return NextResponse.json({ error: 'booking_not_found' }, { status: 404 });
       }
 
@@ -188,7 +189,7 @@ export async function POST(request: Request) {
         .single();
 
       if (updateError) {
-        console.error('Studio update error:', updateError);
+        logger.error('Studio update error:', updateError);
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
 
@@ -211,7 +212,7 @@ export async function POST(request: Request) {
         .single();
 
       if (updateError) {
-        console.error('Rental update error:', updateError);
+        logger.error('Rental update error:', updateError);
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
 
@@ -220,7 +221,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'invalid_booking_type' }, { status: 400 });
     }
   } catch (error) {
-    console.error('POST /api/admin/bookings/update error:', error);
+    logger.error('POST /api/admin/bookings/update error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

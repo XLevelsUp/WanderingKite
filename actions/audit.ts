@@ -3,6 +3,7 @@
 import { adminAuthClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { logger } from '@/lib/logger';
 
 export async function getAuditClashLogs() {
   // Use admin client to bypass RLS (only admins can access this page anyway)
@@ -13,7 +14,7 @@ export async function getAuditClashLogs() {
     .limit(100);
 
   if (error || !logs || logs.length === 0) {
-    if (error) console.error('Failed to fetch audit clash logs:', error);
+    if (error) logger.error('Failed to fetch audit clash logs:', error);
     return [];
   }
 
@@ -53,7 +54,7 @@ export async function getStudioBookingConflicts() {
     .order('created_at', { ascending: false });
 
   if (error || !conflicts) {
-    if (error) console.error('Failed to fetch studio booking conflicts:', error);
+    if (error) logger.error('Failed to fetch studio booking conflicts:', error);
     return [];
   }
 
@@ -115,7 +116,7 @@ export async function resolveStudioBookingConflict(
       .single();
 
     if (fetchError || !conflict) {
-      console.error('Fetch conflict detail failed:', fetchError);
+      logger.error('Fetch conflict detail failed:', fetchError);
       return { success: false, error: 'Conflict record not found' };
     }
 
@@ -149,7 +150,7 @@ export async function resolveStudioBookingConflict(
         .single();
 
       if (bookingError || !newBooking) {
-        console.error('Create booking from override failed:', bookingError);
+        logger.error('Create booking from override failed:', bookingError);
         return { success: false, error: `Failed to create booking: ${bookingError?.message}` };
       }
 
@@ -167,7 +168,7 @@ export async function resolveStudioBookingConflict(
           .insert(joinRows);
 
         if (joinError) {
-          console.error('Linking equipment to override booking failed:', joinError);
+          logger.error('Linking equipment to override booking failed:', joinError);
           // Rollback the created booking if linking fails
           await adminAuthClient.from('studio_bookings').delete().eq('id', newBooking.id);
           return { success: false, error: `Failed to link equipment: ${joinError.message}` };
@@ -189,7 +190,7 @@ export async function resolveStudioBookingConflict(
       .eq('id', conflictId);
 
     if (error) {
-      console.error('Failed to resolve conflict log:', error);
+      logger.error('Failed to resolve conflict log:', error);
       return { success: false, error: error.message };
     }
 
@@ -198,7 +199,7 @@ export async function resolveStudioBookingConflict(
     revalidatePath('/client/dashboard');
     return { success: true };
   } catch (error: any) {
-    console.error('resolveStudioBookingConflict error:', error);
+    logger.error('resolveStudioBookingConflict error:', error);
     return { success: false, error: error.message || 'Server error' };
   }
 }

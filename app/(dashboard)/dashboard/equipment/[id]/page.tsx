@@ -14,6 +14,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
 import {
   ArrowLeft,
   Tag,
@@ -38,7 +39,6 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-// ── Status helpers ────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<
   string,
   { label: string; color: string; icon: React.ElementType }
@@ -134,7 +134,7 @@ export default async function EquipmentDetailPage({
     getBranches().catch(() => []),
     getEquipmentAuditLog(id).catch(() => []),
     getMaintenanceRecords(id).catch((err) => {
-      console.error("Error loading maintenance records in page.tsx:", err);
+      logger.error("Error loading maintenance records in page.tsx:", err);
       return [];
     }),
   ]);

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import Image from 'next/image';
 import { ColumnDef } from '@tanstack/react-table';
 import { Film, Calendar, Shield, Upload, FileText, CheckCircle2, AlertCircle, Clock, AlertTriangle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,9 +27,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { BookingTable } from './BookingTable';
+import RentalBookingForm from './RentalBookingForm';
 import EmptyState from './EmptyState';
 import { useNotifications } from '@/components/ui/useNotifications';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface Equipment {
   id: string;
@@ -79,20 +83,7 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState('');
 
-  // Rental Booking Form States
-  const [startDate, setStartDate] = useState('');
-  const [startHour, setStartHour] = useState('');
-  const [startMinute, setStartMinute] = useState('');
-  const [startAmpm, setStartAmpm] = useState('');
-  
-  const [endDate, setEndDate] = useState('');
-  const [endHour, setEndHour] = useState('');
-  const [endMinute, setEndMinute] = useState('');
-  const [endAmpm, setEndAmpm] = useState('');
-
-  const [purpose, setPurpose] = useState('');
-  const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<string[]>([]);
-  const [bookingError, setBookingError] = useState('');
+  // Form state now managed by RentalBookingForm
 
   const fetchBookings = async () => {
     try {
@@ -102,7 +93,7 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
       const data = await res.json();
       setBookings(data.bookings || []);
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       toast.error('Could not load rentals');
     } finally {
       setIsLoading(false);
@@ -117,13 +108,34 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
         setEquipmentCatalog(data.equipment || []);
       }
     } catch (error) {
-      console.error('Failed to load equipment catalog:', error);
+      logger.error('Failed to load equipment catalog:', error);
     }
   };
 
   useEffect(() => {
     fetchBookings();
     fetchCatalog();
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel('client-id-proof-updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'client_id_proofs' }, (payload) => {
+        const newProof = payload.new as any;
+        if (newProof) {
+          setIdProof({
+            id: newProof.id || '',
+            idType: newProof.id_type || '',
+            fileUrl: newProof.file_url || '',
+            status: newProof.status || 'PENDING',
+            rejectReason: newProof.reject_reason || null,
+          });
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleIdUpload = async (e: React.FormEvent) => {
@@ -166,7 +178,7 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
       setSelectedFile(null);
       setIdType('');
     } catch (error: any) {
-      console.error(error);
+      logger.error(error);
       setUploadError(error.message || 'Something went wrong uploading your ID. Please try again.');
       toast.error(error.message || 'ID Upload failed.');
     } finally {
@@ -174,97 +186,7 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
     }
   };
 
-  const handleBookRental = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBookingError('');
-
-    if (!startDate || !startHour || !startMinute || !startAmpm) {
-      setBookingError('Please enter complete start date and time.');
-      return;
-    }
-    if (!endDate || !endHour || !endMinute || !endAmpm) {
-      setBookingError('Please enter complete end date and time.');
-      return;
-    }
-    if (selectedEquipmentIds.length === 0) {
-      setBookingError('Please select at least one equipment item.');
-      return;
-    }
-
-    const formatDateTime = (dateStr: string, hourStr: string, minStr: string, ampmStr: string) => {
-      let hourNum = parseInt(hourStr, 10);
-      if (ampmStr === 'PM' && hourNum < 12) hourNum += 12;
-      if (ampmStr === 'AM' && hourNum === 12) hourNum = 0;
-      const h = hourNum.toString().padStart(2, '0');
-      return `${dateStr}T${h}:${minStr}:00`;
-    };
-
-    const startDateTimeStr = formatDateTime(startDate, startHour, startMinute, startAmpm);
-    const endDateTimeStr = formatDateTime(endDate, endHour, endMinute, endAmpm);
-
-    const start = new Date(startDateTimeStr);
-    const end = new Date(endDateTimeStr);
-
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      setBookingError('Invalid date or time selected.');
-      return;
-    }
-
-    if (start.getTime() <= Date.now()) {
-      setBookingError('Rental start date must be in the future.');
-      return;
-    }
-    if (end.getTime() <= start.getTime()) {
-      setBookingError('Rental end date must be after the start date.');
-      return;
-    }
-
-    showLoader('Submitting rental request...');
-    try {
-      const res = await fetch('/api/client/rentals/book', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          startDate: startDateTimeStr,
-          endDate: endDateTimeStr,
-          purpose,
-          equipmentIds: selectedEquipmentIds,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Rental booking failed');
-      }
-
-      toast.success('Equipment rental requested successfully!');
-      setIsBookDialogOpen(false);
-      // Reset form
-      setStartDate('');
-      setStartHour('');
-      setStartMinute('');
-      setStartAmpm('');
-      setEndDate('');
-      setEndHour('');
-      setEndMinute('');
-      setEndAmpm('');
-      setPurpose('');
-      setSelectedEquipmentIds([]);
-      fetchBookings();
-    } catch (error: any) {
-      console.error(error);
-      setBookingError(error.message || 'Failed to submit rental request.');
-      toast.error(error.message || 'Rental booking failed.');
-    } finally {
-      hideLoader();
-    }
-  };
-
-  const toggleEquipmentSelection = (id: string) => {
-    setSelectedEquipmentIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
+  // Form submit and equipment selection logic handled by RentalBookingForm
 
   const getStatusBadge = (status: RentalBooking['status']) => {
     switch (status) {
@@ -485,9 +407,11 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
       {/* Show rental terms/bill back image only after uploading an ID (pending or verified) */}
       {idProof && !isRejected && (
         <div className="mt-6 mb-8 bg-slate-900/50 rounded-2xl overflow-hidden border border-slate-800 shadow-lg">
-          <img 
+          <Image 
             src="/rental-bill-back.webp" 
             alt="Wandering Kite Rental Terms and Conditions" 
+            width={1200}
+            height={800}
             className="w-full h-auto object-cover opacity-90 hover:opacity-100 transition-opacity"
           />
         </div>
@@ -524,204 +448,13 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
                   </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={handleBookRental} className="space-y-4 mt-2">
-                  {bookingError && (
-                    <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2 animate-shake">
-                      <AlertCircle className="h-4 w-4 shrink-0" />
-                      <span>{bookingError}</span>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <style>{`
-                      input[type="date"]::-webkit-calendar-picker-indicator {
-                        display: block !important;
-                        opacity: 0.85 !important;
-                        cursor: pointer;
-                        filter: invert(62%) sepia(93%) saturate(1682%) hue-rotate(15deg) brightness(102%) contrast(101%) !important;
-                      }
-                      input[type="date"]::-webkit-calendar-picker-indicator:hover {
-                        opacity: 1 !important;
-                        filter: invert(72%) sepia(61%) saturate(3033%) hue-rotate(5deg) brightness(101%) contrast(97%) !important;
-                      }
-                    `}</style>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-amber-500" />
-                        Start Date & Time *
-                      </Label>
-                      <div className="relative mb-2">
-                        <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-amber-500 pointer-events-none" />
-                        <input
-                          type="date"
-                          value={startDate}
-                          min={new Date().toISOString().split('T')[0]}
-                          onChange={(e) => {
-                            setStartDate(e.target.value);
-                            if (bookingError) setBookingError('');
-                          }}
-                          onClick={(e) => {
-                            try { e.currentTarget.showPicker(); } catch (err) {}
-                          }}
-                          style={{ colorScheme: 'dark' }}
-                          className="flex h-9 w-full rounded-lg border border-slate-800 bg-slate-950 pl-10 pr-3 py-1 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500/50 cursor-pointer"
-                          required
-                        />
-                      </div>
-                      <div className="flex gap-1.5">
-                        <div className="flex-1">
-                          <Select value={startHour} onValueChange={(val) => { setStartHour(val); if(bookingError) setBookingError(''); }}>
-                            <SelectTrigger className="w-full bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 text-xs">
-                              <SelectValue placeholder="Hour" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-950 border border-slate-800 text-white max-h-[200px]">
-                              {Array.from({ length: 12 }, (_, i) => {
-                                const h = (i + 1).toString().padStart(2, '0');
-                                return <SelectItem key={h} value={h}>{h}</SelectItem>;
-                              })}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex-1">
-                          <Select value={startMinute} onValueChange={setStartMinute}>
-                            <SelectTrigger className="w-full bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 text-xs">
-                              <SelectValue placeholder="Min" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-950 border border-slate-800 text-white max-h-[200px]">
-                              {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map((m) => (
-                                <SelectItem key={m} value={m}>{m}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="w-[72px] shrink-0">
-                          <Select value={startAmpm} onValueChange={(val) => { setStartAmpm(val); if(bookingError) setBookingError(''); }}>
-                            <SelectTrigger className="w-full bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 text-xs">
-                              <SelectValue placeholder="AM/PM" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-950 border border-slate-800 text-white">
-                              <SelectItem value="AM">AM</SelectItem>
-                              <SelectItem value="PM">PM</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-amber-500" />
-                        End Date & Time *
-                      </Label>
-                      <div className="relative mb-2">
-                        <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-amber-500 pointer-events-none" />
-                        <input
-                          type="date"
-                          value={endDate}
-                          min={startDate || new Date().toISOString().split('T')[0]}
-                          onChange={(e) => {
-                            setEndDate(e.target.value);
-                            if (bookingError) setBookingError('');
-                          }}
-                          onClick={(e) => {
-                            try { e.currentTarget.showPicker(); } catch (err) {}
-                          }}
-                          style={{ colorScheme: 'dark' }}
-                          className="flex h-9 w-full rounded-lg border border-slate-800 bg-slate-950 pl-10 pr-3 py-1 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500/50 cursor-pointer"
-                          required
-                        />
-                      </div>
-                      <div className="flex gap-1.5">
-                        <div className="flex-1">
-                          <Select value={endHour} onValueChange={(val) => { setEndHour(val); if(bookingError) setBookingError(''); }}>
-                            <SelectTrigger className="w-full bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 text-xs">
-                              <SelectValue placeholder="Hour" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-950 border border-slate-800 text-white max-h-[200px]">
-                              {Array.from({ length: 12 }, (_, i) => {
-                                const h = (i + 1).toString().padStart(2, '0');
-                                return <SelectItem key={h} value={h}>{h}</SelectItem>;
-                              })}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex-1">
-                          <Select value={endMinute} onValueChange={setEndMinute}>
-                            <SelectTrigger className="w-full bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 text-xs">
-                              <SelectValue placeholder="Min" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-950 border border-slate-800 text-white max-h-[200px]">
-                              {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map((m) => (
-                                <SelectItem key={m} value={m}>{m}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="w-[72px] shrink-0">
-                          <Select value={endAmpm} onValueChange={(val) => { setEndAmpm(val); if(bookingError) setBookingError(''); }}>
-                            <SelectTrigger className="w-full bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9 text-xs">
-                              <SelectValue placeholder="AM/PM" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-950 border border-slate-800 text-white">
-                              <SelectItem value="AM">AM</SelectItem>
-                              <SelectItem value="PM">PM</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label htmlFor="purpose" className="text-xs font-semibold text-slate-300">Rental Purpose</Label>
-                    <Input
-                      id="purpose"
-                      value={purpose}
-                      onChange={(e) => setPurpose(e.target.value)}
-                      className="bg-slate-950 border-slate-800 focus:border-amber-500/50 text-white rounded-lg h-9"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-300">Select Equipment Catalog *</Label>
-                    <div className="border border-slate-800 rounded-xl bg-slate-950 p-3 max-h-48 overflow-y-auto space-y-2">
-                      {equipmentCatalog.length === 0 ? (
-                        <p className="text-xs text-slate-500 italic text-center py-4">No active rental gear available right now.</p>
-                      ) : (
-                        equipmentCatalog.map((item) => (
-                          <label
-                            key={item.id}
-                            className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-900/50 cursor-pointer border border-transparent hover:border-slate-800 transition-colors"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedEquipmentIds.includes(item.id)}
-                              onChange={() => toggleEquipmentSelection(item.id)}
-                              className="mt-1 h-4 w-4 rounded border-slate-800 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-950 bg-slate-950"
-                            />
-                            <div className="space-y-0.5">
-                              <span className="text-xs font-semibold text-white block">{item.name}</span>
-                              {item.description && (
-                                <span className="text-[10px] text-slate-400 block leading-tight">{item.description}</span>
-                              )}
-                            </div>
-                          </label>
-                        ))
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
-                    <DialogClose asChild>
-                      <Button type="button" variant="outline" className="border-slate-800 hover:bg-slate-800 text-slate-300 rounded-lg">
-                        Cancel
-                      </Button>
-                    </DialogClose>
-                    <Button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-lg">
-                      Submit Booking
-                    </Button>
-                  </div>
-                </form>
+                <RentalBookingForm 
+                  equipmentCatalog={equipmentCatalog} 
+                  onSuccess={() => {
+                    setIsBookDialogOpen(false);
+                    fetchBookings();
+                  }} 
+                />
               </DialogContent>
             </Dialog>
           </div>

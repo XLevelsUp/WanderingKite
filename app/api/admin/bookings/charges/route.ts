@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.error('Insert booking charge error:', error);
+      logger.error('Insert booking charge error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, charge });
   } catch (error) {
-    console.error('POST /api/admin/bookings/charges error:', error);
+    logger.error('POST /api/admin/bookings/charges error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

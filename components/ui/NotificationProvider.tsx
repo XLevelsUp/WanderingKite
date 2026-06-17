@@ -201,7 +201,7 @@ export function NotificationProvider({
     setupFetchInterceptor({
       allowedOrigins: ['supabase.co', window.location.hostname],
       allowedPrefixes: ['/api/', '/v1/'],
-      silentCodes: [404], // Silently ignore 404s for global fetch logic
+      silentCodes: [404, 409], // Silently ignore 404s and 409s for global fetch logic
       onError: (status, url, message) => {
         showError(message || `An error occurred (${status})`);
       },

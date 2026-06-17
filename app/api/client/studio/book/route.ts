@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { adminAuthClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
       .lte('date_time', bufferEnd.toISOString());
 
     if (rangeError) {
-      console.error('Fetch studio bookings in buffer window failed:', rangeError);
+      logger.error('Fetch studio bookings in buffer window failed:', rangeError);
       return NextResponse.json({ error: 'server_error' }, { status: 500 });
     }
 
@@ -130,7 +131,7 @@ export async function POST(request: Request) {
         });
 
       if (auditError) {
-        console.error('Failed to log booking conflict:', auditError);
+        logger.error('Failed to log booking conflict:', auditError);
       }
 
       return NextResponse.json({
@@ -171,7 +172,7 @@ export async function POST(request: Request) {
       .single();
 
     if (insertError || !booking) {
-      console.error('Studio insert failed:', insertError);
+      logger.error('Studio insert failed:', insertError);
       return NextResponse.json({ error: 'insert_failed' }, { status: 500 });
     }
 
@@ -186,7 +187,7 @@ export async function POST(request: Request) {
       .insert(joinRows);
 
     if (joinError) {
-      console.error('Studio join insertion failed:', joinError);
+      logger.error('Studio join insertion failed:', joinError);
       // Rollback
       await supabase.from('studio_bookings').delete().eq('id', booking.id);
       return NextResponse.json({ error: 'join_failed' }, { status: 500 });
@@ -194,7 +195,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, bookingId: booking.id });
   } catch (error) {
-    console.error('POST /api/client/studio/book error:', error);
+    logger.error('POST /api/client/studio/book error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

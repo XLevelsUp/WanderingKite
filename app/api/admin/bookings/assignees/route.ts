@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
         if (error.code === '23505') { // unique violation
           return NextResponse.json({ error: 'already_assigned' }, { status: 400 });
         }
-        console.error('Insert assignee error:', error);
+        logger.error('Insert assignee error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
         .match(matchCriteria);
 
       if (error) {
-        console.error('Delete assignee error:', error);
+        logger.error('Delete assignee error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'invalid_action' }, { status: 400 });
     }
   } catch (error) {
-    console.error('POST /api/admin/bookings/assignees error:', error);
+    logger.error('POST /api/admin/bookings/assignees error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

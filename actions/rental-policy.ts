@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { logger } from '@/lib/logger';
 
 export async function requireAdminOrSuper() {
   const supabase = await createClient();
@@ -30,7 +31,7 @@ export async function getGlobalRentalPolicySettings() {
     .single();
 
   if (error && error.code !== 'PGRST116') {
-    console.error('Error fetching settings', error);
+    logger.error('Error fetching settings', error);
     return null;
   }
   return data;
@@ -123,7 +124,7 @@ export async function updateEquipmentRate(equipmentId: string, formData: FormDat
       notes
     });
     if (historyError) {
-      console.error('Failed to log equipment history:', historyError);
+      logger.error('Failed to log equipment history:', historyError);
     }
   }
 

@@ -44,6 +44,7 @@ import {
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotifications } from '@/components/ui/useNotifications';
+import { logger } from '@/lib/logger';
 
 interface AlbumDetail {
   id: string;
@@ -600,7 +601,7 @@ export default function ClientDetailsView({
       toast.success(`Account has been ${nextActiveState ? 'activated' : 'deactivated'} successfully.`);
       router.refresh();
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       toast.error('Could not update account status.');
     } finally {
       hideLoader();
@@ -634,7 +635,7 @@ export default function ClientDetailsView({
       toast.success(`ID proof successfully ${status === 'VERIFIED' ? 'Approved' : 'Rejected'}.`);
       router.refresh();
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       toast.error('Could not verify ID Proof.');
     } finally {
       hideLoader();
@@ -673,7 +674,7 @@ export default function ClientDetailsView({
       }
       router.refresh();
     } catch (error: any) {
-      console.error(error);
+      logger.error(error);
       toast.error(error.message || 'Could not update booking status.');
     } finally {
       hideLoader();
@@ -713,7 +714,7 @@ export default function ClientDetailsView({
     const roundedAdvance = Math.round(parsedAdvance);
     const roundedAmount = Math.round(parsedAmount);
 
-    console.log('Pre-submit booking update payload:', {
+    logger.debug('Pre-submit booking update payload:', {
       bookingType: activeBookingType,
       bookingId: activeBookingId,
       status: updateStatus,
@@ -780,7 +781,7 @@ export default function ClientDetailsView({
       }
       router.refresh();
     } catch (error: any) {
-      console.error(error);
+      logger.error(error);
       setBookingUpdateError(error.message || 'Could not update booking.');
     } finally {
       hideLoader();
@@ -815,7 +816,7 @@ export default function ClientDetailsView({
     const roundedAdvance = Math.round(parsedAdvance);
     const roundedAmount = Math.round(parsedAmount);
 
-    console.log('Pre-submit photography booking complete payload:', {
+    logger.debug('Pre-submit photography booking complete payload:', {
       bookingType: 'PHOTOGRAPHY',
       bookingId: activePhotoBookingId,
       status: 'COMPLETED',
@@ -875,7 +876,7 @@ export default function ClientDetailsView({
       );
       router.refresh();
     } catch (error: any) {
-      console.error(error);
+      logger.error(error);
       setPhotoError(error.message || 'Could not complete booking.');
     } finally {
       hideLoader();
@@ -903,7 +904,7 @@ export default function ClientDetailsView({
       );
       router.refresh();
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       toast.error('Could not confirm rental.');
     } finally {
       hideLoader();
@@ -933,7 +934,7 @@ export default function ClientDetailsView({
 
     const parsedDamageCost = rentalStatus === 'DAMAGED' && damageCost ? Math.round(parseFloat(damageCost)) : null;
 
-    console.log('Pre-submit rental return payload:', {
+    logger.debug('Pre-submit rental return payload:', {
       bookingId: activeRentalBooking?.id,
       status: rentalStatus,
       returnCondition,
@@ -984,7 +985,7 @@ export default function ClientDetailsView({
       );
       router.refresh();
     } catch (error: any) {
-      console.error(error);
+      logger.error(error);
       setRentalError(error.message || 'Could not save return record.');
     } finally {
       hideLoader();

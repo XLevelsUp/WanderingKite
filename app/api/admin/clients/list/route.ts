@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -26,7 +27,7 @@ export async function GET() {
       .order('createdAt', { ascending: false });
 
     if (clientsError) {
-      console.error('Fetch admin client list failed:', clientsError);
+      logger.error('Fetch admin client list failed:', clientsError);
       return NextResponse.json({ error: 'server_error' }, { status: 500 });
     }
 
@@ -66,7 +67,7 @@ export async function GET() {
 
     return NextResponse.json({ clients: clientList });
   } catch (error) {
-    console.error('GET /api/admin/clients/list error:', error);
+    logger.error('GET /api/admin/clients/list error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

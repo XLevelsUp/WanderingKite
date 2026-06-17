@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { adminAuthClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -28,7 +29,7 @@ export async function GET() {
       .order('date_time', { ascending: false });
 
     if (bookingsError) {
-      console.error('Fetch studio list failed:', bookingsError);
+      logger.error('Fetch studio list failed:', bookingsError);
       return NextResponse.json({ error: 'server_error' }, { status: 500 });
     }
 
@@ -42,7 +43,7 @@ export async function GET() {
         .in('A', bookingIds);
 
       if (joinsError) {
-        console.error('Fetch studio list join links failed:', joinsError);
+        logger.error('Fetch studio list join links failed:', joinsError);
         return NextResponse.json({ error: 'server_error' }, { status: 500 });
       }
 
@@ -56,7 +57,7 @@ export async function GET() {
           .in('id', equipmentIds);
 
         if (equipError) {
-          console.error('Fetch studio equipment details failed:', equipError);
+          logger.error('Fetch studio equipment details failed:', equipError);
           return NextResponse.json({ error: 'server_error' }, { status: 500 });
         }
 
@@ -95,7 +96,7 @@ export async function GET() {
 
     return NextResponse.json({ bookings: formattedBookings });
   } catch (error) {
-    console.error('GET /api/client/studio/list error:', error);
+    logger.error('GET /api/client/studio/list error:', error);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

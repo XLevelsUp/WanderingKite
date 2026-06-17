@@ -1,5 +1,6 @@
 import { adminAuthClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 const initialRentalEquipment = [
   {
@@ -121,7 +122,7 @@ export async function GET() {
       results,
     });
   } catch (error: any) {
-    console.error('Seeding error:', error);
+    logger.error('Seeding error:', error);
     return NextResponse.json(
       { error: 'Failed to seed equipment catalog', details: error.message },
       { status: 500 }

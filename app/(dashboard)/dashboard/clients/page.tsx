@@ -20,6 +20,7 @@ import { redirect } from 'next/navigation';
 import { hasAccess } from '@/lib/access';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, UserCheck, Activity } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 export default async function ClientsPage() {
   const supabase = await createClient();
@@ -43,7 +44,7 @@ export default async function ClientsPage() {
     .order('createdAt', { ascending: false });
 
   if (error) {
-    console.error('Error loading clients in ERP:', error);
+    logger.error('Error loading clients in ERP:', error);
   }
 
   const clientsWithActivity = (clients || []).map((client: any) => {

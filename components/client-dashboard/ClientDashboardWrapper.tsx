@@ -123,7 +123,7 @@ export default function ClientDashboardWrapper({
 
         {/* Tab switcher navigation (Vertical on desktop) */}
         <Card className="bg-slate-900/40 border-slate-800 backdrop-blur-md p-2">
-          <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-1.5 scrollbar-none">
+          <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-1.5 scrollbar-none [mask-image:linear-gradient(to_right,black_85%,transparent_100%)] lg:[mask-image:none]">
             {subscribedServices.includes('PHOTOGRAPHY') && (
               <button
                 onClick={() => handleTabChange('PHOTOGRAPHY')}

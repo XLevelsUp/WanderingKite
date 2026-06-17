@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminAuthClient } from "@/lib/supabase/admin";
 import bcrypt from "bcryptjs";
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
       .single();
 
     if (insertError || !client) {
-      console.error("Client signup insert error:", insertError);
+      logger.error("Client signup insert error:", insertError);
       return NextResponse.json({ error: "server_error" }, { status: 500 });
     }
 
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
         .insert(serviceInserts);
 
       if (servicesError) {
-        console.error("Client signup services insert error:", servicesError);
+        logger.error("Client signup services insert error:", servicesError);
         // We still keep the client profile even if service mapping had issues,
         // but let's log it.
       }
@@ -79,7 +80,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, clientId: client.id });
   } catch (error) {
-    console.error("Client signup unexpected error:", error);
+    logger.error("Client signup unexpected error:", error);
     return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 }
