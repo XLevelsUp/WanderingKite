@@ -17,9 +17,20 @@ import {
   Building2,
   Calendar,
   Layers,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { resolveStudioBookingConflict } from '@/actions/audit';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 interface Props {
   clashLogs: any[];
@@ -39,6 +50,7 @@ function formatDateTime(isoString: string) {
 }
 
 export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConflicts, defaultTab = 'equipment' }: Props) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'equipment' | 'studio'>(defaultTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [studioConflicts, setStudioConflicts] = useState(initialStudioConflicts);
@@ -49,10 +61,36 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
   const [resolutionNotes, setResolutionNotes] = useState('');
   const [isPending, startTransition] = useTransition();
 
+  const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean, title: string, desc: string, onConfirm: () => void, isDestructive: boolean }>({ isOpen: false, title: '', desc: '', onConfirm: () => { }, isDestructive: false });
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleOpenResolve = (conflict: any) => {
     setSelectedConflict(conflict);
     setResolutionStatus('approved');
     setResolutionNotes('');
+  };
+
+  const handleDeleteLog = (id: string, type: 'clash' | 'conflict') => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Log',
+      desc: 'Are you sure you want to permanently delete this log? This action cannot be undone.',
+      isDestructive: true,
+      onConfirm: async () => {
+        setIsDeleting(true);
+        try {
+          const res = await fetch(`/api/admin/audit/delete?id=${id}&type=${type}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error('Failed to delete log');
+          toast.success('Log deleted successfully');
+          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          router.refresh();
+        } catch (err: any) {
+          toast.error(err.message);
+        } finally {
+          setIsDeleting(false);
+        }
+      }
+    });
   };
 
   const handleResolveSubmit = (e: React.FormEvent) => {
@@ -247,11 +285,23 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
                           </div>
                         </td>
 
-                        {/* Timestamp */}
+                        {/* Timestamp & Actions */}
                         <td className="px-5 py-4 text-right">
-                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-white/5 border border-white/5 text-xs text-foreground/50">
-                            {formatDateTime(log.created_at)}
-                          </span>
+                          <div className="flex items-center justify-end gap-3">
+                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-white/5 border border-white/5 text-xs text-foreground/50">
+                              {formatDateTime(log.created_at)}
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteLog(log.id, 'clash');
+                              }}
+                              title="Delete Log"
+                              className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -375,19 +425,31 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
 
                           {/* Action */}
                           <td className="px-5 py-4 text-right">
-                            {c.status === 'blocked' ? (
+                            <div className="flex items-center justify-end gap-3">
+                              {c.status === 'blocked' ? (
+                                <button
+                                  onClick={() => handleOpenResolve(c)}
+                                  className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs rounded-lg shadow-sm hover:shadow transition-all"
+                                >
+                                  Resolve
+                                </button>
+                              ) : (
+                                <span className="text-xs text-slate-500 flex items-center justify-end gap-1 font-medium">
+                                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                  Handled
+                                </span>
+                              )}
                               <button
-                                onClick={() => handleOpenResolve(c)}
-                                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs rounded-lg shadow-sm hover:shadow transition-all"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteLog(c.id, 'conflict');
+                                }}
+                                title="Delete Log"
+                                className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
                               >
-                                Resolve
+                                <Trash2 className="w-4 h-4" />
                               </button>
-                            ) : (
-                              <span className="text-xs text-slate-500 flex items-center justify-end gap-1 font-medium">
-                                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                Handled
-                              </span>
-                            )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -498,6 +560,61 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
               </form>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      <Dialog open={confirmDialog.isOpen} onOpenChange={(open) => !open && !isDeleting && setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 max-w-md">
+          <DialogHeader>
+            <DialogTitle className={confirmDialog.isDestructive ? "text-rose-500" : ""}>
+              {confirmDialog.title}
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              {confirmDialog.desc}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button 
+              variant="outline" 
+              className="border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white" 
+              onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant={confirmDialog.isDestructive ? "destructive" : "default"}
+              className={confirmDialog.isDestructive ? "bg-rose-600 hover:bg-rose-500 text-white" : ""}
+              onClick={() => { confirmDialog.onConfirm(); }}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Confirm'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Global Loading Overlay */}
+      <AnimatePresence>
+        {isDeleting && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm"
+          >
+            <div className="flex flex-col items-center gap-4 bg-slate-900/90 border border-slate-800 p-8 rounded-2xl shadow-2xl">
+              <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+              <p className="text-slate-200 font-medium">Deleting log safely...</p>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

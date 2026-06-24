@@ -238,6 +238,10 @@ export async function deleteEmployee(id: string) {
     return { error: 'Unauthorized' };
   }
 
+  if (requester.id === id) {
+    return { error: 'You cannot delete your own account' };
+  }
+
   const { data: requesterProfile } = await supabase
     .from('profiles')
     .select('role')
@@ -248,14 +252,40 @@ export async function deleteEmployee(id: string) {
     return { error: 'Only Super Admin can delete employees' };
   }
 
-  const { error } = await adminAuthClient.auth.admin.deleteUser(id);
+  // 1. Soft delete profile in database
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({ deletedAt: new Date().toISOString() })
+    .eq('id', id);
 
-  if (error) {
-    logger.error('Error deleting user', error);
-    return { error: 'Failed to delete user' };
+  if (profileError) {
+    logger.error('Error soft-deleting profile', profileError);
+    return { error: profileError.message || 'Failed to delete employee profile' };
+  }
+
+  // 2. Deactivate contract if exists
+  const { error: contractError } = await supabase
+    .from('employee_contracts')
+    .update({ isActive: false, deactivatedAt: new Date().toISOString() })
+    .eq('profileId', id);
+
+  if (contractError) {
+    logger.error('Error deactivating contract during soft-delete', contractError);
+    // Non-blocking, continue
+  }
+
+  // 3. Ban user in Supabase Auth so they cannot log in
+  const { error: authError } = await adminAuthClient.auth.admin.updateUserById(id, {
+    ban_duration: 'none',
+  });
+
+  if (authError) {
+    logger.error('Error banning user in Auth during soft-delete', authError);
+    // Non-blocking, continue
   }
 
   revalidatePath('/dashboard/employees');
+  revalidatePath('/admin/employees');
   return { success: true };
 }
 

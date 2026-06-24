@@ -41,19 +41,21 @@ export default async function DashboardLayout({
           <SidebarNav profile={profile} email={user.email || ''} />
         }
         footerContent={
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-foreground/50">
+          <div className="flex items-center justify-between gap-4 w-full">
+            <div className="text-sm text-foreground/50 min-w-0 flex-1">
               <Link
                 href={`/dashboard/employees/${user.id}`}
                 className="font-medium text-foreground hover:text-primary truncate block transition-colors duration-150"
               >
-                {profile?.full_name || user.email}
+                {user.email}
               </Link>
               <p className="text-xs mt-1 capitalize text-primary/55">
                 {profile?.role.replace('_', ' ').toLowerCase()}
               </p>
             </div>
-            <SignOutButton />
+            <div className="flex-shrink-0">
+              <SignOutButton />
+            </div>
           </div>
         }
       >

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell,
@@ -18,9 +19,20 @@ import {
   XCircle,
   User,
   Activity,
+  ExternalLink,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 type BookingStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
 type PaymentStatus = 'PENDING' | 'PARTIALLY_COMPLETED' | 'COMPLETED';
@@ -112,6 +124,9 @@ export function AdminOperationalHub({
 }: Props) {
   const [active, setActive] = useState<TabKey>('allBookings');
   const [bookingFilter, setBookingFilter] = useState<FilterChip>('All');
+  const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean, title: string, desc: string, onConfirm: () => void, isDestructive: boolean }>({ isOpen: false, title: '', desc: '', onConfirm: () => { }, isDestructive: false });
+  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
 
   const counts: Record<TabKey, number> = {
     allBookings: allBookings.length,
@@ -164,13 +179,20 @@ export function AdminOperationalHub({
       </div>
 
       {/* Top Cards for Today's Bookings */}
-      <div className="p-4 border-b border-slate-800 bg-slate-900/30 flex items-center">
+      <div className="p-4 border-b border-slate-800 bg-slate-900/30 flex items-center justify-between gap-3">
         <div className="px-5 py-3 rounded-xl border border-slate-800 bg-slate-900/60 flex items-center gap-4 hover:border-amber-500/30 transition-colors">
           <div className="flex flex-col">
             <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Today's Bookings</span>
           </div>
           <span className="text-2xl font-bold text-amber-400">{todaysBookingsCount}</span>
         </div>
+        <button
+          onClick={() => router.push('/admin/bookings')}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-300 transition-all duration-200 whitespace-nowrap cursor-pointer"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+          Manage All Bookings
+        </button>
       </div>
 
       {/* Tab Content */}
@@ -227,18 +249,18 @@ export function AdminOperationalHub({
                     </>
                   ) : (
                     <div className="space-y-2">
-                      {allBookings
-                        .filter(b => {
-                          if (bookingFilter === 'Pending Request') return b.status === 'PENDING';
-                          if (bookingFilter === 'Confirmed') return b.status === 'CONFIRMED';
-                          if (bookingFilter === 'Shoot Completed') return b.status === 'COMPLETED';
-                          return true;
-                        })
-                        .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime())
-                        .map((b) => (
-                          <BookingRow key={b.id} booking={b} showPayment />
-                        ))
-                      }
+                      <GroupedBookingsList 
+                        bookings={allBookings
+                          .filter(b => {
+                            if (bookingFilter === 'Pending Request') return b.status === 'PENDING';
+                            if (bookingFilter === 'Confirmed') return b.status === 'CONFIRMED';
+                            if (bookingFilter === 'Shoot Completed') return b.status === 'COMPLETED';
+                            return true;
+                          })
+                          .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime())
+                        } 
+                        showPayment 
+                      />
                     </div>
                   )}
                 </div>
@@ -262,11 +284,12 @@ export function AdminOperationalHub({
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-3">
                     {pendingBookings.length} request{pendingBookings.length !== 1 ? 's' : ''} awaiting approval
                   </p>
-                  {pendingBookings
-                    .sort((a, b) => new Date(a.createdAt || a.dateTime).getTime() - new Date(b.createdAt || b.dateTime).getTime())
-                    .map((b) => (
-                      <BookingRow key={b.id} booking={b} showPayment />
-                    ))}
+                  <GroupedBookingsList 
+                    bookings={pendingBookings
+                      .sort((a, b) => new Date(a.createdAt || a.dateTime).getTime() - new Date(b.createdAt || b.dateTime).getTime())
+                    } 
+                    showPayment 
+                  />
                 </div>
               )}
             </motion.div>
@@ -361,7 +384,7 @@ export function AdminOperationalHub({
                     {conflictLogs.length} conflict{conflictLogs.length !== 1 ? 's' : ''} logged ({counts.conflicts} unresolved)
                   </p>
                   {conflictLogs.map((conflict) => (
-                    <ConflictRow key={conflict.id} conflict={conflict} />
+                    <ConflictRow key={conflict.id} conflict={conflict} setConfirmDialog={setConfirmDialog} setIsDeleting={setIsDeleting} />
                   ))}
                 </div>
               )}
@@ -369,17 +392,97 @@ export function AdminOperationalHub({
           )}
         </AnimatePresence>
       </div>
+
+      <Dialog open={confirmDialog.isOpen} onOpenChange={(open) => !open && !isDeleting && setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 max-w-md">
+          <DialogHeader>
+            <DialogTitle className={confirmDialog.isDestructive ? "text-rose-500" : ""}>
+              {confirmDialog.title}
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              {confirmDialog.desc}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button 
+              variant="outline" 
+              className="border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white" 
+              onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant={confirmDialog.isDestructive ? "destructive" : "default"}
+              className={confirmDialog.isDestructive ? "bg-rose-600 hover:bg-rose-500 text-white" : ""}
+              onClick={() => { confirmDialog.onConfirm(); }}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Confirm'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Global Loading Overlay */}
+      <AnimatePresence>
+        {isDeleting && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm"
+          >
+            <div className="flex flex-col items-center gap-4 bg-slate-900/90 border border-slate-800 p-8 rounded-2xl shadow-2xl">
+              <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+              <p className="text-slate-200 font-medium">Deleting record safely...</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function ConflictRow({ conflict }: { conflict: any }) {
+function ConflictRow({ conflict, setConfirmDialog, setIsDeleting }: { conflict: any, setConfirmDialog: any, setIsDeleting: any }) {
+  const router = useRouter();
   const isResolved = conflict.status !== 'blocked';
   const statusColors = {
     blocked: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
     approved: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     rejected: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
   }[conflict.status as string] || 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+
+  const handleDeleteConflict = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Conflict Log',
+      desc: 'Are you sure you want to permanently delete this conflict log? This action cannot be undone.',
+      isDestructive: true,
+      onConfirm: async () => {
+        setIsDeleting(true);
+        try {
+          const res = await fetch(`/api/admin/audit/delete?id=${conflict.id}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error('Failed to delete log');
+          toast.success('Log deleted successfully');
+          setConfirmDialog((prev: any) => ({ ...prev, isOpen: false }));
+          router.refresh();
+        } catch (err: any) {
+          toast.error(err.message);
+        } finally {
+          setIsDeleting(false);
+        }
+      }
+    });
+  };
 
   return (
     <Link href="/dashboard/audit-logs?tab=studio">
@@ -419,6 +522,14 @@ function ConflictRow({ conflict }: { conflict: any }) {
           </span>
         </div>
 
+        <button 
+          onClick={handleDeleteConflict}
+          className="p-1.5 ml-2 rounded-md hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 transition-colors"
+          title="Delete Log"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+
         <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-amber-500 transition-colors flex-shrink-0" />
       </div>
     </Link>
@@ -438,21 +549,65 @@ function EmptyState({ icon: Icon, message }: { icon: React.ElementType; message:
   );
 }
 
+function GroupedBookingsList({ bookings, showPayment }: { bookings: BaseBooking[]; showPayment: boolean }) {
+  const photography = bookings.filter(b => b.type === 'PHOTOGRAPHY');
+  const studio = bookings.filter(b => b.type === 'STUDIO');
+  const rental = bookings.filter(b => b.type === 'RENTAL');
+
+  return (
+    <div className="space-y-4">
+      {photography.length > 0 && (
+        <div className="space-y-2 pl-2 border-l border-slate-800">
+          <div className="flex items-center gap-1.5 text-xs text-violet-400 font-bold uppercase tracking-wider">
+            <Camera className="h-3.5 w-3.5" />
+            <span>Photography ({photography.length})</span>
+          </div>
+          <div className="space-y-2">
+            {photography.map(b => (
+              <BookingRow key={b.id} booking={b} showPayment={showPayment} />
+            ))}
+          </div>
+        </div>
+      )}
+      {studio.length > 0 && (
+        <div className="space-y-2 pl-2 border-l border-slate-800">
+          <div className="flex items-center gap-1.5 text-xs text-sky-400 font-bold uppercase tracking-wider">
+            <Building2 className="h-3.5 w-3.5" />
+            <span>Studio Space ({studio.length})</span>
+          </div>
+          <div className="space-y-2">
+            {studio.map(b => (
+              <BookingRow key={b.id} booking={b} showPayment={showPayment} />
+            ))}
+          </div>
+        </div>
+      )}
+      {rental.length > 0 && (
+        <div className="space-y-2 pl-2 border-l border-slate-800">
+          <div className="flex items-center gap-1.5 text-xs text-amber-400 font-bold uppercase tracking-wider">
+            <Package className="h-3.5 w-3.5" />
+            <span>Rentals ({rental.length})</span>
+          </div>
+          <div className="space-y-2">
+            {rental.map(b => (
+              <BookingRow key={b.id} booking={b} showPayment={showPayment} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BookingGroup({ title, bookings }: { title: string; bookings: BaseBooking[] }) {
   if (bookings.length === 0) return null;
+  const sorted = [...bookings].sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime());
   return (
     <div className="space-y-2">
       <h3 className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold pb-1 border-b border-slate-800">
         {title} ({bookings.length})
       </h3>
-      <div className="space-y-2">
-        {bookings
-          .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime())
-          .map((b) => (
-            <BookingRow key={b.id} booking={b} showPayment />
-          ))
-        }
-      </div>
+      <GroupedBookingsList bookings={sorted} showPayment />
     </div>
   );
 }
@@ -470,7 +625,7 @@ function BookingRow({ booking, showPayment }: { booking: BaseBooking; showPaymen
   }[booking.status] || 'bg-slate-500/10 text-slate-400 border-slate-500/20';
 
   return (
-    <Link href="/admin/bookings">
+    <Link href={`/dashboard/clients/${booking.clientId}`}>
       <div className="group flex items-center gap-3 p-3 rounded-xl border border-slate-800 hover:border-amber-500/30 hover:bg-slate-800/50 transition-all cursor-pointer">
         {/* Service icon */}
         <div className={`flex-shrink-0 p-2 rounded-lg bg-slate-800/80 ${serviceColor}`}>
