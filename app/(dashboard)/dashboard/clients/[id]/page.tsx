@@ -31,17 +31,31 @@ export default async function ClientDetailPage({
     redirect('/dashboard');
   }
 
-  // Fetch client details with relative bookings and ID proofs using Supabase
-  const { data: client, error: clientError } = await supabase
-    .from('clients')
-    .select('*, client_services(type), client_id_proofs(*), photography_bookings(*, album_details(*)), rental_bookings(*, equipment(*)), studio_bookings(*, equipment(*))')
-    .eq('id', id)
-    .single();
+  // Fetch client details, profiles, assignees, and charges
+  const [{ data: client, error: clientError }, profilesRes, assigneesRes, chargesRes] = await Promise.all([
+    supabase
+      .from('clients')
+      .select('*, client_services(type), client_id_proofs(*), photography_bookings(*, album_details(*)), rental_bookings(*, equipment(*)), studio_bookings(*, equipment(*))')
+      .eq('id', id)
+      .single(),
+    supabase.from('profiles').select('id, fullName, role, deletedAt, employee_contracts(isActive)').in('role', ['ADMIN', 'SUPER_ADMIN', 'EMPLOYEE']).is('deletedAt', null),
+    supabase.from('booking_assignees').select('*, profile:profiles(*)'),
+    supabase.from('studio_booking_charges').select('*'),
+  ]);
 
   if (clientError || !client) {
     logger.error('Fetch client details error:', clientError);
     redirect('/dashboard/clients');
   }
+
+  const editors = (profilesRes.data || []).filter((profile: any) => {
+    const contracts = profile.employee_contracts || [];
+    const hasActiveContract = contracts.some((c: any) => c.isActive === true);
+    if (profile.role === 'ADMIN' || profile.role === 'SUPER_ADMIN') {
+      return contracts.length === 0 || hasActiveContract;
+    }
+    return hasActiveContract;
+  });
 
   // Generate secure temporary signed URL for the client ID proof
   const idProofObj = Array.isArray(client.client_id_proofs) 
@@ -108,6 +122,7 @@ export default async function ClientDetailPage({
         amountPaid: b.amount_paid ? b.amount_paid.toString() : '0',
         advancePaid: b.advance_paid ? b.advance_paid.toString() : '0',
         createdAt: b.created_at,
+        delivery_link: b.delivery_link,
         album: albumObj
           ? {
               id: albumObj.id,
@@ -151,6 +166,7 @@ export default async function ClientDetailPage({
       additionalCharges: b.additional_charges ? b.additional_charges.toString() : '0',
       notes: b.notes,
       createdAt: b.created_at,
+      delivery_link: b.delivery_link,
       equipments: (b.equipment || []).map((eq: any) => ({ id: eq.id, name: eq.name })),
     }))
     .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -168,6 +184,9 @@ export default async function ClientDetailPage({
         photographyBookings={photographyBookingsSerialized}
         rentalBookings={rentalBookingsSerialized}
         studioBookings={studioBookingsSerialized}
+        editors={editors}
+        assignees={assigneesRes.data || []}
+        charges={chargesRes.data || []}
       />
     </div>
   );

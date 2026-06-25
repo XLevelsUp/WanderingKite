@@ -45,7 +45,7 @@ export function EmployeeTable({
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
   const [viewingId, setViewingId] = useState<string | null>(null);
-  const { showModal, removeModal, showError, showSuccess } = useNotifications();
+  const { showModal, removeModal, showLoader, hideLoader, showError, showSuccess } = useNotifications();
 
   const handleDelete = (id: string, name: string | null) => {
     const modalId = showModal({
@@ -57,8 +57,10 @@ export function EmployeeTable({
       onConfirm: async () => {
         removeModal(modalId);
         setIsDeleting(true);
+        showLoader('Deleting Employee...');
         const result = await deleteEmployee(id);
         setIsDeleting(false);
+        hideLoader();
 
         if (result.error) {
           showError(result.error);

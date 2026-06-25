@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
@@ -30,9 +30,16 @@ interface SidebarNavProps {
 }
 
 export function SidebarNav({ profile, email }: SidebarNavProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
+  // /admin/bookings is a dashboard-level page, NOT an HR route
+  const isHRRoute = (p: string | null) =>
+    !!p && p.startsWith('/admin') && !p.startsWith('/admin/bookings');
+  const [isExpanded, setIsExpanded] = useState(() => isHRRoute(pathname));
+  const router = useRouter();
+
+  useEffect(() => {
+    setIsExpanded(isHRRoute(pathname));
+  }, [pathname]);
 
   const isActive = (path: string) => {
     if (path === '/dashboard') return pathname === '/dashboard';
@@ -62,13 +69,13 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
         <div className='mb-8'>
           <h1 className='text-xl font-bold text-gradient-brand'>HR & Payroll</h1>
         </div>
-        <button
-          onClick={() => setIsExpanded(false)}
+        <a
+          href="/dashboard"
           className='w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-xl text-xs font-bold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 hover:bg-primary/18 transition-all duration-150 group'
         >
           <ArrowLeftCircle className='w-4 h-4 text-primary group-hover:-translate-x-0.5 transition-transform' />
           Return to Main Menu
-        </button>
+        </a>
 
         <div className='space-y-1 mt-2'>
           <p className='px-4 text-[9px] font-bold uppercase tracking-[0.2em] text-primary/45 mb-2'>

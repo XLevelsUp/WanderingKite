@@ -23,17 +23,18 @@ export default async function AdminBookingsPage() {
     supabase.from('photography_bookings').select('*, album:album_details(*), client:clients(*)').order('created_at', { ascending: false }),
     supabase.from('studio_bookings').select('*, client:clients(*)').order('created_at', { ascending: false }),
     supabase.from('rental_bookings').select('*, client:clients(*)').order('created_at', { ascending: false }),
-    supabase.from('profiles').select('id, fullName, role').in('role', ['ADMIN', 'SUPER_ADMIN', 'EMPLOYEE']), // For assignees
+    supabase.from('profiles').select('id, fullName, role, deletedAt, employee_contracts(isActive)').in('role', ['ADMIN', 'SUPER_ADMIN', 'EMPLOYEE']).is('deletedAt', null), // For assignees
   ]);
 
-  // Employee Contracts to filter editors
-  const { data: contracts } = await supabase
-    .from('employee_contracts')
-    .select('profileId, jobTitle, isActive')
-    .eq('isActive', true);
-
   const employees = profilesRes.data || [];
-  const editors = employees; // Allow any admin/employee to be assigned
+  const editors = employees.filter((profile: any) => {
+    const contracts = profile.employee_contracts || [];
+    const hasActiveContract = contracts.some((c: any) => c.isActive === true);
+    if (profile.role === 'ADMIN' || profile.role === 'SUPER_ADMIN') {
+      return contracts.length === 0 || hasActiveContract;
+    }
+    return hasActiveContract;
+  });
 
   // Fetch assignees
   const { data: assignees } = await supabase.from('booking_assignees').select('*, profile:profiles(*)');

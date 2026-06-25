@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Plus, Trash2, Link as LinkIcon, User, Loader2 } from 'lucide-react';
+import { X, Check, Plus, Trash2, Link as LinkIcon, User, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -56,19 +56,43 @@ export function BookingDrawer({
   // Payment update state
   const [updateAmountPaid, setUpdateAmountPaid] = useState('');
   const [updateQuotationAmount, setUpdateQuotationAmount] = useState('');
+  const [updatePaymentStatus, setUpdatePaymentStatus] = useState('PARTIALLY_COMPLETED');
+  const [updateAdvancePaid, setUpdateAdvancePaid] = useState('');
+  const [newPaymentAmount, setNewPaymentAmount] = useState('');
+  const [bookingUpdateError, setBookingUpdateError] = useState('');
   const [isUpdatingPayment, setIsUpdatingPayment] = useState(false);
 
   useEffect(() => {
     if (bookingData) {
-      setDeliveryLink(bookingData.delivery_link || '');
-      setUpdateAmountPaid(bookingData.amount_paid?.toString() || '0');
+      setDeliveryLink(bookingData.delivery_link || bookingData.album?.downloadLink || '');
+      setUpdateAmountPaid(bookingData.amount_paid?.toString() || bookingData.amountPaid?.toString() || '0');
       const { metadata } = parseNotesMetadata(bookingData.notes || '');
       setUpdateQuotationAmount(metadata.quotationAmount?.toString() || metadata.estimatedBreakdown?.estimatedTotal?.toString() || '');
+      setUpdatePaymentStatus(metadata.paymentStatus || 'PARTIALLY_COMPLETED');
+      setUpdateAdvancePaid(metadata.advancePaid?.toString() || bookingData.advancePaid?.toString() || '0');
+      setNewPaymentAmount('');
+      setBookingUpdateError('');
     }
   }, [bookingData]);
 
+  const cleanNumberInput = (val: string) => val.replace(/^0+(?=\d)/, '');
+
   const handleUpdatePayment = async () => {
-    if (!updateAmountPaid) return toast.error('Enter a valid amount');
+    let finalAmountPaid = updateAmountPaid === '' ? 0 : Number(updateAmountPaid);
+    const parsedNewPayment = newPaymentAmount === '' ? 0 : Number(newPaymentAmount);
+
+    if (updatePaymentStatus !== 'COMPLETED') {
+      finalAmountPaid += parsedNewPayment;
+    }
+
+    if (updatePaymentStatus !== 'COMPLETED' && updateQuotationAmount) {
+      const q = Number(updateQuotationAmount);
+      if (finalAmountPaid > q) {
+        setBookingUpdateError('New payment plus existing total exceeds the quotation amount. Please select "Fully Paid" if the balance is settled.');
+        return;
+      }
+    }
+
     setIsUpdatingPayment(true);
     try {
       const res = await fetch('/api/admin/bookings/update', {
@@ -78,12 +102,16 @@ export function BookingDrawer({
           bookingId,
           bookingType,
           status: bookingData.status,
-          amountPaid: updateAmountPaid,
+          amountPaid: finalAmountPaid,
+          advancePaid: updateAdvancePaid,
+          paymentStatus: updatePaymentStatus,
           quotationAmount: updateQuotationAmount
         })
       });
       if (!res.ok) throw new Error('Failed to update payment');
-      toast.success('Payment updated successfully');
+      toast.success('Payment logged successfully');
+      setUpdateAmountPaid(String(finalAmountPaid));
+      setNewPaymentAmount('');
       router.refresh();
     } catch (e: any) {
       toast.error(e.message);
@@ -181,7 +209,7 @@ export function BookingDrawer({
   };
 
   const updateStatus = async (newStatus: string) => {
-    if (newStatus === 'HANDED_OVER' && !deliveryLink && !bookingData.delivery_link) {
+    if (newStatus === 'HANDED_OVER' && !deliveryLink && !bookingData.delivery_link && !bookingData.album?.downloadLink) {
       toast.error('Please provide a delivery link before marking as Handed Over.');
       return;
     }
@@ -286,13 +314,72 @@ export function BookingDrawer({
                     <div className="space-y-3">
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-slate-400">Quotation Amount (₹)</label>
-                        <Input type="number" placeholder="e.g. 15000" value={updateQuotationAmount} onChange={e => setUpdateQuotationAmount(e.target.value)} className="bg-slate-950 border-slate-800 text-sm h-9" />
+                        <Input type="number" placeholder="e.g. 15000" value={updateQuotationAmount} disabled className="bg-slate-900 border border-slate-800 text-slate-400 text-sm h-9 font-medium" />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-400">Advance Already Paid (₹)</label>
+                        <Input type="number" value={updateAdvancePaid} disabled className="bg-slate-900 border border-slate-800 text-slate-450 text-sm h-9" />
                       </div>
                       
                       <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-slate-400">Total Amount Paid (₹)</label>
-                        <Input type="number" placeholder="Amount (₹)" value={updateAmountPaid} onChange={e => setUpdateAmountPaid(e.target.value)} className="bg-slate-950 border-slate-800 text-sm h-9" />
+                        <label className="text-xs font-semibold text-slate-400">Payment Status *</label>
+                        <select
+                          value={updatePaymentStatus}
+                          onChange={(e) => {
+                            const newStatus = e.target.value as any;
+                            setUpdatePaymentStatus(newStatus);
+                            if (newStatus === 'COMPLETED') {
+                              setUpdateAmountPaid(updateQuotationAmount);
+                            }
+                          }}
+                          className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg h-9 px-3 text-sm focus:border-amber-500/50 focus:outline-none"
+                        >
+                          <option value="COMPLETED">Fully Paid</option>
+                          <option value="PARTIALLY_COMPLETED">Partially Paid</option>
+                        </select>
                       </div>
+
+                      {updatePaymentStatus !== 'COMPLETED' && (
+                        <div className="space-y-4">
+                          <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-2">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-slate-400">Total Received So Far</span>
+                              <span className="text-white font-medium">₹{updateAmountPaid}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-slate-400">Outstanding Balance</span>
+                              <span className={`font-bold ${Number(updateQuotationAmount) - Number(updateAmountPaid) > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                ₹{Math.max(0, Number(updateQuotationAmount) - Number(updateAmountPaid))}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
+                            <label className="text-xs font-bold text-slate-300">Log New Payment (₹)</label>
+                            <p className="text-[10px] text-slate-400">
+                              Enter the <strong>new</strong> amount you just received. It will be added to the total of ₹{updateAmountPaid}.
+                            </p>
+                            <Input type="number" placeholder="e.g. 5000" value={newPaymentAmount} onChange={e => { setNewPaymentAmount(cleanNumberInput(e.target.value)); setBookingUpdateError(''); }} className="bg-slate-950 border-indigo-500/20 text-sm h-9 text-white focus-visible:ring-indigo-500/50" />
+                            {bookingUpdateError && bookingUpdateError.includes('exceed') && (
+                              <p className="text-[11px] text-amber-400 mt-1 font-semibold flex items-center gap-1">
+                                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                                <span>{bookingUpdateError}</span>
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Balance preview */}
+                      {updateQuotationAmount && (
+                        <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-850 text-xs flex items-center justify-between mt-2">
+                          <span className="text-slate-400">Outstanding Balance</span>
+                          <span className={`font-bold ${Number(updateQuotationAmount) - Number(updateAmountPaid) > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                            ₹{Math.max(0, Number(updateQuotationAmount) - Number(updateAmountPaid))}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     
                     <Button onClick={handleUpdatePayment} disabled={isUpdatingPayment} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white h-9 mt-2">

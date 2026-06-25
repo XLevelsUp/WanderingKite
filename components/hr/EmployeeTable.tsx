@@ -35,8 +35,10 @@ import {
   ExternalLink,
   Search,
   Filter,
+  Trash,
 } from 'lucide-react';
 import { deactivateEmployee, reactivateEmployee } from '@/actions/hr/employees';
+import { deleteEmployee } from '@/actions/employees';
 import type { HREmployee } from '@/lib/types/hr';
 import { useNotifications } from '@/components/ui/useNotifications';
 
@@ -97,6 +99,7 @@ export function HREmployeeTable({
 }: HREmployeeTableProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isDeleting, setIsDeleting] = useState(false);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
@@ -104,6 +107,31 @@ export function HREmployeeTable({
   const { showModal, removeModal, showLoader, hideLoader, showError, showSuccess } = useNotifications();
 
   const canManage = currentUserRole === 'ADMIN' || currentUserRole === 'SUPER_ADMIN';
+
+  const handleDelete = (id: string, name: string | null) => {
+    const modalId = showModal({
+      title: 'Delete Employee',
+      description: `Are you sure you want to delete ${name || 'this employee'}? This will permanently delete their account, profile, and HR contract. This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onCancel: () => removeModal(modalId),
+      onConfirm: async () => {
+        removeModal(modalId);
+        setIsDeleting(true);
+        showLoader('Deleting Employee...');
+        const result = await deleteEmployee(id);
+        setIsDeleting(false);
+        hideLoader();
+
+        if (result.error) {
+          showError(result.error);
+        } else {
+          showSuccess('Employee deleted successfully');
+          router.refresh();
+        }
+      },
+    });
+  };
 
   // Client-side filtering
   const filteredEmployees = useMemo(() => {
@@ -295,7 +323,10 @@ export function HREmployeeTable({
               variant='outline'
               size='sm'
               className='h-8 px-3 hidden sm:flex text-xs font-medium'
-              onClick={() => router.push(`/admin/employees/${e.id}`)}
+              onClick={() => {
+                showLoader('Loading Employee...');
+                router.push(`/admin/employees/${e.id}`);
+              }}
             >
               View
             </Button>
@@ -318,7 +349,10 @@ export function HREmployeeTable({
                 </DropdownMenuLabel>
                 {currentUserRole === 'SUPER_ADMIN' ? (
                   <DropdownMenuItem
-                    onClick={() => router.push(`/admin/employees/${e.id}`)}
+                    onClick={() => {
+                      showLoader('Loading Employee...');
+                      router.push(`/admin/employees/${e.id}`);
+                    }}
                     className='text-foreground hover:text-foreground focus:text-foreground hover:bg-primary/10 focus:bg-primary/10 cursor-pointer'
                   >
                     <Pencil className='mr-2 h-4 w-4 text-primary' />
@@ -326,7 +360,10 @@ export function HREmployeeTable({
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem
-                    onClick={() => router.push(`/admin/employees/${e.id}`)}
+                    onClick={() => {
+                      showLoader('Loading Details...');
+                      router.push(`/admin/employees/${e.id}`);
+                    }}
                     className='text-foreground hover:text-foreground focus:text-foreground hover:bg-primary/10 focus:bg-primary/10 cursor-pointer'
                   >
                     <ExternalLink className='mr-2 h-4 w-4 text-primary' />
@@ -366,6 +403,19 @@ export function HREmployeeTable({
                           Reactivate
                         </>
                       )}
+                    </DropdownMenuItem>
+                  </>
+                )}
+                {currentUserRole === 'SUPER_ADMIN' && (
+                  <>
+                    <DropdownMenuSeparator className='bg-primary/12' />
+                    <DropdownMenuItem
+                      className='cursor-pointer text-red-400 hover:bg-red-500/10 focus:bg-red-500/10'
+                      onClick={() => handleDelete(e.id, e.fullName)}
+                      disabled={isDeleting}
+                    >
+                      <Trash className='mr-2 h-4 w-4' />
+                      Delete Employee
                     </DropdownMenuItem>
                   </>
                 )}
