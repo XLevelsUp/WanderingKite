@@ -107,7 +107,7 @@ export function MainNav() {
                 </Link>
               )}
               <a
-                href={generateWhatsAppLink()}
+                href={generateWhatsAppLink(pathname === '/studiospace' ? 'studio' : undefined)}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Contact us on WhatsApp"
