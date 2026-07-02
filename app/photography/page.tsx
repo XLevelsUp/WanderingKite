@@ -674,7 +674,6 @@ export default function PhotographyPage() {
         {/* FAQ */}
         <ServiceFAQ faqs={faqs} accentColor="amber" />
         <ServiceTerms type="photography" />
-        <BookingFlyout service="photography" />
         <Footer />
       </main>
     </>

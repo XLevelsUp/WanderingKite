@@ -13,6 +13,8 @@ export const siteConfig = {
     email: 'hello@wanderingkite.in',
     phone: '+91 70100 92090', // Updated based on footer
     whatsapp: '917010092090',
+    studioPhone: '+91 90254 92090',
+    studioWhatsapp: '919025492090',
     address: {
       street: 'NO 178, 1st Floor A Rammachandra Road',
       city: 'RS Puram, Coimbatore',

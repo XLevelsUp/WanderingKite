@@ -180,10 +180,10 @@ export function Footer({ account = 'wanderingkite' }: FooterProps) {
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
                 <a
-                  href={`tel:${account === 'studio' ? '9025492090' : siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`}
+                  href={`tel:${account === 'studio' ? siteConfig.contact.studioPhone.replace(/[^0-9+]/g, '') : siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`}
                   className="hover:text-foreground"
                 >
-                  {account === 'studio' ? '9025492090' : siteConfig.contact.phone}
+                  {account === 'studio' ? siteConfig.contact.studioPhone : siteConfig.contact.phone}
                 </a>
               </li>
               <li className="flex items-center gap-2">
