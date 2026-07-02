@@ -18,6 +18,15 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
   const { showError, showInfo } = useNotify();
   const pathname = usePathname();
 
+  // Infer service from pathname if not provided via props
+  let actualService = service;
+  if (!actualService) {
+    if (pathname === '/studiospace') actualService = 'studio';
+    else if (pathname === '/photography') actualService = 'photography';
+    else if (pathname === '/rentals') actualService = 'rentals';
+    else if (pathname === '/podcast') actualService = 'podcast';
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 2500);
     return () => clearTimeout(timer);
@@ -44,7 +53,7 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       window.open(
-        generateWhatsAppLink(service),
+        generateWhatsAppLink(actualService),
         '_blank',
         'noopener,noreferrer'
       );
@@ -89,7 +98,7 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
                       Quick Inquiry
                     </p>
                     <p className="mt-0.5 text-sm font-semibold text-foreground">
-                      {service ?? 'Book a Session'}
+                      {actualService ?? 'Book a Session'}
                     </p>
                   </div>
                   <button
