@@ -189,7 +189,7 @@ async function EquipmentData({
   isSuperAdmin: boolean; 
   categories: any[]; 
   branches: any[];
-  searchParams?: { q?: string; category?: string };
+  searchParams?: { q?: string; category?: string; usage?: string };
 }) {
   let equipment = await getEquipmentWithFieldStatus();
   
@@ -201,6 +201,15 @@ async function EquipmentData({
     equipment = equipment.filter(e => {
       const cat = (e as any).category_name || (e.categories as any)?.name;
       return cat === searchParams.category;
+    });
+  }
+
+  if (searchParams?.usage && searchParams.usage !== 'all') {
+    equipment = equipment.filter(e => {
+      if (searchParams.usage === 'rentals') return (e as any).is_rental === true;
+      if (searchParams.usage === 'studiospace') return (e as any).is_studio_space === true;
+      if (searchParams.usage === 'inhouse') return !(e as any).is_rental && !(e as any).is_studio_space;
+      return true;
     });
   }
 
@@ -439,7 +448,7 @@ export default async function EquipmentPage({
           isSuperAdmin={isSuperAdmin} 
           categories={categories} 
           branches={branches}
-          searchParams={resolvedSearchParams}
+          searchParams={resolvedSearchParams as any}
         />
       </Suspense>
     </div>

@@ -26,7 +26,7 @@ export default async function RentalSettingsPage() {
   // Fetch initial data
   const [settings, { data: equipment }] = await Promise.all([
     getGlobalRentalPolicySettings(),
-    supabase.from('equipment').select('*').is('deletedAt', null).eq('is_rental', true).order('name')
+    supabase.from('equipment').select('*').eq('is_rental', true).order('name')
   ]);
 
   return (

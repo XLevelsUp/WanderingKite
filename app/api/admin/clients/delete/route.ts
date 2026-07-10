@@ -28,48 +28,26 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Missing client ID' }, { status: 400 });
     }
 
-    // 1. Get all bookings for this client to delete assignments
-    const [pBookings, sBookings, rBookings] = await Promise.all([
-      adminAuthClient.from('photography_bookings').select('id').eq('client_id', clientId),
-      adminAuthClient.from('studio_bookings').select('id').eq('client_id', clientId),
-      adminAuthClient.from('rental_bookings').select('id').eq('client_id', clientId),
-    ]);
+    // Soft-delete: set deleted_at and is_active=false on the client row.
+    // All related bookings, ID proofs, and history are preserved for audit purposes.
+    // The client will be blocked from logging in (is_active=false) and hidden from
+    // all admin listings (deleted_at IS NOT NULL filter in getClients()).
+    const now = new Date().toISOString();
 
-    const bookingIds = [
-      ...(pBookings.data || []).map(b => b.id),
-      ...(sBookings.data || []).map(b => b.id),
-      ...(rBookings.data || []).map(b => b.id),
-    ];
-
-    if (bookingIds.length > 0) {
-      const { error: assignError } = await adminAuthClient
-        .from('assignment_history')
-        .delete()
-        .in('booking_id', bookingIds);
-      if (assignError) logger.error('Failed to delete assignment history:', assignError);
-    }
-
-    // 2. Delete Bookings
-    await Promise.all([
-      adminAuthClient.from('photography_bookings').delete().eq('client_id', clientId),
-      adminAuthClient.from('studio_bookings').delete().eq('client_id', clientId),
-      adminAuthClient.from('rental_bookings').delete().eq('client_id', clientId),
-    ]);
-
-    // 3. Delete ID Proofs
-    await adminAuthClient.from('client_id_proofs').delete().eq('client_id', clientId);
-
-    // 4. Finally delete the client
-    const { error: clientError } = await adminAuthClient
+    const { error: softDeleteError } = await adminAuthClient
       .from('clients')
-      .delete()
+      .update({
+        deleted_at: now,
+        is_active: false,
+      })
       .eq('id', clientId);
 
-    if (clientError) {
-      logger.error('Failed to delete client:', clientError);
-      return NextResponse.json({ error: clientError.message }, { status: 500 });
+    if (softDeleteError) {
+      logger.error('Failed to soft-delete client:', softDeleteError.message);
+      return NextResponse.json({ error: softDeleteError.message }, { status: 500 });
     }
 
+    logger.info(`Client ${clientId} soft-deleted at ${now}`);
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error('DELETE /api/admin/clients/delete error:', error);

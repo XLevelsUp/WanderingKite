@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { BookingFlyout } from '@/components/booking/BookingFlyout';
+import { createClient } from '@/lib/supabase/server';
 import { Footer } from '@/components/shared/Footer';
 import { Testimonials } from '@/components/sections/Testimonials';
 import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
@@ -163,6 +164,7 @@ export default async function RentalsPage() {
       name: e.name,
       category: categoryName,
       pricingPlans: Array.isArray((e as any).pricingPlans) ? (e as any).pricingPlans : [],
+      hourlyRate: e.hourly_rate ? Number(e.hourly_rate) : 0,
       image: e.image_url || '',
       specs: parsedSpecs,
       available: e.status === 'AVAILABLE',
@@ -186,8 +188,41 @@ export default async function RentalsPage() {
       e.category === 'accessories'
   );
 
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let isRepeatClient = false;
+  if (user && user.email) {
+    const { data: clientData } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('email', user.email)
+      .single();
+
+    if (clientData) {
+      const { count } = await supabase
+        .from('rental_bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('client_id', clientData.id);
+      
+      if (count && count > 0) {
+        isRepeatClient = true;
+      }
+    }
+  }
+
+  // Fetch global settings
+  const { getGlobalRentalPolicySettings } = await import('@/actions/rental-policy');
+  const globalSettings = await getGlobalRentalPolicySettings();
+  const discountPercentage = globalSettings?.repeat_client_discount_percentage || 0;
+  const billingPolicy = globalSettings?.active_billing_policy || 'HOURLY';
+
   return (
-    <RentalCartProvider>
+    <RentalCartProvider 
+      discountPercentage={discountPercentage} 
+      billingPolicy={billingPolicy}
+      isRepeatClient={isRepeatClient}
+    >
       <main className="min-h-screen bg-background pt-20">
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">

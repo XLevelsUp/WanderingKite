@@ -13,8 +13,9 @@ export function EquipmentFilterBar({ categories }: { categories: any[] }) {
   
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [category, setCategory] = useState(searchParams.get('category') || 'all');
+  const [usage, setUsage] = useState(searchParams.get('usage') || 'all');
 
-  const updateFilters = useCallback((q: string, cat: string) => {
+  const updateFilters = useCallback((q: string, cat: string, usg: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (q) params.set('q', q);
     else params.delete('q');
@@ -22,6 +23,9 @@ export function EquipmentFilterBar({ categories }: { categories: any[] }) {
     if (cat && cat !== 'all') params.set('category', cat);
     else params.delete('category');
     
+    if (usg && usg !== 'all') params.set('usage', usg);
+    else params.delete('usage');
+
     router.push(`${pathname}?${params.toString()}`);
   }, [pathname, router, searchParams]);
 
@@ -29,11 +33,11 @@ export function EquipmentFilterBar({ categories }: { categories: any[] }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (query !== (searchParams.get('q') || '')) {
-        updateFilters(query, category);
+        updateFilters(query, category, usage);
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [query, category, updateFilters, searchParams]);
+  }, [query, category, usage, updateFilters, searchParams]);
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -51,7 +55,7 @@ export function EquipmentFilterBar({ categories }: { categories: any[] }) {
           value={category} 
           onValueChange={(val) => {
             setCategory(val);
-            updateFilters(query, val);
+            updateFilters(query, val, usage);
           }}
         >
           <SelectTrigger>
@@ -62,6 +66,25 @@ export function EquipmentFilterBar({ categories }: { categories: any[] }) {
             {categories.map((c) => (
               <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="w-full sm:w-[200px]">
+        <Select 
+          value={usage} 
+          onValueChange={(val) => {
+            setUsage(val);
+            updateFilters(query, category, val);
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="All Usages" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Usages</SelectItem>
+            <SelectItem value="rentals">Rentals</SelectItem>
+            <SelectItem value="studiospace">Studio Space</SelectItem>
+            <SelectItem value="inhouse">In-House</SelectItem>
           </SelectContent>
         </Select>
       </div>

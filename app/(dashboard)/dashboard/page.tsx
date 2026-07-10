@@ -339,19 +339,7 @@ export default async function DashboardPage() {
               </Link>
             </div>
           )}
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold mb-1">Create Order</h3>
-              <p className="text-sm text-slate-600">
-                Start a new rental order.
-              </p>
-            </div>
-            <Link href="/dashboard/rentals">
-              <Button size="sm" variant="secondary">
-                View Rentals
-              </Button>
-            </Link>
-          </div>
+
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold mb-1">Add Employee</h3>

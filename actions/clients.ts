@@ -5,13 +5,14 @@ import { revalidatePath } from 'next/cache';
 import { clientSchema } from '@/lib/validations/schemas';
 import { parseSupabaseError } from '@/lib/errorHandler';
 
-// Get all clients
+// Get all clients — excludes soft-deleted rows
 export async function getClients() {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from('clients')
     .select('*, client_services(type)')
+    .is('deleted_at', null)         // hide soft-deleted clients
     .order('createdAt', { ascending: false });
 
   if (error) {
@@ -80,11 +81,16 @@ export async function updateClient(id: string, formData: FormData) {
   return data;
 }
 
-// Delete client
+// Soft-delete client — sets deleted_at + is_active=false, does NOT remove the row.
+// All bookings, ID proofs, and history are preserved for audit purposes.
+// The client is blocked from logging in via the is_active=false check in auth.ts.
 export async function deleteClient(id: string) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from('clients').delete().eq('id', id);
+  const { error } = await supabase
+    .from('clients')
+    .update({ deleted_at: new Date().toISOString(), is_active: false })
+    .eq('id', id);
 
   if (error) {
     throw new Error(parseSupabaseError(error, 'Failed to delete client'));

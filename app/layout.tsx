@@ -9,7 +9,6 @@ import { siteConfig } from '@/config/site';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import { NotificationProvider } from '@/components/ui/NotificationProvider';
 import NextTopLoader from 'nextjs-toploader';
-import { Suspense } from 'react';
 import { Toaster } from 'sonner';
 
 const inter = Inter({
@@ -288,14 +287,12 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
-        <Suspense>
-          <NotificationProvider>
+        <NotificationProvider>
             <MainNav />
             {children}
             <BookingFlyout />
             <Toaster richColors position="bottom-right" />
           </NotificationProvider>
-        </Suspense>
       </body>
     </html>
   );

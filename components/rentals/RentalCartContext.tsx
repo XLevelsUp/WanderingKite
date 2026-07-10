@@ -23,8 +23,12 @@ interface RentalCartContextType {
   toggleItem: (item: Omit<CartItem, 'selectedPlan'>, plan: CartItem['selectedPlan']) => void;
   clearCart: () => void;
   subtotal: number;
+  discountAmount: number;
   gst: number;
   finalTotal: number;
+  billingPolicy: string;
+  isRepeatClient: boolean;
+  discountPercentage: number;
 }
 
 const RentalCartContext = createContext<RentalCartContextType | undefined>(
@@ -33,8 +37,14 @@ const RentalCartContext = createContext<RentalCartContextType | undefined>(
 
 export function RentalCartProvider({
   children,
+  billingPolicy = 'HOURLY',
+  discountPercentage = 0,
+  isRepeatClient = false,
 }: {
   children: React.ReactNode;
+  billingPolicy?: string;
+  discountPercentage?: number;
+  isRepeatClient?: boolean;
 }) {
   const [selectedItems, setSelectedItems] = useState<Map<string, CartItem>>(
     new Map()
@@ -69,8 +79,16 @@ export function RentalCartProvider({
     return total;
   }, [selectedItems]);
 
-  const gst = subtotal * 0.18;
-  const finalTotal = subtotal + gst;
+  const discountAmount = useMemo(() => {
+    if (isRepeatClient && discountPercentage > 0) {
+      return subtotal * (discountPercentage / 100);
+    }
+    return 0;
+  }, [subtotal, isRepeatClient, discountPercentage]);
+
+  const subtotalAfterDiscount = subtotal - discountAmount;
+  const gst = subtotalAfterDiscount * 0.18;
+  const finalTotal = subtotalAfterDiscount + gst;
 
   return (
     <RentalCartContext.Provider
@@ -79,8 +97,12 @@ export function RentalCartProvider({
         toggleItem,
         clearCart,
         subtotal,
+        discountAmount,
         gst,
         finalTotal,
+        billingPolicy,
+        isRepeatClient,
+        discountPercentage,
       }}
     >
       {children}

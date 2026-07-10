@@ -8,7 +8,7 @@ import { useNotify } from '@/hooks/useNotify';
 import { Loader2 } from 'lucide-react';
 
 export function RentalCartSummary() {
-  const { selectedItems, subtotal, gst, finalTotal, clearCart } =
+  const { selectedItems, subtotal, discountAmount, gst, finalTotal, clearCart, isRepeatClient, discountPercentage, billingPolicy } =
     useRentalCart();
   const [isLoading, setIsLoading] = useState(false);
   const { showError, showInfo } = useNotify();
@@ -21,7 +21,16 @@ export function RentalCartSummary() {
     const itemDetails = Array.from(selectedItems.values())
       .map((item) => `${item.name} (${item.selectedPlan.name} - ${formatINR(item.selectedPlan.rate)})`)
       .join('\n- ');
-    return `Hi! I'd like to request a rental booking for the following equipment:\n\n- ${itemDetails}\n\nTotal Estimated Quote: ${formatINR(Math.round(finalTotal))} (incl. GST).`;
+    
+    let msg = `Hi! I'd like to request a rental booking for the following equipment:\n\n- ${itemDetails}\n\n`;
+    msg += `Billing Mode: ${billingPolicy === 'HOURLY' ? 'Hourly' : 'Slot Based'}\n`;
+    msg += `Subtotal: ${formatINR(subtotal)}\n`;
+    if (isRepeatClient && discountAmount > 0) {
+      msg += `Discount (${discountPercentage}% repeat client): -${formatINR(discountAmount)}\n`;
+    }
+    msg += `GST (18%): ${formatINR(Math.round(gst))}\n`;
+    msg += `Total Estimated Quote: ${formatINR(Math.round(finalTotal))} (incl. GST).`;
+    return msg;
   };
 
   const handleBookingRequest = async () => {
@@ -84,6 +93,14 @@ export function RentalCartSummary() {
                   {formatINR(subtotal)}
                 </p>
               </div>
+              {discountAmount > 0 && (
+                <div>
+                  <p className="text-emerald-500 text-xs mb-1 font-semibold">{discountPercentage}% Discount</p>
+                  <p className="font-mono text-lg text-emerald-400">
+                    -{formatINR(discountAmount)}
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="text-zinc-500 text-xs mb-1">GST (18%)</p>
                 <p className="font-mono text-lg text-zinc-500">

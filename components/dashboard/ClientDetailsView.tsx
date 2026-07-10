@@ -1253,7 +1253,7 @@ export default function ClientDetailsView({
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || 'Failed to delete client');
       }
-      toast.success('Client and all associated records deleted permanently.');
+      toast.success('Client account deactivated. All booking history has been preserved.');
       router.push('/dashboard/clients');
     } catch (err: any) {
       toast.error(err.message);
