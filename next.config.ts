@@ -17,6 +17,17 @@ const nextConfig: NextConfig = {
             },
         ],
     },
+    async redirects() {
+        return [
+            // Old URL /studio was renamed to /studiospace — 301 so ranking/backlinks
+            // move to the new URL and the two stop competing (SEO cannibalization).
+            {
+                source: '/studio',
+                destination: '/studiospace',
+                permanent: true,
+            },
+        ];
+    },
 };
 
 export default nextConfig;

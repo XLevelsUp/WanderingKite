@@ -19,21 +19,52 @@ export default async function ClientDashboardPage() {
     redirect("/client/login");
   }
 
-  // Fetch client details including selected services and ID proofs.
+  // Guard: email must be present before querying. If null, eq() would ignore the
+  // filter, returning ALL client rows, and .single()/.maybeSingle() would throw.
+  const clientEmail = session.user.email;
+  if (!clientEmail) {
+    logger.error("Client session is missing an email address — cannot fetch profile.");
+    redirect("/client/login");
+  }
+
+  // Fetch client details
   // adminAuthClient (service role) is used here because clients authenticate
   // via NextAuth credentials — they are not Supabase Auth users, so auth.uid()
   // is null and the anon client's RLS policies would block the query.
   // Access is already guarded by the NextAuth session role check above.
-  const { data: client, error } = await adminAuthClient
+  const { data: clientData, error } = await adminAuthClient
     .from("clients")
-    .select("*, client_services(type), client_id_proofs(*)")
-    .eq("email", session.user.email)
-    .single();
+    .select("*")
+    .eq("email", clientEmail)
+    .maybeSingle();
 
-  if (error || !client) {
-    logger.error("Error fetching client for dashboard:", error);
+  if (error) {
+    logger.error("Error fetching client for dashboard:", error.message || error.code || JSON.stringify(error));
     redirect("/client/login");
   }
+
+  if (!clientData) {
+    logger.error("No client row found for email:", clientEmail);
+    redirect("/client/login");
+  }
+
+  // Fetch client_services separately to avoid ambiguous join errors
+  const { data: servicesData } = await adminAuthClient
+    .from("client_services")
+    .select("type")
+    .eq("client_id", clientData.id);
+
+  // Fetch client_id_proofs separately
+  const { data: idProofsData } = await adminAuthClient
+    .from("client_id_proofs")
+    .select("*")
+    .eq("client_id", clientData.id);
+
+  const client = {
+    ...clientData,
+    client_services: servicesData || [],
+    client_id_proofs: idProofsData || []
+  };
 
   if (client.is_active === false) {
     redirect("/client/login?message=Your+account+has+been+deactivated.+Please+contact+administration+for+assistance.");

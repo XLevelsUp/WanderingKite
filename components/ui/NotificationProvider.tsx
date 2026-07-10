@@ -7,7 +7,7 @@ import { Banner, BannerProps } from './Banner';
 import { Modal, ModalProps } from './Modal';
 import { setupFetchInterceptor, restoreFetch } from '@/lib/fetch-interceptor';
 import { createClient } from '@/lib/supabase/client';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { WKLogo } from '@/components/shared/WKLogo';
 
 type OmittedToastProps = Omit<ToastProps, 'id' | 'onClose'>;
@@ -46,12 +46,12 @@ export function NotificationProvider({
   const [loaderMessage, setLoaderMessage] = useState<string | null>(null);
 
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
-  // Clear loader automatically when route changes
+  // Clear loader automatically when the route (pathname) changes.
+  // usePathname is safe to call directly — it does NOT require Suspense in Next.js 15.
   useEffect(() => {
     setLoaderMessage(null);
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   // Toasts
   const removeToast = useCallback((id: string) => {
@@ -280,6 +280,7 @@ export function NotificationProvider({
           </motion.div>
         )}
       </AnimatePresence>
+
 
       {children}
 

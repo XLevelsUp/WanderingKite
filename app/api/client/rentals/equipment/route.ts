@@ -15,7 +15,7 @@ export async function GET() {
     const { data: equipment, error } = await supabase
       .from('equipment')
       .select('*')
-      .eq('available_for_rental', true)
+      .eq('is_rental', true)
       .neq('status', 'RETIRED')
       .order('name', { ascending: true });
 

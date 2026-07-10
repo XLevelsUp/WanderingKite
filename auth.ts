@@ -2,8 +2,10 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { adminAuthClient } from "@/lib/supabase/admin";
 import bcrypt from "bcryptjs";
+import { authConfig } from "@/auth.config";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   providers: [
     CredentialsProvider({
       id: "client-credentials",
@@ -56,24 +58,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = (user as any).role || "client";
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        (session.user as any).id = token.id as string;
-        (session.user as any).role = (token.role as string) || "client";
-      }
-      return session;
-    },
-  },
-  pages: {
-    signIn: "/client/login",
-  },
-  secret: process.env.NEXTAUTH_SECRET || "default_nextauth_secret_wandering_kite_38294723",
 });

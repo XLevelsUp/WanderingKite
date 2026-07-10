@@ -123,24 +123,7 @@ export function RentalSettingsClient({
                   disabled={role !== 'SUPER_ADMIN'}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Default Security Deposit (₹)</Label>
-                <Input 
-                  type="number" step="1" 
-                  value={globalSettings.default_security_deposit} 
-                  onChange={e => handleNumberChange('default_security_deposit', e.target.value)}
-                  disabled={role !== 'SUPER_ADMIN'}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Default Late Penalty Amount (₹)</Label>
-                <Input 
-                  type="number" step="1" 
-                  value={globalSettings.default_late_penalty_amount} 
-                  onChange={e => handleNumberChange('default_late_penalty_amount', e.target.value)}
-                  disabled={role !== 'SUPER_ADMIN'}
-                />
-              </div>
+
               <div className="space-y-2">
                 <Label>Active Billing Policy</Label>
                 <Select

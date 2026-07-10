@@ -2,7 +2,7 @@
 
 import { useRef, useCallback, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Camera } from 'lucide-react';
+import { Camera, Plus, Minus } from 'lucide-react';
 import Image from 'next/image';
 import { useRentalCart } from '../rentals/RentalCartContext';
 
@@ -12,6 +12,7 @@ interface EquipmentCardProps {
   image: string;
   available: boolean;
   specs: string[];
+  hourlyRate: number;
   pricingPlans: Array<{
     name: string;
     durationHours: number;
@@ -25,10 +26,11 @@ export function EquipmentCard({
   image,
   available,
   specs,
+  hourlyRate = 0,
   pricingPlans = [],
 }: EquipmentCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const { selectedItems, toggleItem } = useRentalCart();
+  const { selectedItems, toggleItem, billingPolicy } = useRentalCart();
 
   const cartItem = selectedItems?.get(id);
   const isSelected = !!cartItem;
@@ -46,8 +48,21 @@ export function EquipmentCard({
     return dailyIdx !== -1 ? dailyIdx : 0;
   });
 
+  const [hourlyCount, setHourlyCount] = useState(1);
+
   const activePlan = sortedPlans[selectedPlanIndex];
-  const currentPlan = isSelected ? cartItem.selectedPlan : activePlan;
+
+  const currentPlan = useMemo(() => {
+    if (isSelected) return cartItem.selectedPlan;
+    if (billingPolicy === 'HOURLY') {
+      return {
+        name: 'Hourly',
+        durationHours: hourlyCount,
+        rate: hourlyRate * hourlyCount,
+      };
+    }
+    return activePlan;
+  }, [isSelected, cartItem, billingPolicy, hourlyCount, hourlyRate, activePlan]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -161,38 +176,69 @@ export function EquipmentCard({
                 </p>
               </div>
 
-              {sortedPlans.length > 1 && (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {sortedPlans.map((plan, idx) => {
-                    const isPlanActive = isSelected
-                      ? cartItem.selectedPlan.name === plan.name
-                      : selectedPlanIndex === idx;
-                    return (
-                      <button
-                        key={plan.name}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (isSelected) {
-                            toggleItem({ id, name }, plan);
-                          } else {
-                            setSelectedPlanIndex(idx);
-                          }
-                        }}
-                        className={`
-                          rounded-full px-3 py-1 text-[10px] font-semibold transition-all duration-200 border
-                          ${
-                            isPlanActive
-                              ? 'bg-warning/20 text-warning border-warning/40'
-                              : 'bg-zinc-900/60 text-zinc-400 border-primary/10 hover:border-primary/30 hover:text-white'
-                          }
-                        `}
-                      >
-                        {plan.name}
-                      </button>
-                    );
-                  })}
+              {billingPolicy === 'HOURLY' ? (
+                <div className="mt-3 flex items-center gap-3">
+                  <span className="text-xs text-foreground/60">Hours:</span>
+                  <div className="flex items-center rounded-lg border border-primary/20 bg-zinc-900/60 p-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isSelected && hourlyCount > 1) setHourlyCount(c => c - 1);
+                      }}
+                      disabled={isSelected || hourlyCount <= 1}
+                      className="p-1 text-zinc-400 hover:text-white disabled:opacity-30 disabled:hover:text-zinc-400 transition-colors"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="w-8 text-center text-sm font-semibold text-white">
+                      {isSelected ? cartItem.selectedPlan.durationHours : hourlyCount}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isSelected) setHourlyCount(c => c + 1);
+                      }}
+                      disabled={isSelected}
+                      className="p-1 text-zinc-400 hover:text-white disabled:opacity-30 disabled:hover:text-zinc-400 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
+              ) : (
+                sortedPlans.length > 1 && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {sortedPlans.map((plan, idx) => {
+                      const isPlanActive = isSelected
+                        ? cartItem.selectedPlan.name === plan.name
+                        : selectedPlanIndex === idx;
+                      return (
+                        <button
+                          key={plan.name}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isSelected) {
+                              toggleItem({ id, name }, plan);
+                            } else {
+                              setSelectedPlanIndex(idx);
+                            }
+                          }}
+                          className={`
+                            rounded-full px-3 py-1 text-[10px] font-semibold transition-all duration-200 border
+                            ${
+                              isPlanActive
+                                ? 'bg-warning/20 text-warning border-warning/40'
+                                : 'bg-zinc-900/60 text-zinc-400 border-primary/10 hover:border-primary/30 hover:text-white'
+                            }
+                          `}
+                        >
+                          {plan.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )
               )}
             </div>
 

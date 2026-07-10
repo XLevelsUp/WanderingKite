@@ -37,6 +37,11 @@ import ServiceTerms from '@/components/sections/ServiceTerms';
 
 import { JsonLd } from '@/lib/schema-helpers';
 
+// This page fetches live equipment via a cookie-based Supabase client, so it
+// must render per-request. Marking it dynamic stops the build-time
+// DYNAMIC_SERVER_USAGE error and ensures the equipment section always loads.
+export const dynamic = 'force-dynamic';
+
 const podcastEquipment = [
   {
     icon: Mic,
@@ -433,10 +438,15 @@ const pricingTiers = [
 
 export default async function StudioPage() {
   // Fetch live equipment summary and filter for Studio Space Rental gear
-  const allEquipment = await getEquipment();
-  const rentalEquipment = allEquipment.filter(
-    (eq: any) => eq.available_for_studio === true
-  );
+  let rentalEquipment: any[] = [];
+  try {
+    const allEquipment = await getEquipment();
+    rentalEquipment = allEquipment.filter(
+      (eq: any) => eq.available_for_studio === true
+    );
+  } catch (error) {
+    console.error('Failed to fetch equipment for studio page:', error);
+  }
 
   // Hardcoded equipment previews for the rental section below
   const previewCameras = 'Sony A7 IV, Canon EOS R5, Lumix S5 IIX ,Sony Alpha M7 V,Sony Alpha FX3 , Sony Alpha FX 30';
@@ -476,10 +486,10 @@ export default async function StudioPage() {
               <h1 className="mb-6 font-bold leading-tight">
                 <span className="block text-3xl sm:text-4xl md:text-5xl text-white mb-3">
                   Photography Studio Space
-                </span>
+                </span>{' '}
                 <span className="block text-2xl sm:text-3xl md:text-4xl bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
                   Rental Place in Coimbatore
-                </span>
+                </span>{' '}
                 <span className="block text-sm sm:text-base md:text-lg font-semibold text-white/70 mt-3">
                   1200 Sq Ft | RS Puram | Book by Hour
                 </span>
@@ -487,7 +497,7 @@ export default async function StudioPage() {
               <h2 className="mb-8 leading-relaxed font-normal max-w-3xl mx-auto">
                 <span className="block text-base sm:text-lg text-amber-400 font-medium">
                   A Professional Photography Studio Built for Creators in Coimbatore
-                </span>
+                </span>{' '}
                 <span className="block text-sm sm:text-base text-muted-foreground mt-1">
                   Looking for the best photography studio for rent in Coimbatore? Studiospace offers a premium 1200 sq ft studio near RS Puram with Profoto lighting, infinity wall &amp; 9 backdrops. Book by the hour, half day or full day.
                 </span>

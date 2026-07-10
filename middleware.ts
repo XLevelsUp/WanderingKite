@@ -1,12 +1,19 @@
 import { updateSession } from '@/lib/supabase/middleware';
-import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { NextResponse } from 'next/server';
+import NextAuth from 'next-auth';
+import { authConfig } from '@/auth.config';
 import { createServerClient } from '@supabase/ssr';
+
+// Read the NextAuth session using the SAME edge-safe config the app uses via
+// auth(). This guarantees middleware and the app agree on login state (same
+// secret, cookies, session strategy) — fixing the redirect loop that happened
+// when the legacy getToken() couldn't read the secure cookie on production.
+const { auth } = NextAuth(authConfig);
 
 // Internal paths that should never be indexed by any crawler.
 const NOINDEX_PREFIXES = ['/admin', '/dashboard', '/api', '/auth', '/client'];
 
-export async function middleware(request: NextRequest) {
+export default auth(async function middleware(request) {
   let response = await updateSession(request);
 
   const { pathname } = request.nextUrl;
@@ -19,13 +26,10 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = pathname === '/client/login' || pathname === '/client/signup';
 
   if (isClientPath) {
-    // Check NextAuth client token
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET || "default_nextauth_secret_wandering_kite_38294723",
-    });
-
-    const hasClientSession = token && token.role === 'client';
+    // request.auth is populated by the auth() wrapper above.
+    const hasClientSession =
+      Boolean(request.auth?.user) &&
+      (request.auth!.user as any).role === 'client';
 
     if (isAuthPage) {
       if (hasClientSession) {
@@ -72,7 +76,7 @@ export async function middleware(request: NextRequest) {
   }
 
   return response;
-}
+});
 
 export const config = {
   matcher: [
