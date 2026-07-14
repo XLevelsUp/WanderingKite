@@ -33,6 +33,8 @@ export default async function ClientsPage() {
     .eq('id', user.id)
     .single();
 
+  const isSuperAdmin = profile?.role === 'SUPER_ADMIN';
+
   if (!hasAccess(profile?.role ?? 'EMPLOYEE', '/dashboard/clients')) {
     redirect('/dashboard');
   }
@@ -87,11 +89,13 @@ export default async function ClientsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Clients (ERP)</h1>
           <p className="text-slate-400 mt-2">Manage customer records, view activity, and verify ID submissions.</p>
         </div>
-        <Link href="/dashboard/clients/new">
-          <Button className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-lg">
-            Add Client
-          </Button>
-        </Link>
+        {isSuperAdmin && (
+          <Link href="/dashboard/clients/new">
+            <Button className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-lg">
+              Add Client
+            </Button>
+          </Link>
+        )}
       </div>
 
       <Card className="bg-slate-900/40 border-slate-800 backdrop-blur-sm">

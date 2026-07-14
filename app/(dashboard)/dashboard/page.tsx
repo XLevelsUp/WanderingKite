@@ -1,16 +1,6 @@
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import {
   Package,
   Users,
   ClipboardList,
@@ -20,7 +10,11 @@ import {
 } from 'lucide-react';
 import { EmployeeDashboard } from './EmployeeDashboard';
 import { AdminOperationalHub } from '@/components/dashboard/AdminOperationalHub';
+import { DashboardStatCards } from '@/components/dashboard/DashboardStatCards';
+import { QuickActions } from '@/components/dashboard/QuickActions';
+import { RemindersWidget } from '@/components/dashboard/RemindersWidget';
 import { getStudioBookingConflicts } from '@/actions/audit';
+import { getMyReminders } from '@/actions/reminders';
 
 export const metadata: Metadata = {
   title: 'Overview — Studio ERP',
@@ -237,124 +231,64 @@ export default async function DashboardPage() {
     },
   ];
 
+  const isAdmin = profile?.role === 'ADMIN' || profile?.role === 'SUPER_ADMIN';
+
   const filteredStatCards = statCards.filter((card) => {
-    if (card.href === '/dashboard/clients') return isSuperAdmin;
+    if (card.href === '/dashboard/clients') return isAdmin;
     return true;
   });
 
   const conflictLogs = isSuperAdmin ? await getStudioBookingConflicts() : [];
 
+  // ─── Reminders (private per admin) ─────────────────────────────────────────
+  const myReminders = await getMyReminders();
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-slate-500 mt-2">
-          Photo Studio ERP — Asset Management Overview
-        </p>
-      </div>
-
-      {/* Stat Cards */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
-        {filteredStatCards.map((card) => (
-          <Link key={card.title} href={card.href} className="block">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">
-                  {card.title}
-                </CardTitle>
-                <span className={`p-1.5 rounded-md ${card.bg}`}>
-                  <card.icon className={`h-4 w-4 ${card.color}`} />
-                </span>
-              </CardHeader>
-              <CardContent>
-                <div className={`text-2xl font-bold ${card.color}`}>
-                  {card.value}
-                </div>
-                <p className="text-xs text-slate-500 mt-1">{card.subtitle}</p>
-                {card.badge && (
-                  <Badge variant="destructive" className="mt-2 text-xs">
-                    {card.badge}
-                  </Badge>
-                )}
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
-
-      {/* Operational Hub — Super Admin only */}
-      {isSuperAdmin && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <LayoutDashboard className="h-4 w-4 text-amber-500" />
-            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-widest">Operational Hub</h2>
-          </div>
-          <AdminOperationalHub
-            allBookings={allBookings}
-            pendingBookings={pendingBookings}
-            confirmedBookings={confirmedBookings}
-            outstandingBookings={outstandingBookings}
-            idProofs={idProofs}
-            conflictLogs={conflictLogs}
-            todaysBookingsCount={todaysBookingsCount}
-            recentActivity={recentActivity}
-          />
+    <div className="space-y-6 sm:space-y-8">
+      {/* ── Page header ─────────────────────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-6">
+        <div className="min-w-0 flex-1">
+          {/* Gradient title */}
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent leading-tight">
+            Dashboard
+          </h1>
+          <p className="text-sm sm:text-base text-slate-500 mt-1">
+            Photo Studio ERP — Asset Management Overview
+          </p>
         </div>
-      )}
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>
-            Common tasks to manage your studio assets
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold mb-1">Add Equipment</h3>
-              <p className="text-sm text-slate-600">
-                Register new gear into inventory.
-              </p>
-            </div>
-            <Link href="/dashboard/equipment/new">
-              <Button size="sm" variant="secondary">
-                Add Equipment
-              </Button>
-            </Link>
-          </div>
-          {isSuperAdmin && (
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold mb-1">Register Client</h3>
-                <p className="text-sm text-slate-600">
-                  Add a new client profile.
-                </p>
-              </div>
-              <Link href="/dashboard/clients/new">
-                <Button size="sm" variant="secondary">
-                  Add Client
-                </Button>
-              </Link>
-            </div>
-          )}
+        {/* Reminders widget — top-right (desktop only) */}
+        <div className="hidden lg:block shrink-0">
+          <RemindersWidget reminders={myReminders} />
+        </div>
+      </div>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold mb-1">Add Employee</h3>
-              <p className="text-sm text-slate-600">
-                Onboard a new team member.
-              </p>
-            </div>
-            <Link href="/dashboard/employees/new">
-              <Button size="sm" variant="secondary">
-                Add Employee
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+      {/* ── Stat Cards ───────────────────────────────────────────────────── */}
+      <DashboardStatCards cards={filteredStatCards} />
+
+      {/* ── Operational Hub — ADMIN and SUPER_ADMIN ─────────────────────── */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <LayoutDashboard className="h-4 w-4 text-amber-500" />
+          <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-widest">
+            Operational Hub
+          </h2>
+        </div>
+        <AdminOperationalHub
+          allBookings={allBookings}
+          pendingBookings={pendingBookings}
+          confirmedBookings={confirmedBookings}
+          outstandingBookings={outstandingBookings}
+          idProofs={idProofs}
+          conflictLogs={conflictLogs}
+          todaysBookingsCount={todaysBookingsCount}
+          recentActivity={recentActivity}
+          isSuperAdmin={isSuperAdmin}
+        />
+      </div>
+
+      {/* ── Quick Actions ────────────────────────────────────────────────── */}
+      <QuickActions isSuperAdmin={isSuperAdmin} />
     </div>
   );
 }

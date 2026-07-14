@@ -2,8 +2,15 @@ import { NewClientForm } from './NewClientForm';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 
-export default function NewClientPage() {
+export default async function NewClientPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (profile?.role !== 'SUPER_ADMIN') redirect('/dashboard/clients');
   return (
     <div className="space-y-6">
       <Link href="/dashboard/clients">
