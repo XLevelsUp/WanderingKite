@@ -68,6 +68,8 @@ interface Props {
   conflictLogs: any[];
   todaysBookingsCount?: number;
   recentActivity?: BaseBooking[];
+  /** Gates super-admin-only tabs (Studio Booking Conflicts). */
+  isSuperAdmin?: boolean;
 }
 
 const SERVICE_ICON = {
@@ -120,8 +122,11 @@ export function AdminOperationalHub({
   idProofs, 
   conflictLogs = [],
   todaysBookingsCount = 0,
-  recentActivity = []
+  recentActivity = [],
+  isSuperAdmin = false
 }: Props) {
+  // Conflicts tab is super-admin only.
+  const tabs = TABS.filter((t) => t.key !== 'conflicts' || isSuperAdmin);
   const [active, setActive] = useState<TabKey>('allBookings');
   const [bookingFilter, setBookingFilter] = useState<FilterChip>('All');
   const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean, title: string, desc: string, onConfirm: () => void, isDestructive: boolean }>({ isOpen: false, title: '', desc: '', onConfirm: () => { }, isDestructive: false });
@@ -144,7 +149,7 @@ export function AdminOperationalHub({
         className="flex items-center border-b border-slate-800 bg-slate-950/50 overflow-x-auto scrollbar-none"
         style={{ WebkitMaskImage: 'linear-gradient(to right, black 85%, transparent 100%)', maskImage: 'linear-gradient(to right, black 85%, transparent 100%)' }}
       >
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = active === tab.key;
           const count = counts[tab.key];
@@ -152,7 +157,7 @@ export function AdminOperationalHub({
             <button
               key={tab.key}
               onClick={() => setActive(tab.key)}
-              className={`relative flex items-center gap-2 px-5 py-4 text-xs font-semibold whitespace-nowrap transition-colors ${
+              className={`relative flex flex-shrink-0 items-center gap-2 px-3 sm:px-5 py-3 sm:py-4 text-xs font-semibold whitespace-nowrap transition-colors ${
                 isActive
                   ? 'text-amber-400'
                   : 'text-slate-400 hover:text-slate-200'
@@ -179,8 +184,8 @@ export function AdminOperationalHub({
       </div>
 
       {/* Top Cards for Today's Bookings */}
-      <div className="p-4 border-b border-slate-800 bg-slate-900/30 flex items-center justify-between gap-3">
-        <div className="px-5 py-3 rounded-xl border border-slate-800 bg-slate-900/60 flex items-center gap-4 hover:border-amber-500/30 transition-colors">
+      <div className="p-4 border-b border-slate-800 bg-slate-900/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="px-5 py-3 rounded-xl border border-slate-800 bg-slate-900/60 flex items-center justify-between sm:justify-start gap-4 hover:border-amber-500/30 transition-colors w-full sm:w-auto">
           <div className="flex flex-col">
             <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Today's Bookings</span>
           </div>
@@ -188,7 +193,7 @@ export function AdminOperationalHub({
         </div>
         <button
           onClick={() => router.push('/admin/bookings')}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-300 transition-all duration-200 whitespace-nowrap cursor-pointer"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-300 transition-all duration-200 whitespace-nowrap cursor-pointer w-full sm:w-auto"
         >
           <ExternalLink className="h-3.5 w-3.5" />
           Manage All Bookings
@@ -676,7 +681,7 @@ function BalanceRow({ booking }: { booking: BaseBooking }) {
 
   return (
     <Link href={`/dashboard/clients/${booking.clientId}`}>
-      <div className="group flex items-center gap-3 p-3 rounded-xl border border-slate-800 hover:border-amber-500/30 hover:bg-slate-800/50 transition-all cursor-pointer">
+      <div className="group flex flex-wrap sm:flex-nowrap items-center gap-3 p-3 rounded-xl border border-slate-800 hover:border-amber-500/30 hover:bg-slate-800/50 transition-all cursor-pointer">
         <div className={`flex-shrink-0 p-2 rounded-lg bg-slate-800/80 ${serviceColor}`}>
           <ServiceIcon className="h-4 w-4" />
         </div>
@@ -710,8 +715,8 @@ function BalanceRow({ booking }: { booking: BaseBooking }) {
           </div>
         </div>
 
-        {/* Balance highlight */}
-        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+        {/* Balance highlight — inline row on mobile, right-aligned column from sm */}
+        <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2 sm:gap-1 flex-shrink-0 ml-auto sm:ml-0">
           <span className="text-xs font-bold text-amber-400">₹{balance.toLocaleString('en-IN')}</span>
           <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${payInfo.cls}`}>
             {payInfo.label}

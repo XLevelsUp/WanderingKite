@@ -6,6 +6,9 @@ import { SidebarNav } from '@/components/dashboard/SidebarNav';
 import type { AppRole } from '@/lib/access';
 import { SignOutButton } from '@/components/dashboard/SignOutButton';
 import { ResponsiveSidebarWrapper } from '@/components/dashboard/ResponsiveSidebarWrapper';
+import { DueRemindersBanner } from '@/components/dashboard/DueRemindersBanner';
+import { getMyReminders } from '@/actions/reminders';
+import { isUnacknowledgedToday } from '@/lib/reminders';
 
 export const metadata: Metadata = {
   title: 'Dashboard - Main Menu',
@@ -34,8 +37,16 @@ export default async function DashboardLayout({
     .eq('id', user.id)
     .single();
 
+  // Due reminders — fetched here so the banner persists across all routes
+  const isEmployee = profile?.role === 'EMPLOYEE';
+  const allReminders = isEmployee ? [] : await getMyReminders();
+  const dueReminders = allReminders.filter((r) => isUnacknowledgedToday(r));
+
   return (
     <div className="min-h-screen bg-[#0A0A0B] pt-20">
+      {/* Non-blocking top-centre banner — persists across navigation */}
+      <DueRemindersBanner reminders={dueReminders} />
+
       <ResponsiveSidebarWrapper
         navContent={
           <SidebarNav profile={profile} email={user.email || ''} />
