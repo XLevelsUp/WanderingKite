@@ -19,7 +19,20 @@ import {
   Layers,
   Trash2,
   Loader2,
+  LogIn,
+  Globe,
+  MousePointerClick,
+  Trophy,
+  History,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
+import type {
+  LoginActivityRow,
+  ClickEventRow,
+  ClickLeaderboardRow,
+  AuditLogRow,
+} from '@/actions/activity';
 import { toast } from 'sonner';
 import { resolveStudioBookingConflict } from '@/actions/audit';
 import {
@@ -35,7 +48,11 @@ import { useRouter } from 'next/navigation';
 interface Props {
   clashLogs: any[];
   studioConflicts: any[];
-  defaultTab?: 'equipment' | 'studio';
+  loginActivity: LoginActivityRow[];
+  clickEvents: ClickEventRow[];
+  clickLeaderboard: ClickLeaderboardRow[];
+  auditLog: AuditLogRow[];
+  defaultTab?: 'equipment' | 'studio' | 'logins' | 'clicks' | 'changes';
 }
 
 function formatDateTime(isoString: string) {
@@ -49,9 +66,19 @@ function formatDateTime(isoString: string) {
   }).format(d);
 }
 
-export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConflicts, defaultTab = 'equipment' }: Props) {
+function formatDuration(seconds: number) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m`;
+  return `${seconds}s`;
+}
+
+export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConflicts, loginActivity, clickEvents, clickLeaderboard, auditLog, defaultTab = 'equipment' }: Props) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'equipment' | 'studio'>(defaultTab);
+  const [activeTab, setActiveTab] = useState<'equipment' | 'studio' | 'logins' | 'clicks' | 'changes'>(defaultTab);
+  const [clickView, setClickView] = useState<'log' | 'leaderboard'>('leaderboard');
+  const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [studioConflicts, setStudioConflicts] = useState(initialStudioConflicts);
   
@@ -147,6 +174,44 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
     );
   });
 
+  const filteredLoginActivity = loginActivity.filter((s) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      (s.user_name || '').toLowerCase().includes(query) ||
+      (s.user_email || '').toLowerCase().includes(query) ||
+      (s.ip_address || '').toLowerCase().includes(query)
+    );
+  });
+
+  const filteredClickEvents = clickEvents.filter((c) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      (c.user_name || '').toLowerCase().includes(query) ||
+      (c.user_email || '').toLowerCase().includes(query) ||
+      c.label.toLowerCase().includes(query) ||
+      c.path.toLowerCase().includes(query)
+    );
+  });
+
+  const filteredLeaderboard = clickLeaderboard.filter((c) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      c.label.toLowerCase().includes(query) || c.path.toLowerCase().includes(query)
+    );
+  });
+  const leaderboardMax = Math.max(1, ...clickLeaderboard.map((c) => c.count));
+
+  const filteredAuditLog = auditLog.filter((l) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      (l.user_name || '').toLowerCase().includes(query) ||
+      (l.user_email || '').toLowerCase().includes(query) ||
+      l.action.toLowerCase().includes(query) ||
+      l.table_name.toLowerCase().includes(query) ||
+      (l.record_id || '').toLowerCase().includes(query)
+    );
+  });
+
   return (
     <div className="space-y-6">
       {/* Tab Select & Search Bar */}
@@ -188,6 +253,53 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
               </span>
             )}
           </button>
+          <button
+            onClick={() => setActiveTab('logins')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === 'logins'
+                ? 'bg-amber-500 text-slate-950 shadow-md'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <LogIn className="w-3.5 h-3.5" />
+            Login Activity
+            {loginActivity.length > 0 && (
+              <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                activeTab === 'logins' ? 'bg-slate-950 text-amber-400' : 'bg-slate-800 text-slate-400'
+              }`}>
+                {loginActivity.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('clicks')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === 'clicks'
+                ? 'bg-amber-500 text-slate-950 shadow-md'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <MousePointerClick className="w-3.5 h-3.5" />
+            Click Analytics
+          </button>
+          <button
+            onClick={() => setActiveTab('changes')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === 'changes'
+                ? 'bg-amber-500 text-slate-950 shadow-md'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <History className="w-3.5 h-3.5" />
+            Data Changes
+            {auditLog.length > 0 && (
+              <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                activeTab === 'changes' ? 'bg-slate-950 text-amber-400' : 'bg-slate-800 text-slate-400'
+              }`}>
+                {auditLog.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Search Input */}
@@ -198,7 +310,13 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
             placeholder={
               activeTab === 'equipment'
                 ? 'Search clashes by user, equipment...'
-                : 'Search conflicts by client...'
+                : activeTab === 'studio'
+                  ? 'Search conflicts by client...'
+                  : activeTab === 'logins'
+                    ? 'Search by employee, email, IP...'
+                    : activeTab === 'clicks'
+                      ? 'Search by employee, button, or page...'
+                      : 'Search by employee, action, or table...'
             }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -452,6 +570,295 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
                             </div>
                           </td>
                         </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ─── Tab 3: Login Activity ─── */}
+        {activeTab === 'logins' && (
+          <motion.div
+            key="login-activity"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.15 }}
+            className="border border-white/10 rounded-2xl bg-[#0a0a0a] overflow-hidden"
+          >
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead>
+                  <tr className="border-b border-white/10 bg-white/[0.02] text-foreground/40 font-medium">
+                    <th className="px-5 py-3 font-medium">Employee</th>
+                    <th className="px-5 py-3 font-medium">Login Time</th>
+                    <th className="px-5 py-3 font-medium">Last Active / Logout</th>
+                    <th className="px-5 py-3 font-medium">Duration</th>
+                    <th className="px-5 py-3 font-medium text-right">IP Address</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {filteredLoginActivity.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-12 text-center text-foreground/40">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <LogIn className="w-8 h-8 opacity-20 text-rose-400" />
+                          <p>No login activity recorded yet.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredLoginActivity.map((s) => (
+                      <tr key={s.id} className="hover:bg-white/[0.02] transition-colors">
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                              <User className="w-4 h-4 text-foreground/50" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-foreground/90">
+                                {s.user_name || 'Unknown User'}
+                              </p>
+                              <p className="text-xs text-foreground/40">
+                                {s.user_email || 'No email available'}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className="text-xs text-foreground/70">{formatDateTime(s.login_at)}</span>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="space-y-0.5">
+                            <span className="text-xs text-foreground/70">
+                              {formatDateTime(s.logout_at ?? s.last_active_at)}
+                            </span>
+                            {!s.logout_at && (
+                              <span className="block text-[10px] text-emerald-400 font-medium">
+                                still active / not signed out
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-white/5 border border-white/5 text-xs text-foreground/70">
+                            {formatDuration(s.duration_seconds)}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-right">
+                          <span className="inline-flex items-center gap-1.5 text-xs text-foreground/50">
+                            <Globe className="w-3.5 h-3.5 opacity-50" />
+                            {s.ip_address || '—'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ─── Tab 4: Click Analytics ─── */}
+        {activeTab === 'clicks' && (
+          <motion.div
+            key="click-analytics"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.15 }}
+            className="space-y-4"
+          >
+            <div className="flex items-center gap-1.5 p-1 bg-white/[0.03] border border-white/5 rounded-xl self-start w-fit">
+              <button
+                onClick={() => setClickView('leaderboard')}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                  clickView === 'leaderboard'
+                    ? 'bg-amber-500 text-slate-950'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Trophy className="w-3.5 h-3.5" />
+                Leaderboard
+              </button>
+              <button
+                onClick={() => setClickView('log')}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                  clickView === 'log'
+                    ? 'bg-amber-500 text-slate-950'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <MousePointerClick className="w-3.5 h-3.5" />
+                Raw Log
+              </button>
+            </div>
+
+            {clickView === 'leaderboard' ? (
+              <div className="border border-white/10 rounded-2xl bg-[#0a0a0a] p-5">
+                {filteredLeaderboard.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center gap-2 py-12 text-foreground/40">
+                    <Trophy className="w-8 h-8 opacity-20 text-amber-400" />
+                    <p>No clicks recorded yet.</p>
+                  </div>
+                ) : (
+                  <ul className="space-y-2.5">
+                    {filteredLeaderboard.map((c, i) => (
+                      <li key={`${c.label}::${c.path}`} className="relative">
+                        <div
+                          className="absolute inset-y-0 left-0 rounded-lg bg-amber-500/10"
+                          style={{ width: `${(c.count / leaderboardMax) * 100}%` }}
+                        />
+                        <div className="relative flex items-center justify-between gap-3 px-3 py-2">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="text-[10px] font-bold text-foreground/30 w-4 shrink-0">
+                              {i + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground/90 truncate">{c.label}</p>
+                              <p className="text-[10px] text-foreground/40 truncate">{c.path}</p>
+                            </div>
+                          </div>
+                          <span className="shrink-0 text-xs font-semibold text-amber-400">
+                            {c.count}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ) : (
+              <div className="border border-white/10 rounded-2xl bg-[#0a0a0a] overflow-hidden">
+                <div className="overflow-x-auto custom-scrollbar">
+                  <table className="w-full text-left text-sm whitespace-nowrap">
+                    <thead>
+                      <tr className="border-b border-white/10 bg-white/[0.02] text-foreground/40 font-medium">
+                        <th className="px-5 py-3 font-medium">Employee</th>
+                        <th className="px-5 py-3 font-medium">Button / Link</th>
+                        <th className="px-5 py-3 font-medium">Page</th>
+                        <th className="px-5 py-3 font-medium text-right">When</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {filteredClickEvents.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="px-5 py-12 text-center text-foreground/40">
+                            <div className="flex flex-col items-center justify-center gap-2">
+                              <MousePointerClick className="w-8 h-8 opacity-20 text-amber-400" />
+                              <p>No clicks recorded yet.</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredClickEvents.map((c) => (
+                          <tr key={c.id} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="px-5 py-4">
+                              <p className="font-medium text-foreground/90">{c.user_name || 'Unknown User'}</p>
+                              <p className="text-xs text-foreground/40">{c.user_email || 'No email available'}</p>
+                            </td>
+                            <td className="px-5 py-4 text-foreground/80">{c.label}</td>
+                            <td className="px-5 py-4 text-xs text-foreground/50">{c.path}</td>
+                            <td className="px-5 py-4 text-right text-xs text-foreground/50">
+                              {formatDateTime(c.created_at)}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* ─── Tab 5: Data Changes ─── */}
+        {activeTab === 'changes' && (
+          <motion.div
+            key="data-changes"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.15 }}
+            className="border border-white/10 rounded-2xl bg-[#0a0a0a] overflow-hidden"
+          >
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead>
+                  <tr className="border-b border-white/10 bg-white/[0.02] text-foreground/40 font-medium">
+                    <th className="px-5 py-3 font-medium w-8"></th>
+                    <th className="px-5 py-3 font-medium">User</th>
+                    <th className="px-5 py-3 font-medium">Action</th>
+                    <th className="px-5 py-3 font-medium">Table</th>
+                    <th className="px-5 py-3 font-medium text-right">When</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {filteredAuditLog.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-12 text-center text-foreground/40">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <History className="w-8 h-8 opacity-20 text-amber-400" />
+                          <p>No data changes recorded yet.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredAuditLog.map((l) => {
+                      const isExpanded = expandedLogId === l.id;
+                      return (
+                        <React.Fragment key={l.id}>
+                          <tr
+                            className="hover:bg-white/[0.02] transition-colors cursor-pointer"
+                            onClick={() => setExpandedLogId(isExpanded ? null : l.id)}
+                          >
+                            <td className="px-5 py-4 text-foreground/40">
+                              {isExpanded ? (
+                                <ChevronDown className="w-3.5 h-3.5" />
+                              ) : (
+                                <ChevronRight className="w-3.5 h-3.5" />
+                              )}
+                            </td>
+                            <td className="px-5 py-4">
+                              <p className="font-medium text-foreground/90">{l.user_name || 'Unknown User'}</p>
+                              <p className="text-xs text-foreground/40">{l.user_email || 'No email available'}</p>
+                            </td>
+                            <td className="px-5 py-4">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-[10px] font-semibold uppercase tracking-wide text-foreground/70">
+                                {l.action}
+                              </span>
+                            </td>
+                            <td className="px-5 py-4 text-xs text-foreground/60">{l.table_name}</td>
+                            <td className="px-5 py-4 text-right text-xs text-foreground/50">
+                              {formatDateTime(l.created_at)}
+                            </td>
+                          </tr>
+                          {isExpanded && (
+                            <tr>
+                              <td colSpan={5} className="px-5 pb-4 bg-white/[0.01]">
+                                <div className="grid gap-3 sm:grid-cols-2 pt-2">
+                                  <div>
+                                    <p className="text-[10px] uppercase tracking-wide text-foreground/40 mb-1">Before</p>
+                                    <pre className="text-[11px] leading-relaxed text-foreground/70 bg-black/30 border border-white/5 rounded-lg p-3 overflow-x-auto max-h-64">
+                                      {l.old_data ? JSON.stringify(l.old_data, null, 2) : '—'}
+                                    </pre>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] uppercase tracking-wide text-foreground/40 mb-1">After</p>
+                                    <pre className="text-[11px] leading-relaxed text-foreground/70 bg-black/30 border border-white/5 rounded-lg p-3 overflow-x-auto max-h-64">
+                                      {l.new_data ? JSON.stringify(l.new_data, null, 2) : '—'}
+                                    </pre>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       );
                     })
                   )}

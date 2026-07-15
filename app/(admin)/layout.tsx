@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { SignOutButton } from '@/components/dashboard/SignOutButton';
 import { ResponsiveSidebarWrapper } from '@/components/dashboard/ResponsiveSidebarWrapper';
 import { SidebarNav } from '@/components/dashboard/SidebarNav';
+import { SessionTracker } from '@/components/dashboard/SessionTracker';
+import { ClickTracker } from '@/components/dashboard/ClickTracker';
 
 export const metadata: Metadata = {
   title: 'HR Admin — Studio ERP',
@@ -60,6 +62,8 @@ export default async function AdminLayout({
 
   return (
     <div className='min-h-screen bg-[#0A0A0B] pt-20'>
+      <SessionTracker />
+      <ClickTracker />
       <ResponsiveSidebarWrapper
         navContent={<SidebarNav profile={profile} email={user.email || ''} />}
         footerContent={footerContent}

@@ -7,6 +7,8 @@ import type { AppRole } from '@/lib/access';
 import { SignOutButton } from '@/components/dashboard/SignOutButton';
 import { ResponsiveSidebarWrapper } from '@/components/dashboard/ResponsiveSidebarWrapper';
 import { DueRemindersBanner } from '@/components/dashboard/DueRemindersBanner';
+import { SessionTracker } from '@/components/dashboard/SessionTracker';
+import { ClickTracker } from '@/components/dashboard/ClickTracker';
 import { getMyReminders } from '@/actions/reminders';
 import { isUnacknowledgedToday } from '@/lib/reminders';
 
@@ -44,6 +46,9 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] pt-20">
+      <SessionTracker />
+      <ClickTracker />
+
       {/* Non-blocking top-centre banner — persists across navigation */}
       <DueRemindersBanner reminders={dueReminders} />
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { logger } from '@/lib/logger';
@@ -22,7 +21,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const supabase = createClient();
   const { hideLoader, showError } = useNotifications();
 
@@ -49,9 +47,10 @@ export default function LoginPage() {
 
       if (data.user) {
         toast.success('Successfully signed in!', { id: toastId });
-        router.push('/dashboard');
-        router.refresh();
-        // Do not set isLoading to false here, so the loader persists during redirect
+        // Hard navigation ensures the browser commits the Supabase session cookies
+        // before the /dashboard request is sent — fixes the middleware race condition
+        // that required a manual refresh after every login.
+        window.location.href = '/dashboard';
         return;
       }
     } catch (err) {

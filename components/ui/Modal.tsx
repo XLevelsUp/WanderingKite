@@ -25,10 +25,11 @@ export function Modal({
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm pointer-events-auto">
       <motion.div
+        dir="ltr"
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        className="w-full max-w-md bg-[rgba(17,17,22,0.96)] border border-white/10 shadow-2xl rounded-2xl overflow-hidden"
+        className="w-full max-w-md bg-[rgba(17,17,22,0.96)] border border-white/10 shadow-2xl rounded-2xl overflow-hidden text-left"
       >
         <div className="p-6">
           <h3 className="text-xl font-bold text-white mb-2">{title}</h3>

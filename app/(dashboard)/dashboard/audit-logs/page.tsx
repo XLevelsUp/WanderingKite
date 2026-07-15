@@ -3,11 +3,12 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { ShieldAlert } from 'lucide-react';
 import { getAuditClashLogs, getStudioBookingConflicts } from '@/actions/audit';
+import { getLoginActivity, getClickEvents, getClickLeaderboard, getAuditLog } from '@/actions/activity';
 import { AuditLogsClient } from '@/components/dashboard/AuditLogsClient';
 
 export const metadata: Metadata = {
   title: 'Audit Logs — Studio ERP',
-  description: 'Security and conflict audit logs for equipment assignments.',
+  description: 'Staff activity, click analytics, and data-change audit trail.',
 };
 
 export const dynamic = 'force-dynamic';
@@ -27,7 +28,16 @@ export default async function AuditLogsPage(props: {
   searchParams: Promise<{ tab?: string }>;
 }) {
   const searchParams = await props.searchParams;
-  const defaultTab = searchParams?.tab === 'studio' ? 'studio' : 'equipment';
+  const defaultTab =
+    searchParams?.tab === 'studio'
+      ? 'studio'
+      : searchParams?.tab === 'logins'
+        ? 'logins'
+        : searchParams?.tab === 'clicks'
+          ? 'clicks'
+          : searchParams?.tab === 'changes'
+            ? 'changes'
+            : 'equipment';
 
   const supabase = await createClient();
 
@@ -45,6 +55,10 @@ export default async function AuditLogsPage(props: {
 
   const clashLogs = await getAuditClashLogs();
   const studioConflicts = await getStudioBookingConflicts();
+  const loginActivity = await getLoginActivity();
+  const clickEvents = await getClickEvents();
+  const clickLeaderboard = await getClickLeaderboard();
+  const auditLog = await getAuditLog();
 
   return (
     <div className="relative space-y-8">
@@ -60,14 +74,18 @@ export default async function AuditLogsPage(props: {
             </h1>
           </div>
           <p className="text-sm text-foreground/45 ml-11.5">
-            Security history of scheduling conflicts and double-booking attempts.
+            Scheduling conflicts, staff login activity, click analytics, and the full data-change history.
           </p>
         </div>
       </div>
 
-      <AuditLogsClient 
-        clashLogs={clashLogs} 
-        studioConflicts={studioConflicts} 
+      <AuditLogsClient
+        clashLogs={clashLogs}
+        studioConflicts={studioConflicts}
+        loginActivity={loginActivity}
+        clickEvents={clickEvents}
+        clickLeaderboard={clickLeaderboard}
+        auditLog={auditLog}
         defaultTab={defaultTab}
       />
     </div>
