@@ -5,9 +5,24 @@ import { hasAccess } from '@/lib/access';
 import ClientDetailsView from '@/components/dashboard/ClientDetailsView';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft } from 'lucide-react';
+import { HardDrive, Plus } from 'lucide-react';
 import ClientBackButton from '@/components/dashboard/ClientBackButton';
 import { logger } from '@/lib/logger';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  MediaStatusBadge,
+  DEVICE_TYPE_LABEL,
+  hasBackupRisk,
+  NoBackupPill,
+  hasUnloggedContent,
+  NotLoggedPill,
+} from '@/app/(dashboard)/dashboard/media-tracker/status';
 
 export default async function ClientDetailPage({
   params,
@@ -154,6 +169,27 @@ export default async function ClientDetailPage({
     }))
     .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
+  // Media Tracker records for this client (graceful: empty if table not yet migrated)
+  const { data: mediaRecordsData, error: mediaRecordsError } = await supabase
+    .from('media_records')
+    .select(
+      `
+      id, title, status, shoot_date, content_logged_at,
+      primary_storage:storage_devices!primary_storage_device_id(id, label, type),
+      original_backup:storage_devices!original_backup_device_id(id, label),
+      backup_copy:storage_devices!backup_copy_device_id(id, label)
+    `
+    )
+    .eq('client_id', id)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false });
+
+  if (mediaRecordsError) {
+    logger.error('Fetch client media records error:', mediaRecordsError);
+  }
+  const clientMediaRecords = mediaRecordsData ?? [];
+  const isEmployeeRole = profile?.role === 'EMPLOYEE';
+
   // Format studio bookings
   const studioBookingsSerialized = (client.studio_bookings || [])
     .map((b: any) => ({
@@ -188,6 +224,67 @@ export default async function ClientDetailPage({
         assignees={assigneesRes.data || []}
         charges={chargesRes.data || []}
       />
+
+      {/* Media Tracker — this client's tracked shoots */}
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <HardDrive className="h-5 w-5 text-primary" />
+              Media Records
+            </CardTitle>
+            <CardDescription className="mt-1">
+              Where this client&apos;s footage and backups are stored.
+            </CardDescription>
+          </div>
+          {!isEmployeeRole && (
+            <Link href="/dashboard/media-tracker/new" className="shrink-0">
+              <Button size="sm" variant="outline">
+                <Plus className="h-4 w-4 mr-1.5" />
+                Track new shoot
+              </Button>
+            </Link>
+          )}
+        </CardHeader>
+        <CardContent>
+          {clientMediaRecords.length === 0 ? (
+            <p className="py-6 text-center text-sm text-slate-500">
+              No tracked shoots for this client yet.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {clientMediaRecords.map((r: any) => (
+                <li
+                  key={r.id}
+                  className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 rounded-xl border border-border p-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/dashboard/media-tracker/${r.id}`}
+                      className="text-sm font-semibold hover:text-primary hover:underline"
+                    >
+                      {r.title}
+                    </Link>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {r.shoot_date
+                        ? new Date(r.shoot_date).toLocaleDateString('en-IN')
+                        : 'No shoot date'}
+                      {r.primary_storage
+                        ? ` · ${r.primary_storage.label} (${DEVICE_TYPE_LABEL[r.primary_storage.type] ?? r.primary_storage.type})`
+                        : ' · No storage set'}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                    <MediaStatusBadge status={r.status} />
+                    {hasBackupRisk(r) && <NoBackupPill />}
+                    {hasUnloggedContent(r) && <NotLoggedPill />}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

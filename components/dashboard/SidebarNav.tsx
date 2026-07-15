@@ -18,6 +18,7 @@ import {
   ArrowLeftCircle,
   Wrench,
   ShieldAlert,
+  HardDrive,
 } from 'lucide-react';
 import { getNavAccess } from '@/lib/access';
 
@@ -168,6 +169,12 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
         <Link href='/dashboard/equipment' className={getLinkClasses('/dashboard/equipment')}>
           <Briefcase className='w-4 h-4 opacity-75' />
           Equipment
+        </Link>
+      )}
+      {access.canViewMediaTracker && (
+        <Link href='/dashboard/media-tracker' className={getLinkClasses('/dashboard/media-tracker')}>
+          <HardDrive className='w-4 h-4 opacity-75' />
+          Media Tracker
         </Link>
       )}
       {access.canViewRentalSettings && (

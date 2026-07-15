@@ -1,6 +1,7 @@
 'use client';
 
 import { useNotifications } from '@/components/ui/useNotifications';
+import { getStoredSessionId, clearStoredSessionId } from '@/lib/clientSession';
 
 export function SignOutButton() {
   const { showModal, removeModal, showLoader } = useNotifications();
@@ -20,6 +21,15 @@ export function SignOutButton() {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '/auth/signout';
+        const sessionId = getStoredSessionId();
+        if (sessionId) {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'sessionId';
+          input.value = sessionId;
+          form.appendChild(input);
+        }
+        clearStoredSessionId();
         document.body.appendChild(form);
         form.submit();
       },

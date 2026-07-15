@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { writeAuditLog } from '@/lib/audit';
 
 export async function POST(request: Request) {
   try {
@@ -53,6 +54,14 @@ export async function POST(request: Request) {
       logger.error('Toggle active status error:', updateError);
       return NextResponse.json({ error: 'update_failed' }, { status: 500 });
     }
+
+    await writeAuditLog(supabase, {
+      user_id: user.id,
+      action: isActive ? 'ACTIVATE_CLIENT' : 'DEACTIVATE_CLIENT',
+      table_name: 'clients',
+      record_id: clientId,
+      new_data: { is_active: !!isActive },
+    });
 
     return NextResponse.json({
       success: true,

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { adminAuthClient } from '@/lib/supabase/admin';
 import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { writeAuditLog } from '@/lib/audit';
 
 export async function DELETE(request: Request) {
   try {
@@ -34,6 +35,12 @@ export async function DELETE(request: Request) {
     // all admin listings (deleted_at IS NOT NULL filter in getClients()).
     const now = new Date().toISOString();
 
+    const { data: oldRow } = await adminAuthClient
+      .from('clients')
+      .select('*')
+      .eq('id', clientId)
+      .single();
+
     const { error: softDeleteError } = await adminAuthClient
       .from('clients')
       .update({
@@ -46,6 +53,14 @@ export async function DELETE(request: Request) {
       logger.error('Failed to soft-delete client:', softDeleteError.message);
       return NextResponse.json({ error: softDeleteError.message }, { status: 500 });
     }
+
+    await writeAuditLog(supabase, {
+      user_id: user.id,
+      action: 'DELETE_CLIENT',
+      table_name: 'clients',
+      record_id: clientId,
+      old_data: oldRow,
+    });
 
     logger.info(`Client ${clientId} soft-deleted at ${now}`);
     return NextResponse.json({ success: true });

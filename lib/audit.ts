@@ -6,7 +6,7 @@
  *
  * Usage:
  *   import { writeAuditLog } from '@/lib/audit';
- *   await writeAuditLog(supabase, { action: 'CREATE_EMPLOYEE', table_name: 'profiles', record_id: newId, new_data: profile });
+ *   await writeAuditLog(supabase, { user_id: user.id, action: 'CREATE_EMPLOYEE', table_name: 'profiles', record_id: newId, new_data: profile });
  */
 
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -15,6 +15,7 @@ import { logger } from './logger';
 export type AuditSeverity = 'INFO' | 'WARN' | 'CRITICAL';
 
 export interface AuditLogParams {
+  user_id: string; // profiles.id of whoever made the change
   action: string; // e.g. 'CREATE_EMPLOYEE', 'ASSIGN_EQUIPMENT', 'DELETE_CLIENT'
   table_name: string; // e.g. 'profiles', 'equipment', 'orders'
   record_id: string; // UUID of the affected row
@@ -32,6 +33,7 @@ export async function writeAuditLog(
   params: AuditLogParams
 ): Promise<void> {
   const {
+    user_id,
     action,
     table_name,
     record_id,
@@ -44,6 +46,7 @@ export async function writeAuditLog(
   } = params;
 
   const { error } = await supabase.from('audit_logs').insert({
+    user_id,
     action,
     table_name,
     record_id,

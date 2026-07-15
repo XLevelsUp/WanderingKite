@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Menu, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -17,10 +17,16 @@ export function ResponsiveSidebarWrapper({
 }: ResponsiveSidebarWrapperProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const mainRef = useRef<HTMLElement>(null);
 
   // Close sidebar on route change (mobile nav)
   useEffect(() => {
     setIsOpen(false);
+  }, [pathname]);
+
+  // Scroll main content area back to the top on every route change
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
   }, [pathname]);
 
   // Prevent body scroll when mobile sidebar is open
@@ -104,7 +110,7 @@ export function ResponsiveSidebarWrapper({
       </aside>
 
       {/* ── Main content ─────────────────────────────────────── */}
-      <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-16 sm:pt-20 lg:pt-8 min-h-screen bg-[#0A0A0B] w-full overflow-x-hidden">
+      <main ref={mainRef} className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-16 sm:pt-20 lg:pt-8 min-h-screen bg-[#0A0A0B] w-full overflow-x-hidden">
         {children}
       </main>
     </div>

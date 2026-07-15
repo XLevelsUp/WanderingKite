@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { clientSchema } from '@/lib/validations/schemas';
 import { parseSupabaseError } from '@/lib/errorHandler';
+import { writeAuditLog } from '@/lib/audit';
 
 // Get all clients — excludes soft-deleted rows
 export async function getClients() {
@@ -25,6 +26,9 @@ export async function getClients() {
 // Create client
 export async function createNewClient(formData: FormData) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const rawData = {
     name: formData.get('name') as string,
@@ -47,6 +51,16 @@ export async function createNewClient(formData: FormData) {
     throw new Error(parseSupabaseError(error, 'Failed to create client'));
   }
 
+  if (user) {
+    await writeAuditLog(supabase, {
+      user_id: user.id,
+      action: 'CREATE_CLIENT',
+      table_name: 'clients',
+      record_id: data.id,
+      new_data: data,
+    });
+  }
+
   revalidatePath('/dashboard/clients');
   return data;
 }
@@ -54,6 +68,15 @@ export async function createNewClient(formData: FormData) {
 // Update client
 export async function updateClient(id: string, formData: FormData) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: oldRow } = await supabase
+    .from('clients')
+    .select('*')
+    .eq('id', id)
+    .single();
 
   const rawData = {
     name: formData.get('name') as string,
@@ -77,6 +100,17 @@ export async function updateClient(id: string, formData: FormData) {
     throw new Error(parseSupabaseError(error, 'Failed to update client'));
   }
 
+  if (user) {
+    await writeAuditLog(supabase, {
+      user_id: user.id,
+      action: 'UPDATE_CLIENT',
+      table_name: 'clients',
+      record_id: id,
+      old_data: oldRow,
+      new_data: data,
+    });
+  }
+
   revalidatePath('/dashboard/clients');
   return data;
 }
@@ -86,6 +120,15 @@ export async function updateClient(id: string, formData: FormData) {
 // The client is blocked from logging in via the is_active=false check in auth.ts.
 export async function deleteClient(id: string) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: oldRow } = await supabase
+    .from('clients')
+    .select('*')
+    .eq('id', id)
+    .single();
 
   const { error } = await supabase
     .from('clients')
@@ -94,6 +137,16 @@ export async function deleteClient(id: string) {
 
   if (error) {
     throw new Error(parseSupabaseError(error, 'Failed to delete client'));
+  }
+
+  if (user) {
+    await writeAuditLog(supabase, {
+      user_id: user.id,
+      action: 'DELETE_CLIENT',
+      table_name: 'clients',
+      record_id: id,
+      old_data: oldRow,
+    });
   }
 
   revalidatePath('/dashboard/clients');

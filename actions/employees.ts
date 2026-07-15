@@ -12,6 +12,7 @@ import {
 } from '@/lib/validations/employees';
 import { redirect } from 'next/navigation';
 import { parseSupabaseError } from '@/lib/errorHandler';
+import { writeAuditLog } from '@/lib/audit';
 
 export async function getEmployees(query?: string) {
   const supabase = await createClient();
@@ -153,6 +154,14 @@ export async function createEmployee(data: CreateEmployeeFormData) {
     return { error: 'User created but failed to update profile details.' };
   }
 
+  await writeAuditLog(supabase, {
+    user_id: requester.id,
+    action: 'CREATE_EMPLOYEE',
+    table_name: 'profiles',
+    record_id: authUser.user.id,
+    new_data: { email, full_name, role, branch_id, manager_id },
+  });
+
   revalidatePath('/dashboard/employees');
   return { success: true };
 }
@@ -203,6 +212,12 @@ export async function updateEmployee(id: string, data: UpdateEmployeeFormData) {
     }
   }
 
+  const { data: oldRow } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', id)
+    .single();
+
   // Update
   const { error } = await adminAuthClient
     .from('profiles')
@@ -222,6 +237,15 @@ export async function updateEmployee(id: string, data: UpdateEmployeeFormData) {
     logger.error('Error updating employee', error);
     return { error: 'Failed to update employee' };
   }
+
+  await writeAuditLog(supabase, {
+    user_id: requester.id,
+    action: 'UPDATE_EMPLOYEE',
+    table_name: 'profiles',
+    record_id: id,
+    old_data: oldRow,
+    new_data: { full_name, role, branch_id, manager_id },
+  });
 
   revalidatePath('/dashboard/employees');
   revalidatePath(`/dashboard/employees/${id}`);
@@ -283,6 +307,13 @@ export async function deleteEmployee(id: string) {
     logger.error('Error banning user in Auth during soft-delete', authError);
     // Non-blocking, continue
   }
+
+  await writeAuditLog(supabase, {
+    user_id: requester.id,
+    action: 'DELETE_EMPLOYEE',
+    table_name: 'profiles',
+    record_id: id,
+  });
 
   revalidatePath('/dashboard/employees');
   revalidatePath('/admin/employees');

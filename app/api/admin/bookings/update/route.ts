@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { writeAuditLog } from '@/lib/audit';
 
 export async function POST(request: Request) {
   try {
@@ -64,10 +65,11 @@ export async function POST(request: Request) {
     }
 
     if (bookingType === 'PHOTOGRAPHY') {
-      // 1. Fetch current booking details to preserve notes and metadata
+      // 1. Fetch current booking details to preserve notes/metadata and as
+      // the audit trail's before-state.
       const { data: booking, error: fetchErr } = await supabase
         .from('photography_bookings')
-        .select('notes')
+        .select('*')
         .eq('id', bookingId)
         .single();
 
@@ -114,6 +116,15 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
 
+      await writeAuditLog(supabase, {
+        user_id: user.id,
+        action: 'UPDATE_PHOTOGRAPHY_BOOKING',
+        table_name: 'photography_bookings',
+        record_id: bookingId,
+        old_data: booking,
+        new_data: updated,
+      });
+
       // If completing a shoot and album info is provided, create/update album details
       if (status === 'COMPLETED' && albumName) {
         const { data: existingAlbum } = await supabase
@@ -145,10 +156,11 @@ export async function POST(request: Request) {
 
       return NextResponse.json({ success: true, booking: updated });
     } else if (bookingType === 'STUDIO') {
-      // 1. Fetch current booking details to preserve notes and metadata
+      // 1. Fetch current booking details to preserve notes/metadata and as
+      // the audit trail's before-state.
       const { data: booking, error: fetchErr } = await supabase
         .from('studio_bookings')
-        .select('notes')
+        .select('*')
         .eq('id', bookingId)
         .single();
 
@@ -193,8 +205,23 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
 
+      await writeAuditLog(supabase, {
+        user_id: user.id,
+        action: 'UPDATE_STUDIO_BOOKING',
+        table_name: 'studio_bookings',
+        record_id: bookingId,
+        old_data: booking,
+        new_data: updated,
+      });
+
       return NextResponse.json({ success: true, booking: updated });
     } else if (bookingType === 'RENTAL') {
+      const { data: oldRental } = await supabase
+        .from('rental_bookings')
+        .select('*')
+        .eq('id', bookingId)
+        .single();
+
       const updatePayload: any = {
         status,
         updated_at: new Date().toISOString(),
@@ -215,6 +242,15 @@ export async function POST(request: Request) {
         logger.error('Rental update error:', updateError);
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
+
+      await writeAuditLog(supabase, {
+        user_id: user.id,
+        action: 'UPDATE_RENTAL_BOOKING',
+        table_name: 'rental_bookings',
+        record_id: bookingId,
+        old_data: oldRental,
+        new_data: updated,
+      });
 
       return NextResponse.json({ success: true, booking: updated });
     } else {
