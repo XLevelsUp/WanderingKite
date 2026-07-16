@@ -2,6 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
     images: {
+        // Vercel's Image Optimization pipeline hit its plan quota (402
+        // Payment Required on every next/image request, local and remote).
+        // unoptimized serves files as-is, bypassing that paid pipeline —
+        // no more resizing/format conversion, but images load again for
+        // free. Revisit if you upgrade the Vercel plan and want responsive
+        // resizing back.
+        unoptimized: true,
         remotePatterns: [
             // Your existing Supabase configuration
             {
