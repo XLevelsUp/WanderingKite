@@ -26,12 +26,20 @@ import {
   History,
   ChevronDown,
   ChevronRight,
+  Laptop,
+  RefreshCw,
 } from 'lucide-react';
 import type {
   LoginActivityRow,
   ClickEventRow,
   ClickLeaderboardRow,
   AuditLogRow,
+} from '@/actions/activity';
+import {
+  getLoginActivity,
+  getClickEvents,
+  getClickLeaderboard,
+  getAuditLog,
 } from '@/actions/activity';
 import { toast } from 'sonner';
 import { resolveStudioBookingConflict } from '@/actions/audit';
@@ -55,6 +63,14 @@ interface Props {
   defaultTab?: 'equipment' | 'studio' | 'logins' | 'clicks' | 'changes';
 }
 
+const PAGE_SIZE = 100;
+const DAYS_OPTIONS: { label: string; value: number | undefined }[] = [
+  { label: '7d', value: 7 },
+  { label: '30d', value: 30 },
+  { label: '90d', value: 90 },
+  { label: 'All time', value: undefined },
+];
+
 function formatDateTime(isoString: string) {
   const d = new Date(isoString);
   return new Intl.DateTimeFormat('en-IN', {
@@ -74,14 +90,89 @@ function formatDuration(seconds: number) {
   return `${seconds}s`;
 }
 
-export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConflicts, loginActivity, clickEvents, clickLeaderboard, auditLog, defaultTab = 'equipment' }: Props) {
+export function AuditLogsClient({
+  clashLogs,
+  studioConflicts: initialStudioConflicts,
+  loginActivity: initialLoginActivity,
+  clickEvents: initialClickEvents,
+  clickLeaderboard: initialClickLeaderboard,
+  auditLog: initialAuditLog,
+  defaultTab = 'equipment',
+}: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'equipment' | 'studio' | 'logins' | 'clicks' | 'changes'>(defaultTab);
   const [clickView, setClickView] = useState<'log' | 'leaderboard'>('leaderboard');
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [studioConflicts, setStudioConflicts] = useState(initialStudioConflicts);
-  
+
+  // Login/Click/Data-Change activity — locally refetchable with a date
+  // range + "load more", since these tables can grow large over time.
+  const [loginActivity, setLoginActivity] = useState(initialLoginActivity);
+  const [clickEvents, setClickEvents] = useState(initialClickEvents);
+  const [clickLeaderboard, setClickLeaderboard] = useState(initialClickLeaderboard);
+  const [auditLog, setAuditLog] = useState(initialAuditLog);
+  const [activityDays, setActivityDays] = useState<number | undefined>(30);
+  const [loginLimit, setLoginLimit] = useState(PAGE_SIZE);
+  const [clickLimit, setClickLimit] = useState(PAGE_SIZE);
+  const [changesLimit, setChangesLimit] = useState(PAGE_SIZE);
+  const [isActivityPending, startActivityTransition] = useTransition();
+
+  const refreshLogins = (days: number | undefined, limit: number) => {
+    startActivityTransition(async () => {
+      setLoginActivity(await getLoginActivity({ days, limit }));
+    });
+  };
+  const refreshClicks = (days: number | undefined, limit: number) => {
+    startActivityTransition(async () => {
+      const [events, leaderboard] = await Promise.all([
+        getClickEvents({ days, limit }),
+        getClickLeaderboard(days),
+      ]);
+      setClickEvents(events);
+      setClickLeaderboard(leaderboard);
+    });
+  };
+  const refreshChanges = (days: number | undefined, limit: number) => {
+    startActivityTransition(async () => {
+      setAuditLog(await getAuditLog({ days, limit }));
+    });
+  };
+
+  const handleDaysChange = (days: number | undefined) => {
+    setActivityDays(days);
+    if (activeTab === 'logins') {
+      setLoginLimit(PAGE_SIZE);
+      refreshLogins(days, PAGE_SIZE);
+    } else if (activeTab === 'clicks') {
+      setClickLimit(PAGE_SIZE);
+      refreshClicks(days, PAGE_SIZE);
+    } else if (activeTab === 'changes') {
+      setChangesLimit(PAGE_SIZE);
+      refreshChanges(days, PAGE_SIZE);
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (activeTab === 'logins') {
+      const next = loginLimit + PAGE_SIZE;
+      setLoginLimit(next);
+      refreshLogins(activityDays, next);
+    } else if (activeTab === 'clicks') {
+      const next = clickLimit + PAGE_SIZE;
+      setClickLimit(next);
+      refreshClicks(activityDays, next);
+    } else if (activeTab === 'changes') {
+      const next = changesLimit + PAGE_SIZE;
+      setChangesLimit(next);
+      refreshChanges(activityDays, next);
+    }
+  };
+
+  const canLoadMoreLogins = loginActivity.length >= loginLimit;
+  const canLoadMoreClicks = clickEvents.length >= clickLimit;
+  const canLoadMoreChanges = auditLog.length >= changesLimit;
+
   // Resolution Modal State
   const [selectedConflict, setSelectedConflict] = useState<any | null>(null);
   const [resolutionStatus, setResolutionStatus] = useState<'approved' | 'rejected'>('approved');
@@ -324,6 +415,29 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
           />
         </div>
       </div>
+
+      {/* Date range — only the tabs backed by a growing activity table */}
+      {(activeTab === 'logins' || activeTab === 'clicks' || activeTab === 'changes') && (
+        <div className="flex items-center gap-1.5">
+          {DAYS_OPTIONS.map((opt) => (
+            <button
+              key={opt.label}
+              onClick={() => handleDaysChange(opt.value)}
+              disabled={isActivityPending}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50 ${
+                activityDays === opt.value
+                  ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                  : 'text-slate-500 border border-transparent hover:text-slate-300'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+          {isActivityPending && (
+            <RefreshCw className="w-3.5 h-3.5 text-slate-500 animate-spin ml-1" />
+          )}
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
         {/* ─── Tab 1: Equipment Clashes ─── */}
@@ -597,13 +711,14 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
                     <th className="px-5 py-3 font-medium">Login Time</th>
                     <th className="px-5 py-3 font-medium">Last Active / Logout</th>
                     <th className="px-5 py-3 font-medium">Duration</th>
+                    <th className="px-5 py-3 font-medium">Device</th>
                     <th className="px-5 py-3 font-medium text-right">IP Address</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {filteredLoginActivity.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-5 py-12 text-center text-foreground/40">
+                      <td colSpan={6} className="px-5 py-12 text-center text-foreground/40">
                         <div className="flex flex-col items-center justify-center gap-2">
                           <LogIn className="w-8 h-8 opacity-20 text-rose-400" />
                           <p>No login activity recorded yet.</p>
@@ -636,9 +751,14 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
                             <span className="text-xs text-foreground/70">
                               {formatDateTime(s.logout_at ?? s.last_active_at)}
                             </span>
-                            {!s.logout_at && (
+                            {s.status === 'active' && (
                               <span className="block text-[10px] text-emerald-400 font-medium">
-                                still active / not signed out
+                                active now
+                              </span>
+                            )}
+                            {s.status === 'stale' && (
+                              <span className="block text-[10px] text-amber-400 font-medium">
+                                ended (not signed out)
                               </span>
                             )}
                           </div>
@@ -646,6 +766,12 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
                         <td className="px-5 py-4">
                           <span className="inline-flex items-center px-2 py-1 rounded-md bg-white/5 border border-white/5 text-xs text-foreground/70">
                             {formatDuration(s.duration_seconds)}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className="inline-flex items-center gap-1.5 text-xs text-foreground/50">
+                            <Laptop className="w-3.5 h-3.5 opacity-50" />
+                            {s.device_label}
                           </span>
                         </td>
                         <td className="px-5 py-4 text-right">
@@ -660,6 +786,17 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
                 </tbody>
               </table>
             </div>
+            {canLoadMoreLogins && (
+              <div className="border-t border-white/10 p-3 text-center">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={isActivityPending}
+                  className="text-xs font-semibold text-amber-400 hover:text-amber-300 disabled:opacity-50"
+                >
+                  {isActivityPending ? 'Loading…' : 'Load more'}
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
 
@@ -772,6 +909,17 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
                     </tbody>
                   </table>
                 </div>
+                {canLoadMoreClicks && (
+                  <div className="border-t border-white/10 p-3 text-center">
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={isActivityPending}
+                      className="text-xs font-semibold text-amber-400 hover:text-amber-300 disabled:opacity-50"
+                    >
+                      {isActivityPending ? 'Loading…' : 'Load more'}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </motion.div>
@@ -865,6 +1013,17 @@ export function AuditLogsClient({ clashLogs, studioConflicts: initialStudioConfl
                 </tbody>
               </table>
             </div>
+            {canLoadMoreChanges && (
+              <div className="border-t border-white/10 p-3 text-center">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={isActivityPending}
+                  className="text-xs font-semibold text-amber-400 hover:text-amber-300 disabled:opacity-50"
+                >
+                  {isActivityPending ? 'Loading…' : 'Load more'}
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

@@ -53,12 +53,14 @@ export default async function AuditLogsPage(props: {
   const isSuperAdmin = profile?.role === 'SUPER_ADMIN';
   if (!isSuperAdmin) redirect('/dashboard');
 
+  // 30-day default matches AuditLogsClient's initial date-range selection —
+  // keeps the first render consistent with what the filter UI shows as active.
   const clashLogs = await getAuditClashLogs();
   const studioConflicts = await getStudioBookingConflicts();
-  const loginActivity = await getLoginActivity();
-  const clickEvents = await getClickEvents();
-  const clickLeaderboard = await getClickLeaderboard();
-  const auditLog = await getAuditLog();
+  const loginActivity = await getLoginActivity({ days: 30 });
+  const clickEvents = await getClickEvents({ days: 30 });
+  const clickLeaderboard = await getClickLeaderboard(30);
+  const auditLog = await getAuditLog({ days: 30 });
 
   return (
     <div className="relative space-y-8">
