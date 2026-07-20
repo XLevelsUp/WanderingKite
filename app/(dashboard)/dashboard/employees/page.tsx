@@ -30,7 +30,7 @@ export default async function EmployeesPage() {
   const employees = await getEmployees();
 
   const canManage =
-    profile?.role === 'SUPER_ADMIN' || profile?.role === 'ADMIN';
+    profile?.role === 'SUPER_ADMIN' || profile?.role === 'ADMIN' || profile?.role === 'DEVELOPER';
 
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">

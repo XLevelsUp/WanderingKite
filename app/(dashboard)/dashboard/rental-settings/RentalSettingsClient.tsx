@@ -49,7 +49,7 @@ export function RentalSettingsClient({
 
   const handleGlobalSettingsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (role !== 'SUPER_ADMIN') return;
+    if (role !== 'SUPER_ADMIN' && role !== 'DEVELOPER') return;
     setIsUpdatingSettings(true);
     try {
       const formData = new FormData();
@@ -120,14 +120,14 @@ export function RentalSettingsClient({
                   type="number" step="0.01" 
                   value={globalSettings.repeat_client_discount_percentage} 
                   onChange={e => handleNumberChange('repeat_client_discount_percentage', e.target.value)}
-                  disabled={role !== 'SUPER_ADMIN'}
+                  disabled={role !== 'SUPER_ADMIN' && role !== 'DEVELOPER'}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label>Active Billing Policy</Label>
                 <Select
-                  disabled={role !== 'SUPER_ADMIN'}
+                  disabled={role !== 'SUPER_ADMIN' && role !== 'DEVELOPER'}
                   value={globalSettings.active_billing_policy}
                   onValueChange={val => setGlobalSettings({ ...globalSettings, active_billing_policy: val })}
                 >
@@ -141,7 +141,7 @@ export function RentalSettingsClient({
                 </Select>
               </div>
             </div>
-            {role === 'SUPER_ADMIN' && (
+            {(role === 'SUPER_ADMIN' || role === 'DEVELOPER') && (
               <Button type="submit" disabled={isUpdatingSettings}>
                 {isUpdatingSettings && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Save Global Settings
@@ -198,7 +198,7 @@ export function RentalSettingsClient({
                         <Button size="sm" onClick={() => handleEquipmentSubmit(item.id)} disabled={isUpdatingEquipment}>
                           {isUpdatingEquipment ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : null} Save
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => setEditingEquipment(null)} disabled={isUpdatingEquipment}>Cancel</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setEditingEquipment(null)} disabled={isUpdatingEquipment} data-no-track>Cancel</Button>
                       </TableCell>
                     </>
                   ) : (

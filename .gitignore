@@ -43,3 +43,6 @@ next-env.d.ts
 # agents
 .agent/
 .agents/
+
+# local-only admin scripts (not for version control)
+scripts/reset-password.js

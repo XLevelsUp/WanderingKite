@@ -426,7 +426,7 @@ export default async function EquipmentPage({
     .single();
 
   const isEmployee = profile?.role === 'EMPLOYEE';
-  const isSuperAdmin = profile?.role === 'SUPER_ADMIN';
+  const isSuperAdmin = profile?.role === 'SUPER_ADMIN' || profile?.role === 'DEVELOPER';
 
   const [categories, branches] = await Promise.all([
     getCategories().catch(() => []),

@@ -432,6 +432,7 @@ export function AttendanceGrid({
               <button
                 type='button'
                 onClick={() => !isPending && setEditingCell(null)}
+                data-no-track
                 className='text-foreground/40 hover:text-foreground/70 p-1.5 rounded-lg hover:bg-white/5 transition-colors mt-0.5'
               >
                 <X className='w-4 h-4' />
@@ -539,6 +540,7 @@ export function AttendanceGrid({
                   type='button'
                   onClick={() => !isPending && setEditingCell(null)}
                   disabled={isPending}
+                  data-no-track
                   className='px-5 py-2.5 rounded-xl border border-white/12 text-sm font-medium text-foreground/60 hover:text-foreground hover:bg-white/5 transition-all'
                 >
                   Cancel
@@ -631,6 +633,7 @@ export function AttendanceGrid({
               <button
                 type='button'
                 onClick={() => !settingsPending && setShowSettings(false)}
+                data-no-track
                 className='text-foreground/40 hover:text-foreground/70 p-1.5 rounded-lg hover:bg-white/5 transition-colors'
               >
                 <X className='w-4 h-4' />
@@ -639,16 +642,18 @@ export function AttendanceGrid({
 
             {/* Tabs */}
             <div className='flex border-b border-primary/12'>
-              <button 
-                type='button' 
+              <button
+                type='button'
                 onClick={() => setSettingsTab('ATTENDANCE')}
+                data-no-track
                 className={`flex-1 py-3 text-xs font-semibold border-b-2 transition-colors ${settingsTab === 'ATTENDANCE' ? 'border-primary text-primary' : 'border-transparent text-foreground/50 hover:text-foreground/80'}`}
               >
                 Attendance Policy
               </button>
-              <button 
-                type='button' 
+              <button
+                type='button'
                 onClick={() => setSettingsTab('COMPLIANCE')}
+                data-no-track
                 className={`flex-1 py-3 text-xs font-semibold border-b-2 transition-colors ${settingsTab === 'COMPLIANCE' ? 'border-primary text-primary' : 'border-transparent text-foreground/50 hover:text-foreground/80'}`}
               >
                 Statutory Compliance
@@ -890,6 +895,7 @@ export function AttendanceGrid({
                   type='button'
                   onClick={() => !settingsPending && setShowSettings(false)}
                   disabled={settingsPending}
+                  data-no-track
                   className='px-4 py-2.5 rounded-xl border border-white/12 text-xs font-semibold text-foreground/60 hover:text-foreground hover:bg-white/5 transition-all'
                 >
                   Close

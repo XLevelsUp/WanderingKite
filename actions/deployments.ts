@@ -201,7 +201,7 @@ export async function quickReturnAction(
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
   const isOwner = existing.employeeId === user.id;
-  if (profile?.role !== 'ADMIN' && profile?.role !== 'SUPER_ADMIN' && !isOwner) {
+  if (profile?.role !== 'ADMIN' && profile?.role !== 'SUPER_ADMIN' && profile?.role !== 'DEVELOPER' && !isOwner) {
     return { success: false, error: 'Unauthorized to return this equipment.' };
   }
 
@@ -257,7 +257,7 @@ export async function createAssignmentAction(
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
   const isSelfAssignment = employeeId === user.id;
-  if (profile?.role !== 'ADMIN' && profile?.role !== 'SUPER_ADMIN' && !isSelfAssignment) {
+  if (profile?.role !== 'ADMIN' && profile?.role !== 'SUPER_ADMIN' && profile?.role !== 'DEVELOPER' && !isSelfAssignment) {
     return { success: false, error: 'Unauthorized to create assignment for another user.' };
   }
 

@@ -17,6 +17,13 @@ export async function startSession(): Promise<string | null> {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+  if (profile?.role === 'DEVELOPER') return null;
+
   const { ip, ua } = getRequestMeta(await headers());
 
   const { data, error } = await supabase

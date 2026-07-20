@@ -157,7 +157,7 @@ export function EditContentButton({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={busy} data-no-track>
               Cancel
             </Button>
             <Button onClick={save} disabled={busy}>

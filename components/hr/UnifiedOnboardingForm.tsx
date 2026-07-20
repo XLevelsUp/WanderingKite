@@ -288,6 +288,7 @@ export function UnifiedOnboardingForm({ branches, managers, nextEmployeeNumber }
                     type='button'
                     onClick={() => setShowPassword(!showPassword)}
                     className='absolute right-3 top-1/2 -translate-y-1/2 text-foreground/30 hover:text-foreground/60 transition-colors'
+                    data-no-track
                   >
                     {showPassword ? <EyeOff className='w-4 h-4' /> : <Eye className='w-4 h-4' />}
                   </button>

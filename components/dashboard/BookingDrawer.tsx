@@ -257,15 +257,15 @@ export function BookingDrawer({
                 <h2 className="text-lg font-bold text-white">Booking Details</h2>
                 <p className="text-xs text-slate-400 capitalize">{bookingType?.replace('_', ' ').toLowerCase()}</p>
               </div>
-              <Button variant="ghost" size="icon" onClick={onClose} className="text-slate-400 hover:text-white rounded-full">
+              <Button variant="ghost" size="icon" onClick={onClose} data-no-track className="text-slate-400 hover:text-white rounded-full">
                 <X className="h-5 w-5" />
               </Button>
             </div>
 
             <div className="flex px-4 py-2 gap-4 border-b border-slate-800 bg-slate-900/30">
-              <button onClick={() => setActiveTab('DETAILS')} className={`text-sm font-semibold pb-2 border-b-2 ${activeTab === 'DETAILS' ? 'border-amber-500 text-amber-500' : 'border-transparent text-slate-500'}`}>Details</button>
-              {bookingType !== 'RENTAL' && <button onClick={() => setActiveTab('PAYMENTS')} className={`text-sm font-semibold pb-2 border-b-2 ${activeTab === 'PAYMENTS' ? 'border-amber-500 text-amber-500' : 'border-transparent text-slate-500'}`}>Payments</button>}
-              <button onClick={() => setActiveTab('WORKFLOW')} className={`text-sm font-semibold pb-2 border-b-2 ${activeTab === 'WORKFLOW' ? 'border-amber-500 text-amber-500' : 'border-transparent text-slate-500'}`}>Workflow</button>
+              <button onClick={() => setActiveTab('DETAILS')} data-no-track className={`text-sm font-semibold pb-2 border-b-2 ${activeTab === 'DETAILS' ? 'border-amber-500 text-amber-500' : 'border-transparent text-slate-500'}`}>Details</button>
+              {bookingType !== 'RENTAL' && <button onClick={() => setActiveTab('PAYMENTS')} data-no-track className={`text-sm font-semibold pb-2 border-b-2 ${activeTab === 'PAYMENTS' ? 'border-amber-500 text-amber-500' : 'border-transparent text-slate-500'}`}>Payments</button>}
+              <button onClick={() => setActiveTab('WORKFLOW')} data-no-track className={`text-sm font-semibold pb-2 border-b-2 ${activeTab === 'WORKFLOW' ? 'border-amber-500 text-amber-500' : 'border-transparent text-slate-500'}`}>Workflow</button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">

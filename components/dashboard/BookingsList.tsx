@@ -439,6 +439,7 @@ export default function BookingsList({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
+            data-no-track
             className={`whitespace-nowrap px-4 py-2 text-sm font-medium transition-colors relative ${activeTab === tab.id ? 'text-amber-500' : 'text-slate-400 hover:text-slate-200'
               }`}
           >
@@ -478,7 +479,7 @@ export default function BookingsList({
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 mt-4">
-            <Button variant="outline" className="border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white" onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>
+            <Button variant="outline" className="border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white" onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))} data-no-track>
               Cancel
             </Button>
             <Button
@@ -550,7 +551,7 @@ export default function BookingsList({
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
             <DialogClose asChild>
-              <Button type="button" variant="outline" className="border-slate-800 hover:bg-slate-800 text-slate-355 rounded-lg">
+              <Button type="button" variant="outline" data-no-track className="border-slate-800 hover:bg-slate-800 text-slate-355 rounded-lg">
                 Cancel
               </Button>
             </DialogClose>

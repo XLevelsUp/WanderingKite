@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { clientSchema } from '@/lib/validations/schemas';
+import { clientSchema, CLIENT_SOURCES, type ClientSource } from '@/lib/validations/schemas';
 import { parseSupabaseError } from '@/lib/errorHandler';
 import { writeAuditLog } from '@/lib/audit';
 
@@ -30,20 +30,31 @@ export async function createNewClient(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const rawSource = (formData.get('source') as string) || undefined;
   const rawData = {
     name: formData.get('name') as string,
     email: formData.get('email') as string,
     phone: (formData.get('phone') as string) || undefined,
     address: (formData.get('address') as string) || undefined,
     govtId: (formData.get('govt_id') as string) || undefined,
+    source: rawSource as any,
+    sourceDetail: rawSource === 'OTHER'
+      ? ((formData.get('source_detail') as string) || undefined)
+      : undefined,
   };
 
   // Validate
   const validatedData = clientSchema.parse(rawData);
 
+  const { source, sourceDetail, govtId, ...rest } = validatedData;
   const { data, error } = await supabase
     .from('clients')
-    .insert(validatedData)
+    .insert({
+      ...rest,
+      govtId,
+      source: source ?? null,
+      source_detail: source === 'OTHER' ? (sourceDetail ?? null) : null,
+    })
     .select()
     .single();
 
@@ -78,20 +89,31 @@ export async function updateClient(id: string, formData: FormData) {
     .eq('id', id)
     .single();
 
+  const rawSource = (formData.get('source') as string) || undefined;
   const rawData = {
     name: formData.get('name') as string,
     email: formData.get('email') as string,
     phone: (formData.get('phone') as string) || undefined,
     address: (formData.get('address') as string) || undefined,
     govtId: (formData.get('govt_id') as string) || undefined,
+    source: rawSource as any,
+    sourceDetail: rawSource === 'OTHER'
+      ? ((formData.get('source_detail') as string) || undefined)
+      : undefined,
   };
 
   // Validate
   const validatedData = clientSchema.parse(rawData);
 
+  const { source, sourceDetail, govtId, ...rest } = validatedData;
   const { data, error } = await supabase
     .from('clients')
-    .update(validatedData)
+    .update({
+      ...rest,
+      govtId,
+      source: source ?? null,
+      source_detail: source === 'OTHER' ? (sourceDetail ?? null) : null,
+    })
     .eq('id', id)
     .select()
     .single();
@@ -149,5 +171,49 @@ export async function deleteClient(id: string) {
     });
   }
 
+  revalidatePath('/dashboard/clients');
+}
+
+// Update only the referral source for an existing client
+export async function updateClientSource(
+  id: string,
+  source: ClientSource | null,
+  sourceDetail: string | null,
+): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
+
+  // Validate source value if provided
+  if (source !== null && !(CLIENT_SOURCES as readonly string[]).includes(source)) {
+    throw new Error('Invalid source value');
+  }
+
+  const { data: oldRow } = await supabase
+    .from('clients')
+    .select('source, source_detail')
+    .eq('id', id)
+    .single();
+
+  const { error } = await supabase
+    .from('clients')
+    .update({
+      source: source ?? null,
+      source_detail: source === 'OTHER' ? (sourceDetail ?? null) : null,
+    })
+    .eq('id', id);
+
+  if (error) throw new Error(parseSupabaseError(error, 'Failed to update referral source'));
+
+  await writeAuditLog(supabase, {
+    user_id: user.id,
+    action: 'UPDATE_CLIENT_SOURCE',
+    table_name: 'clients',
+    record_id: id,
+    old_data: oldRow,
+    new_data: { source, source_detail: source === 'OTHER' ? sourceDetail : null },
+  });
+
+  revalidatePath(`/dashboard/clients/${id}`);
   revalidatePath('/dashboard/clients');
 }

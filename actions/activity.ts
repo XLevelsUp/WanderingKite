@@ -4,8 +4,8 @@ import { adminAuthClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 
-/** Only SUPER_ADMIN may read staff activity data — mirrors the audit-logs page gate. */
-async function requireSuperAdmin() {
+/** Only developer accounts may read staff activity data — mirrors the audit-logs page gate. */
+async function requireDeveloper() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -18,7 +18,7 @@ async function requireSuperAdmin() {
     .eq('id', user.id)
     .single();
 
-  if (!profile || profile.role !== 'SUPER_ADMIN') {
+  if (!profile || profile.role !== 'DEVELOPER') {
     throw new Error('Forbidden');
   }
 }
@@ -78,7 +78,7 @@ export interface LoginActivityRow {
 export async function getLoginActivity(
   query: ActivityQuery = {}
 ): Promise<LoginActivityRow[]> {
-  await requireSuperAdmin();
+  await requireDeveloper();
   const limit = query.limit ?? DEFAULT_LIMIT;
 
   let dbQuery = adminAuthClient
@@ -166,7 +166,7 @@ function maybeCleanupOldClickEvents() {
 export async function getClickEvents(
   query: ActivityQuery = {}
 ): Promise<ClickEventRow[]> {
-  await requireSuperAdmin();
+  await requireDeveloper();
   maybeCleanupOldClickEvents();
   const limit = query.limit ?? DEFAULT_LIMIT;
 
@@ -219,7 +219,7 @@ export interface ClickLeaderboardRow {
 export async function getClickLeaderboard(
   days?: number
 ): Promise<ClickLeaderboardRow[]> {
-  await requireSuperAdmin();
+  await requireDeveloper();
 
   const { data, error } = await adminAuthClient.rpc('get_click_leaderboard', {
     p_days: days ?? null,
@@ -257,7 +257,7 @@ export interface AuditLogRow {
 export async function getAuditLog(
   query: ActivityQuery = {}
 ): Promise<AuditLogRow[]> {
-  await requireSuperAdmin();
+  await requireDeveloper();
   const limit = query.limit ?? DEFAULT_LIMIT;
 
   let dbQuery = adminAuthClient

@@ -16,6 +16,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useNotify } from '@/hooks/useNotify';
 import { Loader2 } from 'lucide-react';
+import { SourcePicker } from '@/components/dashboard/SourcePicker';
 
 export function NewClientForm() {
   const router = useRouter();
@@ -111,6 +112,8 @@ export function NewClientForm() {
               disabled={isLoading}
             />
           </div>
+
+          <SourcePicker disabled={isLoading} />
 
           <div className="flex gap-4 pt-4">
             <Button type="submit" disabled={isLoading} className="gap-2">

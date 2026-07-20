@@ -24,7 +24,7 @@ export default async function NewEmployeeRedirectPage() {
     .single();
 
   // Only admins can create employees; redirect to the unified HR onboarding page
-  if (profile?.role === 'SUPER_ADMIN' || profile?.role === 'ADMIN') {
+  if (profile?.role === 'SUPER_ADMIN' || profile?.role === 'ADMIN' || profile?.role === 'DEVELOPER') {
     redirect('/admin/employees/new');
   }
 

@@ -147,6 +147,7 @@ export function BulkAttendanceModal({ employees }: BulkAttendanceModalProps) {
           </div>
           <button
             onClick={() => !isPending && setOpen(false)}
+            data-no-track
             className='text-foreground/40 hover:text-foreground/70 p-1 rounded-lg hover:bg-white/5 transition-colors mt-0.5'
           >
             <X className='w-5 h-5' />
@@ -162,6 +163,7 @@ export function BulkAttendanceModal({ employees }: BulkAttendanceModalProps) {
               setResult(null);
               setActiveTab('single');
             }}
+            data-no-track
             className={`py-3 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all ${
               activeTab === 'single'
                 ? 'border-primary text-primary'
@@ -177,6 +179,7 @@ export function BulkAttendanceModal({ employees }: BulkAttendanceModalProps) {
               setResult(null);
               setActiveTab('range');
             }}
+            data-no-track
             className={`py-3 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all ${
               activeTab === 'range'
                 ? 'border-primary text-primary'
@@ -372,6 +375,7 @@ export function BulkAttendanceModal({ employees }: BulkAttendanceModalProps) {
             <button
               onClick={() => !isPending && setOpen(false)}
               disabled={isPending}
+              data-no-track
               className='px-5 py-2.5 rounded-xl border border-white/12 text-sm font-medium text-foreground/60 hover:text-foreground hover:bg-white/5 transition-all'
             >
               Cancel

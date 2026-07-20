@@ -228,6 +228,7 @@ export function PricingPlansManager({
                     className="h-7 text-xs text-muted-foreground hover:text-foreground"
                     onClick={() => setEditingIndex(null)}
                     disabled={disabled}
+                    data-no-track
                   >
                     Cancel
                   </Button>

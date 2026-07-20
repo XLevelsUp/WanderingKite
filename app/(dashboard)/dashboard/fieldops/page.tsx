@@ -161,7 +161,7 @@ export default async function DeploymentsPage() {
     .eq('id', user.id)
     .single();
 
-  const isAdmin = profile?.role === 'ADMIN' || profile?.role === 'SUPER_ADMIN';
+  const isAdmin = profile?.role === 'ADMIN' || profile?.role === 'SUPER_ADMIN' || profile?.role === 'DEVELOPER';
 
   return (
     <div className="relative space-y-8 min-h-[500px]">

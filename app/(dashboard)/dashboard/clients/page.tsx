@@ -21,6 +21,7 @@ import { hasAccess } from '@/lib/access';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, UserCheck, Activity } from 'lucide-react';
 import { logger } from '@/lib/logger';
+import { sourceLabel } from '@/lib/sourceUtils';
 
 export default async function ClientsPage() {
   const supabase = await createClient();
@@ -33,7 +34,7 @@ export default async function ClientsPage() {
     .eq('id', user.id)
     .single();
 
-  const isSuperAdmin = profile?.role === 'SUPER_ADMIN';
+  const isSuperAdmin = profile?.role === 'SUPER_ADMIN' || profile?.role === 'DEVELOPER';
 
   if (!hasAccess(profile?.role ?? 'EMPLOYEE', '/dashboard/clients')) {
     redirect('/dashboard');
@@ -43,10 +44,16 @@ export default async function ClientsPage() {
   const { data: clients, error } = await supabase
     .from('clients')
     .select('*, client_services(type), photography_bookings(status, date_time, created_at), rental_bookings(status, start_date, created_at), studio_bookings(status, date_time, created_at)')
+    .is('deletedAt', null)
     .order('createdAt', { ascending: false });
 
   if (error) {
-    logger.error('Error loading clients in ERP:', error);
+    logger.error('Error loading clients in ERP:', {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+    });
   }
 
   const clientsWithActivity = (clients || []).map((client: any) => {
@@ -137,7 +144,22 @@ export default async function ClientsPage() {
                     'Unnamed';
                   return (
                     <TableRow key={client.id} className="border-slate-850 hover:bg-slate-800/20 transition-colors">
-                      <TableCell className="font-semibold text-white">{clientName}</TableCell>
+                      <TableCell className="font-semibold text-white">
+                        <div className="flex flex-col gap-0.5">
+                          <span>{clientName}</span>
+                          {(() => {
+                            const src = sourceLabel(client.source);
+                            return src ? (
+                              <span className="text-[10px] text-slate-400 font-normal">
+                                {src.emoji} via {src.label}
+                                {client.source === 'OTHER' && client.source_detail
+                                  ? ` — ${client.source_detail}`
+                                  : ''}
+                              </span>
+                            ) : null;
+                          })()}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-slate-300">
                         <div className="text-xs space-y-0.5">
                           <div>{client.email}</div>

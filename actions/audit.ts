@@ -5,8 +5,47 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { logger } from '@/lib/logger';
 
+async function requireDeveloper() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile || profile.role !== 'DEVELOPER') {
+    throw new Error('Forbidden');
+  }
+}
+
+async function requireAdmin() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile || !['ADMIN', 'SUPER_ADMIN', 'DEVELOPER'].includes(profile.role)) {
+    throw new Error('Forbidden');
+  }
+}
+
 export async function getAuditClashLogs() {
-  // Use admin client to bypass RLS (only admins can access this page anyway)
+  // Only developer accounts may read this — mirrors the audit-logs page gate.
+  await requireDeveloper();
+
+  // Use admin client to bypass RLS
   const { data: logs, error } = await adminAuthClient
     .from('audit_clash_logs')
     .select('*')
@@ -47,7 +86,11 @@ export async function getAuditClashLogs() {
 }
 
 export async function getStudioBookingConflicts() {
-  // Use admin client to bypass RLS for admins
+  // Booking conflict resolution is an operational task for ADMIN/SUPER_ADMIN/
+  // DEVELOPER, separate from the developer-only audit-logs page.
+  await requireAdmin();
+
+  // Use admin client to bypass RLS
   const { data: conflicts, error } = await adminAuthClient
     .from('studio_booking_conflicts')
     .select('*')
@@ -99,12 +142,12 @@ export async function resolveStudioBookingConflict(
       .eq('id', user.id)
       .single();
 
-    if (!profile || !['ADMIN', 'SUPER_ADMIN'].includes(profile.role)) {
+    if (!profile || !['ADMIN', 'SUPER_ADMIN', 'DEVELOPER'].includes(profile.role)) {
       return { success: false, error: 'Forbidden' };
     }
 
-    // Only SUPER_ADMIN is allowed to approve overrides and bypass booking checks
-    if (status === 'approved' && profile.role !== 'SUPER_ADMIN') {
+    // Only SUPER_ADMIN/DEVELOPER is allowed to approve overrides and bypass booking checks
+    if (status === 'approved' && profile.role !== 'SUPER_ADMIN' && profile.role !== 'DEVELOPER') {
       return { success: false, error: 'Unauthorized: Only Super Admins can approve booking overrides.' };
     }
 
@@ -194,7 +237,7 @@ export async function resolveStudioBookingConflict(
       return { success: false, error: error.message };
     }
 
-    revalidatePath('/dashboard/audit-logs');
+    revalidatePath('/dashboard/booking-conflicts');
     revalidatePath('/dashboard');
     revalidatePath('/client/dashboard');
     return { success: true };

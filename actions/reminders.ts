@@ -19,7 +19,7 @@ async function requireAdminOrSuper() {
     .eq('id', user.id)
     .single();
 
-  if (!profile || !['ADMIN', 'SUPER_ADMIN'].includes(profile.role)) {
+  if (!profile || !['ADMIN', 'SUPER_ADMIN', 'DEVELOPER'].includes(profile.role)) {
     throw new Error('Unauthorized');
   }
   return { supabase, user, role: profile.role };

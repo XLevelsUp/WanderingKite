@@ -102,6 +102,8 @@ export default async function ClientDetailPage({
     gender: client.gender,
     isActive: client.is_active,
     createdAt: client.createdAt,
+    source: client.source ?? null,
+    sourceDetail: client.source_detail ?? null,
   };
 
   const servicePriority: Record<string, number> = {

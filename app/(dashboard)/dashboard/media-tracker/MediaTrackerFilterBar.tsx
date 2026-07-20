@@ -76,7 +76,7 @@ export function MediaTrackerFilterBar({
             updateFilters(query, val, employee);
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger data-no-track>
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -97,7 +97,7 @@ export function MediaTrackerFilterBar({
             updateFilters(query, status, val);
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger data-no-track>
             <SelectValue placeholder="All Employees" />
           </SelectTrigger>
           <SelectContent>

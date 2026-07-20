@@ -343,6 +343,7 @@ export function RemindersWidget({ reminders }: { reminders: Reminder[] }) {
               variant="outline"
               onClick={() => setEditorOpen(false)}
               disabled={busy}
+              data-no-track
               className="border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white"
             >
               Cancel
@@ -372,6 +373,7 @@ export function RemindersWidget({ reminders }: { reminders: Reminder[] }) {
               variant="outline"
               onClick={() => setDeleting(null)}
               disabled={busy}
+              data-no-track
               className="border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white"
             >
               Cancel

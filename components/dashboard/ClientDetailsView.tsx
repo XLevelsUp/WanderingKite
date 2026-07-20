@@ -27,7 +27,13 @@ import {
   Image as ImageIcon,
   Link as LinkIcon,
   Wrench,
+  Share2,
+  Pencil,
 } from 'lucide-react';
+import { SourcePicker, SourcePickerControlled } from '@/components/dashboard/SourcePicker';
+import { sourceLabel } from '@/lib/sourceUtils';
+import type { ClientSource } from '@/lib/validations/schemas';
+import { updateClientSource } from '@/actions/clients';
 import { BookingDrawer } from './BookingDrawer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -118,6 +124,8 @@ interface ClientProfile {
   gender: string | null;
   isActive: boolean;
   createdAt: string;
+  source?: ClientSource | null;
+  sourceDetail?: string | null;
 }
 
 interface IdProof {
@@ -164,6 +172,27 @@ export default function ClientDetailsView({
   const [photographyBookings, setPhotographyBookings] = useState<PhotographyBooking[]>(initialPhotographyBookings);
   const [rentalBookings, setRentalBookings] = useState<RentalBooking[]>(initialRentalBookings);
   const [studioBookings, setStudioBookings] = useState<StudioBooking[]>(initialStudioBookings);
+
+  // Source / referral edit state
+  const [isEditingSource, setIsEditingSource] = useState(false);
+  const [isSavingSource, setIsSavingSource] = useState(false);
+  // Tracks what is staged in the SourcePicker before saving
+  const [pendingSource, setPendingSource] = useState<ClientSource | null>(initialClient.source ?? null);
+  const [pendingDetail, setPendingDetail] = useState<string>(initialClient.sourceDetail ?? '');
+
+  const handleSaveSource = async () => {
+    setIsSavingSource(true);
+    try {
+      await updateClientSource(client.id, pendingSource, pendingDetail || null);
+      setClient((prev) => ({ ...prev, source: pendingSource, sourceDetail: pendingDetail || null }));
+      setIsEditingSource(false);
+      toast.success('Referral source updated.');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save source.');
+    } finally {
+      setIsSavingSource(false);
+    }
+  };
 
   // Sync state with updated initial props on router.refresh()
   useEffect(() => {
@@ -1354,6 +1383,85 @@ export default function ClientDetailsView({
                   <span className="capitalize">Gender: {client.gender.toLowerCase()}</span>
                 </div>
               )}
+              {/* Source / Referral channel — inline editable */}
+              <div className="border-t border-slate-800/60 pt-3 mt-1">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-slate-500 font-semibold uppercase flex items-center gap-1.5">
+                    <Share2 className="h-3.5 w-3.5" /> Referral Source
+                  </span>
+                  {!isEditingSource && (
+                    <button
+                      type="button"
+                      data-no-track
+                      onClick={() => {
+                        setPendingSource(client.source ?? null);
+                        setPendingDetail(client.sourceDetail ?? '');
+                        setIsEditingSource(true);
+                      }}
+                      className="inline-flex items-center gap-1 text-[10px] text-slate-500 hover:text-amber-400 transition-colors"
+                    >
+                      <Pencil className="h-3 w-3" />
+                      {client.source ? 'Edit' : 'Set'}
+                    </button>
+                  )}
+                </div>
+
+                {!isEditingSource ? (
+                  // ── Read-only display ──
+                  (() => {
+                    const src = sourceLabel(client.source);
+                    return src ? (
+                      <p className="text-sm">
+                        <span className="font-semibold text-white">{src.emoji} {src.label}</span>
+                        {client.source === 'OTHER' && client.sourceDetail && (
+                          <span className="text-slate-400"> — {client.sourceDetail}</span>
+                        )}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-slate-500 italic">Not set</p>
+                    );
+                  })()
+                ) : (
+                  // ── Inline edit mode ──
+                  <AnimatePresence>
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-3"
+                    >
+                      {/* Controlled SourcePicker — intercepts pill clicks via callbacks */}
+                      <SourcePickerControlled
+                        value={pendingSource}
+                        detail={pendingDetail}
+                        onChangeSource={setPendingSource}
+                        onChangeDetail={setPendingDetail}
+                        disabled={isSavingSource}
+                      />
+                      <div className="flex gap-2 pt-1">
+                        <Button
+                          size="sm"
+                          onClick={handleSaveSource}
+                          disabled={isSavingSource}
+                          className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs h-7 px-3"
+                        >
+                          {isSavingSource ? 'Saving…' : 'Save'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          data-no-track
+                          onClick={() => setIsEditingSource(false)}
+                          disabled={isSavingSource}
+                          className="text-slate-400 hover:bg-slate-900/50 text-xs h-7 px-3"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-800">
                 <div className="bg-slate-950 rounded-xl p-3 border border-slate-800/60">
                   <div className="text-[10px] text-slate-500 font-semibold uppercase mb-1">Total Bookings</div>
@@ -1473,6 +1581,7 @@ export default function ClientDetailsView({
                           variant="ghost"
                           size="sm"
                           onClick={() => setIsRejectingId(false)}
+                          data-no-track
                           className="text-slate-400 hover:bg-slate-900/50"
                         >
                           Cancel
@@ -1500,30 +1609,35 @@ export default function ClientDetailsView({
               <div className="flex gap-6 overflow-x-auto hide-scrollbar">
                 <button
                   onClick={() => { setActiveTab('pending'); setVisibleCompleted(5); }}
+                  data-no-track
                   className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${activeTab === 'pending' ? 'border-amber-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
                 >
                   Pending Requests {pendingBookings.length > 0 && <span className="ml-1.5 bg-amber-500/20 text-amber-500 py-0.5 px-2 rounded-full text-[10px]">{pendingBookings.length}</span>}
                 </button>
                 <button
                   onClick={() => { setActiveTab('active'); setVisibleCompleted(5); }}
+                  data-no-track
                   className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${activeTab === 'active' ? 'border-blue-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
                 >
                   Active & Ongoing {activeBookings.length > 0 && <span className="ml-1.5 bg-blue-500/20 text-blue-400 py-0.5 px-2 rounded-full text-[10px]">{activeBookings.length}</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('completed')}
+                  data-no-track
                   className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${activeTab === 'completed' ? 'border-emerald-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
                 >
                   Shoot Completed & Archived {completedBookings.length > 0 && <span className="ml-1.5 bg-slate-800 text-slate-400 py-0.5 px-2 rounded-full text-[10px]">{completedBookings.length}</span>}
                 </button>
                 <button
                   onClick={() => { setActiveTab('editing'); setVisibleCompleted(5); }}
+                  data-no-track
                   className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${activeTab === 'editing' ? 'border-purple-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
                 >
                   In Editing {editingBookings.length > 0 && <span className="ml-1.5 bg-purple-500/20 text-purple-400 py-0.5 px-2 rounded-full text-[10px]">{editingBookings.length}</span>}
                 </button>
                 <button
                   onClick={() => { setActiveTab('handed_over'); setVisibleCompleted(5); }}
+                  data-no-track
                   className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${activeTab === 'handed_over' ? 'border-indigo-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
                 >
                   Handed Over {handedOverBookings.length > 0 && <span className="ml-1.5 bg-indigo-500/20 text-indigo-400 py-0.5 px-2 rounded-full text-[10px]">{handedOverBookings.length}</span>}
@@ -1568,7 +1682,7 @@ export default function ClientDetailsView({
                       {renderGroupedUnifiedBookings(completedBookings.slice(0, visibleCompleted))}
                       {visibleCompleted < completedBookings.length && (
                         <div className="pt-4 text-center">
-                          <Button variant="outline" className="border-slate-800 text-slate-400 hover:text-white" onClick={() => setVisibleCompleted(v => v + 5)}>
+                          <Button variant="outline" className="border-slate-800 text-slate-400 hover:text-white" onClick={() => setVisibleCompleted(v => v + 5)} data-no-track>
                             Show More
                           </Button>
                         </div>
@@ -1679,7 +1793,7 @@ export default function ClientDetailsView({
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
               <DialogClose asChild>
-                <Button type="button" variant="outline" className="border-slate-800 hover:bg-slate-800 text-slate-350 rounded-lg">
+                <Button type="button" variant="outline" data-no-track className="border-slate-800 hover:bg-slate-800 text-slate-350 rounded-lg">
                   Cancel
                 </Button>
               </DialogClose>
@@ -1784,7 +1898,7 @@ export default function ClientDetailsView({
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
               <DialogClose asChild>
-                <Button type="button" variant="outline" className="border-slate-800 hover:bg-slate-800 text-slate-350 rounded-lg">
+                <Button type="button" variant="outline" data-no-track className="border-slate-800 hover:bg-slate-800 text-slate-350 rounded-lg">
                   Cancel
                 </Button>
               </DialogClose>
@@ -2038,7 +2152,7 @@ export default function ClientDetailsView({
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
               <DialogClose asChild>
-                <Button type="button" variant="outline" className="border-slate-800 hover:bg-slate-800 text-slate-350 rounded-lg">
+                <Button type="button" variant="outline" data-no-track className="border-slate-800 hover:bg-slate-800 text-slate-350 rounded-lg">
                   Cancel
                 </Button>
               </DialogClose>
@@ -2065,7 +2179,7 @@ export default function ClientDetailsView({
             >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-white">Booking Actions</h3>
-                <Button variant="ghost" size="icon" onClick={() => setMobileActionsBooking(null)} className="h-8 w-8 text-slate-400">
+                <Button variant="ghost" size="icon" onClick={() => setMobileActionsBooking(null)} data-no-track className="h-8 w-8 text-slate-400">
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -2086,7 +2200,7 @@ export default function ClientDetailsView({
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 mt-4">
-            <Button variant="outline" className="border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white" onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>
+            <Button variant="outline" className="border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white" onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))} data-no-track>
               Cancel
             </Button>
             <Button
@@ -2158,7 +2272,7 @@ export default function ClientDetailsView({
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
             <DialogClose asChild>
-              <Button type="button" variant="outline" className="border-slate-800 hover:bg-slate-800 text-slate-350 rounded-lg">
+              <Button type="button" variant="outline" data-no-track className="border-slate-800 hover:bg-slate-800 text-slate-350 rounded-lg">
                 Cancel
               </Button>
             </DialogClose>

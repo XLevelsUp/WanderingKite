@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { ShieldAlert } from 'lucide-react';
-import { getAuditClashLogs, getStudioBookingConflicts } from '@/actions/audit';
+import { getAuditClashLogs } from '@/actions/audit';
 import { getLoginActivity, getClickEvents, getClickLeaderboard, getAuditLog } from '@/actions/activity';
 import { AuditLogsClient } from '@/components/dashboard/AuditLogsClient';
 
@@ -29,15 +29,13 @@ export default async function AuditLogsPage(props: {
 }) {
   const searchParams = await props.searchParams;
   const defaultTab =
-    searchParams?.tab === 'studio'
-      ? 'studio'
-      : searchParams?.tab === 'logins'
-        ? 'logins'
-        : searchParams?.tab === 'clicks'
-          ? 'clicks'
-          : searchParams?.tab === 'changes'
-            ? 'changes'
-            : 'equipment';
+    searchParams?.tab === 'logins'
+      ? 'logins'
+      : searchParams?.tab === 'clicks'
+        ? 'clicks'
+        : searchParams?.tab === 'changes'
+          ? 'changes'
+          : 'equipment';
 
   const supabase = await createClient();
 
@@ -50,13 +48,11 @@ export default async function AuditLogsPage(props: {
     .eq('id', user.id)
     .single();
 
-  const isSuperAdmin = profile?.role === 'SUPER_ADMIN';
-  if (!isSuperAdmin) redirect('/dashboard');
+  if (profile?.role !== 'DEVELOPER') redirect('/dashboard');
 
   // 30-day default matches AuditLogsClient's initial date-range selection —
   // keeps the first render consistent with what the filter UI shows as active.
   const clashLogs = await getAuditClashLogs();
-  const studioConflicts = await getStudioBookingConflicts();
   const loginActivity = await getLoginActivity({ days: 30 });
   const clickEvents = await getClickEvents({ days: 30 });
   const clickLeaderboard = await getClickLeaderboard(30);
@@ -76,14 +72,13 @@ export default async function AuditLogsPage(props: {
             </h1>
           </div>
           <p className="text-sm text-foreground/45 ml-11.5">
-            Scheduling conflicts, staff login activity, click analytics, and the full data-change history.
+            Equipment scheduling clashes, staff login activity, click analytics, and the full data-change history.
           </p>
         </div>
       </div>
 
       <AuditLogsClient
         clashLogs={clashLogs}
-        studioConflicts={studioConflicts}
         loginActivity={loginActivity}
         clickEvents={clickEvents}
         clickLeaderboard={clickLeaderboard}
