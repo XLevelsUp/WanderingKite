@@ -6,7 +6,15 @@
  * This is the single source of truth for all role-based permissions.
  *
  * Roles (from highest to lowest privilege):
- *   SUPER_ADMIN → Full system access including audit logs, settings, billing
+ *   DEVELOPER   → Full system access, no restrictions. Never tracked (see
+ *                 lib/audit.ts, actions/session-tracking.ts, click route).
+ *                 Exclusive audit-log visibility — see canViewAuditLogs below.
+ *                 Not selectable anywhere in the UI; seeded only via
+ *                 scripts/create-developer.js.
+ *   SUPER_ADMIN → Full system access including settings, billing. Does NOT
+ *                 see audit logs / login activity / click analytics — those
+ *                 are DEVELOPER-only now, since a super admin's own actions
+ *                 are still tracked.
  *   ADMIN       → HR & Payroll, employee management, operational dashboards
  *   EMPLOYEE    → Own profile, own payslips only
  *
@@ -16,13 +24,14 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-export type AppRole = 'SUPER_ADMIN' | 'ADMIN' | 'EMPLOYEE';
+export type AppRole = 'DEVELOPER' | 'SUPER_ADMIN' | 'ADMIN' | 'EMPLOYEE';
 
 // Role hierarchy — higher index = higher privilege
 const ROLE_RANK: Record<AppRole, number> = {
   EMPLOYEE: 0,
   ADMIN: 1,
   SUPER_ADMIN: 2,
+  DEVELOPER: 3,
 };
 
 /**
@@ -42,7 +51,7 @@ export const ROUTE_ACCESS: Record<string, AppRole> = {
   '/dashboard/fieldops':      'EMPLOYEE',
   '/dashboard/media-tracker': 'EMPLOYEE',
   '/dashboard/clients':       'ADMIN',
-  '/dashboard/audit-logs':    'SUPER_ADMIN',
+  '/dashboard/booking-conflicts': 'ADMIN',
   '/dashboard/rentals':       'ADMIN',
   '/dashboard/categories':    'ADMIN',
   '/dashboard/branches':      'ADMIN',
@@ -56,8 +65,8 @@ export const ROUTE_ACCESS: Record<string, AppRole> = {
   '/admin/payroll/payslip':   'EMPLOYEE', // Allow employees to view their own detailed payslip
   '/dashboard/rental-settings': 'ADMIN',
 
-  // ── Super Admin only ─────────────────────────────────────────────────────
-  // Removed duplicate /dashboard/audit-logs
+  // ── Developer only ────────────────────────────────────────────────────────
+  '/dashboard/audit-logs':    'DEVELOPER', // Login activity, click analytics, data-change audit log — not even SUPER_ADMIN
 };
 
 /**
@@ -79,6 +88,7 @@ export const ROLE_NAV_ACCESS = {
     canViewAdminExtras: false,    // Categories, Branches
     canViewRentalSettings: false,
     canViewMediaTracker: true,    // View-only — CRUD hidden inline for this role
+    canViewBookingConflicts: false,
   },
   ADMIN: {
     canViewEmployees: true,
@@ -94,8 +104,25 @@ export const ROLE_NAV_ACCESS = {
     canViewAdminExtras: true,
     canViewRentalSettings: true,
     canViewMediaTracker: true,
+    canViewBookingConflicts: true,
   },
   SUPER_ADMIN: {
+    canViewEmployees: true,
+    canViewEquipment: true,
+    canViewDeployments: true,
+    canViewOwnPayslips: false,
+    canViewOwnAttendance: false,
+    canViewClients: true,
+    canViewRentals: true,
+    canViewPortfolio: true,
+    canAccessHR: true,
+    canViewAuditLogs: false,
+    canViewAdminExtras: true,
+    canViewRentalSettings: true,
+    canViewMediaTracker: true,
+    canViewBookingConflicts: true,
+  },
+  DEVELOPER: {
     canViewEmployees: true,
     canViewEquipment: true,
     canViewDeployments: true,
@@ -109,6 +136,7 @@ export const ROLE_NAV_ACCESS = {
     canViewAdminExtras: true,
     canViewRentalSettings: true,
     canViewMediaTracker: true,
+    canViewBookingConflicts: true,
   },
 } satisfies Record<AppRole, Record<string, boolean>>;
 

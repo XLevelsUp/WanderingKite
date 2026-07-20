@@ -45,6 +45,13 @@ export async function writeAuditLog(
     user_agent,
   } = params;
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user_id)
+    .single();
+  if (profile?.role === 'DEVELOPER') return;
+
   const { error } = await supabase.from('audit_logs').insert({
     user_id,
     action,

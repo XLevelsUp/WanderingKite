@@ -278,6 +278,7 @@ export function Footer({ account = 'wanderingkite' }: FooterProps) {
                 href="/dashboard"
                 className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 text-sm"
                 title="Admin Dashboard"
+                rel="nofollow"
               >
                 <ShieldCheck className="h-4 w-4" />
                 <span className="sr-only">Admin Dashboard</span>

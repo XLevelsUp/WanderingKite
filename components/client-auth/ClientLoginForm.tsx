@@ -129,6 +129,7 @@ export default function ClientLoginForm() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors z-10"
                 disabled={isLoading}
+                data-no-track
               >
                 {showPassword ? (
                   <EyeOff className="h-4 w-4" />

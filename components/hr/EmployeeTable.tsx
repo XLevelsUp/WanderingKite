@@ -334,6 +334,7 @@ export function HREmployeeTable({
               <DropdownMenuTrigger asChild>
                 <Button
                   variant='ghost'
+                  data-no-track
                   className='h-8 w-8 p-0 text-primary/60 hover:text-primary hover:bg-primary/10'
                 >
                   <span className='sr-only'>Open menu</span>

@@ -14,7 +14,7 @@ export default async function AdminBookingsPage() {
     .eq('id', user.id)
     .single();
 
-  if (!profile || profile.role !== 'SUPER_ADMIN') {
+  if (!profile || (profile.role !== 'SUPER_ADMIN' && profile.role !== 'DEVELOPER')) {
     redirect('/dashboard');
   }
 

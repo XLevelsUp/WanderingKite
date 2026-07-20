@@ -229,7 +229,7 @@ export function SlotActions({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCopyOpen(false)} disabled={busy}>
+            <Button variant="outline" onClick={() => setCopyOpen(false)} disabled={busy} data-no-track>
               Cancel
             </Button>
             <Button
@@ -269,7 +269,7 @@ export function SlotActions({
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTransferOpen(false)} disabled={busy}>
+            <Button variant="outline" onClick={() => setTransferOpen(false)} disabled={busy} data-no-track>
               Cancel
             </Button>
             <Button
@@ -304,7 +304,7 @@ export function SlotActions({
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAssignOpen(false)} disabled={busy}>
+            <Button variant="outline" onClick={() => setAssignOpen(false)} disabled={busy} data-no-track>
               Cancel
             </Button>
             <Button

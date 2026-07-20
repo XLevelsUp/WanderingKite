@@ -490,7 +490,7 @@ function ConflictRow({ conflict, setConfirmDialog, setIsDeleting }: { conflict: 
   };
 
   return (
-    <Link href="/dashboard/audit-logs?tab=studio">
+    <Link href="/dashboard/booking-conflicts">
       <div className="group flex items-center gap-3 p-3 rounded-xl border border-slate-800 hover:border-amber-500/30 hover:bg-slate-800/50 transition-all cursor-pointer">
         <div className="flex-shrink-0 p-2 rounded-lg bg-slate-800/80">
           <AlertCircle className="h-4 w-4 text-rose-400" />

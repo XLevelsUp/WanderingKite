@@ -37,7 +37,7 @@ export default async function AdminLayout({
   console.log('ADMIN PROFILE:', profile);
 
   // HR section is ADMIN / SUPER_ADMIN only
-  if (!profile || !['ADMIN', 'SUPER_ADMIN'].includes(profile.role)) {
+  if (!profile || !['ADMIN', 'SUPER_ADMIN', 'DEVELOPER'].includes(profile.role)) {
     redirect('/dashboard');
   }
 
@@ -62,8 +62,12 @@ export default async function AdminLayout({
 
   return (
     <div className='min-h-screen bg-[#0A0A0B] pt-20'>
-      <SessionTracker />
-      <ClickTracker />
+      {profile?.role !== 'DEVELOPER' && (
+        <>
+          <SessionTracker />
+          <ClickTracker />
+        </>
+      )}
       <ResponsiveSidebarWrapper
         navContent={<SidebarNav profile={profile} email={user.email || ''} />}
         footerContent={footerContent}

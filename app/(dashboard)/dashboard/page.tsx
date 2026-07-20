@@ -48,7 +48,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase.from('profiles').select('role, fullName').eq('id', user.id).single();
   const isEmployee = profile?.role === 'EMPLOYEE';
-  const isSuperAdmin = profile?.role === 'SUPER_ADMIN';
+  const isSuperAdmin = profile?.role === 'SUPER_ADMIN' || profile?.role === 'DEVELOPER';
 
   if (isEmployee) {
     return <EmployeeDashboard user={user} profile={profile} />;
@@ -231,7 +231,7 @@ export default async function DashboardPage() {
     },
   ];
 
-  const isAdmin = profile?.role === 'ADMIN' || profile?.role === 'SUPER_ADMIN';
+  const isAdmin = profile?.role === 'ADMIN' || profile?.role === 'SUPER_ADMIN' || profile?.role === 'DEVELOPER';
 
   const filteredStatCards = statCards.filter((card) => {
     if (card.href === '/dashboard/clients') return isAdmin;

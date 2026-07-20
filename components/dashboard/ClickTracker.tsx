@@ -55,6 +55,7 @@ export function ClickTracker() {
         'button, a, [role="button"], [data-track-label]'
       );
       if (!el) return;
+      if (el.hasAttribute('data-no-track')) return;
 
       const label =
         el.dataset.trackLabel?.trim() ||

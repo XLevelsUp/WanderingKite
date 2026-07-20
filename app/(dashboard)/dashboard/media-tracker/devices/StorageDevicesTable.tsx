@@ -261,7 +261,7 @@ export function StorageDevicesTable({
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={busy}>
+            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={busy} data-no-track>
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={busy}>

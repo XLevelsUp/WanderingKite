@@ -33,7 +33,7 @@ async function requireAdmin() {
     .eq('id', user.id)
     .single();
 
-  if (!profile || !['ADMIN', 'SUPER_ADMIN'].includes(profile.role)) {
+  if (!profile || !['ADMIN', 'SUPER_ADMIN', 'DEVELOPER'].includes(profile.role)) {
     redirect('/dashboard');
   }
 

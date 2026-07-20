@@ -132,6 +132,7 @@ function OverrideModal({
           </div>
           <button
             onClick={onClose}
+            data-no-track
             className='text-foreground/40 hover:text-foreground/70 p-1.5 rounded-lg hover:bg-white/5 transition-colors mt-0.5'
           >
             <X className='w-4 h-4' />
@@ -349,6 +350,7 @@ function OverrideModal({
           <div className='flex justify-end gap-3'>
             <button
               onClick={onClose}
+              data-no-track
               className='px-4 py-2.5 rounded-xl border border-white/12 text-xs font-semibold text-foreground/60 hover:text-foreground hover:bg-white/5 transition-all'
             >
               Cancel
@@ -531,6 +533,7 @@ export function PayrollSummaryCard({ record, isSuperAdmin = false }: PayrollSumm
           <button
             type='button'
             onClick={() => setExpanded(!expanded)}
+            data-no-track
             className='w-full flex items-center justify-between text-[11px] text-primary/75 hover:text-primary transition-colors bg-primary/4 hover:bg-primary/8 border border-primary/10 rounded-xl px-3 py-2 font-semibold'
           >
             <span className='flex items-center gap-1.5'>

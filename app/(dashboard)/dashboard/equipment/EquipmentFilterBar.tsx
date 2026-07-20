@@ -58,7 +58,7 @@ export function EquipmentFilterBar({ categories }: { categories: any[] }) {
             updateFilters(query, val, usage);
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger data-no-track>
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
@@ -77,7 +77,7 @@ export function EquipmentFilterBar({ categories }: { categories: any[] }) {
             updateFilters(query, category, val);
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger data-no-track>
             <SelectValue placeholder="All Usages" />
           </SelectTrigger>
           <SelectContent>

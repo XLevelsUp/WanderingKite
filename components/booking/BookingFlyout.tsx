@@ -103,6 +103,7 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
                   </div>
                   <button
                     onClick={() => setExpanded(false)}
+                    data-no-track
                     className="
                       flex h-7 w-7 items-center justify-center rounded-lg
                       border border-primary/15 text-primary
@@ -152,6 +153,7 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
                 transition={{ duration: 0.18 }}
                 onClick={() => setExpanded(true)}
                 aria-label="Open quick inquiry"
+                data-no-track
                 className="
                   flex items-center gap-3 rounded-full
                   border border-primary/35

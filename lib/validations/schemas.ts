@@ -48,6 +48,18 @@ export const equipmentSchema = z.object({
 export type EquipmentFormData = z.infer<typeof equipmentSchema>;
 
 // Client Validation
+export const CLIENT_SOURCES = [
+  'INSTAGRAM',
+  'REDDIT',
+  'YOUTUBE',
+  'WHATSAPP',
+  'REFERRAL',
+  'BLOGGER',
+  'OTHER',
+] as const;
+
+export type ClientSource = (typeof CLIENT_SOURCES)[number];
+
 export const clientSchema = z.object({
   name: z.string().min(1, 'Client name is required'),
   email: z.string().email('Invalid email address'),
@@ -58,6 +70,16 @@ export const clientSchema = z.object({
     .or(z.literal('')),
   address: z.string().optional(),
   govtId: z.string().optional(),
+  source: z.enum(CLIENT_SOURCES).optional(),
+  sourceDetail: z.string().max(100, 'Details must be under 100 characters').optional(),
+}).superRefine((data, ctx) => {
+  if (data.source === 'OTHER' && !data.sourceDetail?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Please specify how they found us',
+      path: ['sourceDetail'],
+    });
+  }
 });
 
 export type ClientFormData = z.infer<typeof clientSchema>;

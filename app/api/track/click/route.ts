@@ -25,6 +25,13 @@ export async function POST(request: Request) {
     // Beacon calls have no way to surface an error — fail silently.
     if (!user) return new Response(null, { status: 204 });
 
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    if (profile?.role === 'DEVELOPER') return new Response(null, { status: 204 });
+
     const body = await request.json().catch(() => null);
     const events: ClickEventPayload[] = Array.isArray(body?.events)
       ? body.events

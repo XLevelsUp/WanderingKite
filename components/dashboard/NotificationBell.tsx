@@ -43,7 +43,7 @@ export function NotificationBell() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-      if (profile?.role === 'SUPER_ADMIN') {
+      if (profile?.role === 'SUPER_ADMIN' || profile?.role === 'DEVELOPER') {
         setIsSuperAdmin(true);
       }
     };
@@ -188,6 +188,7 @@ export function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
+        data-no-track
         className="relative p-2 rounded-full text-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors"
       >
         <Bell className="w-5 h-5" />

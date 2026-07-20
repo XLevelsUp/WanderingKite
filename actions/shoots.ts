@@ -18,7 +18,7 @@ async function requireAdmin() {
     .eq('id', user.id)
     .single();
 
-  if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SUPER_ADMIN')) {
+  if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SUPER_ADMIN' && profile.role !== 'DEVELOPER')) {
     throw new Error('Insufficient permissions');
   }
   return { supabase, user };

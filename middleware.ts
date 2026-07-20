@@ -11,7 +11,7 @@ import { createServerClient } from '@supabase/ssr';
 const { auth } = NextAuth(authConfig);
 
 // Internal paths that should never be indexed by any crawler.
-const NOINDEX_PREFIXES = ['/admin', '/dashboard', '/api', '/auth', '/client'];
+const NOINDEX_PREFIXES = ['/admin', '/dashboard', '/api', '/auth', '/client', '/login'];
 
 export default auth(async function middleware(request) {
   let response = await updateSession(request);

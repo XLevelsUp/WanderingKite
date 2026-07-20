@@ -61,7 +61,7 @@ export default async function EmployeeDetailPage({
     .eq('id', user.id)
     .single();
 
-  const isSuperAdmin = profile?.role === 'SUPER_ADMIN';
+  const isSuperAdmin = profile?.role === 'SUPER_ADMIN' || profile?.role === 'DEVELOPER';
 
   const { contract } = employee;
   const initials = (employee.fullName ?? employee.email)

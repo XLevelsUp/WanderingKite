@@ -127,6 +127,7 @@ export default function ClientDashboardWrapper({
             {subscribedServices.includes('PHOTOGRAPHY') && (
               <button
                 onClick={() => handleTabChange('PHOTOGRAPHY')}
+                data-no-track
                 className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 shrink-0 text-left w-full ${
                   activeTab === 'PHOTOGRAPHY'
                     ? 'bg-amber-500 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.15)] scale-[1.02]'
@@ -141,6 +142,7 @@ export default function ClientDashboardWrapper({
             {subscribedServices.includes('RENTALS') && (
               <button
                 onClick={() => handleTabChange('RENTALS')}
+                data-no-track
                 className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 shrink-0 text-left w-full ${
                   activeTab === 'RENTALS'
                     ? 'bg-amber-500 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.15)] scale-[1.02]'
@@ -155,6 +157,7 @@ export default function ClientDashboardWrapper({
             {subscribedServices.includes('STUDIO_SPACE') && (
               <button
                 onClick={() => handleTabChange('STUDIO_SPACE')}
+                data-no-track
                 className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 shrink-0 text-left w-full ${
                   activeTab === 'STUDIO_SPACE'
                     ? 'bg-amber-500 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.15)] scale-[1.02]'

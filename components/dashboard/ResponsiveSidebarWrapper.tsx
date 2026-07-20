@@ -64,6 +64,7 @@ export function ResponsiveSidebarWrapper({
       {/* ── Mobile / Tablet hamburger button ─────────────────── */}
       <button
         onClick={() => setIsOpen(true)}
+        data-no-track
         className="lg:hidden fixed top-[88px] left-4 z-40 p-2 rounded-xl bg-[rgba(17,17,22,0.95)] border border-primary/20 text-primary/70 hover:text-primary hover:bg-primary/10 transition-all shadow-lg backdrop-blur-sm"
         aria-label="Open navigation"
       >
@@ -91,6 +92,7 @@ export function ResponsiveSidebarWrapper({
           </span>
           <button
             onClick={() => setIsOpen(false)}
+            data-no-track
             className="p-1.5 rounded-lg text-foreground/40 hover:text-foreground hover:bg-white/5 transition-colors"
             aria-label="Close navigation"
           >

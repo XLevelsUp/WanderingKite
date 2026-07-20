@@ -37,7 +37,8 @@ lowest privilege:
 
 | Role | Rank | Intended for | Scope summary |
 |------|------|--------------|---------------|
-| `SUPER_ADMIN` | 2 | Owners / system admins | Everything, incl. clients & audit logs |
+| `DEVELOPER` | 3 | Engineering / platform maintainers | Everything SUPER_ADMIN has, plus exclusive audit-log visibility. Never tracked. |
+| `SUPER_ADMIN` | 2 | Owners / system admins | Everything except audit logs — see 2.1a |
 | `ADMIN` | 1 | Operations / HR managers | HR, payroll, rentals, portfolio, ops dashboards |
 | `EMPLOYEE` | 0 | Staff members | Own profile, own payslips, equipment, field ops |
 
@@ -47,6 +48,32 @@ requirement met by a lower role (`userRank >= requiredRank`).
 **Default / fallback role:** if a user's role is missing or unrecognized, the
 code treats them as `EMPLOYEE` (the least-privileged role) — fail-safe by
 default.
+
+### 2.1a The DEVELOPER role
+
+`DEVELOPER` is a real, first-class value in the Postgres `"UserRole"` enum
+(see migration `00047_developer_role.sql`) — not a disguised `SUPER_ADMIN`
+with a hidden marker column. Every RLS policy and inline role check that
+grants access to `ADMIN`/`SUPER_ADMIN` explicitly lists `'DEVELOPER'` too, so
+it has no restrictions anywhere in the app or database, with two deliberate
+exceptions:
+
+1. **Never tracked.** `startSession()` ([`actions/session-tracking.ts`](../actions/session-tracking.ts)),
+   the click-ingest route ([`app/api/track/click/route.ts`](../app/api/track/click/route.ts)),
+   and `writeAuditLog()` ([`lib/audit.ts`](../lib/audit.ts)) each check
+   `profiles.role === 'DEVELOPER'` and no-op. `SessionTracker`/`ClickTracker`
+   are also simply not mounted in the dashboard/admin layouts for a developer
+   account, as a client-side nicety (the server-side checks are the real
+   enforcement — a removed client component is not a security boundary).
+2. **Exclusive audit/activity visibility.** Login activity, click analytics,
+   the equipment-clash log, and the data-change audit log
+   (`/dashboard/audit-logs`) are visible **only** to `DEVELOPER` — a real
+   `SUPER_ADMIN` cannot view them. See Section 3a.
+
+`DEVELOPER` is never selectable anywhere in the employee-management UI (no
+role dropdown option, no signup flow). It is provisioned exclusively via
+[`scripts/create-developer.js`](../scripts/create-developer.js), which
+creates a Supabase Auth user and sets `profiles.role = 'DEVELOPER'` directly.
 
 ### 2.2 Client role (NextAuth)
 
@@ -78,16 +105,45 @@ more specific route overrides a general one).
 | `/dashboard/branches` | ADMIN |
 | `/dashboard/portfolio` | ADMIN |
 | `/dashboard/rental-settings` | ADMIN |
-| `/dashboard/clients` | SUPER_ADMIN |
-| `/dashboard/audit-logs` | SUPER_ADMIN |
+| `/dashboard/clients` | ADMIN |
+| `/dashboard/booking-conflicts` | ADMIN |
 | `/admin` | ADMIN |
 | `/admin/employees` | ADMIN |
 | `/admin/attendance` | ADMIN |
 | `/admin/payroll` | ADMIN |
 | `/admin/payroll/payslip` | EMPLOYEE (own detailed payslip) |
+| `/dashboard/audit-logs` | DEVELOPER (not even SUPER_ADMIN) |
 
 > **Unlisted routes are public** — `hasAccess()` allows any path that has no
 > matching rule. Add a rule when you create a page that must be restricted.
+
+### 3a. Audit logs are DEVELOPER-only, not SUPER_ADMIN-only
+
+`/dashboard/audit-logs` (login activity, click analytics, data-change audit
+log, equipment clash logs) requires `role === 'DEVELOPER'` directly — a real
+`SUPER_ADMIN` is redirected to `/dashboard` even though `SUPER_ADMIN` outranks
+every other route's minimum role. This is intentional: a super admin's own
+logins/clicks/data changes are still recorded (Section 2.1a), so letting a
+super admin read those logs would let them view a trail that includes
+themselves — deliberately restricted to `DEVELOPER` instead.
+
+Enforcement mirrors across every layer:
+- Page: `app/(dashboard)/dashboard/audit-logs/page.tsx` redirects unless
+  `profile.role === 'DEVELOPER'`.
+- Server actions: `actions/activity.ts` (`getLoginActivity`, `getClickEvents`,
+  `getClickLeaderboard`, `getAuditLog`) and `actions/audit.ts`
+  (`getAuditClashLogs`) each independently call a `requireDeveloper()` guard.
+- RLS: the `SELECT` policies on `audit_logs`, `user_sessions`, and
+  `click_events` (migration `00047_developer_role.sql`) check
+  `get_user_role(auth.uid()) = 'DEVELOPER'` instead of `'SUPER_ADMIN'`.
+
+**Studio booking conflict resolution was split out** to its own page,
+`/dashboard/booking-conflicts` (ADMIN+), because it is an operational task
+(approving/rejecting overlapping bookings), not log-viewing — it stays
+available to ADMIN/SUPER_ADMIN/DEVELOPER even though the rest of the
+audit-logs page is DEVELOPER-only. `getStudioBookingConflicts()` and
+`resolveStudioBookingConflict()` in `actions/audit.ts` use `requireAdmin()`,
+unrelated to the developer-only gate.
 
 ---
 
@@ -97,20 +153,21 @@ more specific route overrides a general one).
 each role sees in the dashboard sidebar (via `getNavAccess()` used by
 [`components/dashboard/SidebarNav.tsx`](../components/dashboard/SidebarNav.tsx)).
 
-| Capability | EMPLOYEE | ADMIN | SUPER_ADMIN |
-|------------|:-------:|:-----:|:-----------:|
-| View employees | ✅ (own) | ✅ | ✅ |
-| View equipment | ✅ | ✅ | ✅ |
-| View deployments / field ops | ✅ | ✅ | ✅ |
-| Own payslips | ✅ | — | — |
-| Own attendance | ✅ | — | — |
-| View clients | — | — | ✅ |
-| View rentals | — | ✅ | ✅ |
-| View portfolio | — | ✅ | ✅ |
-| HR access | — | ✅ | ✅ |
-| Audit logs | — | — | ✅ |
-| Admin extras (categories, branches) | — | ✅ | ✅ |
-| Rental settings | — | ✅ | ✅ |
+| Capability | EMPLOYEE | ADMIN | SUPER_ADMIN | DEVELOPER |
+|------------|:-------:|:-----:|:-----------:|:---------:|
+| View employees | ✅ (own) | ✅ | ✅ | ✅ |
+| View equipment | ✅ | ✅ | ✅ | ✅ |
+| View deployments / field ops | ✅ | ✅ | ✅ | ✅ |
+| Own payslips | ✅ | — | — | — |
+| Own attendance | ✅ | — | — | — |
+| View clients | — | ✅ | ✅ | ✅ |
+| View rentals | — | ✅ | ✅ | ✅ |
+| View portfolio | — | ✅ | ✅ | ✅ |
+| HR access | — | ✅ | ✅ | ✅ |
+| Booking conflicts | — | ✅ | ✅ | ✅ |
+| Audit logs | — | — | — | ✅ |
+| Admin extras (categories, branches) | — | ✅ | ✅ | ✅ |
+| Rental settings | — | ✅ | ✅ | ✅ |
 
 > **Note:** hiding a nav link is a UX convenience, **not** a security boundary.
 > Real enforcement happens server-side (Section 5). Never rely on the sidebar
@@ -205,3 +262,9 @@ Request
   the hosting env vars.
 - Nav visibility is cosmetic — always enforce on the server.
 - Never expose the service-role Supabase key to the client; it bypasses RLS.
+- `scripts/create-developer.js` requires `NEXT_PUBLIC_SUPABASE_URL` and
+  `SUPABASE_SERVICE_ROLE_KEY` as environment variables (loaded via
+  `node --env-file=.env.local ...`) — never hardcode credentials into a
+  script that gets committed. `scripts/seed-equipment.js` currently does
+  hardcode a service-role key in plaintext; that should be rotated and fixed
+  separately from this change.

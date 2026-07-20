@@ -152,6 +152,13 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
         </Link>
       )}
 
+      {access.canViewBookingConflicts && (
+        <Link href='/dashboard/booking-conflicts' className={getLinkClasses('/dashboard/booking-conflicts')}>
+          <ShieldAlert className='w-4 h-4 opacity-75' />
+          Booking Conflicts
+        </Link>
+      )}
+
       {/* Admin-only operational pages */}
       {profile?.role === 'SUPER_ADMIN' && (
         <Link href='/admin/bookings' className={getLinkClasses('/admin/bookings')}>

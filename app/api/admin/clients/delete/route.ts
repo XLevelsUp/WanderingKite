@@ -18,7 +18,7 @@ export async function DELETE(request: Request) {
       .eq('id', user.id)
       .single();
 
-    if (!profile || !['ADMIN', 'SUPER_ADMIN'].includes(profile.role)) {
+    if (!profile || !['ADMIN', 'SUPER_ADMIN', 'DEVELOPER'].includes(profile.role)) {
       return NextResponse.json({ error: 'forbidden' }, { status: 403 });
     }
 
@@ -44,7 +44,7 @@ export async function DELETE(request: Request) {
     const { error: softDeleteError } = await adminAuthClient
       .from('clients')
       .update({
-        deleted_at: now,
+        deletedAt: now,
         is_active: false,
       })
       .eq('id', clientId);

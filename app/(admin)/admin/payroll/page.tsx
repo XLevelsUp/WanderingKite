@@ -38,7 +38,7 @@ export default async function PayrollPage() {
   let isSuperAdmin = false;
   if (user) {
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role === 'SUPER_ADMIN') isSuperAdmin = true;
+    if (profile?.role === 'SUPER_ADMIN' || profile?.role === 'DEVELOPER') isSuperAdmin = true;
   }
 
   return (

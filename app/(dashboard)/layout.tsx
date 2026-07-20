@@ -46,8 +46,12 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] pt-20">
-      <SessionTracker />
-      <ClickTracker />
+      {profile?.role !== 'DEVELOPER' && (
+        <>
+          <SessionTracker />
+          <ClickTracker />
+        </>
+      )}
 
       {/* Non-blocking top-centre banner — persists across navigation */}
       <DueRemindersBanner reminders={dueReminders} />
