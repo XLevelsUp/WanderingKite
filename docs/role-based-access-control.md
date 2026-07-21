@@ -107,6 +107,7 @@ more specific route overrides a general one).
 | `/dashboard/rental-settings` | ADMIN |
 | `/dashboard/clients` | ADMIN |
 | `/dashboard/booking-conflicts` | ADMIN |
+| `/dashboard/invoices` | ADMIN |
 | `/admin` | ADMIN |
 | `/admin/employees` | ADMIN |
 | `/admin/attendance` | ADMIN |
@@ -165,6 +166,7 @@ each role sees in the dashboard sidebar (via `getNavAccess()` used by
 | View portfolio | — | ✅ | ✅ | ✅ |
 | HR access | — | ✅ | ✅ | ✅ |
 | Booking conflicts | — | ✅ | ✅ | ✅ |
+| Invoices | — | ✅ | ✅ | ✅ |
 | Audit logs | — | — | — | ✅ |
 | Admin extras (categories, branches) | — | ✅ | ✅ | ✅ |
 | Rental settings | — | ✅ | ✅ | ✅ |

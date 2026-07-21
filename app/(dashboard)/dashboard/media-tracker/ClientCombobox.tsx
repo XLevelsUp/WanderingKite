@@ -35,11 +35,14 @@ export function ClientCombobox({
   onValueChange,
   clients,
   onClientCreated,
+  allowCreate = true,
 }: {
   value: string;
   onValueChange: (value: string) => void;
   clients: ClientOption[];
   onClientCreated: (client: ClientOption) => void;
+  /** Hide the "Add as new client" quick-add row — used where new clients are entered via their own dedicated form instead. */
+  allowCreate?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -155,7 +158,7 @@ export function ClientCombobox({
             )}
           </ul>
 
-          {query.trim() && (
+          {allowCreate && query.trim() && (
             <button
               type="button"
               disabled={busy}

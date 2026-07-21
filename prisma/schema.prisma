@@ -47,6 +47,8 @@ model User {
 
   resolvedConflicts StudioBookingConflict[] @relation("ConflictResolver")
 
+  createdInvoices Invoice[]
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -73,7 +75,8 @@ model Client {
   studioBookings      StudioBooking[]
   idProof             ClientIdProof?
   studioBookingConflicts StudioBookingConflict[]
-  
+  invoices            Invoice[]
+
   // Soft-delete: set instead of hard-deleting the row.
   // When set, the client cannot log in (is_active is also set to false)
   // and is hidden from all admin listings.
@@ -456,4 +459,75 @@ model StudioBookingConflict {
   updatedAt                 DateTime       @updatedAt @map("updated_at")
 
   @@map("studio_booking_conflicts")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INVOICING MODELS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  CANCELLED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FLAT
+}
+
+model Invoice {
+  id              String         @id @default(uuid())
+  invoiceNumber   String         @unique @map("invoice_number")
+
+  clientId        String         @map("client_id")
+  client          Client         @relation(fields: [clientId], references: [id])
+
+  issueDate       DateTime       @default(now()) @map("issue_date") @db.Date
+  status          InvoiceStatus  @default(DRAFT)
+
+  subtotal        Int            @default(0)
+  discountType    DiscountType?  @map("discount_type")
+  discountValue   Decimal?       @map("discount_value")
+  discountAmount  Int            @default(0) @map("discount_amount")
+  taxableAmount   Int            @default(0) @map("taxable_amount")
+  gstRate         Decimal        @default(18) @map("gst_rate")
+  gstAmount       Int            @default(0) @map("gst_amount")
+  total           Int            @default(0)
+
+  businessGstin   String?        @map("business_gstin")
+  clientGstin     String?        @map("client_gstin")
+  notes           String?
+
+  createdById     String?        @map("created_by_id")
+  createdBy       User?          @relation(fields: [createdById], references: [id])
+
+  items           InvoiceItem[]
+
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id              String   @id @default(uuid())
+
+  invoiceId       String   @map("invoice_id")
+  invoice         Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  description     String
+  // 'PHOTOGRAPHY' | 'STUDIO' | 'RENTAL' | 'CUSTOM' — no FK; the source
+  // booking lives in one of three separate tables (polymorphic reference).
+  sourceType      String?  @map("source_type")
+  sourceBookingId String?  @map("source_booking_id")
+
+  quantity        Int      @default(1)
+  unitPrice       Int      @map("unit_price")
+  amount          Int
+
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("invoice_items")
 }

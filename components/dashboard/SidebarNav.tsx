@@ -19,6 +19,7 @@ import {
   Wrench,
   ShieldAlert,
   HardDrive,
+  Receipt,
 } from 'lucide-react';
 import { getNavAccess } from '@/lib/access';
 
@@ -194,6 +195,12 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
         <Link href='/dashboard/clients' className={getLinkClasses('/dashboard/clients')}>
           <Users className='w-4 h-4 opacity-75' />
           Clients
+        </Link>
+      )}
+      {access.canViewInvoices && (
+        <Link href='/dashboard/invoices' className={getLinkClasses('/dashboard/invoices')}>
+          <Receipt className='w-4 h-4 opacity-75' />
+          Invoices
         </Link>
       )}
       {/* Rentals — hidden from UI
