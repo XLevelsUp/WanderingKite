@@ -241,11 +241,9 @@ export default function RootLayout({
 
   return (
     <html lang="en" className="dark">
-      <head>
-        <ThemeProvider />
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="preconnect" href="https://scontent.cdninstagram.com" crossOrigin="anonymous" />
-      </head>
+      <ThemeProvider />
+      <link rel="preconnect" href="https://www.googletagmanager.com" />
+      <link rel="preconnect" href="https://scontent.cdninstagram.com" crossOrigin="anonymous" />
       <body className={`${inter.variable} font-sans antialiased`}>
         <NextTopLoader
           color="#f59e0b"
