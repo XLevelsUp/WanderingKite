@@ -22,7 +22,7 @@ export function ThemeProvider() {
 
   return (
     <style
-      id='brand-theme'
+      id="brand-theme"
       // nonce can be added here for strict CSP environments
       dangerouslySetInnerHTML={{ __html: css }}
     />

@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { adminAuthClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { quickReturnSchema, assignmentSchema } from '@/lib/validations/schemas';
@@ -8,6 +9,8 @@ import type {
   ActiveAssignment,
   EmployeeDeploymentGroup,
 } from '@/lib/types/deployments';
+import { parseSupabaseError } from '@/lib/errorHandler';
+import { logger } from '@/lib/logger';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // READ: Form data for Create Assignment modal
@@ -24,13 +27,13 @@ export async function getAssignmentFormData() {
   const [employeesRes, equipmentRes, clientsRes] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, fullName, email, role')
+      .select('id, fullName, email, role, employee_contracts(isActive)')
       .is('deletedAt', null)
       .in('role', ['EMPLOYEE', 'ADMIN', 'SUPER_ADMIN'])
       .order('fullName'),
     supabase
       .from('equipment')
-      .select('id, name, serialNumber, categories(name)')
+      .select('id, name, serialNumber, categories(name), category_name, is_studio_space, is_rental')
       .is('deletedAt', null)
       .eq('status', 'AVAILABLE')
       .order('name'),
@@ -41,8 +44,30 @@ export async function getAssignmentFormData() {
       .order('name'),
   ]);
 
+  if (employeesRes.error) {
+    throw new Error(parseSupabaseError(employeesRes.error, 'Failed to fetch employees.'));
+  }
+  if (equipmentRes.error) {
+    throw new Error(parseSupabaseError(equipmentRes.error, 'Failed to fetch equipment.'));
+  }
+  if (clientsRes.error) {
+    throw new Error(parseSupabaseError(clientsRes.error, 'Failed to fetch clients.'));
+  }
+
+  const rawEmployees = employeesRes.data ?? [];
+  const activeEmployees = rawEmployees.filter((profile: any) => {
+    const contracts = profile.employee_contracts;
+    if (!contracts || contracts.length === 0) return true;
+    return contracts.some((c: any) => c.isActive === true);
+  }).map((p: any) => ({
+    id: p.id,
+    fullName: p.fullName,
+    email: p.email,
+    role: p.role,
+  }));
+
   return {
-    employees: employeesRes.data ?? [],
+    employees: activeEmployees,
     equipment: equipmentRes.data ?? [],
     clients: clientsRes.data ?? [],
   };
@@ -90,8 +115,7 @@ export async function getActiveDeployments(): Promise<
     .order('"assignedAt"', { ascending: false });
 
   if (error) {
-    console.error('[getActiveDeployments] Query failed:', error.message);
-    throw new Error('Failed to fetch active deployments');
+    return [];
   }
 
   const now = Date.now();
@@ -160,9 +184,10 @@ export async function quickReturnAction(
   if (!user) return { success: false, error: 'Unauthorized' };
 
   // Verify the assignment is still active before writing
-  const { data: existing, error: fetchError } = await supabase
+  // Using adminAuthClient so employees can mark any equipment as returned (bypasses RLS)
+  const { data: existing, error: fetchError } = await adminAuthClient
     .from('equipment_assignments')
-    .select('id, returnedAt')
+    .select('id, returnedAt, employeeId')
     .eq('id', parsed.data.assignmentId)
     .is('returnedAt', null)
     .maybeSingle();
@@ -174,7 +199,13 @@ export async function quickReturnAction(
     };
   }
 
-  const { error } = await supabase
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  const isOwner = existing.employeeId === user.id;
+  if (profile?.role !== 'ADMIN' && profile?.role !== 'SUPER_ADMIN' && profile?.role !== 'DEVELOPER' && !isOwner) {
+    return { success: false, error: 'Unauthorized to return this equipment.' };
+  }
+
+  const { error } = await adminAuthClient
     .from('equipment_assignments')
     .update({
       returnedAt: new Date().toISOString(),
@@ -185,11 +216,11 @@ export async function quickReturnAction(
     .eq('id', parsed.data.assignmentId);
 
   if (error) {
-    console.error('[quickReturnAction] Update failed:', error.message);
+    logger.error('[quickReturnAction] Update failed:', error.message);
     return { success: false, error: 'Failed to mark equipment as returned' };
   }
 
-  revalidatePath('/dashboard/deployments');
+  revalidatePath('/dashboard/fieldops');
   return { success: true };
 }
 
@@ -221,32 +252,76 @@ export async function createAssignmentAction(
 
   if (!user) return { success: false, error: 'Unauthorized' };
 
-  const { equipmentId, employeeId, clientId, expectedReturn, location, notes } =
+  const { equipmentIds, employeeId, clientId, expectedReturn, location, notes, assignedAt, serviceType } =
     parsed.data;
 
-  const { error } = await supabase.from('equipment_assignments').insert({
-    equipmentId,
-    employeeId,
-    clientId: clientId ?? null,
-    expectedReturn: expectedReturn ?? null,
-    location: location ?? null,
-    notes: notes ?? null,
-    assignedBy: user.id,
-    status: 'in_field',
-  });
-
-  if (error) {
-    // Unique constraint violation = gear already assigned
-    if (error.code === '23505') {
-      return {
-        success: false,
-        error: 'This equipment already has an active assignment',
-      };
-    }
-    console.error('[createAssignmentAction] Insert failed:', error.message);
-    return { success: false, error: 'Failed to create assignment' };
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  const isSelfAssignment = employeeId === user.id;
+  if (profile?.role !== 'ADMIN' && profile?.role !== 'SUPER_ADMIN' && profile?.role !== 'DEVELOPER' && !isSelfAssignment) {
+    return { success: false, error: 'Unauthorized to create assignment for another user.' };
   }
 
-  revalidatePath('/dashboard/deployments');
+  const safeStart = assignedAt || new Date().toISOString();
+  const safeEnd = expectedReturn || '2099-01-01T00:00:00Z';
+
+  // 1. Manually check for conflicts to log them (since trigger rollback kills the log)
+  // We MUST use adminAuthClient here because regular users cannot see assignments belonging to other users due to RLS.
+  const { data: conflicts } = await adminAuthClient
+    .from('equipment_assignments')
+    .select('id, equipmentId')
+    .in('equipmentId', equipmentIds)
+    .is('returnedAt', null)
+    .lt('assignedAt', safeEnd)
+    .or(`expectedReturn.gt.${safeStart},expectedReturn.is.null`);
+
+  if (conflicts && conflicts.length > 0) {
+    // Log the clashes manually
+    const clashPayload = conflicts.map((c) => ({
+      equipment_id: c.equipmentId,
+      attempted_by: user.id,
+      attempted_start: safeStart,
+      attempted_end: expectedReturn || null,
+      conflict_with_assignment_id: c.id,
+    }));
+    const { error: auditError } = await adminAuthClient.from('audit_clash_logs').insert(clashPayload);
+    if (auditError) {
+      logger.error('[createAssignmentAction] Audit log insert failed:', auditError.message);
+    }
+
+    return {
+      success: false,
+      error: 'Conflict: One or more selected items are already assigned during these dates.',
+    };
+  }
+
+  // Insert multiple rows for each selected equipment item
+  const payload = equipmentIds.map((eqId) => ({
+    equipmentId: eqId,
+    employeeId,
+    clientId: clientId || null,
+    expectedReturn: expectedReturn || null,
+    location: location || null,
+    notes: notes || null,
+    assignedAt: assignedAt || new Date().toISOString(),
+    service_type: serviceType || null,
+    assignedBy: user.id,
+    status: 'in_field',
+  }));
+
+  const { error } = await adminAuthClient.from('equipment_assignments').insert(payload);
+
+  if (error) {
+    // Unique constraint or Trigger exception
+    if (error.code === '23505' || error.message?.includes('EQUIPMENT_CLASH')) {
+      return {
+        success: false,
+        error: 'This equipment is already booked for the selected dates. Please choose different dates or a different item.',
+      };
+    }
+    logger.error('[createAssignmentAction] Insert failed:', error.message);
+    return { success: false, error: `Unable to create assignment. Please try again or contact your admin. (${error.code || 'UNKNOWN'})` };
+  }
+
+  revalidatePath('/dashboard/fieldops');
   return { success: true };
 }

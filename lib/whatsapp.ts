@@ -2,11 +2,12 @@ import { siteConfig } from '@/config/site';
 
 export function generateWhatsAppLink(
   service?: string,
-  customMessage?: string,
+  customMessage?: string
 ): string {
   const baseMessage = customMessage || getDefaultMessage(service);
   const encodedMessage = encodeURIComponent(baseMessage);
-  return `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodedMessage}`;
+  const phone = service === 'studio' ? siteConfig.contact.studioWhatsapp : siteConfig.contact.whatsapp;
+  return `https://wa.me/${phone}?text=${encodedMessage}`;
 }
 
 function getDefaultMessage(service?: string): string {

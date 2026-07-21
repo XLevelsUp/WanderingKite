@@ -1,0 +1,163 @@
+'use client';
+
+import { ServiceCard } from '@/components/services/ServiceCard';
+import { TrustSection } from '@/components/shared/TrustSection';
+import { Footer } from '@/components/shared/Footer';
+import { HowItWorks } from '@/components/sections/HowItWorks';
+import { TechSpecs } from '@/components/sections/TechSpecs';
+import { FAQ } from '@/components/sections/FAQ';
+import { FadeIn } from '@/components/animations/FadeIn';
+import { StaggerContainer } from '@/components/animations/StaggerContainer';
+import { motion } from 'framer-motion';
+import { TeamSection } from '@/components/sections/TeamSection';
+import { Testimonials } from '@/components/sections/Testimonials';
+import { homepageTestimonials } from '@/lib/service-page-data';
+
+const services = [
+  {
+    title: 'Photography',
+    tagline: 'Event & Lifestyle',
+    description:
+      'Event and lifestyle photography that captures authentic moments with cinematic precision.',
+    iconName: 'camera' as const,
+    href: '/photography',
+    badge: 'Popular',
+    features: ['Weddings & Events', 'Commercial Shoots', 'Portrait Sessions'],
+    delay: 0,
+  },
+  {
+    title: 'Studio Space',
+    tagline: '1200 sq ft',
+    description:
+      'Premium studio facilities for photography and video production.',
+    iconName: 'studio' as const,
+    href: '/studiospace',
+    badge: 'New',
+    features: ['Infinity Wall', 'ProFoto Lighting', 'Green Screen'],
+    delay: 0.2,
+  },
+];
+
+export function HomePageClient() {
+  return (
+    <main className="min-h-screen">
+      {/* ── Hero ────────────────────────────────────────── */}
+      <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pt-20">
+        {/* Layered radial + vignette */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[rgba(46,49,69,0.30)] via-transparent to-[rgba(10,10,11,0.85)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_50%_40%,rgba(46,49,69,0.40),transparent)]" />
+
+        {/* Decorative ring — uses primary brand color */}
+        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="h-[520px] w-[520px] rounded-full border border-primary/10" />
+          <div className="absolute inset-8 rounded-full border border-primary/7" />
+        </div>
+
+        <div className="relative z-10 text-center">
+          {/* NOTE: eyebrow + h1 are NOT animated — they are the LCP elements.
+              Framer-motion entrance animations cause Chrome to report a huge
+              "Element render delay" because the node starts at opacity:0 and
+              only becomes visible after JS hydrates. Plain elements paint
+              immediately after CSS loads, cutting LCP by ~2 s. */}
+          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-primary opacity-80">
+            Creative Infrastructure
+          </p>
+
+          <h1 className="mb-6 text-5xl font-bold leading-tight sm:text-6xl md:text-7xl lg:text-8xl">
+            Where Vision
+            <br />
+            <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+              Meets Craft
+            </span>
+          </h1>
+
+          <h2 className="mx-auto mb-8 max-w-3xl text-lg text-foreground/60 md:text-xl leading-relaxed font-normal">
+            Photography · Equipment Rentals · Studio Spaces · Podcast Production
+          </h2>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="flex items-center justify-center gap-4"
+          >
+            <span className="flex items-center gap-2 text-sm text-foreground/50">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
+              Available Now
+            </span>
+            <span className="text-primary/25">•</span>
+            <span className="text-sm text-foreground/50">
+              Coimbatore, India
+            </span>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Services Grid ───────────────────────────────── */}
+      <section className="container mx-auto px-6 py-24">
+        <FadeIn>
+          <div className="mb-4 text-center">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary opacity-80">
+              What We Offer
+            </p>
+            <h2 className="text-4xl font-bold text-foreground">Our Services</h2>
+          </div>
+        </FadeIn>
+
+        <StaggerContainer className="mt-12 mx-auto grid max-w-5xl gap-6 md:grid-cols-2 lg:gap-8">
+          {services.map((svc) => (
+            <motion.div
+              key={svc.href}
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0 },
+              }}
+              className="h-full"
+            >
+              <ServiceCard
+                title={svc.title}
+                tagline={svc.tagline}
+                description={svc.description}
+                iconName={svc.iconName}
+                href={svc.href}
+                badge={svc.badge}
+                features={svc.features}
+                delay={svc.delay}
+              />
+            </motion.div>
+          ))}
+        </StaggerContainer>
+      </section>
+
+      {/* ── How It Works ────────────────────────────────── */}
+      <HowItWorks />
+
+      {/* ── Team ──────────────────────────────── */}
+      <FadeIn>
+        <TeamSection />
+      </FadeIn>
+
+      {/* ── Tech Specs ──────────────────────────────────── */}
+      <TechSpecs />
+
+      {/* ── Trust Section ───────────────────────────────── */}
+      <FadeIn>
+        <TrustSection />
+      </FadeIn>
+
+      {/* ── Testimonials ────────────────────────────────── */}
+      <FadeIn>
+        <Testimonials testimonials={homepageTestimonials} accentColor="amber" />
+      </FadeIn>
+
+      {/* ── FAQ ─────────────────────────────────────────── */}
+      <FAQ />
+
+      {/* ── Footer ──────────────────────────────────────── */}
+      <Footer />
+    </main>
+  );
+}

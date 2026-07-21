@@ -4,8 +4,6 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 enum UserRole {
@@ -33,6 +31,7 @@ model User {
   email         String    @unique
   fullName      String?
   role          UserRole  @default(EMPLOYEE)
+  phone         String?   @db.VarChar(15)
   
   // Self-relation: Manager -> Subordinates
   managerId     String?
@@ -43,6 +42,11 @@ model User {
   assignedOrders Order[]  @relation("AssignedEmployee")
   supervisedOrders Order[] @relation("Supervisor")
 
+  // HR contract (1:1)
+  contract      EmployeeContract?
+
+  resolvedConflicts StudioBookingConflict[] @relation("ConflictResolver")
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -50,18 +54,54 @@ model User {
 }
 
 model Client {
-  id          String   @id @default(uuid())
-  name        String
-  email       String   @unique
-  phone       String?
-  address     String?
-  govtId      String?
-  orders      Order[]
+  id            String          @id @default(uuid())
+  name          String
+  firstName     String?         @map("first_name")
+  lastName      String?         @map("last_name")
+  dateOfBirth   DateTime?       @map("date_of_birth")
+  phone         String?         @db.VarChar(15)
+  address       String?
+  email         String          @unique
+  gender        String?
+  passwordHash  String?         @map("password_hash")
+  isActive      Boolean         @default(true) @map("is_active")
+  govtId              String?
+  orders              Order[]
+  services            ClientService[]
+  photographyBookings PhotographyBooking[]
+  rentalBookings      RentalBooking[]
+  studioBookings      StudioBooking[]
+  idProof             ClientIdProof?
+  studioBookingConflicts StudioBookingConflict[]
   
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  // Soft-delete: set instead of hard-deleting the row.
+  // When set, the client cannot log in (is_active is also set to false)
+  // and is hidden from all admin listings.
+  deletedAt     DateTime?       @map("deleted_at")
+  
+  createdAt           DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@map("clients")
+}
+
+enum ServiceType {
+  PHOTOGRAPHY
+  RENTALS
+  STUDIO_SPACE
+}
+
+model ClientService {
+  id        String      @id @default(uuid())
+  clientId  String      @map("client_id")
+  client    Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type      ServiceType
+  
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([clientId, type])
+  @@map("client_services")
 }
 
 model Equipment {
@@ -69,10 +109,36 @@ model Equipment {
   name          String
   serialNumber  String          @unique
   status        EquipmentStatus @default(AVAILABLE)
-  rentalPrice   Float
+  pricingPlans  Json            @default("[]")   @map("pricingPlans")
   description   String?
   
+  // Visibility
+  isStudioSpace Boolean         @default(false)  @map("is_studio_space")
+  isRental      Boolean         @default(false)  @map("is_rental")
+  
+  // External Rental Rates
+  hourlyRate    Decimal?        @map("hourly_rate")
+  dailyRate     Decimal?        @map("daily_rate")
+  weeklyRate    Decimal?        @map("weekly_rate")
+
+  // Studio Space Rates
+  studioPricingPlans Json         @default("[]")   @map("studioPricingPlans")
+  studioHourlyRate   Decimal?     @map("studio_hourly_rate")
+  studioDailyRate    Decimal?     @map("studio_daily_rate")
+  studioWeeklyRate   Decimal?     @map("studio_weekly_rate")
+
+  minRentalDurationHours Int?     @map("min_rental_duration_hours")
+  securityDeposit        Decimal? @map("security_deposit")
+  latePenaltyAmount      Decimal? @map("late_penalty_amount")
+  condition              String?  @default("GOOD")
+  categoryName           String?  @map("category_name")
+  
+  availableForRental Boolean   @default(true)  @map("available_for_rental")
+  availableForStudio Boolean   @default(false) @map("available_for_studio")
+
   orderItems    OrderItem[]
+  rentalBookings RentalBooking[]
+  studioBookings StudioBooking[]
 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -118,4 +184,276 @@ model OrderItem {
   createdAt     DateTime  @default(now())
 
   @@map("order_items")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HR & PAYROLL MODELS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  HALF_DAY
+  ABSENT
+  ON_LEAVE
+}
+
+enum PayrollStatus {
+  DRAFT
+  APPROVED
+  PAID
+  REJECTED
+}
+
+/// 1:1 extension of User (profiles) — HR contract & bank details
+model EmployeeContract {
+  id                String         @id @default(uuid())
+
+  profileId         String         @unique
+  profile           User           @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  jobTitle          String         @default("Staff")
+  employmentType    EmploymentType @default(FULL_TIME)
+  baseSalary        Float          @default(0)
+  incentive         Float          @default(0)
+  joiningDate       DateTime       @db.Date
+
+  // Bank / payment details
+  bankAccountName   String?
+  bankAccountNumber String?
+  bankIFSC          String?
+  upiId             String?
+
+  avatarUrl         String?
+  notes             String?
+  isActive          Boolean        @default(true)
+  deactivatedAt     DateTime?
+
+  // Relations
+  attendanceLogs    AttendanceLog[]
+  payrollRecords    PayrollRecord[]
+
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@map("employee_contracts")
+}
+
+/// Per-employee per-day attendance record
+model AttendanceLog {
+  id           String           @id @default(uuid())
+
+  employeeId   String
+  contract     EmployeeContract @relation(fields: [employeeId], references: [profileId], onDelete: Cascade)
+
+  date         DateTime         @db.Date
+  clockIn      DateTime?        @db.Time
+  clockOut     DateTime?        @db.Time
+  status       AttendanceStatus @default(ABSENT)
+  totalHours   Float?           // Computed by DB or server action
+  markedById   String?
+
+  notes        String?
+
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([employeeId, date])
+  @@map("attendance_logs")
+}
+
+/// Monthly payroll snapshot per employee
+model PayrollRecord {
+  id               String         @id @default(uuid())
+
+  employeeId       String
+  contract         EmployeeContract @relation(fields: [employeeId], references: [profileId], onDelete: Cascade)
+
+  month            Int
+  year             Int
+  workingDays      Int            @default(26)
+  presentDays      Float          @default(0)
+  lateDays         Int            @default(0)
+
+  // Salary components (INR)
+  baseSalary       Float
+  basePay          Float          @default(0)
+  overtimeAmount   Float          @default(0)
+  bonusAmount      Float          @default(0)
+  latePenalty      Float          @default(0)
+  unpaidLeaves     Float          @default(0)
+  taxDeduction     Float          @default(0)
+  otherDeductions  Float          @default(0)
+  netPayout        Float          @default(0)
+  incentive        Float          @default(0)
+
+  status           PayrollStatus  @default(DRAFT)
+  approvedById     String?        @map("approvedBy")
+  approvedAt       DateTime?
+  paidAt           DateTime?
+  paymentRef       String?
+  notes            String?
+
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([employeeId, month, year])
+  @@map("payroll_records")
+}
+
+/// Global attendance config — always a single row
+model AttendanceSetting {
+  id                        String   @id @default(uuid())
+  studioStartTime           String   @default("09:00:00")
+  graceMinutes              Int      @default(15)
+  halfDayThresholdHours     Float    @default(4.0)
+  latePenaltyPerMinute      Float    @default(0)
+  allowedPaidLeavesPerMonth Int      @default(0)
+  updatedAt                 DateTime @updatedAt
+
+  @@map("attendance_settings")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLIENT DASHBOARD (PHASE 2) MODELS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum RentalStatus {
+  PENDING
+  CONFIRMED
+  RETURNED
+  DAMAGED
+  CANCELLED
+}
+
+enum IdProofStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model ClientIdProof {
+  id             String        @id @default(uuid())
+  clientId       String        @unique @map("client_id")
+  client         Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  idType         String        @map("id_type") // e.g. "Driving License" or "Passport"
+  fileUrl        String        @map("file_url")
+  status         IdProofStatus @default(PENDING)
+  rejectReason   String?       @map("reject_reason")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("client_id_proofs")
+}
+
+model RentalBooking {
+  id                String            @id @default(uuid())
+  clientId          String            @map("client_id")
+  client            Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  startDate         DateTime          @map("start_date")
+  endDate           DateTime          @map("end_date")
+  purpose           String?
+  status            RentalStatus      @default(PENDING)
+  pickupCondition   String?           @map("pickup_condition")
+  returnCondition   String?           @map("return_condition")
+  returnedAt        DateTime?         @map("returned_at")
+  damageCost        Int?              @map("damage_cost")
+  damageDescription String?           @map("damage_description")
+  agreementUrl      String?           @map("agreement_url")
+  equipments        Equipment[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@map("rental_bookings")
+}
+
+model StudioBooking {
+  id                String            @id @default(uuid())
+  clientId          String            @map("client_id")
+  client            Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  dateTime          DateTime          @map("date_time")
+  durationHours     Int               @map("duration_hours")
+  purpose           String
+  status            BookingStatus     @default(PENDING)
+  amountPaid        Int               @default(0) @map("amount_paid")
+  additionalCharges Int               @default(0) @map("additional_charges")
+  notes             String?
+  override          Boolean           @default(false)
+  equipments        Equipment[]
+  conflictingAttempts StudioBookingConflict[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@map("studio_bookings")
+}
+
+model PhotographyBooking {
+  id          String        @id @default(uuid())
+  clientId    String        @map("client_id")
+  client      Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  sessionType String        @map("session_type") // Portrait, Wedding, Event, Product, Other
+  dateTime    DateTime      @map("date_time")
+  location    String
+  notes       String?
+  peopleCount Int?          @map("people_count")
+  status      BookingStatus @default(PENDING)
+  amountPaid  Int           @default(0) @map("amount_paid")
+  advancePaid Int           @default(0) @map("advance_paid")
+  album       AlbumDetail?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("photography_bookings")
+}
+
+model AlbumDetail {
+  id           String             @id @default(uuid())
+  bookingId    String             @unique @map("booking_id")
+  booking      PhotographyBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  name         String
+  deliveryDate DateTime?          @map("delivery_date")
+  downloadLink String?            @map("download_link")
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@map("album_details")
+}
+
+model StudioBookingConflict {
+  id                        String         @id @default(uuid())
+  clientId                  String?        @map("client_id")
+  client                    Client?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientName                String         @map("client_name")
+  clientEmail               String         @map("client_email")
+  attemptedDateTime         DateTime       @map("attempted_date_time")
+  attemptedDurationHours    Int            @map("attempted_duration_hours")
+  attemptedPurpose          String         @map("attempted_purpose")
+  attemptedEquipmentIds     Json           @map("attempted_equipment_ids")
+  conflictingBookingId      String?        @map("conflicting_booking_id")
+  conflictingBooking        StudioBooking? @relation(fields: [conflictingBookingId], references: [id])
+  conflictingBookingDetails Json?          @map("conflicting_booking_details")
+  status                    String         @default("blocked")
+  createdBookingId          String?        @map("created_booking_id")
+  resolvedById              String?        @map("resolved_by_id")
+  resolvedBy                User?          @relation("ConflictResolver", fields: [resolvedById], references: [id])
+  resolvedAt                DateTime?      @map("resolved_at")
+  resolutionNotes           String?        @map("resolution_notes")
+  createdAt                 DateTime       @default(now()) @map("created_at")
+  updatedAt                 DateTime       @updatedAt @map("updated_at")
+
+  @@map("studio_booking_conflicts")
 }

@@ -8,19 +8,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Pencil, Trash } from 'lucide-react';
+import { Trash, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { deleteEmployee } from '@/actions/employees';
 import { useState } from 'react';
+import { useNotifications } from '@/components/ui/useNotifications';
 
 interface Employee {
   id: string;
@@ -51,47 +44,56 @@ export function EmployeeTable({
 }: EmployeeTableProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [viewingId, setViewingId] = useState<string | null>(null);
+  const { showModal, removeModal, showLoader, hideLoader, showError, showSuccess } = useNotifications();
 
-  const handleDelete = async (id: string) => {
-    if (
-      !confirm(
-        'Are you sure you want to delete this employee? This action cannot be undone.',
-      )
-    ) {
-      return;
-    }
+  const handleDelete = (id: string, name: string | null) => {
+    const modalId = showModal({
+      title: 'Delete Employee',
+      description: `Are you sure you want to delete ${name || 'this employee'}? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onCancel: () => removeModal(modalId),
+      onConfirm: async () => {
+        removeModal(modalId);
+        setIsDeleting(true);
+        showLoader('Deleting Employee...');
+        const result = await deleteEmployee(id);
+        setIsDeleting(false);
+        hideLoader();
 
-    setIsDeleting(true);
-    const result = await deleteEmployee(id);
-    setIsDeleting(false);
-
-    if (result.error) {
-      alert(result.error);
-    } else {
-      router.refresh();
-    }
+        if (result.error) {
+          showError(result.error);
+        } else {
+          showSuccess('Employee deleted successfully');
+          router.refresh();
+        }
+      },
+    });
   };
 
   return (
-    <div className='rounded-xl border border-primary/15 bg-[rgba(17,17,22,0.85)] backdrop-blur-md overflow-hidden'>
+    <div className="rounded-xl border border-primary/15 bg-[rgba(17,17,22,0.85)] backdrop-blur-md overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className='border-b border-primary/12 hover:bg-transparent'>
-            <TableHead className='text-primary font-semibold text-xs uppercase tracking-widest opacity-80 py-4'>
+          <TableRow className="border-b border-primary/12 hover:bg-transparent">
+            <TableHead className="text-primary font-semibold text-xs uppercase tracking-widest opacity-80 py-4">
               Name
             </TableHead>
-            <TableHead className='text-primary font-semibold text-xs uppercase tracking-widest opacity-80'>
+            <TableHead className="text-primary font-semibold text-xs uppercase tracking-widest opacity-80">
               Email
             </TableHead>
-            <TableHead className='text-primary font-semibold text-xs uppercase tracking-widest opacity-80'>
+            <TableHead className="text-primary font-semibold text-xs uppercase tracking-widest opacity-80">
               Role
             </TableHead>
-            <TableHead className='text-primary font-semibold text-xs uppercase tracking-widest opacity-80'>
+            <TableHead className="text-primary font-semibold text-xs uppercase tracking-widest opacity-80">
               Branch
             </TableHead>
-            <TableHead className='text-primary font-semibold text-xs uppercase tracking-widest opacity-80 text-right'>
-              Actions
-            </TableHead>
+            {currentUserRole === 'SUPER_ADMIN' && (
+              <TableHead className="text-primary font-semibold text-xs uppercase tracking-widest opacity-80 text-right">
+                Actions
+              </TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -99,7 +101,7 @@ export function EmployeeTable({
             <TableRow>
               <TableCell
                 colSpan={5}
-                className='h-24 text-center text-foreground/50'
+                className="h-24 text-center text-foreground/50"
               >
                 No employees found.
               </TableCell>
@@ -108,12 +110,12 @@ export function EmployeeTable({
             employees.map((employee) => (
               <TableRow
                 key={employee.id}
-                className='border-b border-primary/8 hover:bg-primary/6 transition-colors duration-150'
+                className="border-b border-primary/8 hover:bg-primary/6 transition-colors duration-150"
               >
-                <TableCell className='font-medium text-white py-4'>
+                <TableCell className="font-medium text-foreground py-4">
                   {employee.fullName || 'N/A'}
                 </TableCell>
-                <TableCell className='text-foreground/75'>
+                <TableCell className="text-foreground/75">
                   {employee.email}
                 </TableCell>
                 <TableCell>
@@ -123,54 +125,44 @@ export function EmployeeTable({
                     {employee.role.replace('_', ' ')}
                   </span>
                 </TableCell>
-                <TableCell className='text-foreground/65'>
+                <TableCell className="text-foreground/65">
                   {employee.branches?.name || (
-                    <span className='text-foreground/35 italic text-xs'>—</span>
+                    <span className="text-foreground/35 italic text-xs">—</span>
                   )}
                 </TableCell>
-                <TableCell className='text-right'>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                {currentUserRole === 'SUPER_ADMIN' && (
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
                       <Button
-                        variant='ghost'
-                        className='h-8 w-8 p-0 text-primary/60 hover:text-primary hover:bg-primary/10'
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 hidden sm:flex text-xs font-medium"
+                        onClick={() => {
+                          setViewingId(employee.id);
+                          router.push(`/admin/employees/${employee.id}?from=dashboard`);
+                        }}
+                        disabled={viewingId === employee.id}
                       >
-                        <span className='sr-only'>Open menu</span>
-                        <MoreHorizontal className='h-4 w-4' />
+                        {viewingId === employee.id ? (
+                          <>
+                            <Loader2 className="animate-spin h-3 w-3 mr-1.5" />
+                            Loading...
+                          </>
+                        ) : 'View'}
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align='end'
-                      className='bg-[rgba(17,17,22,0.98)] border border-primary/18 backdrop-blur-xl text-white'
-                    >
-                      <DropdownMenuLabel className='text-primary text-xs uppercase tracking-widest opacity-70'>
-                        Actions
-                      </DropdownMenuLabel>
-                      <DropdownMenuItem
-                        onClick={() =>
-                          router.push(`/dashboard/employees/${employee.id}`)
-                        }
-                        className='text-foreground hover:text-white focus:text-white hover:bg-primary/10 focus:bg-primary/10 cursor-pointer'
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-[rgba(239,68,68,0.10)]"
+                        onClick={() => handleDelete(employee.id, employee.fullName)}
+                        disabled={isDeleting}
+                        title="Delete Employee"
                       >
-                        <Pencil className='mr-2 h-4 w-4 text-primary' />
-                        Edit
-                      </DropdownMenuItem>
-                      {currentUserRole === 'SUPER_ADMIN' && (
-                        <>
-                          <DropdownMenuSeparator className='bg-primary/12' />
-                          <DropdownMenuItem
-                            className='text-red-400 hover:text-red-300 focus:text-red-300 hover:bg-[rgba(239,68,68,0.10)] focus:bg-[rgba(239,68,68,0.10)] cursor-pointer'
-                            onClick={() => handleDelete(employee.id)}
-                            disabled={isDeleting}
-                          >
-                            <Trash className='mr-2 h-4 w-4' />
-                            Delete
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}

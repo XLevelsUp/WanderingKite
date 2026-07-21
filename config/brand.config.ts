@@ -125,11 +125,11 @@ export interface BrandConfig {
 export const brandConfig: BrandConfig = {
   name: 'Wandering Kite',
   description:
-    'Professional photography services, camera & equipment rentals, studio space, and podcast recording in Coimbatore, Tamil Nadu.',
+    'Photography, camera & equipment rentals, 1200 sq ft studio & podcast recording in RS Puram, Coimbatore. 4.9★ on Google. 500+ projects delivered.',
   url: 'https://wanderingkite.in',
 
   colors: {
-    // Primary: electric blue
+    // /* --- PREVIOUS COLOR TEMPLATE (Electric Blue) --- */
     primary: '217 91% 60%',
     primaryForeground: '0 0% 100%',
 
@@ -140,6 +140,16 @@ export const brandConfig: BrandConfig = {
     // Accent: matches secondary (used for hover states)
     accent: '240 8% 10%',
     accentForeground: '217 91% 60%',
+
+    /* --- NEW COLOR TEMPLATE (Orange-Red) ---
+     primary: '19 100% 50%',
+    primaryForeground: '0 0% 100%',
+    secondary: '240 8% 10%',
+    secondaryForeground: '0 0% 98%',
+    accent: '240 8% 10%',
+    accentForeground: '20 100% 50%',
+    */
+    
 
     // Muted
     muted: '240 8% 10%',
@@ -189,7 +199,7 @@ export const brandConfig: BrandConfig = {
   },
 
   radius: {
-    default: '0.75rem',
+    default: '21px',
     button: '0.5rem',
     card: '0.75rem',
   },

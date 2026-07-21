@@ -1,4 +1,5 @@
-import { getEquipmentWithFieldStatus } from '@/actions/equipment';
+import { getEquipmentWithFieldStatus, getCategories, getBranches } from '@/actions/equipment';
+import { EditEquipmentDialog } from './[id]/EditEquipmentForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -16,7 +17,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Link from 'next/link';
-import { User, MapPin, Radio } from 'lucide-react';
+import Image from 'next/image';
+import { User, MapPin, Radio, Package, Loader2 } from 'lucide-react';
+import { DeleteEquipmentButton } from '@/components/dashboard/DeleteEquipmentButton';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
+import { hasAccess } from '@/lib/access';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +58,10 @@ function EquipmentStatusBadge({ status }: { status: EquipStatus }) {
     LOST: {
       label: 'Lost',
       cls: 'bg-red-500/12 text-red-400 border border-red-500/25',
+    },
+    RETIRED: {
+      label: 'Retired',
+      cls: 'bg-slate-500/12 text-slate-400 border border-slate-500/25',
     },
   };
   const cfg = map[status] ?? {
@@ -97,7 +108,7 @@ function FieldStatusCell({
   assignment: ActiveAssignment | null;
 }) {
   if (!assignment) {
-    return <span className='text-xs text-foreground/25 italic'>—</span>;
+    return <span className="text-xs text-foreground/25 italic">—</span>;
   }
 
   const now = Date.now();
@@ -106,9 +117,9 @@ function FieldStatusCell({
     new Date(assignment.expectedReturn).getTime() < now;
 
   return (
-    <div className='space-y-1.5'>
+    <div className="space-y-1.5">
       {/* Assignment status badge */}
-      <div className='flex items-center gap-1.5'>
+      <div className="flex items-center gap-1.5">
         <Radio
           className={`w-3 h-3 flex-shrink-0 ${isOverdue ? 'text-amber-400' : 'text-blue-400'}`}
         />
@@ -125,9 +136,9 @@ function FieldStatusCell({
 
       {/* Who has it */}
       {assignment.employee && (
-        <div className='flex items-center gap-1 text-[11px] text-foreground/50'>
-          <User className='w-3 h-3 flex-shrink-0 text-foreground/30' />
-          <span className='truncate max-w-[120px]'>
+        <div className="flex items-center gap-1 text-[11px] text-foreground/50">
+          <User className="w-3 h-3 flex-shrink-0 text-foreground/30" />
+          <span className="truncate max-w-[120px]">
             {assignment.employee.fullName ?? assignment.employee.email}
           </span>
         </div>
@@ -135,9 +146,9 @@ function FieldStatusCell({
 
       {/* Client or location */}
       {(assignment.client || assignment.location) && (
-        <div className='flex items-center gap-1 text-[11px] text-foreground/40'>
-          <MapPin className='w-3 h-3 flex-shrink-0 text-foreground/25' />
-          <span className='truncate max-w-[120px]'>
+        <div className="flex items-center gap-1 text-[11px] text-foreground/40">
+          <MapPin className="w-3 h-3 flex-shrink-0 text-foreground/25" />
+          <span className="truncate max-w-[120px]">
             {assignment.client?.name ?? assignment.location}
           </span>
         </div>
@@ -159,45 +170,89 @@ function FieldStatusCell({
   );
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+import { EquipmentFilterBar } from './EquipmentFilterBar';
 
-export default async function EquipmentPage() {
-  const equipment = await getEquipmentWithFieldStatus();
+// ... other imports ...
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Data Component (Wrapped in Suspense)
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function EquipmentData({ 
+  isEmployee, 
+  isSuperAdmin, 
+  categories, 
+  branches,
+  searchParams 
+}: { 
+  isEmployee: boolean; 
+  isSuperAdmin: boolean; 
+  categories: any[]; 
+  branches: any[];
+  searchParams?: { q?: string; category?: string; usage?: string };
+}) {
+  let equipment = await getEquipmentWithFieldStatus();
+  
+  if (searchParams?.q) {
+    const q = searchParams.q.toLowerCase();
+    equipment = equipment.filter(e => e.name.toLowerCase().includes(q) || e.serialNumber.toLowerCase().includes(q));
+  }
+  if (searchParams?.category && searchParams.category !== 'all') {
+    equipment = equipment.filter(e => {
+      const cat = (e as any).category_name || (e.categories as any)?.name;
+      return cat === searchParams.category;
+    });
+  }
+
+  if (searchParams?.usage && searchParams.usage !== 'all') {
+    equipment = equipment.filter(e => {
+      if (searchParams.usage === 'rentals') return (e as any).is_rental === true;
+      if (searchParams.usage === 'studiospace') return (e as any).is_studio_space === true;
+      if (searchParams.usage === 'inhouse') return !(e as any).is_rental && !(e as any).is_studio_space;
+      return true;
+    });
+  }
+
   const inFieldCount = equipment.filter(
-    (e) => e.activeAssignment !== null,
+    (e) => e.activeAssignment !== null
   ).length;
 
   return (
-    <div className='space-y-8'>
-      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
+    <>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Equipment</h1>
-          <p className='text-foreground/40 mt-2 text-sm'>
+          <h1 className="text-3xl font-bold tracking-tight">Equipment</h1>
+          <p className="text-foreground/40 mt-2 text-sm">
             Manage your rental equipment inventory
             {inFieldCount > 0 && (
-              <span className='ml-2 inline-flex items-center gap-1 text-blue-400'>
-                · <Radio className='w-3 h-3' /> {inFieldCount} currently in
+              <span className="ml-2 inline-flex items-center gap-1 text-blue-400">
+                · <Radio className="w-3 h-3" /> {inFieldCount} currently in
                 field
               </span>
             )}
           </p>
         </div>
-        <Link href='/dashboard/equipment/new'>
-          <Button>Add Equipment</Button>
-        </Link>
+        {!isEmployee && (
+          <Link href="/dashboard/equipment/new">
+            <Button>Add Equipment</Button>
+          </Link>
+        )}
       </div>
+
+      <EquipmentFilterBar categories={categories} />
 
       <Card>
         <CardHeader>
           <CardTitle>All Equipment</CardTitle>
           <CardDescription>
-            {equipment.length} items in inventory
+            {equipment.length} items found
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12"></TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Serial Number</TableHead>
                 <TableHead>Category</TableHead>
@@ -212,7 +267,7 @@ export default async function EquipmentPage() {
                 <TableRow>
                   <TableCell
                     colSpan={7}
-                    className='text-center text-foreground/40 py-8'
+                    className="text-center text-foreground/40 py-8"
                   >
                     No equipment found. Add your first item to get started.
                   </TableCell>
@@ -225,12 +280,31 @@ export default async function EquipmentPage() {
                       item.activeAssignment ? 'bg-blue-500/[0.02]' : ''
                     }
                   >
-                    <TableCell className='font-medium'>{item.name}</TableCell>
-                    <TableCell className='font-mono text-xs text-foreground/60'>
+                    {/* Thumbnail */}
+                    <TableCell className="w-12 pr-0">
+                      <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-border bg-muted/40 shrink-0">
+                        {(item as any).image_url ? (
+                          <Image
+                            src={(item as any).image_url}
+                            alt={item.name}
+                            fill
+                            className="object-contain p-1"
+                            sizes="40px"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center">
+                            <Package className="h-5 w-5 text-muted-foreground/30" />
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell className="font-mono text-xs text-foreground/60">
                       {item.serialNumber}
                     </TableCell>
-                    <TableCell className='text-foreground/60'>
-                      {(item.categories as any)?.name || 'N/A'}
+                    <TableCell className="text-foreground/60">
+                      {(item as any).category_name || (item.categories as any)?.name || 'N/A'}
                     </TableCell>
                     <TableCell>
                       <EquipmentStatusBadge status={item.status} />
@@ -238,24 +312,83 @@ export default async function EquipmentPage() {
                     <TableCell>
                       <FieldStatusCell assignment={item.activeAssignment} />
                     </TableCell>
-                    <TableCell className='text-foreground/70'>
-                      ₹{Number(item.rentalPrice).toLocaleString('en-IN')}
+                    <TableCell className="text-foreground/70 text-xs py-2 max-w-[200px]">
+                      <div className="space-y-1">
+                        {item.is_rental && (
+                          <div>
+                            <span className="text-[10px] uppercase font-semibold text-primary block">Rental:</span>
+                            {(() => {
+                              const plans = Array.isArray(item.pricingPlans) ? (item.pricingPlans as any[]) : [];
+                              if (plans.length === 0) return <span className="text-muted-foreground">—</span>;
+                              const hourly = plans.find((p: any) => p.name?.toLowerCase() === 'hourly');
+                              const daily = plans.find((p: any) => p.name?.toLowerCase() === 'daily');
+                              const parts = [];
+                              if (hourly) parts.push(`₹${Number(hourly.rate).toLocaleString('en-IN')}/hr`);
+                              if (daily) parts.push(`₹${Number(daily.rate).toLocaleString('en-IN')}/day`);
+                              return parts.length > 0 ? parts.join(' · ') : `₹${Number(plans[0].rate).toLocaleString('en-IN')} (${plans[0].name})`;
+                            })()}
+                          </div>
+                        )}
+                        {item.is_studio_space && (
+                          <div>
+                            <span className="text-[10px] uppercase font-semibold text-amber-500 block">Studio:</span>
+                            {(() => {
+                              const plans = Array.isArray(item.studioPricingPlans) ? (item.studioPricingPlans as any[]) : [];
+                              if (plans.length === 0) return <span className="text-muted-foreground">—</span>;
+                              const hourly = plans.find((p: any) => p.name?.toLowerCase() === 'hourly');
+                              const daily = plans.find((p: any) => p.name?.toLowerCase() === 'daily');
+                              const parts = [];
+                              if (hourly) parts.push(`₹${Number(hourly.rate).toLocaleString('en-IN')}/hr`);
+                              if (daily) parts.push(`₹${Number(daily.rate).toLocaleString('en-IN')}/day`);
+                              return parts.length > 0 ? parts.join(' · ') : `₹${Number(plans[0].rate).toLocaleString('en-IN')} (${plans[0].name})`;
+                            })()}
+                          </div>
+                        )}
+                        {!item.is_rental && !item.is_studio_space && (
+                          <span className="text-muted-foreground italic font-medium">In-house</span>
+                        )}
+                      </div>
                     </TableCell>
-                    <TableCell className='space-x-2'>
-                      <Link href={`/dashboard/equipment/${item.id}`}>
-                        <Button variant='outline' size='sm'>
-                          View
-                        </Button>
-                      </Link>
-                      <Link href={`/dashboard/equipment/${item.id}/history`}>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='text-foreground/40'
-                        >
-                          History
-                        </Button>
-                      </Link>
+                    <TableCell className="space-x-2">
+                      <div className="inline-flex items-center gap-2">
+                        <Link href={`/dashboard/equipment/${item.id}`}>
+                          <Button variant="outline" size="sm">
+                            View
+                          </Button>
+                        </Link>
+                        {!isEmployee && (
+                          <EditEquipmentDialog
+                            equipment={{
+                              id: item.id,
+                              name: item.name,
+                              serialNumber: item.serialNumber,
+                              categoryId: (item as any).categoryId ?? null,
+                              branchId: (item as any).branchId ?? null,
+                              pricingPlans: Array.isArray(item.pricingPlans) ? (item.pricingPlans as any[]) : [],
+                              studioPricingPlans: Array.isArray((item as any).studioPricingPlans) ? ((item as any).studioPricingPlans as any[]) : [],
+                              image_url: item.image_url,
+                              specs: Array.isArray((item as any).specs) ? ((item as any).specs as string[]) : typeof (item as any).specs === 'string' ? JSON.parse((item as any).specs) : [],
+                              description: item.description ?? null,
+                              is_studio_space: (item as any).is_studio_space,
+                              is_rental: (item as any).is_rental,
+                              purchase_date: (item as any).purchase_date,
+                              warranty_duration_months: (item as any).warranty_duration_months,
+                              warranty_expiration_date: (item as any).warranty_expiration_date,
+                              service_cost: (item as any).service_cost,
+                              repair_cost: (item as any).repair_cost,
+                              purchase_bill: (item as any).purchase_bill,
+                            }}
+                            categories={categories}
+                            branches={branches}
+                          />
+                        )}
+                        {isSuperAdmin && (
+                          <DeleteEquipmentButton
+                            equipmentId={item.id}
+                            equipmentName={item.name}
+                          />
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -264,6 +397,60 @@ export default async function EquipmentPage() {
           </Table>
         </CardContent>
       </Card>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Page
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default async function EquipmentPage({ 
+  searchParams 
+}: { 
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }> 
+}) {
+  const resolvedSearchParams = await searchParams;
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect('/login');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  const isEmployee = profile?.role === 'EMPLOYEE';
+  const isSuperAdmin = profile?.role === 'SUPER_ADMIN' || profile?.role === 'DEVELOPER';
+
+  const [categories, branches] = await Promise.all([
+    getCategories().catch(() => []),
+    getBranches().catch(() => []),
+  ]);
+
+  return (
+    <div className="space-y-8 min-h-[500px]">
+      <Suspense 
+        fallback={
+          <div className="flex flex-col items-center justify-center py-20 text-foreground/40 gap-4">
+            <Loader2 className="w-8 h-8 animate-spin text-primary/50" />
+            <p className="text-sm font-medium animate-pulse">Loading equipment inventory...</p>
+          </div>
+        }
+      >
+        <EquipmentData 
+          isEmployee={isEmployee} 
+          isSuperAdmin={isSuperAdmin} 
+          categories={categories} 
+          branches={branches}
+          searchParams={resolvedSearchParams as any}
+        />
+      </Suspense>
     </div>
   );
 }

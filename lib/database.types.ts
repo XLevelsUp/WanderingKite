@@ -9,6 +9,58 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      shoots: {
+        Row: {
+          id: string;
+          title: string;
+          description: string | null;
+          category: string;
+          sub_category: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          description?: string | null;
+          category: string;
+          sub_category?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          description?: string | null;
+          category?: string;
+          sub_category?: string | null;
+          created_at?: string;
+        };
+      };
+      gallery_images: {
+        Row: {
+          id: string;
+          shoot_id: string;
+          url: string;
+          alt_text: string | null;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          shoot_id: string;
+          url: string;
+          alt_text?: string | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          shoot_id?: string;
+          url?: string;
+          alt_text?: string | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+      };
       audit_logs: {
         Row: {
           id: string;
@@ -133,7 +185,7 @@ export interface Database {
           category_id: string | null;
           branch_id: string | null;
           status: 'AVAILABLE' | 'RENTED' | 'MAINTENANCE' | 'LOST';
-          rental_price: number;
+          pricingPlans: Json;
           description: string | null;
           created_at: string;
           updated_at: string;
@@ -145,7 +197,7 @@ export interface Database {
           category_id?: string | null;
           branch_id?: string | null;
           status?: 'AVAILABLE' | 'RENTED' | 'MAINTENANCE' | 'LOST';
-          rental_price: number;
+          pricingPlans?: Json;
           description?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -157,7 +209,7 @@ export interface Database {
           category_id?: string | null;
           branch_id?: string | null;
           status?: 'AVAILABLE' | 'RENTED' | 'MAINTENANCE' | 'LOST';
-          rental_price?: number;
+          pricingPlans?: Json;
           description?: string | null;
           created_at?: string;
           updated_at?: string;
