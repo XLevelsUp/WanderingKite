@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Camera,
   Film,
@@ -29,6 +30,7 @@ import {
   Wrench,
   Share2,
   Pencil,
+  Receipt,
 } from 'lucide-react';
 import { SourcePicker, SourcePickerControlled } from '@/components/dashboard/SourcePicker';
 import { sourceLabel } from '@/lib/sourceUtils';
@@ -1306,6 +1308,16 @@ export default function ClientDetailsView({
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto">
+          <Link href={`/dashboard/invoices/new?clientId=${client.id}`} className="w-full md:w-auto">
+            <Button
+              variant="outline"
+              className="w-full md:w-auto rounded-lg border-amber-500/30 bg-amber-500/8 text-amber-400 hover:bg-amber-500/18 hover:border-amber-500/60 hover:text-amber-300"
+            >
+              <Receipt className="h-4 w-4 mr-2" />
+              Create Invoice
+            </Button>
+          </Link>
+
           <Button
             onClick={handleToggleAccount}
             variant="outline"

@@ -51,6 +51,7 @@ export const ROUTE_ACCESS: Record<string, AppRole> = {
   '/dashboard/fieldops':      'EMPLOYEE',
   '/dashboard/media-tracker': 'EMPLOYEE',
   '/dashboard/clients':       'ADMIN',
+  '/dashboard/invoices':      'ADMIN',
   '/dashboard/booking-conflicts': 'ADMIN',
   '/dashboard/rentals':       'ADMIN',
   '/dashboard/categories':    'ADMIN',
@@ -89,6 +90,7 @@ export const ROLE_NAV_ACCESS = {
     canViewRentalSettings: false,
     canViewMediaTracker: true,    // View-only — CRUD hidden inline for this role
     canViewBookingConflicts: false,
+    canViewInvoices: false,
   },
   ADMIN: {
     canViewEmployees: true,
@@ -105,6 +107,7 @@ export const ROLE_NAV_ACCESS = {
     canViewRentalSettings: true,
     canViewMediaTracker: true,
     canViewBookingConflicts: true,
+    canViewInvoices: true,
   },
   SUPER_ADMIN: {
     canViewEmployees: true,
@@ -121,6 +124,7 @@ export const ROLE_NAV_ACCESS = {
     canViewRentalSettings: true,
     canViewMediaTracker: true,
     canViewBookingConflicts: true,
+    canViewInvoices: true,
   },
   DEVELOPER: {
     canViewEmployees: true,
@@ -137,6 +141,7 @@ export const ROLE_NAV_ACCESS = {
     canViewRentalSettings: true,
     canViewMediaTracker: true,
     canViewBookingConflicts: true,
+    canViewInvoices: true,
   },
 } satisfies Record<AppRole, Record<string, boolean>>;
 
