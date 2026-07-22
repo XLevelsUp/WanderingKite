@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { logger } from '@/lib/logger';
+import { compressImageClient } from '@/lib/images/compressImageClient';
 import {
   Upload,
   X,
@@ -34,45 +35,8 @@ const ACCEPTED = [
   'image/png',
   'image/webp',
   'image/gif',
-  'image/dng',
 ];
 const MAX_MB = 50;
-
-async function compressImage(
-  file: File,
-  maxWidthPx = 1920,
-  qualityJpeg = 0.82
-): Promise<File> {
-  return new Promise((resolve) => {
-    const img = new window.Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      const scale = Math.min(1, maxWidthPx / img.width);
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        (blob) => {
-          URL.revokeObjectURL(url);
-          if (!blob) {
-            resolve(file);
-            return;
-          }
-          resolve(
-            new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), {
-              type: 'image/jpeg',
-            })
-          );
-        },
-        'image/jpeg',
-        qualityJpeg
-      );
-    };
-    img.src = url;
-  });
-}
 
 export function ImageUpload({
   value,
@@ -112,10 +76,11 @@ export function ImageUpload({
 
       let fileToUpload = rawFile;
       try {
-        const compressed = await compressImage(rawFile);
+        const { file: compressed, originalSize, compressedSize } =
+          await compressImageClient(rawFile);
         fileToUpload = compressed;
-        if (compressed.size < rawFile.size) {
-          setCompressionStats({ before: rawFile.size, after: compressed.size });
+        if (compressedSize < originalSize) {
+          setCompressionStats({ before: originalSize, after: compressedSize });
         }
       } catch (err) {
         logger.error('[ImageUpload] Compression failed:', err);
@@ -135,7 +100,16 @@ export function ImageUpload({
         }, 8000);
 
         const supabase = createClient();
-        const ext = fileToUpload.name.split('.').pop() ?? 'jpg';
+        // Derive the extension from the actual (possibly compressed) MIME
+        // type rather than the filename — compression can change the type
+        // (e.g. GIF -> JPEG) without renaming the File object.
+        const EXT_BY_MIME: Record<string, string> = {
+          'image/jpeg': 'jpg',
+          'image/png': 'png',
+          'image/webp': 'webp',
+          'image/gif': 'gif',
+        };
+        const ext = EXT_BY_MIME[fileToUpload.type] ?? 'jpg';
         const timestamp = Date.now();
         const safeName = fileToUpload.name
           .replace(/\.[^/.]+$/, '')

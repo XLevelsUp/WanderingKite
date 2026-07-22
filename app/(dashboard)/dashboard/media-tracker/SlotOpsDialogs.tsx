@@ -30,6 +30,7 @@ export const SLOT_LABEL: Record<StorageSlot, string> = {
   primary: 'Primary Storage',
   original_backup: 'Original Backup',
   backup_copy: 'Backup Copy',
+  backup_copy_2: 'Backup Copy 2',
 };
 
 export interface DeviceOption {
@@ -346,10 +347,12 @@ export function getEmptySlots(record: {
   primary_storage?: { id: string } | null;
   original_backup?: { id: string } | null;
   backup_copy?: { id: string } | null;
+  backup_copy_2?: { id: string } | null;
 }): StorageSlot[] {
   const empty: StorageSlot[] = [];
   if (!record.primary_storage) empty.push('primary');
   if (!record.original_backup) empty.push('original_backup');
   if (!record.backup_copy) empty.push('backup_copy');
+  if (!record.backup_copy_2) empty.push('backup_copy_2');
   return empty;
 }

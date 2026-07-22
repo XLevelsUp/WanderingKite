@@ -21,15 +21,11 @@ import {
   getBookingsForClient,
   type ClientBookingOption,
 } from '@/actions/media-tracker';
-import { STATUS_META, DEVICE_TYPE_LABEL, type MediaRecordStatus } from './status';
+import { DEVICE_TYPE_LABEL } from './status';
 
 interface ClientOption {
   id: string;
   name: string;
-}
-interface EmployeeOption {
-  id: string;
-  fullName: string | null;
 }
 interface DeviceOption {
   id: string;
@@ -39,19 +35,22 @@ interface DeviceOption {
 
 interface InitialData {
   title: string;
-  clientId: string;
+  clientId: string | null;
   photographyBookingId: string | null;
   studioBookingId: string | null;
   shootDate: string | null;
+  folderPath: string | null;
+  category: string | null;
+  contentTags: string[] | null;
   primaryStorageDeviceId: string | null;
   originalBackupDeviceId: string | null;
   backupCopyDeviceId: string | null;
-  assignedEmployeeId: string | null;
-  status: MediaRecordStatus;
+  backupCopy2DeviceId: string | null;
   photoCount: number;
   videoCount: number;
   photoSizeGb: number;
   videoSizeGb: number;
+  otherSizeGb: number;
   notes: string | null;
 }
 
@@ -59,14 +58,12 @@ const NONE = 'none';
 
 export function MediaRecordForm({
   clients,
-  employees,
   devices,
   initialData,
   recordId,
   onDone,
 }: {
   clients: ClientOption[];
-  employees: EmployeeOption[];
   devices: DeviceOption[];
   initialData?: InitialData;
   recordId?: string;
@@ -84,6 +81,11 @@ export function MediaRecordForm({
   );
   const [bookings, setBookings] = useState<ClientBookingOption[]>([]);
   const [shootDate, setShootDate] = useState(initialData?.shootDate ?? '');
+  const [folderPath, setFolderPath] = useState(initialData?.folderPath ?? '');
+  const [category, setCategory] = useState(initialData?.category ?? '');
+  const [tagsInput, setTagsInput] = useState(
+    (initialData?.contentTags ?? []).join(', ')
+  );
   const [primaryDevice, setPrimaryDevice] = useState(
     initialData?.primaryStorageDeviceId ?? NONE
   );
@@ -93,11 +95,8 @@ export function MediaRecordForm({
   const [backupCopyDevice, setBackupCopyDevice] = useState(
     initialData?.backupCopyDeviceId ?? NONE
   );
-  const [assignedEmployee, setAssignedEmployee] = useState(
-    initialData?.assignedEmployeeId ?? NONE
-  );
-  const [status, setStatus] = useState<MediaRecordStatus>(
-    initialData?.status ?? 'NOT_STARTED'
+  const [backupCopy2Device, setBackupCopy2Device] = useState(
+    initialData?.backupCopy2DeviceId ?? NONE
   );
   const [photoCount, setPhotoCount] = useState(
     initialData?.photoCount ? String(initialData.photoCount) : ''
@@ -110,6 +109,9 @@ export function MediaRecordForm({
   );
   const [videoSizeGb, setVideoSizeGb] = useState(
     initialData?.videoSizeGb ? String(initialData.videoSizeGb) : ''
+  );
+  const [otherSizeGb, setOtherSizeGb] = useState(
+    initialData?.otherSizeGb ? String(initialData.otherSizeGb) : ''
   );
   const [notes, setNotes] = useState(initialData?.notes ?? '');
   const [busy, setBusy] = useState(false);
@@ -130,30 +132,34 @@ export function MediaRecordForm({
       toast.error('Title is required');
       return;
     }
-    if (!clientId) {
-      toast.error('Select a client');
-      return;
-    }
 
     const selectedBooking = bookings.find((b) => b.id === bookingId);
+    const contentTags = tagsInput
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
 
     const input = {
       title,
-      clientId,
+      clientId: clientId || undefined,
       photographyBookingId:
         selectedBooking?.type === 'PHOTOGRAPHY' ? bookingId : undefined,
       studioBookingId: selectedBooking?.type === 'STUDIO' ? bookingId : undefined,
       shootDate: shootDate || undefined,
+      folderPath: folderPath || undefined,
+      category: category || undefined,
+      contentTags,
       primaryStorageDeviceId: primaryDevice !== NONE ? primaryDevice : undefined,
       originalBackupDeviceId:
         originalBackupDevice !== NONE ? originalBackupDevice : undefined,
       backupCopyDeviceId: backupCopyDevice !== NONE ? backupCopyDevice : undefined,
-      assignedEmployeeId: assignedEmployee !== NONE ? assignedEmployee : undefined,
-      status,
+      backupCopy2DeviceId:
+        backupCopy2Device !== NONE ? backupCopy2Device : undefined,
       photoCount: photoCount ? Number(photoCount) : 0,
       videoCount: videoCount ? Number(videoCount) : 0,
       photoSizeGb: photoSizeGb ? Number(photoSizeGb) : 0,
       videoSizeGb: videoSizeGb ? Number(videoSizeGb) : 0,
+      otherSizeGb: otherSizeGb ? Number(otherSizeGb) : 0,
       notes: notes || undefined,
     };
 
@@ -192,7 +198,7 @@ export function MediaRecordForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>Client</Label>
+          <Label>Client (optional)</Label>
           <ClientCombobox
             value={clientId}
             onValueChange={setClientId}
@@ -225,56 +231,19 @@ export function MediaRecordForm({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="mr-date">Shoot Date (optional)</Label>
-          <Input
-            id="mr-date"
-            type="date"
-            value={shootDate}
-            onChange={(e) => setShootDate(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Status</Label>
-          <Select
-            value={status}
-            onValueChange={(v) => setStatus(v as MediaRecordStatus)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {(Object.keys(STATUS_META) as MediaRecordStatus[]).map((s) => (
-                <SelectItem key={s} value={s}>
-                  {STATUS_META[s].label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
       <div className="space-y-2">
-        <Label>Assigned Editor (optional)</Label>
-        <Select value={assignedEmployee} onValueChange={setAssignedEmployee}>
-          <SelectTrigger>
-            <SelectValue placeholder="Unassigned" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={NONE}>Unassigned</SelectItem>
-            {employees.map((e) => (
-              <SelectItem key={e.id} value={e.id}>
-                {e.fullName ?? 'Unnamed'}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Label htmlFor="mr-date">Shoot Date (optional)</Label>
+        <Input
+          id="mr-date"
+          type="date"
+          value={shootDate}
+          onChange={(e) => setShootDate(e.target.value)}
+        />
       </div>
 
       <div className="rounded-lg border border-border p-4 space-y-4">
         <p className="text-sm font-semibold">Storage &amp; Backup Locations</p>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-2">
             <Label>Primary Storage</Label>
             <Select value={primaryDevice} onValueChange={setPrimaryDevice}>
@@ -313,6 +282,22 @@ export function MediaRecordForm({
           <div className="space-y-2">
             <Label>Backup Copy</Label>
             <Select value={backupCopyDevice} onValueChange={setBackupCopyDevice}>
+              <SelectTrigger>
+                <SelectValue placeholder="Not set" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Not set</SelectItem>
+                {devices.map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.label} ({DEVICE_TYPE_LABEL[d.type] ?? d.type})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Backup Copy 2</Label>
+            <Select value={backupCopy2Device} onValueChange={setBackupCopy2Device}>
               <SelectTrigger>
                 <SelectValue placeholder="Not set" />
               </SelectTrigger>
@@ -387,10 +372,58 @@ export function MediaRecordForm({
             />
           </div>
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="mr-other-size">Unsorted / Mixed (GB)</Label>
+          <Input
+            id="mr-other-size"
+            type="number"
+            min="0"
+            step="0.1"
+            inputMode="decimal"
+            value={otherSizeGb}
+            onChange={(e) => setOtherSizeGb(e.target.value)}
+            placeholder="0"
+          />
+          <p className="text-xs text-slate-500">
+            Use this when you know the total size but haven&apos;t split it
+            into photos vs. videos yet — don&apos;t guess a split.
+          </p>
+        </div>
         <p className="text-xs text-slate-500">
           Sizes are used for the Storage Map&apos;s usage pie — videos usually
           take up far more space per item than photos.
         </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="mr-folder-path">Folder Path (optional)</Label>
+          <Input
+            id="mr-folder-path"
+            value={folderPath}
+            onChange={(e) => setFolderPath(e.target.value)}
+            placeholder="e.g. WK 2TB 01/Wandering Kite Studio/WK Corporates/Alusea"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="mr-category">Category (optional)</Label>
+          <Input
+            id="mr-category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder="e.g. Review Reel, Product Shoot, Wedding"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="mr-tags">Content Tags (optional)</Label>
+        <Input
+          id="mr-tags"
+          value={tagsInput}
+          onChange={(e) => setTagsInput(e.target.value)}
+          placeholder="Comma-separated, e.g. BTS, Final, RAW"
+        />
       </div>
 
       <div className="space-y-2">

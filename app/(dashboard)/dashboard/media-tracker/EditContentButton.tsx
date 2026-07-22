@@ -29,6 +29,7 @@ export function EditContentButton({
   videoCount,
   photoSizeGb,
   videoSizeGb,
+  otherSizeGb,
   compact = false,
 }: {
   recordId: string;
@@ -37,6 +38,7 @@ export function EditContentButton({
   videoCount: number;
   photoSizeGb: number;
   videoSizeGb: number;
+  otherSizeGb: number;
   compact?: boolean;
 }) {
   const router = useRouter();
@@ -45,6 +47,7 @@ export function EditContentButton({
   const [videos, setVideos] = useState('');
   const [photoSize, setPhotoSize] = useState('');
   const [videoSize, setVideoSize] = useState('');
+  const [otherSize, setOtherSize] = useState('');
   const [busy, setBusy] = useState(false);
 
   const openDialog = () => {
@@ -52,6 +55,7 @@ export function EditContentButton({
     setVideos(videoCount ? String(videoCount) : '');
     setPhotoSize(photoSizeGb ? String(photoSizeGb) : '');
     setVideoSize(videoSizeGb ? String(videoSizeGb) : '');
+    setOtherSize(otherSizeGb ? String(otherSizeGb) : '');
     setOpen(true);
   };
 
@@ -63,6 +67,7 @@ export function EditContentButton({
         videoCount: videos ? Number(videos) : 0,
         photoSizeGb: photoSize ? Number(photoSize) : 0,
         videoSizeGb: videoSize ? Number(videoSize) : 0,
+        otherSizeGb: otherSize ? Number(otherSize) : 0,
       });
       toast.success('Content updated');
       setOpen(false);
@@ -152,6 +157,21 @@ export function EditContentButton({
                 inputMode="decimal"
                 value={videoSize}
                 onChange={(e) => setVideoSize(e.target.value)}
+                placeholder="0"
+              />
+            </div>
+            <div className="space-y-1.5 col-span-2">
+              <Label htmlFor="ec-other-size" className="text-xs">
+                Unsorted / Mixed (GB)
+              </Label>
+              <Input
+                id="ec-other-size"
+                type="number"
+                min="0"
+                step="0.1"
+                inputMode="decimal"
+                value={otherSize}
+                onChange={(e) => setOtherSize(e.target.value)}
                 placeholder="0"
               />
             </div>
