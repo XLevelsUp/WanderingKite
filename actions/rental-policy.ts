@@ -17,7 +17,7 @@ export async function requireAdminOrSuper() {
     .single();
 
   if (!profile || !['ADMIN', 'SUPER_ADMIN', 'DEVELOPER'].includes(profile.role)) {
-    throw new Error('Unauthorized');
+    redirect('/dashboard');
   }
   return { supabase, user, role: profile.role };
 }
