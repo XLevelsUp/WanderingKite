@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ClientCombobox, type ClientOption } from '@/app/(dashboard)/dashboard/media-tracker/ClientCombobox';
-import { createNewClient } from '@/actions/clients';
+import { createNewClient, findClientByEmail } from '@/actions/clients';
 import { createInvoice } from '@/actions/invoices';
 import { calculateInvoiceTotals, type DiscountType } from '@/lib/utils/invoice-calc';
 
@@ -130,14 +130,45 @@ export function InvoiceBuilder({ initialClient = null, existingClients = [], gst
       let clientId = initialClient?.id ?? selectedClientId;
 
       if (!initialClient && clientMode === 'NEW') {
-        const formData = new FormData();
-        formData.set('name', newClientName.trim());
-        formData.set('email', newClientEmail.trim() || `${Date.now().toString(36)}@noemail.placeholder`);
-        if (newClientPhone.trim()) formData.set('phone', newClientPhone.trim());
-        if (newClientAddress.trim()) formData.set('address', newClientAddress.trim());
+        // Email is optional here — only use what was typed if it actually
+        // looks like an email, otherwise fall back to a placeholder rather
+        // than blocking invoice creation on a strict format check.
+        const typedEmail = newClientEmail.trim();
+        const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(typedEmail);
+        const emailToUse = looksLikeEmail ? typedEmail : `${Date.now().toString(36)}@noemail.placeholder`;
 
-        const created = await createNewClient(formData);
-        clientId = created.id;
+        // No uniqueness requirement for this quick-entry path: if a client
+        // already exists with that email (even the same one twice in a
+        // row), just bill that existing record instead of erroring —
+        // duplicates aren't blocked here, they're just reused.
+        const existing = looksLikeEmail ? await findClientByEmail(emailToUse) : null;
+
+        if (existing) {
+          clientId = existing.id;
+        } else {
+          const formData = new FormData();
+          formData.set('name', newClientName.trim());
+          formData.set('email', emailToUse);
+          if (newClientPhone.trim()) formData.set('phone', newClientPhone.trim());
+          if (newClientAddress.trim()) formData.set('address', newClientAddress.trim());
+
+          const created = await createNewClient(formData);
+          if ('error' in created && created.error) {
+            // Rare race: someone else created a client with this email
+            // between our check and this insert — reuse it rather than
+            // surfacing an error.
+            const fallback = looksLikeEmail ? await findClientByEmail(emailToUse) : null;
+            if (fallback) {
+              clientId = fallback.id;
+            } else {
+              setError(created.error);
+              toast.error(created.error);
+              return;
+            }
+          } else {
+            clientId = created.client.id;
+          }
+        }
       }
 
       const result = await createInvoice({
@@ -345,8 +376,12 @@ export function InvoiceBuilder({ initialClient = null, existingClients = [], gst
             <span className="font-mono">{fmt(totals.taxableAmount)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">GST @ {gstRate}%</span>
-            <span className="font-mono">{fmt(totals.gstAmount)}</span>
+            <span className="text-muted-foreground">CGST @ {gstRate / 2}%</span>
+            <span className="font-mono">{fmt(Math.round(totals.gstAmount / 2))}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">SGST @ {gstRate / 2}%</span>
+            <span className="font-mono">{fmt(totals.gstAmount - Math.round(totals.gstAmount / 2))}</span>
           </div>
           <div className="flex justify-between text-lg font-bold pt-2 border-t border-border">
             <span>Total</span>

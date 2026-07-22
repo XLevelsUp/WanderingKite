@@ -128,10 +128,23 @@ function InvoiceDocument({ invoice, status }: { invoice: InvoiceRecord; status: 
             <span>Taxable Value</span>
             <span className="tabular-nums">{fmt(invoice.taxable_amount)}</span>
           </div>
-          <div className="flex justify-between text-gray-600">
-            <span>GST @ {Number(invoice.gst_rate)}%</span>
-            <span className="tabular-nums">{fmt(invoice.gst_amount)}</span>
-          </div>
+          {(() => {
+            const halfRate = Number(invoice.gst_rate) / 2;
+            const cgst = Math.round(invoice.gst_amount / 2);
+            const sgst = invoice.gst_amount - cgst;
+            return (
+              <>
+                <div className="flex justify-between text-gray-600">
+                  <span>CGST @ {halfRate}%</span>
+                  <span className="tabular-nums">{fmt(cgst)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>SGST @ {halfRate}%</span>
+                  <span className="tabular-nums">{fmt(sgst)}</span>
+                </div>
+              </>
+            );
+          })()}
           <div className="flex justify-between font-bold text-gray-900 text-sm pt-1.5 mt-1.5 border-t border-gray-200">
             <span>Total</span>
             <span className="tabular-nums">{fmt(invoice.total)}</span>

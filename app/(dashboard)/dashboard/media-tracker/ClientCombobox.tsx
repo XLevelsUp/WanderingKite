@@ -93,7 +93,11 @@ export function ClientCombobox({
       formData.set('email', placeholderEmail(name));
 
       const created = await createNewClient(formData);
-      const option: ClientOption = { id: created.id, name: created.name };
+      if ('error' in created && created.error) {
+        toast.error(created.error);
+        return;
+      }
+      const option: ClientOption = { id: created.client.id, name: created.client.name };
       onClientCreated(option);
       onValueChange(option.id);
       toast.success(`Client "${option.name}" created`);

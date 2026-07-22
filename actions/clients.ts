@@ -23,7 +23,26 @@ export async function getClients() {
   return data ?? [];
 }
 
+// Find a client (active or soft-deleted) by exact email match.
+// Used so ad-hoc client entry (e.g. quick invoice billing) can reuse an
+// existing record instead of failing on the clients.email unique constraint.
+export async function findClientByEmail(email: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('clients')
+    .select('id, name, email, phone, address, deleted_at')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data;
+}
+
 // Create client
+// Note: returns { error } instead of throwing on expected failures (bad
+// input, duplicate email) — Next.js redacts thrown Server Action errors to a
+// generic message in production regardless of content, so a real message
+// can only reach the client as a normal returned value, not a throw.
 export async function createNewClient(formData: FormData) {
   const supabase = await createClient();
   const {
@@ -44,7 +63,11 @@ export async function createNewClient(formData: FormData) {
   };
 
   // Validate
-  const validatedData = clientSchema.parse(rawData);
+  const parsed = clientSchema.safeParse(rawData);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || 'Invalid client data.' };
+  }
+  const validatedData = parsed.data;
 
   const { source, sourceDetail, govtId, ...rest } = validatedData;
   const { data, error } = await supabase
@@ -59,7 +82,7 @@ export async function createNewClient(formData: FormData) {
     .single();
 
   if (error) {
-    throw new Error(parseSupabaseError(error, 'Failed to create client'));
+    return { error: parseSupabaseError(error, 'Failed to create client') };
   }
 
   if (user) {
@@ -73,7 +96,7 @@ export async function createNewClient(formData: FormData) {
   }
 
   revalidatePath('/dashboard/clients');
-  return data;
+  return { client: data };
 }
 
 // Update client
@@ -103,7 +126,11 @@ export async function updateClient(id: string, formData: FormData) {
   };
 
   // Validate
-  const validatedData = clientSchema.parse(rawData);
+  const parsed = clientSchema.safeParse(rawData);
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message || 'Invalid client data.');
+  }
+  const validatedData = parsed.data;
 
   const { source, sourceDetail, govtId, ...rest } = validatedData;
   const { data, error } = await supabase
