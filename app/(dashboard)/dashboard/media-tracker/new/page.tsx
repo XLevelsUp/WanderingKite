@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getClients } from '@/actions/clients';
-import { getEmployees } from '@/actions/employees';
 import { getStorageDevices } from '@/actions/media-tracker';
 import { MediaRecordForm } from '../MediaRecordForm';
 import {
@@ -31,9 +30,8 @@ export default async function NewMediaRecordPage() {
     redirect('/dashboard/media-tracker');
   }
 
-  const [clients, employees, devices] = await Promise.all([
+  const [clients, devices] = await Promise.all([
     getClients().catch(() => []),
-    getEmployees().catch(() => []),
     getStorageDevices(true).catch(() => []),
   ]);
 
@@ -58,10 +56,6 @@ export default async function NewMediaRecordPage() {
         <CardContent>
           <MediaRecordForm
             clients={clients.map((c: any) => ({ id: c.id, name: c.name }))}
-            employees={employees.map((e: any) => ({
-              id: e.id,
-              fullName: e.fullName,
-            }))}
             devices={devices.map((d: any) => ({
               id: d.id,
               label: d.label,

@@ -60,16 +60,20 @@ export const DEVICE_TYPE_LABEL: Record<string, string> = {
 
 /**
  * A record is "at risk" when its footage exists somewhere (primary set) but
- * neither backup slot holds a device — a single-copy data-loss hazard.
+ * none of the backup slots hold a device — a single-copy data-loss hazard.
  * Works on the joined record shape returned by getMediaRecords/getMediaRecord.
  */
 export function hasBackupRisk(record: {
   primary_storage?: unknown;
   original_backup?: unknown;
   backup_copy?: unknown;
+  backup_copy_2?: unknown;
 }): boolean {
   return (
-    !!record.primary_storage && !record.original_backup && !record.backup_copy
+    !!record.primary_storage &&
+    !record.original_backup &&
+    !record.backup_copy &&
+    !record.backup_copy_2
   );
 }
 

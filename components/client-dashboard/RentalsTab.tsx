@@ -32,6 +32,7 @@ import EmptyState from './EmptyState';
 import { useNotifications } from '@/components/ui/useNotifications';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { compressImageClient } from '@/lib/images/compressImageClient';
 
 interface Equipment {
   id: string;
@@ -151,12 +152,23 @@ export default function RentalsTab({ clientName, initialIdProof }: RentalsTabPro
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    formData.append('idType', idType);
+    // PDFs pass through untouched — image compression can't process them.
+    let fileToUpload = selectedFile;
+    if (selectedFile.type !== 'application/pdf') {
+      try {
+        fileToUpload = (await compressImageClient(selectedFile)).file;
+      } catch (err) {
+        logger.error('[RentalsTab] ID proof compression failed:', err);
+        // Fall back to the original file rather than blocking the upload.
+      }
+    }
 
     showLoader('Uploading ID Proof...');
     try {
+      const formData = new FormData();
+      formData.append('file', fileToUpload);
+      formData.append('idType', idType);
+
       const res = await fetch('/api/client/rentals/id-proof', {
         method: 'POST',
         body: formData,

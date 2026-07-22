@@ -11,7 +11,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { MediaRecordForm } from './MediaRecordForm';
-import type { MediaRecordStatus } from './status';
 
 /**
  * Row-level Edit button for the Media Tracker list — opens the full record
@@ -20,12 +19,10 @@ import type { MediaRecordStatus } from './status';
 export function EditMediaRecordDialog({
   record,
   clients,
-  employees,
   devices,
 }: {
   record: any;
   clients: { id: string; name: string }[];
-  employees: { id: string; fullName: string | null }[];
   devices: { id: string; label: string; type: string }[];
 }) {
   const [open, setOpen] = useState(false);
@@ -47,12 +44,12 @@ export function EditMediaRecordDialog({
           <DialogHeader>
             <DialogTitle>Edit — {record.title}</DialogTitle>
             <DialogDescription>
-              Update storage locations, editor, or status.
+              Update storage locations and shoot details. Manage status and
+              assigned editor from the Editor Tracker page.
             </DialogDescription>
           </DialogHeader>
           <MediaRecordForm
             clients={clients}
-            employees={employees}
             devices={devices}
             recordId={record.id}
             onDone={() => setOpen(false)}
@@ -62,15 +59,18 @@ export function EditMediaRecordDialog({
               photographyBookingId: record.photography_booking_id,
               studioBookingId: record.studio_booking_id,
               shootDate: record.shoot_date,
+              folderPath: record.folder_path,
+              category: record.category,
+              contentTags: record.content_tags,
               primaryStorageDeviceId: record.primary_storage?.id ?? null,
               originalBackupDeviceId: record.original_backup?.id ?? null,
               backupCopyDeviceId: record.backup_copy?.id ?? null,
-              assignedEmployeeId: record.assigned_employee?.id ?? null,
-              status: record.status as MediaRecordStatus,
+              backupCopy2DeviceId: record.backup_copy_2?.id ?? null,
               photoCount: record.photo_count ?? 0,
               videoCount: record.video_count ?? 0,
               photoSizeGb: record.photo_size_gb ?? 0,
               videoSizeGb: record.video_size_gb ?? 0,
+              otherSizeGb: record.other_size_gb ?? 0,
               notes: record.notes,
             }}
           />

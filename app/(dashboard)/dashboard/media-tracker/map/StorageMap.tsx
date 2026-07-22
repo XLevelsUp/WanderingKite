@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {
   ChevronLeft,
   Cloud,
+  FileQuestion,
   Folder,
   FolderClock,
   HardDrive,
@@ -41,12 +42,13 @@ interface DeviceEntry {
   slot: StorageSlot;
 }
 
-type FolderKind = 'photos' | 'videos' | 'other' | 'unlogged';
+type FolderKind = 'photos' | 'videos' | 'unsorted' | 'empty' | 'unlogged';
 
 const FOLDER_LABEL: Record<FolderKind, string> = {
   photos: 'Photos',
   videos: 'Videos',
-  other: 'Confirmed Empty',
+  unsorted: 'Unsorted / Mixed',
+  empty: 'Confirmed Empty',
   unlogged: 'Not Logged',
 };
 
@@ -54,6 +56,7 @@ const SLOT_PILL: Record<StorageSlot, string> = {
   primary: 'bg-blue-500/12 text-blue-400 border-blue-500/25',
   original_backup: 'bg-emerald-500/12 text-emerald-400 border-emerald-500/25',
   backup_copy: 'bg-violet-500/12 text-violet-400 border-violet-500/25',
+  backup_copy_2: 'bg-pink-500/12 text-pink-400 border-pink-500/25',
 };
 
 /** Parses free-text capacity like "2TB" / "500 GB" into GB. Null if unparseable. */
@@ -144,22 +147,27 @@ function ContentPie({
   videoCount,
   photoSizeGb,
   videoSizeGb,
+  otherSizeGb,
   onSelectPhotos,
   onSelectVideos,
+  onSelectUnsorted,
 }: {
   photoCount: number;
   videoCount: number;
   photoSizeGb: number;
   videoSizeGb: number;
+  otherSizeGb: number;
   onSelectPhotos: () => void;
   onSelectVideos: () => void;
+  onSelectUnsorted: () => void;
 }) {
   const size = 128;
   const r = 50;
   const circumference = 2 * Math.PI * r;
-  const totalSizeGb = photoSizeGb + videoSizeGb;
+  const totalSizeGb = photoSizeGb + videoSizeGb + otherSizeGb;
   const photoLength = totalSizeGb > 0 ? (photoSizeGb / totalSizeGb) * circumference : 0;
   const videoLength = totalSizeGb > 0 ? (videoSizeGb / totalSizeGb) * circumference : 0;
+  const otherLength = totalSizeGb > 0 ? (otherSizeGb / totalSizeGb) * circumference : 0;
 
   return (
     <div className="flex shrink-0 flex-col items-center gap-2.5">
@@ -205,6 +213,21 @@ function ContentPie({
                   style={{ pointerEvents: 'stroke' }}
                 />
               )}
+              {otherSizeGb > 0 && (
+                <circle
+                  cx="60"
+                  cy="60"
+                  r={r}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="18"
+                  strokeDasharray={`${otherLength} ${circumference - otherLength}`}
+                  strokeDashoffset={-(photoLength + videoLength)}
+                  onClick={onSelectUnsorted}
+                  className="cursor-pointer text-violet-400 transition-opacity hover:opacity-80"
+                  style={{ pointerEvents: 'stroke' }}
+                />
+              )}
             </>
           )}
         </svg>
@@ -213,7 +236,7 @@ function ContentPie({
           <span className="text-[10px] text-slate-500">GB used</span>
         </div>
       </div>
-      <div className="flex items-center gap-3 text-xs">
+      <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
         <button
           onClick={onSelectPhotos}
           disabled={photoCount === 0}
@@ -229,6 +252,14 @@ function ContentPie({
         >
           <span className="h-2.5 w-2.5 rounded-full bg-sky-400" />
           Videos ({videoCount} · {videoSizeGb.toFixed(1)} GB)
+        </button>
+        <button
+          onClick={onSelectUnsorted}
+          disabled={otherSizeGb === 0}
+          className="flex items-center gap-1.5 disabled:opacity-40"
+        >
+          <span className="h-2.5 w-2.5 rounded-full bg-violet-400" />
+          Unsorted ({otherSizeGb.toFixed(1)} GB)
         </button>
       </div>
     </div>
@@ -267,6 +298,7 @@ export function StorageMap({
         ['primary', r.primary_storage],
         ['original_backup', r.original_backup],
         ['backup_copy', r.backup_copy],
+        ['backup_copy_2', r.backup_copy_2],
       ];
       for (const [slot, device] of slots) {
         if (device?.id) {
@@ -293,6 +325,23 @@ export function StorageMap({
     [records]
   );
 
+  // Per-device GB total + shoot count — the same "how full is this drive"
+  // view the old spreadsheet's pivot table gave, now computed live.
+  const deviceTotals = useMemo(() => {
+    return devices.map((d) => {
+      const entries = entriesByDevice.get(d.id) ?? [];
+      const totalGb = entries.reduce(
+        (sum, { record }) =>
+          sum +
+          Number(record.photo_size_gb ?? 0) +
+          Number(record.video_size_gb ?? 0) +
+          Number(record.other_size_gb ?? 0),
+        0
+      );
+      return { device: d, recordCount: entries.length, totalGb };
+    });
+  }, [devices, entriesByDevice]);
+
   const activeDeviceOptions: DeviceOption[] = devices
     .filter((d) => d.is_active)
     .map((d) => ({ id: d.id, label: d.label, type: d.type }));
@@ -307,25 +356,30 @@ export function StorageMap({
     let totalVideos = 0;
     let totalPhotoSizeGb = 0;
     let totalVideoSizeGb = 0;
+    let totalOtherSizeGb = 0;
     const photoEntries: DeviceEntry[] = [];
     const videoEntries: DeviceEntry[] = [];
-    const otherEntries: DeviceEntry[] = [];
+    const unsortedEntries: DeviceEntry[] = [];
+    const emptyEntries: DeviceEntry[] = [];
     const unloggedEntries: DeviceEntry[] = [];
 
     for (const entry of selectedEntries) {
       const photos = entry.record.photo_count ?? 0;
       const videos = entry.record.video_count ?? 0;
+      const otherSizeGb = Number(entry.record.other_size_gb ?? 0);
       totalPhotos += photos;
       totalVideos += videos;
       totalPhotoSizeGb += Number(entry.record.photo_size_gb ?? 0);
       totalVideoSizeGb += Number(entry.record.video_size_gb ?? 0);
+      totalOtherSizeGb += otherSizeGb;
       if (photos > 0) photoEntries.push(entry);
       if (videos > 0) videoEntries.push(entry);
-      if (photos === 0 && videos === 0) {
+      if (otherSizeGb > 0) unsortedEntries.push(entry);
+      if (photos === 0 && videos === 0 && otherSizeGb === 0) {
         if (hasUnloggedContent(entry.record)) {
           unloggedEntries.push(entry);
         } else {
-          otherEntries.push(entry);
+          emptyEntries.push(entry);
         }
       }
     }
@@ -335,10 +389,12 @@ export function StorageMap({
       totalVideos,
       totalPhotoSizeGb,
       totalVideoSizeGb,
-      totalSizeGb: totalPhotoSizeGb + totalVideoSizeGb,
+      totalOtherSizeGb,
+      totalSizeGb: totalPhotoSizeGb + totalVideoSizeGb + totalOtherSizeGb,
       photoEntries,
       videoEntries,
-      otherEntries,
+      unsortedEntries,
+      emptyEntries,
       unloggedEntries,
     };
   }, [selectedEntries]);
@@ -350,11 +406,13 @@ export function StorageMap({
       ? deviceStats.photoEntries
       : openFolder === 'videos'
         ? deviceStats.videoEntries
-        : openFolder === 'other'
-          ? deviceStats.otherEntries
-          : openFolder === 'unlogged'
-            ? deviceStats.unloggedEntries
-            : [];
+        : openFolder === 'unsorted'
+          ? deviceStats.unsortedEntries
+          : openFolder === 'empty'
+            ? deviceStats.emptyEntries
+            : openFolder === 'unlogged'
+              ? deviceStats.unloggedEntries
+              : [];
 
   const renderShootRow = (record: any, slot: StorageSlot) => (
     <li key={`${record.id}-${slot}`} className="rounded-xl border border-border p-3">
@@ -374,7 +432,9 @@ export function StorageMap({
       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
         <span>{record.client?.name ?? 'Unknown client'}</span>
         <MediaStatusBadge status={record.status} />
-        {(record.photo_count > 0 || record.video_count > 0) && (
+        {(record.photo_count > 0 ||
+          record.video_count > 0 ||
+          Number(record.other_size_gb ?? 0) > 0) && (
           <span className="flex items-center gap-2">
             {record.photo_count > 0 && (
               <span className="flex items-center gap-0.5">
@@ -390,6 +450,12 @@ export function StorageMap({
                 {record.video_count}
                 {record.video_size_gb > 0 &&
                   ` (${Number(record.video_size_gb).toFixed(1)} GB)`}
+              </span>
+            )}
+            {Number(record.other_size_gb ?? 0) > 0 && (
+              <span className="flex items-center gap-0.5">
+                <FileQuestion className="h-3 w-3" />
+                Unsorted ({Number(record.other_size_gb).toFixed(1)} GB)
               </span>
             )}
           </span>
@@ -417,6 +483,7 @@ export function StorageMap({
             videoCount={record.video_count ?? 0}
             photoSizeGb={record.photo_size_gb ?? 0}
             videoSizeGb={record.video_size_gb ?? 0}
+            otherSizeGb={record.other_size_gb ?? 0}
             compact
           />
         </div>
@@ -445,6 +512,33 @@ export function StorageMap({
             </p>
           </div>
         </Link>
+      )}
+
+      {/* Per-device utilization summary — the old spreadsheet's pivot table,
+          computed live from tracked records. */}
+      {deviceTotals.length > 0 && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {deviceTotals.map(({ device, recordCount, totalGb }) => (
+            <button
+              key={device.id}
+              onClick={() => setSelectedId(device.id)}
+              className={`flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition-colors hover:bg-accent ${
+                device.id === selectedId
+                  ? 'border-primary/40 bg-primary/5'
+                  : 'border-border'
+              }`}
+            >
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
+                <DeviceIcon type={device.type} className="h-3.5 w-3.5" />
+                {device.label}
+              </span>
+              <span className="text-lg font-bold">{totalGb.toFixed(1)} GB</span>
+              <span className="text-xs text-slate-500">
+                {recordCount} shoot{recordCount !== 1 ? 's' : ''}
+              </span>
+            </button>
+          ))}
+        </div>
       )}
 
       {/* Explorer-style: device sidebar + selected-device contents */}
@@ -522,8 +616,10 @@ export function StorageMap({
                     videoCount={deviceStats.totalVideos}
                     photoSizeGb={deviceStats.totalPhotoSizeGb}
                     videoSizeGb={deviceStats.totalVideoSizeGb}
+                    otherSizeGb={deviceStats.totalOtherSizeGb}
                     onSelectPhotos={() => setOpenFolder('photos')}
                     onSelectVideos={() => setOpenFolder('videos')}
+                    onSelectUnsorted={() => setOpenFolder('unsorted')}
                   />
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate text-lg font-semibold">
@@ -579,17 +675,31 @@ export function StorageMap({
                         {deviceStats.totalVideoSizeGb.toFixed(1)} GB
                       </span>
                     </button>
-                    {deviceStats.otherEntries.length > 0 && (
+                    {deviceStats.unsortedEntries.length > 0 && (
                       <button
-                        onClick={() => setOpenFolder('other')}
+                        onClick={() => setOpenFolder('unsorted')}
+                        className="flex flex-col items-start gap-2 rounded-xl border border-border p-4 text-left transition-colors hover:bg-accent"
+                      >
+                        <FileQuestion className="h-8 w-8 text-violet-400" />
+                        <span className="text-sm font-semibold">Unsorted / Mixed</span>
+                        <span className="text-xs text-slate-500">
+                          {deviceStats.unsortedEntries.length} shoot
+                          {deviceStats.unsortedEntries.length !== 1 ? 's' : ''} ·{' '}
+                          {deviceStats.totalOtherSizeGb.toFixed(1)} GB, split unknown
+                        </span>
+                      </button>
+                    )}
+                    {deviceStats.emptyEntries.length > 0 && (
+                      <button
+                        onClick={() => setOpenFolder('empty')}
                         className="flex flex-col items-start gap-2 rounded-xl border border-border p-4 text-left transition-colors hover:bg-accent"
                       >
                         <Folder className="h-8 w-8 text-slate-400" />
                         <span className="text-sm font-semibold">Confirmed Empty</span>
                         <span className="text-xs text-slate-500">
-                          {deviceStats.otherEntries.length} shoot
-                          {deviceStats.otherEntries.length !== 1 ? 's' : ''} · reviewed,
-                          no photos/videos
+                          {deviceStats.emptyEntries.length} shoot
+                          {deviceStats.emptyEntries.length !== 1 ? 's' : ''} · reviewed,
+                          no content
                         </span>
                       </button>
                     )}
@@ -623,7 +733,9 @@ export function StorageMap({
                       </span>
                     </button>
                     <ul className="space-y-3">
-                      {folderEntries.map(({ record, slot }) => renderShootRow(record, slot))}
+                      {folderEntries.map(({ record, slot }: DeviceEntry) =>
+                        renderShootRow(record, slot)
+                      )}
                     </ul>
                   </div>
                 )}

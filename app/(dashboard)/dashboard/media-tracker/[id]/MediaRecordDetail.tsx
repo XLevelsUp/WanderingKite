@@ -1,18 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import {
   Calendar,
+  FileQuestion,
   FileText,
   HardDrive,
   Image as ImageIcon,
   Link2,
   Pencil,
   User,
+  UserCog,
   Video as VideoIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MediaStatusBadge, DEVICE_TYPE_LABEL, hasBackupRisk, NoBackupPill, hasUnloggedContent, NotLoggedPill, type MediaRecordStatus } from '../status';
+import { MediaStatusBadge, DEVICE_TYPE_LABEL, hasBackupRisk, NoBackupPill, hasUnloggedContent, NotLoggedPill } from '../status';
 import { MediaRecordForm } from '../MediaRecordForm';
 import { SlotActions, getEmptySlots } from '../SlotOpsDialogs';
 import type { StorageSlot } from '@/actions/media-tracker';
@@ -63,13 +66,11 @@ export function MediaRecordDetail({
   record,
   isEmployee,
   clients,
-  employees,
   devices,
 }: {
   record: any;
   isEmployee: boolean;
   clients: { id: string; name: string }[];
-  employees: { id: string; fullName: string | null }[];
   devices: { id: string; label: string; type: string }[];
 }) {
   const [editing, setEditing] = useState(false);
@@ -78,7 +79,6 @@ export function MediaRecordDetail({
     return (
       <MediaRecordForm
         clients={clients}
-        employees={employees}
         devices={devices}
         recordId={record.id}
         initialData={{
@@ -87,15 +87,18 @@ export function MediaRecordDetail({
           photographyBookingId: record.photography_booking_id,
           studioBookingId: record.studio_booking_id,
           shootDate: record.shoot_date,
+          folderPath: record.folder_path,
+          category: record.category,
+          contentTags: record.content_tags,
           primaryStorageDeviceId: record.primary_storage?.id ?? null,
           originalBackupDeviceId: record.original_backup?.id ?? null,
           backupCopyDeviceId: record.backup_copy?.id ?? null,
-          assignedEmployeeId: record.assigned_employee?.id ?? null,
-          status: record.status as MediaRecordStatus,
+          backupCopy2DeviceId: record.backup_copy_2?.id ?? null,
           photoCount: record.photo_count ?? 0,
           videoCount: record.video_count ?? 0,
           photoSizeGb: record.photo_size_gb ?? 0,
           videoSizeGb: record.video_size_gb ?? 0,
+          otherSizeGb: record.other_size_gb ?? 0,
           notes: record.notes,
         }}
       />
@@ -106,19 +109,63 @@ export function MediaRecordDetail({
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center justify-between gap-3">
         <MediaStatusBadge status={record.status} />
-        {!isEmployee && (
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />
-              Edit
+        <div className="flex items-center gap-2">
+          <Link href={`/dashboard/media-tracker/editors?record=${record.id}`}>
+            <Button size="sm" variant="outline">
+              <UserCog className="h-3.5 w-3.5 mr-1.5" />
+              Manage Assignment
             </Button>
-            <DeleteMediaRecordButton recordId={record.id} recordTitle={record.title} />
-          </div>
-        )}
+          </Link>
+          {!isEmployee && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                Edit
+              </Button>
+              <DeleteMediaRecordButton recordId={record.id} recordTitle={record.title} />
+            </>
+          )}
+        </div>
       </div>
 
       <div className="rounded-xl border border-border p-4">
-        <InfoRow icon={User} label="Client" value={record.client?.name ?? 'Unknown'} />
+        <InfoRow icon={User} label="Client" value={record.client?.name ?? '— (no client)'} />
+        {record.category && (
+          <InfoRow
+            icon={FileText}
+            label="Category"
+            value={
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-slate-500/12 text-slate-300 border border-slate-500/25">
+                {record.category}
+              </span>
+            }
+          />
+        )}
+        {record.folder_path && (
+          <InfoRow
+            icon={FileText}
+            label="Folder Path"
+            value={<span className="break-all font-mono text-xs">{record.folder_path}</span>}
+          />
+        )}
+        {record.content_tags && record.content_tags.length > 0 && (
+          <InfoRow
+            icon={FileText}
+            label="Content Tags"
+            value={
+              <span className="flex flex-wrap gap-1.5">
+                {record.content_tags.map((tag: string) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary border border-primary/20"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </span>
+            }
+          />
+        )}
         {(record.photography_booking_id || record.studio_booking_id) && (
           <InfoRow
             icon={Link2}
@@ -164,6 +211,13 @@ export function MediaRecordDetail({
                   {record.video_count ?? 0} videos ·{' '}
                   {Number(record.video_size_gb ?? 0).toFixed(1)} GB
                 </span>
+                {Number(record.other_size_gb ?? 0) > 0 && (
+                  <span className="flex items-center gap-1">
+                    <FileQuestion className="h-3.5 w-3.5 text-slate-500" />
+                    Unsorted ·{' '}
+                    {Number(record.other_size_gb).toFixed(1)} GB
+                  </span>
+                )}
               </span>
             )
           }
@@ -182,6 +236,7 @@ export function MediaRecordDetail({
             ['primary', 'Primary Storage', record.primary_storage],
             ['original_backup', 'Original Backup', record.original_backup],
             ['backup_copy', 'Backup Copy', record.backup_copy],
+            ['backup_copy_2', 'Backup Copy 2', record.backup_copy_2],
           ] as [StorageSlot, string, any][]
         ).map(([slot, label, device]) => (
           <InfoRow

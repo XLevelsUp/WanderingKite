@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { Plus, Pencil, HardDrive } from 'lucide-react';
+import { Plus, Pencil, HardDrive, Trash2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -16,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Modal } from '@/components/ui/Modal';
 import {
   Select,
   SelectContent,
@@ -35,6 +37,7 @@ import {
   createStorageDevice,
   updateStorageDevice,
   setStorageDeviceActive,
+  deleteStorageDevice,
 } from '@/actions/media-tracker';
 import { DEVICE_TYPE_LABEL } from '../status';
 
@@ -68,6 +71,7 @@ export function StorageDevicesTable({
   const [editing, setEditing] = useState<Device | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [busy, setBusy] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Device | null>(null);
 
   const openCreate = () => {
     setEditing(null);
@@ -123,6 +127,21 @@ export function StorageDevicesTable({
       router.refresh();
     } catch (err: any) {
       toast.error(err?.message || 'Something went wrong');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setBusy(true);
+    try {
+      await deleteStorageDevice(deleteTarget.id);
+      toast.success('Device deleted');
+      setDeleteTarget(null);
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to delete device');
     } finally {
       setBusy(false);
     }
@@ -195,6 +214,16 @@ export function StorageDevicesTable({
                         >
                           {d.is_active ? 'Retire' : 'Reactivate'}
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-400 hover:text-red-300 hover:bg-red-500/10 border-red-500/20"
+                          disabled={busy}
+                          title="Delete this device permanently"
+                          onClick={() => setDeleteTarget(d)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     </TableCell>
                   )}
@@ -204,6 +233,20 @@ export function StorageDevicesTable({
           </TableBody>
         </Table>
       </div>
+
+      <AnimatePresence>
+        {deleteTarget && (
+          <Modal
+            id={`delete-storage-device-${deleteTarget.id}`}
+            title="Delete Storage Device"
+            description={`Delete "${deleteTarget.label}"? This removes it from the device list entirely. Devices still referenced by a media record can't be deleted — retire those instead.`}
+            confirmText="Delete"
+            cancelText="Cancel"
+            onConfirm={handleDelete}
+            onCancel={() => setDeleteTarget(null)}
+          />
+        )}
+      </AnimatePresence>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
