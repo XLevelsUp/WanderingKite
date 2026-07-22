@@ -25,15 +25,27 @@ export function parseSupabaseError(error: any, fallback = 'An unexpected error o
   // Handle PostgREST database errors
   if (error.code) {
     switch (error.code) {
-      case '23505': // unique_violation
-        // Try to extract the field name if possible (usually in the detail or message)
-        const match = error.message?.match(/unique constraint "(.*?)"/i) || error.detail?.match(/Key \((.*?)\)=/i);
-        if (match && match[1]) {
-          const field = match[1].split('_').pop() || match[1];
-          const friendlyField = field === 'serialNumber' ? 'serial number' : field;
+      case '23505': { // unique_violation
+        // error.detail is Postgres's own "Key (column_name)=(value) already
+        // exists." message — the real column name, straight from Postgres.
+        // Prefer it over parsing the constraint name: Postgres auto-names
+        // unique constraints "<table>_<column>_key", and naively taking the
+        // last '_'-segment of that (the old approach) always returns the
+        // literal word "key", not the column.
+        const detailMatch = error.detail?.match(/Key \(([^)]+)\)=/i);
+        const constraintMatch = error.message?.match(/unique constraint "(.*?)"/i);
+
+        let field = detailMatch?.[1];
+        if (!field && constraintMatch?.[1]) {
+          field = constraintMatch[1].replace(/_key$/i, '').split('_').pop();
+        }
+
+        if (field) {
+          const friendlyField = field === 'serialNumber' || field === 'serial_number' ? 'serial number' : field;
           return `This ${friendlyField} is already in use. Please use a different one.`;
         }
         return 'This record already exists. Please check for duplicates.';
+      }
       case '23503': // foreign_key_violation
         return 'This operation cannot be completed because it references a record that does not exist.';
       case '23502': // not_null_violation

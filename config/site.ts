@@ -30,8 +30,7 @@ export const siteConfig = {
     longitude: 76.9558,
   },
   invoice: {
-    // TODO: replace with the studio's real GSTIN before issuing any invoice.
-    gstin: '',
+    gstin: '33AAFFW4500N1Z4',
     // Optional — shown in the invoice footer if set.
     bankAccountName: '',
     bankAccountNumber: '',
