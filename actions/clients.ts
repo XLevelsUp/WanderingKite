@@ -13,7 +13,7 @@ export async function getClients() {
   const { data, error } = await supabase
     .from('clients')
     .select('*, client_services(type)')
-    .is('deleted_at', null)         // hide soft-deleted clients
+    .is('deletedAt', null)          // hide soft-deleted clients
     .order('createdAt', { ascending: false });
 
   if (error) {
@@ -137,7 +137,7 @@ export async function updateClient(id: string, formData: FormData) {
   return data;
 }
 
-// Soft-delete client — sets deleted_at + is_active=false, does NOT remove the row.
+// Soft-delete client — sets deletedAt + is_active=false, does NOT remove the row.
 // All bookings, ID proofs, and history are preserved for audit purposes.
 // The client is blocked from logging in via the is_active=false check in auth.ts.
 export async function deleteClient(id: string) {
@@ -154,7 +154,7 @@ export async function deleteClient(id: string) {
 
   const { error } = await supabase
     .from('clients')
-    .update({ deleted_at: new Date().toISOString(), is_active: false })
+    .update({ deletedAt: new Date().toISOString(), is_active: false })
     .eq('id', id);
 
   if (error) {

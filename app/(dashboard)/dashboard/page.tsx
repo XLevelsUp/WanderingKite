@@ -57,7 +57,7 @@ export default async function DashboardPage() {
   // ─── Core counts ───────────────────────────────────────────────────────────
   const [equipmentCount, clientsCount, activeRentalsCount] = await Promise.all([
     supabase.from('equipment').select('*', { count: 'exact', head: true }),
-    supabase.from('clients').select('*', { count: 'exact', head: true }),
+    supabase.from('clients').select('*', { count: 'exact', head: true }).is('deletedAt', null),
     supabase.from('rentals').select('*', { count: 'exact', head: true }).eq('status', 'CONFIRMED'),
   ]);
 
@@ -86,10 +86,12 @@ export default async function DashboardPage() {
     supabase.from('rental_bookings').select('id, client_id, status, start_date, created_at, updated_at').eq('status', 'PENDING'),
     supabase.from('rental_bookings').select('id, client_id, status, start_date, created_at, updated_at').eq('status', 'CONFIRMED'),
     supabase.from('client_id_proofs').select('client_id, id_type, status, file_url'),
-    supabase.from('clients').select('id, name'),
+    supabase.from('clients').select('id, name').is('deletedAt', null),
   ]);
 
-  // Build a client name lookup
+  // Build a client name lookup — excludes soft-deleted clients (query above
+  // filters them out), so any booking whose client isn't in this map belongs
+  // to a deleted client and gets dropped by mapBooking()'s filter below.
   const clientMap: Record<string, string> = {};
   (clientsRes.data ?? []).forEach((c: any) => { clientMap[c.id] = c.name; });
 
@@ -115,19 +117,26 @@ export default async function DashboardPage() {
     };
   }
 
+  // Drops bookings whose client was soft-deleted — clientMap only contains
+  // active clients (query above filters deletedAt), so a missing entry means
+  // the client no longer exists in the active roster.
+  function forActiveClients(rows: any[] | null): any[] {
+    return (rows ?? []).filter((b: any) => clientMap[b.client_id] !== undefined);
+  }
+
   const pendingBookings = [
-    ...(photoPendingRes.data ?? []).map((b) => mapBooking(b, 'PHOTOGRAPHY')),
-    ...(studioPendingRes.data ?? []).map((b) => mapBooking(b, 'STUDIO')),
-    ...(rentalPendingRes.data ?? []).map((b) => mapBooking(b, 'RENTAL')),
+    ...forActiveClients(photoPendingRes.data).map((b) => mapBooking(b, 'PHOTOGRAPHY')),
+    ...forActiveClients(studioPendingRes.data).map((b) => mapBooking(b, 'STUDIO')),
+    ...forActiveClients(rentalPendingRes.data).map((b) => mapBooking(b, 'RENTAL')),
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const confirmedBookings = [
-    ...(photoConfirmedRes.data ?? []).map((b) => mapBooking(b, 'PHOTOGRAPHY')),
-    ...(studioConfirmedRes.data ?? []).map((b) => mapBooking(b, 'STUDIO')),
-    ...(rentalConfirmedRes.data ?? []).map((b) => mapBooking(b, 'RENTAL')),
+    ...forActiveClients(photoConfirmedRes.data).map((b) => mapBooking(b, 'PHOTOGRAPHY')),
+    ...forActiveClients(studioConfirmedRes.data).map((b) => mapBooking(b, 'STUDIO')),
+    ...forActiveClients(rentalConfirmedRes.data).map((b) => mapBooking(b, 'RENTAL')),
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  const idProofs = (idProofsRes.data ?? []).map((p: any) => ({
+  const idProofs = forActiveClients(idProofsRes.data).map((p: any) => ({
     clientId: p.client_id,
     clientName: clientMap[p.client_id] || 'Unknown Client',
     idType: p.id_type,
@@ -140,10 +149,10 @@ export default async function DashboardPage() {
   // are now included alongside CONFIRMED partial/pending payment bookings.
   const outstandingBookings = [
     ...confirmedBookings.filter((b) => b.paymentStatus !== 'COMPLETED'),
-    ...(photoCompletedRes.data ?? [])
+    ...forActiveClients(photoCompletedRes.data)
       .map((b: any) => mapBooking(b, 'PHOTOGRAPHY'))
       .filter((b: any) => b.paymentStatus !== 'COMPLETED'),
-    ...(studioCompletedRes.data ?? [])
+    ...forActiveClients(studioCompletedRes.data)
       .map((b: any) => mapBooking(b, 'STUDIO'))
       .filter((b: any) => b.paymentStatus !== 'COMPLETED'),
   ].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -160,14 +169,14 @@ export default async function DashboardPage() {
   let todaysBookingsCount = 0;
 
   const allBookings = [
-    ...(photoPendingRes.data ?? []).map((b) => mapBooking(b, 'PHOTOGRAPHY')),
-    ...(photoConfirmedRes.data ?? []).map((b) => mapBooking(b, 'PHOTOGRAPHY')),
-    ...(photoCompletedRes.data ?? []).map((b) => mapBooking(b, 'PHOTOGRAPHY')),
-    ...(studioPendingRes.data ?? []).map((b) => mapBooking(b, 'STUDIO')),
-    ...(studioConfirmedRes.data ?? []).map((b) => mapBooking(b, 'STUDIO')),
-    ...(studioCompletedRes.data ?? []).map((b) => mapBooking(b, 'STUDIO')),
-    ...(rentalPendingRes.data ?? []).map((b) => mapBooking(b, 'RENTAL')),
-    ...(rentalConfirmedRes.data ?? []).map((b) => mapBooking(b, 'RENTAL')),
+    ...forActiveClients(photoPendingRes.data).map((b) => mapBooking(b, 'PHOTOGRAPHY')),
+    ...forActiveClients(photoConfirmedRes.data).map((b) => mapBooking(b, 'PHOTOGRAPHY')),
+    ...forActiveClients(photoCompletedRes.data).map((b) => mapBooking(b, 'PHOTOGRAPHY')),
+    ...forActiveClients(studioPendingRes.data).map((b) => mapBooking(b, 'STUDIO')),
+    ...forActiveClients(studioConfirmedRes.data).map((b) => mapBooking(b, 'STUDIO')),
+    ...forActiveClients(studioCompletedRes.data).map((b) => mapBooking(b, 'STUDIO')),
+    ...forActiveClients(rentalPendingRes.data).map((b) => mapBooking(b, 'RENTAL')),
+    ...forActiveClients(rentalConfirmedRes.data).map((b) => mapBooking(b, 'RENTAL')),
   ];
 
   allBookings.forEach((b) => {
