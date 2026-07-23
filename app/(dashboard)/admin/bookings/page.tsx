@@ -42,16 +42,33 @@ export default async function AdminBookingsPage() {
   // Fetch charges
   const { data: charges } = await supabase.from('studio_booking_charges').select('*');
 
+  // Bookings embed the client row via `client:clients(*)`, but PostgREST
+  // can't filter a parent row by a column on the embedded relation — so a
+  // soft-deleted client's bookings would otherwise still show up here
+  // (their client_id row still exists, just flagged). Filter client-side
+  // instead, same intent as getClients()'s `is('deleted_at', null)`.
+  const isClientActive = (client: any) => !client?.deletedAt;
+
+  const photographyBookings = (photoRes.data || []).filter((b: any) =>
+    isClientActive(b.client)
+  );
+  const studioBookings = (studioRes.data || []).filter((b: any) =>
+    isClientActive(b.client)
+  );
+  const rentalBookings = (rentalRes.data || []).filter((b: any) =>
+    isClientActive(b.client)
+  );
+
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-7xl">
       <div className="flex flex-col mb-8">
         <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Centralized Bookings</h1>
         <p className="text-slate-400">Manage all studio space, photography, and equipment rental bookings.</p>
       </div>
-      <BookingsList 
-        photographyBookings={photoRes.data || []}
-        studioBookings={studioRes.data || []}
-        rentalBookings={rentalRes.data || []}
+      <BookingsList
+        photographyBookings={photographyBookings}
+        studioBookings={studioBookings}
+        rentalBookings={rentalBookings}
         editors={editors}
         assignees={assignees || []}
         charges={charges || []}

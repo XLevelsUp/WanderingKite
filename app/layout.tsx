@@ -65,11 +65,15 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Wandering Kite Studio' }],
   // Geo meta tags — strengthens local pack eligibility for RS Puram / Coimbatore
+  // p:domain_verify — Pinterest domain ownership verification
   other: {
     'geo.region': 'IN-TN',
     'geo.placename': 'Coimbatore',
     'geo.position': '11.0168;76.9558',
     ICBM: '11.0168, 76.9558',
+    'p:domain_verify':
+      process.env.NEXT_PUBLIC_PINTEREST_VERIFICATION_ID ??
+      '7b73eeb0d3b0591ee244ac0915750db1',
   },
   openGraph: {
     type: 'website',
