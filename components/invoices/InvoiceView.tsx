@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Download, ArrowLeft, CheckCircle2, Ban, Loader2 } from 'lucide-react';
+import { Download, FileDown, ArrowLeft, CheckCircle2, Ban, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { updateInvoiceStatus } from '@/actions/invoices';
 import { siteConfig } from '@/config/site';
@@ -128,10 +128,23 @@ function InvoiceDocument({ invoice, status }: { invoice: InvoiceRecord; status: 
             <span>Taxable Value</span>
             <span className="tabular-nums">{fmt(invoice.taxable_amount)}</span>
           </div>
-          <div className="flex justify-between text-gray-600">
-            <span>GST @ {Number(invoice.gst_rate)}%</span>
-            <span className="tabular-nums">{fmt(invoice.gst_amount)}</span>
-          </div>
+          {(() => {
+            const halfRate = Number(invoice.gst_rate) / 2;
+            const cgst = Math.round(invoice.gst_amount / 2);
+            const sgst = invoice.gst_amount - cgst;
+            return (
+              <>
+                <div className="flex justify-between text-gray-600">
+                  <span>CGST @ {halfRate}%</span>
+                  <span className="tabular-nums">{fmt(cgst)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>SGST @ {halfRate}%</span>
+                  <span className="tabular-nums">{fmt(sgst)}</span>
+                </div>
+              </>
+            );
+          })()}
           <div className="flex justify-between font-bold text-gray-900 text-sm pt-1.5 mt-1.5 border-t border-gray-200">
             <span>Total</span>
             <span className="tabular-nums">{fmt(invoice.total)}</span>
@@ -159,6 +172,7 @@ export function InvoiceView({ invoice }: { invoice: InvoiceRecord }) {
   const [status, setStatus] = useState(invoice.status);
   const [busy, setBusy] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
@@ -190,10 +204,51 @@ export function InvoiceView({ invoice }: { invoice: InvoiceRecord }) {
     document.title = originalTitle;
   };
 
+  const handleDownloadPdf = async () => {
+    const element = document.getElementById('invoice-preview-capture');
+    if (!element) return;
+
+    setDownloadingPdf(true);
+    try {
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
+
+      const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#ffffff' });
+      const imgData = canvas.toDataURL('image/png');
+
+      const pdf = new jsPDF({ unit: 'mm', format: 'a5' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position -= pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`${invoice.invoice_number}.pdf`);
+    } catch (err) {
+      toast.error('Failed to generate PDF.');
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
   return (
     <div className="p-4 md:p-8 space-y-6 max-w-3xl mx-auto">
       <style dangerouslySetInnerHTML={{ __html: `
-        @page { size: auto; margin: 0; }
+        @page { size: A5; margin: 0; }
         @media print {
           /* Hide everything by default; only the portal-rendered copy (a
              direct child of body, sitting outside the dashboard layout) is
@@ -229,6 +284,14 @@ export function InvoiceView({ invoice }: { invoice: InvoiceRecord }) {
             </>
           )}
           <button
+            onClick={handleDownloadPdf}
+            disabled={downloadingPdf}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/35 bg-primary/8 text-xs font-bold text-primary hover:bg-primary/18 hover:border-primary/60 transition-all disabled:opacity-50"
+          >
+            {downloadingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+            Download PDF
+          </button>
+          <button
             onClick={handlePrint}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/35 bg-primary/8 text-xs font-bold text-primary hover:bg-primary/18 hover:border-primary/60 transition-all"
           >
@@ -238,8 +301,10 @@ export function InvoiceView({ invoice }: { invoice: InvoiceRecord }) {
         </div>
       </div>
 
-      {/* On-screen preview */}
-      <InvoiceDocument invoice={invoice} status={status} />
+      {/* On-screen preview (also the source captured for the PDF download) */}
+      <div id="invoice-preview-capture">
+        <InvoiceDocument invoice={invoice} status={status} />
+      </div>
 
       {/* Print-only copy, portaled to <body> so hidden dashboard chrome can't leave behind blank pages */}
       {mounted && createPortal(

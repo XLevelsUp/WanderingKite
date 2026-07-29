@@ -36,7 +36,11 @@ export function NewClientForm() {
       }, 8000);
 
       const formData = new FormData(e.currentTarget);
-      await createNewClient(formData);
+      const result = await createNewClient(formData);
+      if ('error' in result && result.error) {
+        showError(result.error);
+        return;
+      }
       showSuccess('Client created successfully');
       router.push('/dashboard/clients');
       router.refresh();
