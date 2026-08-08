@@ -3,7 +3,6 @@ import { redirect, notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getMediaRecord, getStorageDevices } from '@/actions/media-tracker';
 import { getClients } from '@/actions/clients';
-import { getEmployees } from '@/actions/employees';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { MediaRecordDetail } from './MediaRecordDetail';
@@ -38,9 +37,8 @@ export default async function MediaRecordDetailPage({
     notFound();
   }
 
-  const [clients, employees, devices] = await Promise.all([
+  const [clients, devices] = await Promise.all([
     getClients().catch(() => []),
-    getEmployees().catch(() => []),
     getStorageDevices(true).catch(() => []),
   ]);
 
@@ -65,10 +63,6 @@ export default async function MediaRecordDetailPage({
         record={record}
         isEmployee={isEmployee}
         clients={clients.map((c: any) => ({ id: c.id, name: c.name }))}
-        employees={employees.map((e: any) => ({
-          id: e.id,
-          fullName: e.fullName,
-        }))}
         devices={devices.map((d: any) => ({
           id: d.id,
           label: d.label,

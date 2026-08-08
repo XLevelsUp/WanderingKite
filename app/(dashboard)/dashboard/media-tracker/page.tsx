@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getMediaRecords, getStorageDevices } from '@/actions/media-tracker';
-import { getEmployees } from '@/actions/employees';
 import { getClients } from '@/actions/clients';
 import {
   Card,
@@ -20,18 +19,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { HardDrive, LayoutGrid, Plus, Settings2, User } from 'lucide-react';
+import { HardDrive, LayoutGrid, Plus, Settings2, UserCog } from 'lucide-react';
 import { MediaTrackerFilterBar } from './MediaTrackerFilterBar';
-import {
-  MediaStatusBadge,
-  DEVICE_TYPE_LABEL,
-  hasBackupRisk,
-  NoBackupPill,
-  hasUnloggedContent,
-  NotLoggedPill,
-} from './status';
+import { DEVICE_TYPE_LABEL, hasBackupRisk, NoBackupPill, hasUnloggedContent, NotLoggedPill } from './status';
 import { DeleteMediaRecordButton } from '@/components/dashboard/DeleteMediaRecordButton';
 import { EditMediaRecordDialog } from './EditMediaRecordDialog';
+import { ExportCsvButton } from './ExportCsvButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,13 +50,10 @@ export default async function MediaTrackerPage({
   const isEmployee = profile?.role === 'EMPLOYEE';
 
   const query = typeof resolved.q === 'string' ? resolved.q : undefined;
-  const status = typeof resolved.status === 'string' ? resolved.status : undefined;
-  const employeeFilter =
-    typeof resolved.employee === 'string' ? resolved.employee : undefined;
+  const unlinkedOnly = resolved.unlinked === '1';
 
-  const [records, employees, clients, devices] = await Promise.all([
-    getMediaRecords({ query, status, employeeId: employeeFilter }),
-    getEmployees().catch(() => []),
+  const [records, clients, devices] = await Promise.all([
+    getMediaRecords({ query, unlinkedOnly }),
     isEmployee ? Promise.resolve([]) : getClients().catch(() => []),
     isEmployee ? Promise.resolve([]) : getStorageDevices(true).catch(() => []),
   ]);
@@ -71,10 +61,6 @@ export default async function MediaTrackerPage({
   const clientOptions = (clients as any[]).map((c) => ({
     id: c.id,
     name: c.name,
-  }));
-  const employeeOptions = (employees as any[]).map((e) => ({
-    id: e.id,
-    fullName: e.fullName ?? null,
   }));
   const deviceOptions = (devices as any[]).map((d) => ({
     id: d.id,
@@ -95,6 +81,15 @@ export default async function MediaTrackerPage({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <ExportCsvButton
+            filters={{ query, unlinkedOnly }}
+          />
+          <Link href="/dashboard/media-tracker/editors">
+            <Button size="sm" variant="outline" className="w-full sm:w-auto">
+              <UserCog className="h-4 w-4 mr-1.5" />
+              Editor Tracker
+            </Button>
+          </Link>
           <Link href="/dashboard/media-tracker/map">
             <Button size="sm" variant="outline" className="w-full sm:w-auto">
               <LayoutGrid className="h-4 w-4 mr-1.5" />
@@ -124,12 +119,7 @@ export default async function MediaTrackerPage({
           <CardDescription>{records.length} tracked shoot(s)</CardDescription>
         </CardHeader>
         <CardContent>
-          <MediaTrackerFilterBar
-            employees={employees.map((e: any) => ({
-              id: e.id,
-              fullName: e.fullName,
-            }))}
-          />
+          <MediaTrackerFilterBar />
 
           <div className="overflow-x-auto">
             <Table>
@@ -137,16 +127,14 @@ export default async function MediaTrackerPage({
                 <TableRow>
                   <TableHead>Client</TableHead>
                   <TableHead>Shoot / Title</TableHead>
-                  <TableHead>Assigned Editor</TableHead>
                   <TableHead>Primary Storage</TableHead>
-                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {records.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-10 text-slate-500">
+                    <TableCell colSpan={4} className="text-center py-10 text-slate-500">
                       No media records found.
                     </TableCell>
                   </TableRow>
@@ -154,7 +142,9 @@ export default async function MediaTrackerPage({
                   records.map((r: any) => (
                     <TableRow key={r.id}>
                       <TableCell className="font-medium">
-                        {r.client?.name ?? 'Unknown Client'}
+                        {r.client?.name ?? (
+                          <span className="text-slate-500">No client</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Link
@@ -163,20 +153,19 @@ export default async function MediaTrackerPage({
                         >
                           {r.title}
                         </Link>
-                        {r.shoot_date && (
+                        {(r.shoot_date || r.category) && (
                           <p className="text-xs text-slate-500 mt-0.5">
-                            {new Date(r.shoot_date).toLocaleDateString('en-IN')}
+                            {r.shoot_date &&
+                              new Date(r.shoot_date).toLocaleDateString('en-IN')}
+                            {r.shoot_date && r.category && ' · '}
+                            {r.category}
                           </p>
                         )}
-                      </TableCell>
-                      <TableCell>
-                        {r.assigned_employee ? (
-                          <span className="flex items-center gap-1.5 text-sm">
-                            <User className="h-3.5 w-3.5 text-slate-500" />
-                            {r.assigned_employee.fullName ?? r.assigned_employee.email}
-                          </span>
-                        ) : (
-                          <span className="text-slate-500 text-sm">Unassigned</span>
+                        {(hasBackupRisk(r) || hasUnloggedContent(r)) && (
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                            {hasBackupRisk(r) && <NoBackupPill />}
+                            {hasUnloggedContent(r) && <NotLoggedPill />}
+                          </div>
                         )}
                       </TableCell>
                       <TableCell>
@@ -196,13 +185,6 @@ export default async function MediaTrackerPage({
                           <span className="text-slate-500 text-sm">—</span>
                         )}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <MediaStatusBadge status={r.status} />
-                          {hasBackupRisk(r) && <NoBackupPill />}
-                          {hasUnloggedContent(r) && <NotLoggedPill />}
-                        </div>
-                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Link href={`/dashboard/media-tracker/${r.id}`}>
@@ -215,7 +197,6 @@ export default async function MediaTrackerPage({
                               <EditMediaRecordDialog
                                 record={r}
                                 clients={clientOptions}
-                                employees={employeeOptions}
                                 devices={deviceOptions}
                               />
                               <DeleteMediaRecordButton

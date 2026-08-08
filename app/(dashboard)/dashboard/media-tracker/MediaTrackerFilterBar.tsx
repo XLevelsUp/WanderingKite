@@ -3,45 +3,26 @@
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Search } from 'lucide-react';
-import { STATUS_META, type MediaRecordStatus } from './status';
+import { Button } from '@/components/ui/button';
+import { Search, Users } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface EmployeeOption {
-  id: string;
-  fullName: string | null;
-}
-
-export function MediaTrackerFilterBar({
-  employees,
-}: {
-  employees: EmployeeOption[];
-}) {
+export function MediaTrackerFilterBar() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
   const [query, setQuery] = useState(searchParams.get('q') || '');
-  const [status, setStatus] = useState(searchParams.get('status') || 'all');
-  const [employee, setEmployee] = useState(searchParams.get('employee') || 'all');
+  const [unlinked, setUnlinked] = useState(searchParams.get('unlinked') === '1');
 
   const updateFilters = useCallback(
-    (q: string, st: string, emp: string) => {
+    (q: string, unl: boolean) => {
       const params = new URLSearchParams(searchParams.toString());
       if (q) params.set('q', q);
       else params.delete('q');
 
-      if (st && st !== 'all') params.set('status', st);
-      else params.delete('status');
-
-      if (emp && emp !== 'all') params.set('employee', emp);
-      else params.delete('employee');
+      if (unl) params.set('unlinked', '1');
+      else params.delete('unlinked');
 
       router.push(`${pathname}?${params.toString()}`);
     },
@@ -51,65 +32,41 @@ export function MediaTrackerFilterBar({
   useEffect(() => {
     const timer = setTimeout(() => {
       if (query !== (searchParams.get('q') || '')) {
-        updateFilters(query, status, employee);
+        updateFilters(query, unlinked);
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [query, status, employee, updateFilters, searchParams]);
+  }, [query, unlinked, updateFilters, searchParams]);
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 mb-6">
       <div className="relative flex-1">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search by shoot title..."
+          placeholder="Search by title or folder path..."
           className="pl-9"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
-      <div className="w-full sm:w-[200px]">
-        <Select
-          value={status}
-          onValueChange={(val) => {
-            setStatus(val);
-            updateFilters(query, val, employee);
-          }}
-        >
-          <SelectTrigger data-no-track>
-            <SelectValue placeholder="All Statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            {(Object.keys(STATUS_META) as MediaRecordStatus[]).map((s) => (
-              <SelectItem key={s} value={s}>
-                {STATUS_META[s].label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="w-full sm:w-[200px]">
-        <Select
-          value={employee}
-          onValueChange={(val) => {
-            setEmployee(val);
-            updateFilters(query, status, val);
-          }}
-        >
-          <SelectTrigger data-no-track>
-            <SelectValue placeholder="All Employees" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Employees</SelectItem>
-            {employees.map((e) => (
-              <SelectItem key={e.id} value={e.id}>
-                {e.fullName ?? 'Unnamed'}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        data-no-track
+        className={cn(
+          'shrink-0 h-9',
+          unlinked && 'bg-primary/10 border-primary/40 text-primary'
+        )}
+        onClick={() => {
+          const next = !unlinked;
+          setUnlinked(next);
+          updateFilters(query, next);
+        }}
+      >
+        <Users className="h-3.5 w-3.5 mr-1.5" />
+        No Client
+      </Button>
     </div>
   );
 }

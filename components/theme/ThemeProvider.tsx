@@ -23,6 +23,11 @@ export function ThemeProvider() {
   return (
     <style
       id="brand-theme"
+      // precedence + href let React hoist this into <head> and de-duplicate
+      // it there — required whenever a <style> tag isn't written literally
+      // inside <head> (see https://react.dev/reference/react-dom/components/style).
+      precedence="default"
+      href="brand-theme"
       // nonce can be added here for strict CSP environments
       dangerouslySetInnerHTML={{ __html: css }}
     />

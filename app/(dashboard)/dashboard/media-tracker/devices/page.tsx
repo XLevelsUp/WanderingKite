@@ -54,7 +54,8 @@ export default async function StorageDevicesPage() {
         <CardHeader>
           <CardTitle>Device Inventory</CardTitle>
           <CardDescription>
-            Retire a device instead of deleting it to preserve backup history.
+            Retire a device to hide it from pickers while keeping history, or
+            delete it permanently if it was never actually used.
           </CardDescription>
         </CardHeader>
         <CardContent>
