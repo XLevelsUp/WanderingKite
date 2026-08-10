@@ -10,8 +10,7 @@ export const invoiceLineItemSchema = z.object({
 
 export type InvoiceLineItemFormData = z.infer<typeof invoiceLineItemSchema>;
 
-export const createInvoiceSchema = z.object({
-  clientId: z.string().uuid('Select a valid client'),
+const invoiceContentFields = {
   items: z.array(invoiceLineItemSchema).min(1, 'Add at least one line item'),
   discountType: z.enum(['PERCENTAGE', 'FLAT']).optional().nullable(),
   discountValue: z.number().min(0, 'Discount must be non-negative').optional().nullable(),
@@ -24,9 +23,31 @@ export const createInvoiceSchema = z.object({
     .or(z.literal(''))
     .nullable(),
   notes: z.string().max(1000).optional().or(z.literal('')),
-}).refine(
-  (data) => !data.discountType || (data.discountValue !== undefined && data.discountValue !== null),
-  { message: 'Enter a discount value for the selected discount type', path: ['discountValue'] }
-);
+};
+
+const discountValueRequiredWhenTypeSet = {
+  message: 'Enter a discount value for the selected discount type',
+  path: ['discountValue'] as PropertyKey[],
+};
+
+function requiresDiscountValue(data: { discountType?: string | null; discountValue?: number | null }) {
+  return !data.discountType || (data.discountValue !== undefined && data.discountValue !== null);
+}
+
+export const createInvoiceSchema = z
+  .object({
+    clientId: z.string().uuid('Select a valid client'),
+    ...invoiceContentFields,
+  })
+  .refine(requiresDiscountValue, discountValueRequiredWhenTypeSet);
 
 export type CreateInvoiceFormData = z.infer<typeof createInvoiceSchema>;
+
+// Same content as createInvoiceSchema, minus clientId — an ISSUED invoice's
+// bill-to client is fixed; only its content (items/discount/GST/notes) can
+// be edited before it's paid.
+export const updateInvoiceSchema = z
+  .object({ ...invoiceContentFields })
+  .refine(requiresDiscountValue, discountValueRequiredWhenTypeSet);
+
+export type UpdateInvoiceFormData = z.infer<typeof updateInvoiceSchema>;

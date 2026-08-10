@@ -505,6 +505,11 @@ model Invoice {
 
   items           InvoiceItem[]
 
+  // Soft-delete: only ever set for DRAFT/CANCELLED invoices (see deleteInvoice
+  // in actions/invoices.ts). ISSUED/PAID invoices keep a real GST invoice
+  // number, so they're never removed from listings this way.
+  deletedAt       DateTime?      @map("deleted_at")
+
   createdAt       DateTime       @default(now()) @map("created_at")
   updatedAt       DateTime       @updatedAt @map("updated_at")
 
