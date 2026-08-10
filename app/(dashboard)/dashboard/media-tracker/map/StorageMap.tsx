@@ -484,6 +484,7 @@ export function StorageMap({
             photoSizeGb={record.photo_size_gb ?? 0}
             videoSizeGb={record.video_size_gb ?? 0}
             otherSizeGb={record.other_size_gb ?? 0}
+            folderPath={record.folder_path}
             compact
           />
         </div>

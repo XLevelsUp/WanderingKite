@@ -8,62 +8,15 @@ import {
   Focus,
   Lightbulb,
   User,
-  Users,
   Plus,
   Box,
   Loader2,
+  Clock,
 } from 'lucide-react';
 import Image from 'next/image';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { useNotify } from '@/hooks/useNotify';
 
-const PACKAGES = [
-  {
-    id: 'hourly',
-    name: 'Hourly Flex',
-    price: 999,
-    originalPrice: 1499,
-    duration: '/per hr',
-    desc: 'Includes Photo/Video Space, 3 Lights, 1 Tripod',
-    save: 500,
-  },
-  {
-    id: 'half-day',
-    name: 'Half Day',
-    price: 3499,
-    originalPrice: 3999,
-    duration: '/4 hrs',
-    desc: 'Perfect for portrait sessions or quick product shoots.',
-    save: 500,
-  },
-  {
-    id: 'full-day',
-    name: 'Full Day',
-    price: 6999,
-    originalPrice: 7999,
-    duration: '/8 hrs',
-    desc: 'Best for elaborate setups, commercial shoots, and music videos.',
-    save: 1000,
-    bestValue: true,
-  },
-];
-
-const ADD_ONS = [
-  {
-    id: 'cameraman',
-    name: 'Pro Cameraman',
-    price: 1000,
-    unit: 'hr',
-    icon: User,
-  },
-  {
-    id: 'assistant',
-    name: 'Studio Assistant',
-    price: 250,
-    unit: 'hr',
-    icon: Users,
-  },
-];
 const getEquipmentHourlyRate = (item: any): number => {
   if (!item) return 0;
   
@@ -94,8 +47,18 @@ const getEquipmentHourlyRate = (item: any): number => {
   return 0;
 };
 
-export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
-  const [selectedPackage, setSelectedPackage] = useState(PACKAGES[2]); // Default to Full Day
+export function StudioPricingEngine({
+  equipment = [],
+  packages = [],
+  addOns = [],
+}: {
+  equipment?: any[];
+  packages?: any[];
+  addOns?: any[];
+}) {
+  const [selectedPackage, setSelectedPackage] = useState<any>(
+    () => packages.find((p) => p.is_best_value) ?? packages[packages.length - 1] ?? null
+  );
   const [selectedAddOns, setSelectedAddOns] = useState<Set<string>>(new Set());
   const [selectedEquipment, setSelectedEquipment] = useState<Set<string>>(
     new Set()
@@ -120,17 +83,17 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
     setSelectedEquipment(newSet);
   };
 
-  const packageHours =
-    selectedPackage.id === 'hourly'
-      ? 1
-      : selectedPackage.id === 'half-day'
-        ? 4
-        : 8;
+  // Duration label doesn't carry a stable machine-readable id anymore (admin
+  // can rename/reorder packages freely), so the hour multiplier is parsed
+  // from its leading number — "4 Hours" -> 4, "Per Hour" -> 1 (no leading digit).
+  const packageHours = selectedPackage
+    ? parseInt(selectedPackage.duration_label?.match(/^(\d+)/)?.[1] ?? '1', 10)
+    : 1;
 
   const subtotal = useMemo(() => {
-    let total = selectedPackage.price;
+    let total = selectedPackage ? selectedPackage.price : 0;
     selectedAddOns.forEach((id) => {
-      const addon = ADD_ONS.find((a) => a.id === id);
+      const addon = addOns.find((a) => a.id === id);
       if (addon) {
         total += addon.price * packageHours;
       }
@@ -148,6 +111,7 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
     selectedEquipment,
     packageHours,
     equipment,
+    addOns,
   ]);
 
   const gst = subtotal * 0.18;
@@ -157,10 +121,10 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
 
   const generateBookingMessage = () => {
     const addOnNames = Array.from(selectedAddOns)
-      .map((id) => ADD_ONS.find((a) => a.id === id)?.name)
+      .map((id) => addOns.find((a) => a.id === id)?.name)
       .join(', ');
     const addOnString = addOnNames ? ` + [${addOnNames}]` : '';
-    return `Hi! I'd like to book: [${selectedPackage.name}]${addOnString}. Total Estimate: ${formatINR(Math.round(finalTotal))} (incl. GST).`;
+    return `Hi! I'd like to book: [${selectedPackage?.name ?? 'Studio Session'}]${addOnString}. Total Estimate: ${formatINR(Math.round(finalTotal))} (incl. GST).`;
   };
 
   const handleBookingRequest = async () => {
@@ -199,62 +163,66 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
 
       <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
         <div className="lg:col-span-7 flex flex-col gap-4 w-full">
-          {PACKAGES.map((pkg) => (
-            <div
-              key={pkg.id}
-              onClick={() => setSelectedPackage(pkg)}
-              className={`relative cursor-pointer transition-all duration-300 rounded-2xl border p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6
+          {packages.map((pkg) => {
+            const save = pkg.original_price - pkg.price;
+            return (
+              <div
+                key={pkg.id}
+                onClick={() => setSelectedPackage(pkg)}
+                className={`relative cursor-pointer transition-all duration-300 rounded-2xl border p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6
                                  ${
-                                   selectedPackage.id === pkg.id
+                                   selectedPackage?.id === pkg.id
                                      ? 'border-warning bg-warning/10 shadow-[0_0_20px_-5px_hsl(var(--color-warning)/0.2)] sm:scale-[1.02]'
                                      : 'border-white/5 bg-zinc-900/50 hover:bg-zinc-900 sm:hover:scale-[1.01]'
                                  }`}
-            >
-              {pkg.bestValue && (
-                <motion.span
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute -top-3 left-6 rounded-full bg-warning px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-warning-foreground"
-                >
-                  Best Value
-                </motion.span>
-              )}
-
-              <div className="text-left flex-1 w-full">
-                <div className="flex flex-row items-center gap-2 sm:gap-3 mb-1 flex-wrap">
-                  <h3 className="text-lg sm:text-xl font-bold text-white leading-none">{pkg.name}</h3>
-                  <span className="rounded bg-warning/10 border border-warning/20 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-warning inline-block">
-                    {pkg.duration.replace('/', '')}
-                  </span>
-                </div>
-                <p className="text-xs sm:text-sm text-zinc-400 mt-1 leading-relaxed">{pkg.desc}</p>
-              </div>
-
-              <div className="text-left sm:text-right flex-shrink-0 flex flex-col items-start sm:items-end mt-2 sm:mt-0 w-full sm:w-auto border-t border-white/5 sm:border-0 pt-3 sm:pt-0">
-                <div className="flex items-baseline gap-2">
-                  <span
-                    className="text-lg sm:text-xl font-medium text-zinc-500 line-through"
-                    aria-label={`Original price ${formatINR(pkg.originalPrice)}`}
+              >
+                {pkg.is_best_value && (
+                  <motion.span
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute -top-3 left-6 rounded-full bg-warning px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-warning-foreground"
                   >
-                    {formatINR(pkg.originalPrice)}
-                  </span>
-                  <span className="text-2xl sm:text-3xl font-bold text-warning">
-                    {formatINR(pkg.price)}
-                  </span>
-                </div>
-                {pkg.save > 0 && (
-                  <div className="flex items-center gap-2 mt-1 sm:mt-2">
-                    <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-emerald-500/20 inline-block">
-                      {Math.round((pkg.save / pkg.originalPrice) * 100)}% OFF
-                    </span>
-                    <span className="text-xs font-semibold text-emerald-400">
-                      Save {formatINR(pkg.save)}
+                    Best Value
+                  </motion.span>
+                )}
+
+                <div className="text-left flex-1 w-full">
+                  <div className="flex flex-row items-center gap-2 sm:gap-3 mb-1 flex-wrap">
+                    <h3 className="text-lg sm:text-xl font-bold text-white leading-none">{pkg.name}</h3>
+                    <span className="flex items-center gap-1 rounded-full bg-warning/15 border border-warning/30 px-2.5 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-warning inline-flex shadow-[0_0_10px_-4px_hsl(var(--color-warning)/0.5)]">
+                      <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      {pkg.duration_label}
                     </span>
                   </div>
-                )}
+                  <p className="text-xs sm:text-sm text-zinc-400 mt-1 leading-relaxed">{pkg.description}</p>
+                </div>
+
+                <div className="text-left sm:text-right flex-shrink-0 flex flex-col items-start sm:items-end mt-2 sm:mt-0 w-full sm:w-auto border-t border-white/5 sm:border-0 pt-3 sm:pt-0">
+                  <div className="flex items-baseline gap-2.5">
+                    <span
+                      className="text-base sm:text-lg font-semibold text-zinc-300 line-through decoration-rose-500/70 decoration-2"
+                      aria-label={`Original price ${formatINR(pkg.original_price)}`}
+                    >
+                      {formatINR(pkg.original_price)}
+                    </span>
+                    <span className="text-3xl sm:text-4xl font-extrabold text-warning drop-shadow-[0_0_12px_hsl(var(--color-warning)/0.35)]">
+                      {formatINR(pkg.price)}
+                    </span>
+                  </div>
+                  {save > 0 && (
+                    <div className="flex items-center gap-2 mt-1 sm:mt-2">
+                      <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-emerald-500/20 inline-block">
+                        {Math.round((save / pkg.original_price) * 100)}% OFF
+                      </span>
+                      <span className="text-xs font-semibold text-emerald-400">
+                        Save {formatINR(save)}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Add-ons */}
@@ -264,7 +232,7 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
               Add-ons (Optional)
             </h4>
             <div className="space-y-3">
-              {ADD_ONS.map((addon) => {
+              {addOns.map((addon) => {
                 const isSelected = selectedAddOns.has(addon.id);
                 return (
                   <label
@@ -281,7 +249,7 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
                           onChange={() => toggleAddOn(addon.id)}
                         />
                       </div>
-                      <addon.icon
+                      <User
                         className={`w-4 h-4 ${isSelected ? 'text-warning' : 'text-zinc-500'}`}
                       />
                       <span
@@ -337,11 +305,11 @@ export function StudioPricingEngine({ equipment = [] }: { equipment?: any[] }) {
                         return (
                           <div
                             key={item.id}
-                            className={`min-w-[240px] flex-shrink-0 rounded-2xl border p-4 flex flex-col gap-3 transition-colors cursor-pointer snap-start
+                            className={`w-[240px] shrink-0 rounded-2xl border p-4 flex flex-col gap-3 transition-colors cursor-pointer snap-start
                                                             ${isSelected ? 'border-warning bg-warning/10 shadow-[0_0_15px_-5px_hsl(var(--color-warning)/0.15)]' : 'border-white/5 bg-zinc-900/50 hover:bg-zinc-900'}`}
                             onClick={() => toggleEquipment(item.id)}
                           >
-                            <div className="aspect-video relative rounded-lg bg-zinc-800/50 overflow-hidden">
+                            <div className="aspect-video w-full relative rounded-lg bg-zinc-800/50 overflow-hidden">
                               {item.imageUrl || item.image_url ? (
                                 <Image
                                   src={item.imageUrl || item.image_url}

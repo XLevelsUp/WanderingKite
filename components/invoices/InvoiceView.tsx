@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Download, FileDown, ArrowLeft, CheckCircle2, Ban, Loader2 } from 'lucide-react';
+import { Download, FileDown, ArrowLeft, CheckCircle2, Ban, Loader2, Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { updateInvoiceStatus } from '@/actions/invoices';
+import { updateInvoiceStatus, updateInvoiceDate } from '@/actions/invoices';
 import { siteConfig } from '@/config/site';
 import { brandConfig } from '@/config/brand.config';
 
@@ -49,7 +49,17 @@ const STATUS_STYLES: Record<string, string> = {
   CANCELLED: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
 };
 
-function InvoiceDocument({ invoice, status }: { invoice: InvoiceRecord; status: InvoiceRecord['status'] }) {
+function InvoiceDocument({
+  invoice,
+  status,
+  issueDate,
+  dateAction,
+}: {
+  invoice: InvoiceRecord;
+  status: InvoiceRecord['status'];
+  issueDate: string;
+  dateAction?: ReactNode;
+}) {
   return (
     <div className="bg-white text-gray-900 rounded-2xl overflow-hidden shadow-2xl print:shadow-none print:rounded-none border border-gray-100 print:w-full print:border-0 print:m-0">
       {/* Header */}
@@ -68,8 +78,9 @@ function InvoiceDocument({ invoice, status }: { invoice: InvoiceRecord; status: 
         </div>
         <div className="sm:text-right">
           <p className="text-sm font-bold text-white print:text-black">{invoice.invoice_number}</p>
-          <p className="text-[10px] text-gray-500 mt-0.5 print:text-gray-600">
-            Issued {new Date(invoice.issue_date).toLocaleDateString('en-IN')}
+          <p className="text-[10px] text-gray-500 mt-0.5 print:text-gray-600 flex items-center gap-1.5 sm:justify-end">
+            <span>Issued {new Date(issueDate).toLocaleDateString('en-IN')}</span>
+            {dateAction}
           </p>
           <span className={`inline-block mt-1.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase border ${STATUS_STYLES[status]} print:border-gray-400 print:text-black print:bg-transparent`}>
             {status}
@@ -173,8 +184,36 @@ export function InvoiceView({ invoice }: { invoice: InvoiceRecord }) {
   const [busy, setBusy] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [issueDate, setIssueDate] = useState(invoice.issue_date);
+  const [editingDate, setEditingDate] = useState(false);
+  const [dateInput, setDateInput] = useState(invoice.issue_date.slice(0, 10));
+  const [savingDate, setSavingDate] = useState(false);
 
   useEffect(() => setMounted(true), []);
+
+  const handleSaveDate = async () => {
+    if (!dateInput) return;
+    setSavingDate(true);
+    try {
+      const result = await updateInvoiceDate(invoice.id, dateInput);
+      if ('error' in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setIssueDate(dateInput);
+      setEditingDate(false);
+      toast.success('Invoice date updated.');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update invoice date.');
+    } finally {
+      setSavingDate(false);
+    }
+  };
+
+  const handleCancelDateEdit = () => {
+    setDateInput(issueDate.slice(0, 10));
+    setEditingDate(false);
+  };
 
   const handleStatusChange = async (next: 'PAID' | 'CANCELLED') => {
     setBusy(true);
@@ -303,13 +342,54 @@ export function InvoiceView({ invoice }: { invoice: InvoiceRecord }) {
 
       {/* On-screen preview (also the source captured for the PDF download) */}
       <div id="invoice-preview-capture">
-        <InvoiceDocument invoice={invoice} status={status} />
+        <InvoiceDocument
+          invoice={invoice}
+          status={status}
+          issueDate={issueDate}
+          dateAction={
+            editingDate ? (
+              <span className="inline-flex items-center gap-1">
+                <input
+                  type="date"
+                  value={dateInput}
+                  onChange={(e) => setDateInput(e.target.value)}
+                  className="text-[10px] px-1 py-0.5 rounded border border-gray-600 bg-gray-900 text-white leading-none"
+                  autoFocus
+                />
+                <button
+                  onClick={handleSaveDate}
+                  disabled={savingDate}
+                  title="Save date"
+                  className="text-emerald-400 hover:text-emerald-300 disabled:opacity-50"
+                >
+                  {savingDate ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                </button>
+                <button
+                  onClick={handleCancelDateEdit}
+                  disabled={savingDate}
+                  title="Cancel"
+                  className="text-rose-400 hover:text-rose-300 disabled:opacity-50"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ) : (
+              <button
+                onClick={() => setEditingDate(true)}
+                title="Change invoice date"
+                className="text-gray-500 hover:text-primary transition-colors"
+              >
+                <Pencil className="h-3 w-3" />
+              </button>
+            )
+          }
+        />
       </div>
 
       {/* Print-only copy, portaled to <body> so hidden dashboard chrome can't leave behind blank pages */}
       {mounted && createPortal(
         <div id="invoice-print-root" className="hidden print:block">
-          <InvoiceDocument invoice={invoice} status={status} />
+          <InvoiceDocument invoice={invoice} status={status} issueDate={issueDate} />
         </div>,
         document.body
       )}

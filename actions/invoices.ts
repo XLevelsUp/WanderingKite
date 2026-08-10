@@ -209,3 +209,44 @@ export async function updateInvoiceStatus(id: string, nextStatus: 'ISSUED' | 'PA
   revalidatePath(`/dashboard/invoices/${id}`);
   return { success: true };
 }
+
+export async function updateInvoiceDate(id: string, nextIssueDate: string) {
+  const { supabase, user } = await requireAdminOrSuper();
+
+  const parsedDate = new Date(nextIssueDate);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(nextIssueDate) || Number.isNaN(parsedDate.getTime())) {
+    return { error: 'Invalid date.' };
+  }
+
+  const { data: current, error: fetchError } = await supabase
+    .from('invoices')
+    .select('issue_date')
+    .eq('id', id)
+    .single();
+
+  if (fetchError || !current) {
+    return { error: 'Invoice not found.' };
+  }
+
+  if (current.issue_date === nextIssueDate) {
+    return { success: true };
+  }
+
+  const { error } = await supabase.from('invoices').update({ issue_date: nextIssueDate }).eq('id', id);
+  if (error) {
+    return { error: parseSupabaseError(error, 'Failed to update invoice date.') };
+  }
+
+  await writeAuditLog(supabase, {
+    user_id: user.id,
+    action: 'UPDATE_INVOICE_DATE',
+    table_name: 'invoices',
+    record_id: id,
+    old_data: { issue_date: current.issue_date },
+    new_data: { issue_date: nextIssueDate },
+  });
+
+  revalidatePath('/dashboard/invoices');
+  revalidatePath(`/dashboard/invoices/${id}`);
+  return { success: true };
+}

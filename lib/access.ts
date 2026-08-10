@@ -65,6 +65,7 @@ export const ROUTE_ACCESS: Record<string, AppRole> = {
   '/admin/payroll':           'ADMIN',
   '/admin/payroll/payslip':   'EMPLOYEE', // Allow employees to view their own detailed payslip
   '/dashboard/rental-settings': 'ADMIN',
+  '/dashboard/studio-pricing': 'ADMIN',
 
   // ── Developer only ────────────────────────────────────────────────────────
   '/dashboard/audit-logs':    'DEVELOPER', // Login activity, click analytics, data-change audit log — not even SUPER_ADMIN
@@ -91,6 +92,7 @@ export const ROLE_NAV_ACCESS = {
     canViewMediaTracker: true,    // View-only — CRUD hidden inline for this role
     canViewBookingConflicts: false,
     canViewInvoices: false,
+    canViewStudioPricing: false,
   },
   ADMIN: {
     canViewEmployees: true,
@@ -108,6 +110,7 @@ export const ROLE_NAV_ACCESS = {
     canViewMediaTracker: true,
     canViewBookingConflicts: true,
     canViewInvoices: true,
+    canViewStudioPricing: true,
   },
   SUPER_ADMIN: {
     canViewEmployees: true,
@@ -125,6 +128,7 @@ export const ROLE_NAV_ACCESS = {
     canViewMediaTracker: true,
     canViewBookingConflicts: true,
     canViewInvoices: true,
+    canViewStudioPricing: true,
   },
   DEVELOPER: {
     canViewEmployees: true,
@@ -142,6 +146,7 @@ export const ROLE_NAV_ACCESS = {
     canViewMediaTracker: true,
     canViewBookingConflicts: true,
     canViewInvoices: true,
+    canViewStudioPricing: true,
   },
 } satisfies Record<AppRole, Record<string, boolean>>;
 
