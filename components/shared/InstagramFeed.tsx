@@ -99,7 +99,7 @@ export function InstagramFeed({ account = 'wanderingkite' }: InstagramFeedProps)
     if (media.length > 0 && item.id === media[0].id) return; // The first video autoplays, ignore
     const video = desktopVideoRefs.current[visualIdx];
     if (video) {
-      video.play().catch((err) => logger.debug('Hover playback error:', err));
+      video.play().catch((err) => logger.warn('Instagram hover playback failed:', item.permalink, err));
     }
   };
 
@@ -261,7 +261,7 @@ export function InstagramFeed({ account = 'wanderingkite' }: InstagramFeedProps)
                       Live
                     </div>
                   )}
-                  {!isFirstVideo && (
+                  {!isFirstVideo && isVideo && (
                     <div className="absolute top-3 left-3 z-[3] flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-md"
                       style={{ background: 'rgba(0,0,0,0.5)' }}>
                       <Film className="h-3 w-3 text-white/60" />
