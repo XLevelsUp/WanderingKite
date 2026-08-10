@@ -49,11 +49,20 @@ export async function GET(request: NextRequest) {
 
     const items = data.data;
 
-    // Filter items: prioritize VIDEO/REEL types
-    const videos = items.filter((item: any) => item.media_type === 'VIDEO');
+    // Filter items: prioritize VIDEO/REEL types.
+    // Instagram omits media_url on rights-restricted posts (e.g. licensed audio) — it
+    // still returns the post and its thumbnail, but no playable file. Those items would
+    // render an empty <video src="">, so they are skipped here.
+    const videos = items.filter((item: any) => item.media_type === 'VIDEO' && item.media_url);
     const images = items.filter(
-      (item: any) => item.media_type === 'IMAGE' || item.media_type === 'CAROUSEL_ALBUM'
+      (item: any) =>
+        (item.media_type === 'IMAGE' || item.media_type === 'CAROUSEL_ALBUM') && item.media_url
     );
+
+    const skipped = items.filter((item: any) => !item.media_url).length;
+    if (skipped > 0) {
+      logger.debug(`Instagram: skipped ${skipped} item(s) with no media_url (restricted media).`);
+    }
 
     // Combine them, prioritizing videos, and falling back to images if we have < 5 videos
     let selected = [...videos];
