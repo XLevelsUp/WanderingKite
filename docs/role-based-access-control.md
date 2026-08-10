@@ -108,6 +108,7 @@ more specific route overrides a general one).
 | `/dashboard/clients` | ADMIN |
 | `/dashboard/booking-conflicts` | ADMIN |
 | `/dashboard/invoices` | ADMIN |
+| `/dashboard/studio-pricing` | ADMIN |
 | `/admin` | ADMIN |
 | `/admin/employees` | ADMIN |
 | `/admin/attendance` | ADMIN |

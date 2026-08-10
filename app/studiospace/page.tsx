@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { StudioCarousel } from '@/components/sections/StudioCarousel';
 import { StudioPricingEngine } from '@/components/studio/StudioPricingEngine';
+import { getStudioPackages, getStudioAddOns } from '@/actions/studio-pricing';
 import { BackdropsGallery } from '@/components/studio/BackdropsGallery';
 import ServiceTerms from '@/components/sections/ServiceTerms';
 
@@ -448,6 +449,11 @@ export default async function StudioPage() {
     console.error('Failed to fetch equipment for studio page:', error);
   }
 
+  const [studioPackages, studioAddOns] = await Promise.all([
+    getStudioPackages(),
+    getStudioAddOns(),
+  ]);
+
   // Hardcoded equipment previews for the rental section below
   const previewCameras = 'Sony A7 IV, Canon EOS R5, Lumix S5 IIX ,Sony Alpha M7 V,Sony Alpha FX3 , Sony Alpha FX 30';
   const previewLenses = 'Sony 24-70mm f/2.8, Canon 50mm f/1.2, Sigma 35mm Art';
@@ -526,7 +532,7 @@ export default async function StudioPage() {
               Check our competitive photo studio rental Coimbatore price options to book photography studio Coimbatore sessions today. Everything you need under one roof.
             </p>
 
-            <StudioPricingEngine equipment={rentalEquipment} />
+            <StudioPricingEngine equipment={rentalEquipment} packages={studioPackages as any} addOns={studioAddOns as any} />
 
             {/* Podcast Studio */}
             <div className="mb-20">

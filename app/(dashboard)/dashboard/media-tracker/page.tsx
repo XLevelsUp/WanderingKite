@@ -10,20 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { HardDrive, LayoutGrid, Plus, Settings2, UserCog } from 'lucide-react';
 import { MediaTrackerFilterBar } from './MediaTrackerFilterBar';
-import { DEVICE_TYPE_LABEL, hasBackupRisk, NoBackupPill, hasUnloggedContent, NotLoggedPill } from './status';
-import { DeleteMediaRecordButton } from '@/components/dashboard/DeleteMediaRecordButton';
-import { EditMediaRecordDialog } from './EditMediaRecordDialog';
+import { MediaRecordsTable } from './MediaRecordsTable';
 import { ExportCsvButton } from './ExportCsvButton';
 
 export const dynamic = 'force-dynamic';
@@ -121,98 +111,12 @@ export default async function MediaTrackerPage({
         <CardContent>
           <MediaTrackerFilterBar />
 
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Shoot / Title</TableHead>
-                  <TableHead>Primary Storage</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {records.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-10 text-slate-500">
-                      No media records found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  records.map((r: any) => (
-                    <TableRow key={r.id}>
-                      <TableCell className="font-medium">
-                        {r.client?.name ?? (
-                          <span className="text-slate-500">No client</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Link
-                          href={`/dashboard/media-tracker/${r.id}`}
-                          className="hover:text-primary hover:underline"
-                        >
-                          {r.title}
-                        </Link>
-                        {(r.shoot_date || r.category) && (
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            {r.shoot_date &&
-                              new Date(r.shoot_date).toLocaleDateString('en-IN')}
-                            {r.shoot_date && r.category && ' · '}
-                            {r.category}
-                          </p>
-                        )}
-                        {(hasBackupRisk(r) || hasUnloggedContent(r)) && (
-                          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                            {hasBackupRisk(r) && <NoBackupPill />}
-                            {hasUnloggedContent(r) && <NotLoggedPill />}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {r.primary_storage ? (
-                          <span className="text-sm">
-                            {r.primary_storage.label}{' '}
-                            <span className="text-slate-500">
-                              ({DEVICE_TYPE_LABEL[r.primary_storage.type] ?? r.primary_storage.type})
-                            </span>
-                            {!r.primary_storage.is_active && (
-                              <span className="ml-1.5 text-[10px] uppercase text-amber-500">
-                                Retired
-                              </span>
-                            )}
-                          </span>
-                        ) : (
-                          <span className="text-slate-500 text-sm">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Link href={`/dashboard/media-tracker/${r.id}`}>
-                            <Button size="sm" variant="secondary">
-                              View
-                            </Button>
-                          </Link>
-                          {!isEmployee && (
-                            <>
-                              <EditMediaRecordDialog
-                                record={r}
-                                clients={clientOptions}
-                                devices={deviceOptions}
-                              />
-                              <DeleteMediaRecordButton
-                                recordId={r.id}
-                                recordTitle={r.title}
-                              />
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <MediaRecordsTable
+            records={records}
+            clientOptions={clientOptions}
+            deviceOptions={deviceOptions}
+            isEmployee={isEmployee}
+          />
         </CardContent>
       </Card>
     </div>

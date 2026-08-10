@@ -257,6 +257,48 @@ export async function deleteMediaRecord(id: string) {
   revalidatePath('/dashboard/media-tracker');
 }
 
+/** Same soft-delete as deleteMediaRecord (sets deleted_at, never removes the
+ * row) applied to many records at once — for the list page's bulk-select. */
+export async function bulkDeleteMediaRecords(ids: string[]) {
+  const { supabase, user } = await requireAdmin();
+
+  if (!ids || ids.length === 0) {
+    return { deleted: 0 };
+  }
+
+  const { data: oldRows } = await supabase
+    .from('media_records')
+    .select('*')
+    .in('id', ids)
+    .is('deleted_at', null);
+
+  const { error } = await supabase
+    .from('media_records')
+    .update({ deleted_at: new Date().toISOString() })
+    .in('id', ids);
+
+  if (error) {
+    logger.error('Failed to bulk delete media records', error);
+    throw new Error(parseSupabaseError(error, 'Failed to delete media records.'));
+  }
+
+  for (const row of oldRows ?? []) {
+    await writeAuditLog(supabase, {
+      user_id: user.id,
+      action: 'DELETE_MEDIA_RECORD',
+      table_name: 'media_records',
+      record_id: row.id,
+      old_data: row,
+    });
+  }
+
+  revalidatePath('/dashboard/media-tracker');
+  revalidatePath('/dashboard/media-tracker/map');
+  revalidatePath('/dashboard/media-tracker/editors');
+
+  return { deleted: oldRows?.length ?? 0 };
+}
+
 // ── Storage slot operations (Copy / Transfer / Remove are all one update) ───
 
 export type StorageSlot =
@@ -329,6 +371,7 @@ export async function updateMediaRecordContent(
     photoSizeGb: number;
     videoSizeGb: number;
     otherSizeGb: number;
+    folderPath?: string;
   }
 ) {
   const { supabase } = await requireAdmin();
@@ -341,6 +384,9 @@ export async function updateMediaRecordContent(
       photo_size_gb: input.photoSizeGb,
       video_size_gb: input.videoSizeGb,
       other_size_gb: input.otherSizeGb,
+      // Only touch folder_path when the caller actually passed it, so this
+      // action stays safe to call from places that don't show that field.
+      ...(input.folderPath !== undefined ? { folder_path: input.folderPath || null } : {}),
       // This dialog exists specifically to review/confirm content, so a
       // save here always counts as "logged" — even if every value is 0.
       content_logged_at: new Date().toISOString(),

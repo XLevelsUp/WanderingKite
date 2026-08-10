@@ -30,6 +30,7 @@ import EmptyState from './EmptyState';
 import { useNotifications } from '@/components/ui/useNotifications';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { getStudioPackages, getStudioAddOns } from '@/actions/studio-pricing';
 
 interface StudioEquipment {
   id: string;
@@ -51,50 +52,6 @@ interface StudioBooking {
   equipments: StudioEquipment[];
   createdAt: string;
 }
-
-const PACKAGES = [
-  {
-    id: 'hourly',
-    name: 'Hourly Flex',
-    price: 999,
-    originalPrice: 1499,
-    duration: '/per hr',
-    desc: 'Includes Photo/Video Space, 3 Lights, 1 Tripod',
-  },
-  {
-    id: 'half_day',
-    name: 'Half Day',
-    price: 3499,
-    originalPrice: 3999,
-    duration: '/4 hrs',
-    desc: 'Perfect for portrait sessions or quick product shoots.',
-  },
-  {
-    id: 'full_day',
-    name: 'Full Day',
-    price: 6999,
-    originalPrice: 7999,
-    duration: '/8 hrs',
-    desc: 'Best for elaborate setups, commercial shoots, and music videos.',
-  },
-];
-
-const ADD_ONS = [
-  {
-    id: 'cameraman',
-    name: 'Pro Cameraman',
-    price: 1000,
-    unit: 'hr',
-    desc: 'Professional assistance for capturing high-quality content.',
-  },
-  {
-    id: 'assistant',
-    name: 'Studio Assistant',
-    price: 250,
-    unit: 'hr',
-    desc: 'Helpers for managing lights, backdrops, and sets.',
-  },
-];
 
 const CATEGORIES = [
   { title: 'Cameras', key: 'camera' },
@@ -138,6 +95,8 @@ const getEquipmentHourlyRate = (item: StudioEquipment): number => {
 export default function StudioTab() {
   const [bookings, setBookings] = useState<StudioBooking[]>([]);
   const [equipmentCatalog, setEquipmentCatalog] = useState<StudioEquipment[]>([]);
+  const [packages, setPackages] = useState<any[]>([]);
+  const [addOns, setAddOns] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -148,7 +107,7 @@ export default function StudioTab() {
   const [hour, setHour] = useState('');
   const [minute, setMinute] = useState('00');
   const [ampm, setAmpm] = useState('');
-  const [packageOption, setPackageOption] = useState<'hourly' | 'half_day' | 'full_day'>('hourly');
+  const [selectedPackageId, setSelectedPackageId] = useState('');
   const [hourlyDuration, setHourlyDuration] = useState('2');
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [purpose, setPurpose] = useState('');
@@ -169,38 +128,44 @@ export default function StudioTab() {
     );
   };
 
+  const selectedPackage = React.useMemo(
+    () => packages.find((p) => p.id === selectedPackageId) ?? null,
+    [packages, selectedPackageId]
+  );
+
+  // A package is "metered by the hour" (client picks how many hours) when its
+  // duration label has no leading number (e.g. "Per Hour"); a label starting
+  // with a digit (e.g. "4 Hours") is a fixed-duration package instead.
+  const isHourlyMetered = !selectedPackage || !/^\d/.test(selectedPackage.duration_label ?? '');
+
   const packageHours = React.useMemo(() => {
-    if (packageOption === 'hourly') {
+    if (isHourlyMetered) {
       return parseInt(hourlyDuration, 10) || 1;
     }
-    return packageOption === 'half_day' ? 4 : 8;
-  }, [packageOption, hourlyDuration]);
+    return parseInt(selectedPackage?.duration_label?.match(/^(\d+)/)?.[1] ?? '1', 10);
+  }, [isHourlyMetered, hourlyDuration, selectedPackage]);
 
   const subtotal = React.useMemo(() => {
-    const selectedPackage = PACKAGES.find((p) => p.id === packageOption);
     if (!selectedPackage) return 0;
-    
-    let total = selectedPackage.price;
-    if (packageOption === 'hourly') {
-      total = selectedPackage.price * packageHours;
-    }
-    
+
+    let total = isHourlyMetered ? selectedPackage.price * packageHours : selectedPackage.price;
+
     selectedAddOns.forEach((id) => {
-      const addon = ADD_ONS.find((a) => a.id === id);
+      const addon = addOns.find((a) => a.id === id);
       if (addon) {
         total += addon.price * packageHours;
       }
     });
-    
+
     selectedEquipmentIds.forEach((id) => {
       const eq = equipmentCatalog.find((e) => e.id === id);
       if (eq) {
         total += getEquipmentHourlyRate(eq) * packageHours;
       }
     });
-    
+
     return total;
-  }, [packageOption, packageHours, selectedAddOns, selectedEquipmentIds, equipmentCatalog]);
+  }, [selectedPackage, isHourlyMetered, packageHours, selectedAddOns, addOns, selectedEquipmentIds, equipmentCatalog]);
 
   const gst = subtotal * 0.18;
   const finalTotal = subtotal + gst;
@@ -245,9 +210,20 @@ export default function StudioTab() {
     }
   };
 
+  const fetchPricing = async () => {
+    try {
+      const [pkgs, addons] = await Promise.all([getStudioPackages(), getStudioAddOns()]);
+      setPackages(pkgs as any[]);
+      setAddOns(addons as any[]);
+    } catch (error) {
+      logger.error('Failed to load studio pricing:', error);
+    }
+  };
+
   useEffect(() => {
     fetchBookings();
     fetchCatalog();
+    fetchPricing();
 
     const supabase = createClient();
     const channel = supabase
@@ -261,6 +237,14 @@ export default function StudioTab() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Default to the best-value package once pricing has loaded.
+  useEffect(() => {
+    if (!selectedPackageId && packages.length > 0) {
+      const best = packages.find((p) => p.is_best_value) ?? packages[0];
+      setSelectedPackageId(best.id);
+    }
+  }, [packages, selectedPackageId]);
 
   const handleBookStudio = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -286,17 +270,14 @@ export default function StudioTab() {
       return;
     }
 
-    let duration = 2;
-    if (packageOption === 'hourly') {
-      duration = parseInt(hourlyDuration, 10);
-    } else if (packageOption === 'half_day') {
-      duration = 4;
-    } else if (packageOption === 'full_day') {
-      duration = 8;
-    }
+    const duration = packageHours;
 
     if (isNaN(duration) || duration <= 0) {
       setFormError('Please enter a valid number of hours.');
+      return;
+    }
+    if (!selectedPackage) {
+      setFormError('Please select a package.');
       return;
     }
     if (!purpose.trim()) {
@@ -313,14 +294,11 @@ export default function StudioTab() {
       return;
     }
 
-    const selectedPackage = PACKAGES.find((p) => p.id === packageOption);
-    const packageLabel = selectedPackage
-      ? `${selectedPackage.name} (${packageOption === 'hourly' ? `${duration} Hours` : selectedPackage.duration.replace('/', '')})`
-      : '';
+    const packageLabel = `${selectedPackage.name} (${isHourlyMetered ? `${duration} Hours` : selectedPackage.duration_label})`;
 
     const addOnLabels = selectedAddOns
       .map((id) => {
-        const addon = ADD_ONS.find((a) => a.id === id);
+        const addon = addOns.find((a) => a.id === id);
         return addon ? `${addon.name} (+₹${addon.price}/${addon.unit})` : '';
       })
       .filter(Boolean);
@@ -336,11 +314,11 @@ export default function StudioTab() {
       .join('\n');
 
     const breakdown = {
-      package: selectedPackage ? { id: selectedPackage.id, name: selectedPackage.name, price: selectedPackage.price } : null,
+      package: { id: selectedPackage.id, name: selectedPackage.name, price: selectedPackage.price },
       packageHours: duration,
-      packageTotal: selectedPackage ? (packageOption === 'hourly' ? selectedPackage.price * duration : selectedPackage.price) : 0,
+      packageTotal: isHourlyMetered ? selectedPackage.price * duration : selectedPackage.price,
       addOns: selectedAddOns.map((id) => {
-        const addon = ADD_ONS.find((a) => a.id === id);
+        const addon = addOns.find((a) => a.id === id);
         return addon ? { id: addon.id, name: addon.name, price: addon.price, total: addon.price * duration } : null;
       }).filter(Boolean),
       equipment: selectedEquipmentIds.map((id) => {
@@ -398,7 +376,7 @@ export default function StudioTab() {
       setHour('');
       setMinute('');
       setAmpm('');
-      setPackageOption('hourly');
+      setSelectedPackageId((packages.find((p) => p.is_best_value) ?? packages[0])?.id ?? '');
       setHourlyDuration('2');
       setSelectedAddOns([]);
       setPurpose('');
@@ -739,8 +717,8 @@ export default function StudioTab() {
                   {date && hour && ampm && (
                     <div className="text-[10px] text-amber-400 mt-1 pl-1 font-medium flex flex-col gap-0.5">
                       <span className="text-slate-400 text-[9.5px]">
-                        Session duration: {packageOption === 'hourly' ? `${hourlyDuration} hours` : packageOption === 'half_day' ? '4 hours (Half Day)' : '8 hours (Full Day)'}
-                        {selectedAddOns.length > 0 && ` • with ${selectedAddOns.map(id => ADD_ONS.find(a => a.id === id)?.name).join(', ')}`}
+                        Session duration: {isHourlyMetered ? `${hourlyDuration} hours` : `${packageHours} hours (${selectedPackage?.name ?? ''})`}
+                        {selectedAddOns.length > 0 && ` • with ${selectedAddOns.map(id => addOns.find(a => a.id === id)?.name).join(', ')}`}
                       </span>
                     </div>
                   )}
@@ -767,13 +745,13 @@ export default function StudioTab() {
                     Select Studio Rental Package *
                   </Label>
                   <div className="grid grid-cols-1 gap-2">
-                    {PACKAGES.map((pkg) => {
-                      const isSelected = packageOption === pkg.id;
+                    {packages.map((pkg) => {
+                      const isSelected = selectedPackageId === pkg.id;
                       const formatINR = (val: number) => `₹${val.toLocaleString('en-IN')}`;
                       return (
                         <div
                           key={pkg.id}
-                          onClick={() => setPackageOption(pkg.id as any)}
+                          onClick={() => setSelectedPackageId(pkg.id)}
                           className={`cursor-pointer transition-all duration-200 rounded-xl border p-3 flex items-center justify-between gap-4 text-left select-none
                             ${
                               isSelected
@@ -784,16 +762,17 @@ export default function StudioTab() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-bold text-white block">{pkg.name}</span>
-                              <span className="rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500">
-                                {pkg.duration.replace('/', '')}
+                              <span className="flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500">
+                                <Clock className="w-2.5 h-2.5" />
+                                {pkg.duration_label}
                               </span>
                             </div>
-                            <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">{pkg.desc}</p>
+                            <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">{pkg.description}</p>
                           </div>
                           <div className="text-right flex-shrink-0">
                             <div className="flex items-baseline gap-1.5 justify-end">
-                              <span className="text-[10px] text-slate-500 line-through">{formatINR(pkg.originalPrice)}</span>
-                              <span className="text-xs font-bold text-amber-500">{formatINR(pkg.price)}</span>
+                              <span className="text-[11px] font-medium text-slate-300 line-through decoration-rose-500/70">{formatINR(pkg.original_price)}</span>
+                              <span className="text-sm font-extrabold text-amber-500">{formatINR(pkg.price)}</span>
                             </div>
                           </div>
                         </div>
@@ -802,7 +781,7 @@ export default function StudioTab() {
                   </div>
                 </div>
 
-                {packageOption === 'hourly' && (
+                {isHourlyMetered && (
                   <div className="space-y-1.5 animate-fadeIn">
                     <Label htmlFor="hourlyDuration" className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                       <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
@@ -828,7 +807,7 @@ export default function StudioTab() {
                     Add-ons (Optional)
                   </Label>
                   <div className="grid grid-cols-2 gap-2">
-                    {ADD_ONS.map((addon) => {
+                    {addOns.map((addon) => {
                       const isSelected = selectedAddOns.includes(addon.id);
                       return (
                         <label

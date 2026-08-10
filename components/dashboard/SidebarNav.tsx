@@ -20,6 +20,7 @@ import {
   ShieldAlert,
   HardDrive,
   Receipt,
+  Tag,
 } from 'lucide-react';
 import { getNavAccess } from '@/lib/access';
 
@@ -189,6 +190,12 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
         <Link href='/dashboard/rental-settings' className={getLinkClasses('/dashboard/rental-settings')}>
           <Wrench className='w-4 h-4 opacity-75' />
           Rental Settings
+        </Link>
+      )}
+      {access.canViewStudioPricing && (
+        <Link href='/dashboard/studio-pricing' className={getLinkClasses('/dashboard/studio-pricing')}>
+          <Tag className='w-4 h-4 opacity-75' />
+          Studio Pricing
         </Link>
       )}
       {access.canViewClients && (

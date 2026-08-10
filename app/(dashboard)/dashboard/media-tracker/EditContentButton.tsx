@@ -30,6 +30,7 @@ export function EditContentButton({
   photoSizeGb,
   videoSizeGb,
   otherSizeGb,
+  folderPath,
   compact = false,
 }: {
   recordId: string;
@@ -39,6 +40,7 @@ export function EditContentButton({
   photoSizeGb: number;
   videoSizeGb: number;
   otherSizeGb: number;
+  folderPath?: string | null;
   compact?: boolean;
 }) {
   const router = useRouter();
@@ -48,6 +50,7 @@ export function EditContentButton({
   const [photoSize, setPhotoSize] = useState('');
   const [videoSize, setVideoSize] = useState('');
   const [otherSize, setOtherSize] = useState('');
+  const [folder, setFolder] = useState('');
   const [busy, setBusy] = useState(false);
 
   const openDialog = () => {
@@ -56,6 +59,7 @@ export function EditContentButton({
     setPhotoSize(photoSizeGb ? String(photoSizeGb) : '');
     setVideoSize(videoSizeGb ? String(videoSizeGb) : '');
     setOtherSize(otherSizeGb ? String(otherSizeGb) : '');
+    setFolder(folderPath ?? '');
     setOpen(true);
   };
 
@@ -68,6 +72,7 @@ export function EditContentButton({
         photoSizeGb: photoSize ? Number(photoSize) : 0,
         videoSizeGb: videoSize ? Number(videoSize) : 0,
         otherSizeGb: otherSize ? Number(otherSize) : 0,
+        folderPath: folder.trim(),
       });
       toast.success('Content updated');
       setOpen(false);
@@ -173,6 +178,17 @@ export function EditContentButton({
                 value={otherSize}
                 onChange={(e) => setOtherSize(e.target.value)}
                 placeholder="0"
+              />
+            </div>
+            <div className="space-y-1.5 col-span-2">
+              <Label htmlFor="ec-folder-path" className="text-xs">
+                Folder Path
+              </Label>
+              <Input
+                id="ec-folder-path"
+                value={folder}
+                onChange={(e) => setFolder(e.target.value)}
+                placeholder="e.g. WK 2TB 01/Wandering Kite Studio/WK Corporates/Alusea"
               />
             </div>
           </div>
