@@ -5,7 +5,12 @@ import { requireAdminOrSuper } from '@/actions/rental-policy';
 import { writeAuditLog } from '@/lib/audit';
 import { parseSupabaseError } from '@/lib/errorHandler';
 import { calculateInvoiceTotals } from '@/lib/utils/invoice-calc';
-import { createInvoiceSchema, type CreateInvoiceFormData } from '@/lib/validations/invoices';
+import {
+  createInvoiceSchema,
+  updateInvoiceSchema,
+  type CreateInvoiceFormData,
+  type UpdateInvoiceFormData,
+} from '@/lib/validations/invoices';
 import { siteConfig } from '@/config/site';
 import { logger } from '@/lib/logger';
 
@@ -144,6 +149,7 @@ export async function getInvoice(id: string) {
     .from('invoices')
     .select('*, client:clients(id, name, email, phone, address), items:invoice_items(*), created_by:profiles(fullName)')
     .eq('id', id)
+    .is('deleted_at', null)
     .single();
 
   if (error || !data) {
@@ -158,6 +164,7 @@ export async function listInvoices() {
   const { data, error } = await supabase
     .from('invoices')
     .select('id, invoice_number, issue_date, status, total, client:clients(name)')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -244,6 +251,159 @@ export async function updateInvoiceDate(id: string, nextIssueDate: string) {
     record_id: id,
     old_data: { issue_date: current.issue_date },
     new_data: { issue_date: nextIssueDate },
+  });
+
+  revalidatePath('/dashboard/invoices');
+  revalidatePath(`/dashboard/invoices/${id}`);
+  return { success: true };
+}
+
+const DELETABLE_STATUSES = ['DRAFT', 'CANCELLED'];
+
+// Soft-delete — sets deleted_at, does not remove the row. Only DRAFT/CANCELLED
+// invoices qualify: ISSUED/PAID invoices carry a real GST invoice number, and
+// deleting one would leave a gap in the invoice-number sequence. Cancel an
+// ISSUED/PAID invoice first if it needs to go away.
+export async function deleteInvoice(id: string) {
+  const { supabase, user } = await requireAdminOrSuper();
+
+  const { data: current, error: fetchError } = await supabase
+    .from('invoices')
+    .select('*')
+    .eq('id', id)
+    .is('deleted_at', null)
+    .single();
+
+  if (fetchError || !current) {
+    return { error: 'Invoice not found.' };
+  }
+
+  if (!DELETABLE_STATUSES.includes(current.status)) {
+    return { error: `Cannot delete a ${current.status.toLowerCase()} invoice. Cancel it first.` };
+  }
+
+  const { error } = await supabase
+    .from('invoices')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id);
+
+  if (error) {
+    return { error: parseSupabaseError(error, 'Failed to delete invoice.') };
+  }
+
+  await writeAuditLog(supabase, {
+    user_id: user.id,
+    action: 'DELETE_INVOICE',
+    table_name: 'invoices',
+    record_id: id,
+    old_data: current,
+  });
+
+  revalidatePath('/dashboard/invoices');
+  revalidatePath(`/dashboard/invoices/${id}`);
+  return { success: true };
+}
+
+// Editing is only allowed while an invoice is ISSUED and unpaid — once PAID
+// or CANCELLED, its content is locked. The bill-to client is never editable
+// here (see updateInvoiceSchema); only content (items, discount, GST rate,
+// client GSTIN, notes) can change. Line items are replaced wholesale rather
+// than diffed since the builder UI has no stable item identity to match on.
+export async function updateInvoice(id: string, input: UpdateInvoiceFormData) {
+  const parsed = updateInvoiceSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message || 'Invalid invoice data.',
+      details: parsed.error.flatten(),
+    };
+  }
+  const data = parsed.data;
+
+  const { supabase, user } = await requireAdminOrSuper();
+
+  const { data: current, error: fetchError } = await supabase
+    .from('invoices')
+    .select('*, items:invoice_items(*)')
+    .eq('id', id)
+    .is('deleted_at', null)
+    .single();
+
+  if (fetchError || !current) {
+    return { error: 'Invoice not found.' };
+  }
+
+  if (current.status !== 'ISSUED') {
+    return { error: `Cannot edit a ${current.status.toLowerCase()} invoice.` };
+  }
+
+  const totals = calculateInvoiceTotals({
+    items: data.items.map((item) => ({ quantity: item.quantity, unitPrice: item.unitPrice })),
+    discountType: data.discountType ?? null,
+    discountValue: data.discountValue ?? null,
+    gstRate: data.gstRate,
+  });
+
+  const { error: updateError } = await supabase
+    .from('invoices')
+    .update({
+      subtotal: totals.subtotal,
+      discount_type: data.discountType || null,
+      discount_value: data.discountValue ?? null,
+      discount_amount: totals.discountAmount,
+      taxable_amount: totals.taxableAmount,
+      gst_rate: data.gstRate,
+      gst_amount: totals.gstAmount,
+      total: totals.total,
+      client_gstin: data.clientGstin || null,
+      notes: data.notes || null,
+    })
+    .eq('id', id);
+
+  if (updateError) {
+    return { error: parseSupabaseError(updateError, 'Failed to update invoice.') };
+  }
+
+  const { error: deleteItemsError } = await supabase.from('invoice_items').delete().eq('invoice_id', id);
+  if (deleteItemsError) {
+    return { error: parseSupabaseError(deleteItemsError, 'Failed to update invoice line items.') };
+  }
+
+  const itemRows = data.items.map((item) => ({
+    invoice_id: id,
+    description: item.description,
+    source_type: item.sourceType,
+    source_booking_id: item.sourceBookingId || null,
+    quantity: item.quantity,
+    unit_price: Math.round(item.unitPrice),
+    amount: Math.round(item.quantity * item.unitPrice),
+  }));
+
+  const { error: itemsError } = await supabase.from('invoice_items').insert(itemRows);
+  if (itemsError) {
+    // Best-effort restore of the old items so the invoice isn't left blank
+    // after the delete above — not a real transaction, but better than nothing.
+    const restoreRows = (current.items || []).map((item: any) => ({
+      invoice_id: id,
+      description: item.description,
+      source_type: item.source_type,
+      source_booking_id: item.source_booking_id,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      amount: item.amount,
+    }));
+    if (restoreRows.length > 0) {
+      await supabase.from('invoice_items').insert(restoreRows);
+    }
+    return { error: parseSupabaseError(itemsError, 'Failed to save invoice line items.') };
+  }
+
+  await writeAuditLog(supabase, {
+    user_id: user.id,
+    action: 'UPDATE_INVOICE',
+    table_name: 'invoices',
+    record_id: id,
+    old_data: current,
+    new_data: { ...totals, gstRate: data.gstRate, clientGstin: data.clientGstin, notes: data.notes, items: data.items },
   });
 
   revalidatePath('/dashboard/invoices');

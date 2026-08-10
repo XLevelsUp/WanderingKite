@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/select';
 import { ClientCombobox, type ClientOption } from '@/app/(dashboard)/dashboard/media-tracker/ClientCombobox';
 import { createNewClient, findClientByEmail } from '@/actions/clients';
-import { createInvoice } from '@/actions/invoices';
+import { createInvoice, updateInvoice } from '@/actions/invoices';
 import { calculateInvoiceTotals, type DiscountType } from '@/lib/utils/invoice-calc';
 
 function fmt(n: number) {
@@ -44,14 +44,34 @@ interface LineItemRow {
 }
 
 interface InvoiceBuilderProps {
-  /** Pre-resolved client (e.g. arrived via ?clientId= from the client detail page) — hides the existing/new radio. */
+  /** Pre-resolved client (e.g. arrived via ?clientId= from the client detail page) — hides the existing/new radio. Always set (and locked) in edit mode. */
   initialClient?: { id: string; name: string; email: string } | null;
   existingClients?: ClientOption[];
   gstRate?: number;
+  /** 'edit' locks the client, prefills content from initial* props, calls updateInvoice, and disables the GST-rate/notes/etc fields from resetting on remount. */
+  mode?: 'create' | 'edit';
+  invoiceId?: string;
+  initialItems?: { description: string; unitPrice: number }[];
+  initialDiscountType?: DiscountType | null;
+  initialDiscountValue?: number | null;
+  initialClientGstin?: string | null;
+  initialNotes?: string | null;
 }
 
-export function InvoiceBuilder({ initialClient = null, existingClients = [], gstRate = 18 }: InvoiceBuilderProps) {
+export function InvoiceBuilder({
+  initialClient = null,
+  existingClients = [],
+  gstRate: defaultGstRate = 18,
+  mode = 'create',
+  invoiceId,
+  initialItems,
+  initialDiscountType = null,
+  initialDiscountValue = null,
+  initialClientGstin = null,
+  initialNotes = null,
+}: InvoiceBuilderProps) {
   const router = useRouter();
+  const isEdit = mode === 'edit';
 
   const [clientMode, setClientMode] = useState<'EXISTING' | 'NEW'>('EXISTING');
   const [clientList, setClientList] = useState(existingClients);
@@ -62,13 +82,16 @@ export function InvoiceBuilder({ initialClient = null, existingClients = [], gst
   const [newClientPhone, setNewClientPhone] = useState('');
   const [newClientAddress, setNewClientAddress] = useState('');
 
-  const [lineItems, setLineItems] = useState<LineItemRow[]>(() => [
-    { key: newItemKey(), description: '', unitPrice: '' },
-  ]);
-  const [discountType, setDiscountType] = useState<'NONE' | DiscountType>('NONE');
-  const [discountValue, setDiscountValue] = useState('');
-  const [clientGstin, setClientGstin] = useState('');
-  const [notes, setNotes] = useState('');
+  const [lineItems, setLineItems] = useState<LineItemRow[]>(() =>
+    initialItems && initialItems.length > 0
+      ? initialItems.map((item) => ({ key: newItemKey(), description: item.description, unitPrice: String(item.unitPrice) }))
+      : [{ key: newItemKey(), description: '', unitPrice: '' }]
+  );
+  const [discountType, setDiscountType] = useState<'NONE' | DiscountType>(initialDiscountType ?? 'NONE');
+  const [discountValue, setDiscountValue] = useState(initialDiscountValue != null ? String(initialDiscountValue) : '');
+  const [gstRate, setGstRate] = useState(defaultGstRate);
+  const [clientGstin, setClientGstin] = useState(initialClientGstin ?? '');
+  const [notes, setNotes] = useState(initialNotes ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -107,7 +130,44 @@ export function InvoiceBuilder({ initialClient = null, existingClients = [], gst
     });
   }, [validItems, discountType, discountValue, gstRate]);
 
+  const handleUpdate = async () => {
+    setError('');
+
+    if (validItems.length === 0) {
+      setError('Add at least one line item with a description and amount.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const result = await updateInvoice(invoiceId!, {
+        items: validItems,
+        discountType: discountType === 'NONE' ? null : discountType,
+        discountValue: discountValue ? Number(discountValue) : null,
+        gstRate,
+        clientGstin: clientGstin.trim() || null,
+        notes: notes.trim() || undefined,
+      });
+
+      if ('error' in result && result.error) {
+        setError(result.error);
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success('Invoice updated.');
+      router.push(`/dashboard/invoices/${invoiceId}`);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to update invoice.');
+      toast.error(err?.message || 'Failed to update invoice.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleSubmit = async () => {
+    if (isEdit) return handleUpdate();
+
     setError('');
 
     if (validItems.length === 0) {
@@ -306,7 +366,7 @@ export function InvoiceBuilder({ initialClient = null, existingClients = [], gst
         <CardHeader>
           <CardTitle>Discount &amp; GST</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <CardContent className={`grid grid-cols-1 sm:grid-cols-3 gap-4 ${isEdit ? 'sm:grid-cols-4' : ''}`}>
           <div className="space-y-1.5">
             <Label>Discount Type</Label>
             <Select value={discountType} onValueChange={(v) => setDiscountType(v as any)}>
@@ -340,6 +400,18 @@ export function InvoiceBuilder({ initialClient = null, existingClients = [], gst
               maxLength={15}
             />
           </div>
+          {isEdit && (
+            <div className="space-y-1.5">
+              <Label>GST Rate (%)</Label>
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                value={gstRate}
+                onChange={(e) => setGstRate(Number(e.target.value) || 0)}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -400,7 +472,7 @@ export function InvoiceBuilder({ initialClient = null, existingClients = [], gst
             ) : (
               <Receipt className="h-4 w-4 mr-2" />
             )}
-            Generate Invoice
+            {isEdit ? 'Save Changes' : 'Generate Invoice'}
           </Button>
         </CardContent>
       </Card>
