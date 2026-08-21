@@ -125,9 +125,6 @@ export default function RootLayout({
   // GA4: use env var with hardcoded fallback so Vercel always tracks
   const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? 'G-50PN3VN8P4';
 
-  // Microsoft Clarity: session recordings & heatmaps
-  const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID ?? 'y5qi27y95h';
-
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': ['LocalBusiness', 'ProfessionalService', 'Store'],
@@ -288,18 +285,6 @@ export default function RootLayout({
               `}
             </Script>
           </>
-        )}
-        {/* Microsoft Clarity – session recordings & heatmaps */}
-        {CLARITY_ID && (
-          <Script id="microsoft-clarity" strategy="lazyOnload">
-            {`
-              (function(c,l,a,r,i,t,y){
-                  c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-                  t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-                  y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-              })(window, document, "clarity", "script", "${CLARITY_ID}");
-            `}
-          </Script>
         )}
         <script
           type="application/ld+json"
