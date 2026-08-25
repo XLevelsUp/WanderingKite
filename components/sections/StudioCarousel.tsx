@@ -96,7 +96,12 @@ export function StudioCarousel() {
                     src={img.src}
                     alt={img.alt}
                     fill
-                    priority={isActive}
+                    // Slide 0 is the LCP element. `isActive` is state — false during SSR —
+                    // so keying priority off it shipped the LCP image at default priority
+                    // and only promoted it after hydration. Key off the static index so it
+                    // is discoverable as high-priority in the initial HTML; lazy-load the rest.
+                    priority={index === 0}
+                    loading={index === 0 ? undefined : 'lazy'}
                     className={img.id === 5 ? 'object-contain' : 'object-cover'}
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />

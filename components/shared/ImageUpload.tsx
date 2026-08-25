@@ -125,6 +125,10 @@ export function ImageUpload({
           .upload(filePath, fileToUpload, {
             upsert: true,
             contentType: fileToUpload.type,
+            // Supabase defaults to 1 hour, which Lighthouse flags as an
+            // inefficient cache lifetime. Paths are timestamped above, so a
+            // changed image is always a new URL — safe to cache for a year.
+            cacheControl: '31536000',
           });
 
         if (uploadError) throw new Error(uploadError.message);

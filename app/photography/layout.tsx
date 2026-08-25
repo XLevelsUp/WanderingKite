@@ -12,7 +12,7 @@ export default function PhotographyLayout({
   return (
     <>
       {CLARITY_ID && (
-        <Script id="microsoft-clarity-photography" strategy="afterInteractive">
+        <Script id="microsoft-clarity-photography" strategy="lazyOnload">
           {`
             (function(c,l,a,r,i,t,y){
                 c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -22,7 +22,7 @@ export default function PhotographyLayout({
           `}
         </Script>
       )}
-      <Script id="fb-pixel-photography" strategy="afterInteractive">
+      <Script id="fb-pixel-photography" strategy="lazyOnload">
         {`
           !function(f,b,e,v,n,t,s)
           {if(f.fbq)return;n=f.fbq=function(){n.callMethod?

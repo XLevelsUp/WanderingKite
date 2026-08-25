@@ -228,9 +228,9 @@ export function StudioPricingEngine({
         {/* Add-ons */}
         <div className="lg:col-span-5 flex flex-col gap-6">
           <div className="rounded-2xl border border-white/5 bg-zinc-900/50 p-6 h-full">
-            <h4 className="text-lg font-bold text-white mb-4">
+            <h3 className="text-lg font-bold text-white mb-4">
               Add-ons (Optional)
-            </h4>
+            </h3>
             <div className="space-y-3">
               {addOns.map((addon) => {
                 const isSelected = selectedAddOns.has(addon.id);
@@ -383,9 +383,9 @@ export function StudioPricingEngine({
         <div className="lg:col-span-12 mt-4">
           <div className="rounded-2xl border border-warning/20 bg-gradient-to-br from-zinc-900 to-zinc-950 p-6 md:p-8 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-8 relative md:sticky md:bottom-6 z-10">
             <div className="flex-1 w-full">
-              <h4 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">
+              <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">
                 Estimated Total
-              </h4>
+              </h3>
               <div className="flex flex-wrap items-end gap-6 sm:gap-12">
                 <div>
                   <p className="text-zinc-500 text-xs mb-1">Subtotal</p>

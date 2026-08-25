@@ -653,7 +653,7 @@ export default async function StudioPage() {
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-purple-500/20 transition-all hover:scale-105 hover:bg-purple-400"
+                    className="inline-flex items-center gap-2 rounded-full bg-purple-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-purple-500/20 transition-all hover:scale-105 hover:bg-purple-700"
                   >
                     Request a Quote <ArrowRight className="h-4 w-4" />
                   </a>
