@@ -237,6 +237,12 @@ export function InstagramFeed({ account = 'wanderingkite' }: InstagramFeedProps)
                     src={item.media_url}
                     poster={item.thumbnail_url}
                     autoPlay={isFirstVideo}
+                    // The feed sits in the footer, below the fold, and this component
+                    // renders BOTH the desktop grid and the mobile carousel (CSS only
+                    // hides one — it does not stop the fetch). Without this the page
+                    // pulled ~53 MB of video on load. Only the poster loads up front;
+                    // bytes are fetched when the autoplay/hover actually calls play().
+                    preload={isFirstVideo ? 'metadata' : 'none'}
                     muted
                     loop
                     playsInline
@@ -340,6 +346,9 @@ export function InstagramFeed({ account = 'wanderingkite' }: InstagramFeedProps)
                         data-is-video="true"
                         src={item.media_url}
                         poster={item.thumbnail_url}
+                        // See the desktop grid above — only the active slide plays, so
+                        // nothing here should download until the carousel reaches it.
+                        preload="none"
                         muted
                         loop
                         playsInline
