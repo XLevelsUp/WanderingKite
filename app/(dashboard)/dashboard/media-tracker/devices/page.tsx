@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getStorageDevices } from '@/actions/media-tracker';
+import { canManageMediaTracker } from '@/lib/access';
 import {
   Card,
   CardContent,
@@ -24,11 +25,11 @@ export default async function StorageDevicesPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, can_manage_media_tracker')
     .eq('id', user.id)
     .single();
 
-  const isEmployee = profile?.role === 'EMPLOYEE';
+  const isEmployee = !canManageMediaTracker(profile?.role ?? 'EMPLOYEE', profile?.can_manage_media_tracker);
 
   const devices = await getStorageDevices();
 

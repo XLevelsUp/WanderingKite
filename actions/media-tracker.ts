@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { logger } from '@/lib/logger';
 import { parseSupabaseError } from '@/lib/errorHandler';
 import { writeAuditLog } from '@/lib/audit';
+import { canManageMediaTracker } from '@/lib/access';
 import {
   mediaRecordSchema,
   storageDeviceSchema,
@@ -25,11 +26,11 @@ async function requireAdmin() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, can_manage_media_tracker')
     .eq('id', user.id)
     .single();
 
-  if (!profile || !['ADMIN', 'SUPER_ADMIN', 'DEVELOPER'].includes(profile.role)) {
+  if (!profile || !canManageMediaTracker(profile.role, profile.can_manage_media_tracker)) {
     throw new Error('Unauthorized');
   }
   return { supabase, user };

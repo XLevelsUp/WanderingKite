@@ -178,3 +178,15 @@ export function getNavAccess(role: string) {
   const appRole = (role as AppRole) in ROLE_NAV_ACCESS ? (role as AppRole) : 'EMPLOYEE';
   return ROLE_NAV_ACCESS[appRole];
 }
+
+/**
+ * Media tracker create/edit/delete rights are ADMIN+ by default, but can
+ * also be granted to an individual EMPLOYEE via profiles.can_manage_media_tracker
+ * — a per-user override independent of the role hierarchy above. Viewing the
+ * media tracker pages themselves is unaffected (already open to EMPLOYEE via
+ * ROUTE_ACCESS); this only gates the manage actions.
+ */
+export function canManageMediaTracker(role: string, override?: boolean | null): boolean {
+  const rank = ROLE_RANK[role as AppRole] ?? 0;
+  return rank >= ROLE_RANK.ADMIN || !!override;
+}

@@ -32,6 +32,10 @@ model User {
   fullName      String?
   role          UserRole  @default(EMPLOYEE)
   phone         String?   @db.VarChar(15)
+
+  // Per-user override: lets an EMPLOYEE get media-tracker create/edit/delete
+  // rights (normally ADMIN+ only) without promoting their overall role.
+  canManageMediaTracker Boolean @default(false) @map("can_manage_media_tracker")
   
   // Self-relation: Manager -> Subordinates
   managerId     String?

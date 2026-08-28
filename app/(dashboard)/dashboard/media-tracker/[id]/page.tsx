@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getMediaRecord, getStorageDevices } from '@/actions/media-tracker';
 import { getClients } from '@/actions/clients';
+import { canManageMediaTracker } from '@/lib/access';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { MediaRecordDetail } from './MediaRecordDetail';
@@ -24,11 +25,11 @@ export default async function MediaRecordDetailPage({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, can_manage_media_tracker')
     .eq('id', user.id)
     .single();
 
-  const isEmployee = profile?.role === 'EMPLOYEE';
+  const isEmployee = !canManageMediaTracker(profile?.role ?? 'EMPLOYEE', profile?.can_manage_media_tracker);
 
   let record;
   try {

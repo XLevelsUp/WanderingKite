@@ -193,12 +193,12 @@ export async function updateEmployee(id: string, data: UpdateEmployeeFormData) {
     return { error: 'Invalid data', details: result.error.flatten() };
   }
 
-  const { full_name, role, branch_id, manager_id } = result.data;
+  const { full_name, role, branch_id, manager_id, can_manage_media_tracker } = result.data;
 
   // Authorization Check Logic
   if (requesterProfile.role === 'EMPLOYEE') {
     if (id !== requester.id) return { error: 'Unauthorized' };
-    if (role || branch_id !== undefined || manager_id !== undefined)
+    if (role || branch_id !== undefined || manager_id !== undefined || can_manage_media_tracker !== undefined)
       return { error: 'Unauthorized to change restricted fields' };
   }
 
@@ -230,6 +230,7 @@ export async function updateEmployee(id: string, data: UpdateEmployeeFormData) {
       ...(manager_id !== undefined
         ? { managerId: manager_id === 'no_manager' ? null : manager_id }
         : {}),
+      ...(can_manage_media_tracker !== undefined ? { can_manage_media_tracker } : {}),
     })
     .eq('id', id);
 
@@ -244,7 +245,7 @@ export async function updateEmployee(id: string, data: UpdateEmployeeFormData) {
     table_name: 'profiles',
     record_id: id,
     old_data: oldRow,
-    new_data: { full_name, role, branch_id, manager_id },
+    new_data: { full_name, role, branch_id, manager_id, can_manage_media_tracker },
   });
 
   revalidatePath('/dashboard/employees');
