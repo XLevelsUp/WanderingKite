@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getClients } from '@/actions/clients';
 import { getStorageDevices } from '@/actions/media-tracker';
+import { canManageMediaTracker } from '@/lib/access';
 import { MediaRecordForm } from '../MediaRecordForm';
 import {
   Card,
@@ -22,11 +23,11 @@ export default async function NewMediaRecordPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, can_manage_media_tracker')
     .eq('id', user.id)
     .single();
 
-  if (!profile || profile.role === 'EMPLOYEE') {
+  if (!profile || !canManageMediaTracker(profile.role, profile.can_manage_media_tracker)) {
     redirect('/dashboard/media-tracker');
   }
 

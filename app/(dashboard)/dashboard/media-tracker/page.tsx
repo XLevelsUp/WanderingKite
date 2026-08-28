@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getMediaRecords, getStorageDevices } from '@/actions/media-tracker';
 import { getClients } from '@/actions/clients';
+import { canManageMediaTracker } from '@/lib/access';
 import {
   Card,
   CardContent,
@@ -33,11 +34,14 @@ export default async function MediaTrackerPage({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, can_manage_media_tracker')
     .eq('id', user.id)
     .single();
 
-  const isEmployee = profile?.role === 'EMPLOYEE';
+  // "isEmployee" here really means "lacks media-tracker manage rights" —
+  // that's normally ADMIN+, but can also be granted to an individual
+  // EMPLOYEE via can_manage_media_tracker (see lib/access.ts).
+  const isEmployee = !canManageMediaTracker(profile?.role ?? 'EMPLOYEE', profile?.can_manage_media_tracker);
 
   const query = typeof resolved.q === 'string' ? resolved.q : undefined;
   const unlinkedOnly = resolved.unlinked === '1';

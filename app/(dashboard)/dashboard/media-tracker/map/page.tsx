@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getMediaRecords, getStorageDevices } from '@/actions/media-tracker';
+import { canManageMediaTracker } from '@/lib/access';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, LayoutGrid } from 'lucide-react';
 import { StorageMap } from './StorageMap';
@@ -17,11 +18,11 @@ export default async function StorageMapPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, can_manage_media_tracker')
     .eq('id', user.id)
     .single();
 
-  const isEmployee = profile?.role === 'EMPLOYEE';
+  const isEmployee = !canManageMediaTracker(profile?.role ?? 'EMPLOYEE', profile?.can_manage_media_tracker);
 
   const [devices, records] = await Promise.all([
     getStorageDevices().catch(() => []),

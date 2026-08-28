@@ -42,6 +42,7 @@ const formSchema = z.object({
   role: z.enum(['SUPER_ADMIN', 'ADMIN', 'EMPLOYEE']),
   branch_id: z.string().optional(),
   manager_id: z.string().optional().nullable(),
+  can_manage_media_tracker: z.boolean().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -83,6 +84,7 @@ export function EmployeeForm({
       role: initialData?.role || 'EMPLOYEE',
       branch_id: initialData?.branch_id || 'no_branch',
       manager_id: initialData?.managerId || 'no_manager',
+      can_manage_media_tracker: initialData?.can_manage_media_tracker || false,
       password: '',
     },
   });
@@ -109,6 +111,7 @@ export function EmployeeForm({
             data.manager_id === 'no_manager' || !data.manager_id
               ? null
               : data.manager_id,
+          can_manage_media_tracker: data.can_manage_media_tracker,
         };
 
         const result = await updateEmployee(initialData.id, updatePayload);
@@ -322,6 +325,33 @@ export function EmployeeForm({
             )}
           />
         </div>
+
+        {isEditing && selectedRole === 'EMPLOYEE' && (
+          <FormField
+            control={form.control}
+            name="can_manage_media_tracker"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center gap-2 font-normal">
+                  <input
+                    type="checkbox"
+                    checked={field.value ?? false}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                    disabled={readOnly}
+                    className="h-4 w-4 rounded border-input"
+                  />
+                  Media Tracker Manager
+                </FormLabel>
+                <FormDescription>
+                  Grants this employee create/edit/delete rights on the media
+                  tracker (records, storage devices, assignments) without
+                  changing their role or any other permissions.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {!readOnly && (
           <Button type="submit" disabled={isLoading}>
