@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { SourcePicker, SourcePickerControlled } from '@/components/dashboard/SourcePicker';
 import { sourceLabel } from '@/lib/sourceUtils';
+import { SOURCE_REQUIRES_DETAIL } from '@/lib/validations/schemas';
 import type { ClientSource } from '@/lib/validations/schemas';
 import { updateClientSource } from '@/actions/clients';
 import { BookingDrawer } from './BookingDrawer';
@@ -1425,7 +1426,7 @@ export default function ClientDetailsView({
                     return src ? (
                       <p className="text-sm">
                         <span className="font-semibold text-white">{src.emoji} {src.label}</span>
-                        {client.source === 'OTHER' && client.sourceDetail && (
+                        {client.source === SOURCE_REQUIRES_DETAIL && client.sourceDetail && (
                           <span className="text-slate-400"> — {client.sourceDetail}</span>
                         )}
                       </p>

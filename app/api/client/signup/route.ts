@@ -51,6 +51,9 @@ export async function POST(request: Request) {
         gender: gender,
         password_hash: passwordHash,
         is_active: true,
+        // Self-signups came through the site by definition — the visitor is
+        // never asked. source is NOT NULL, so this must be set explicitly.
+        source: 'WEBSITE',
       })
       .select("id")
       .single();
