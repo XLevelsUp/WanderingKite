@@ -21,7 +21,8 @@ import { hasAccess } from '@/lib/access';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, UserCheck, Activity } from 'lucide-react';
 import { logger } from '@/lib/logger';
-import { sourceLabel } from '@/lib/sourceUtils';
+import { ClientSourceCell } from '@/components/dashboard/ClientSourceCell';
+import { type ClientSource } from '@/lib/validations/schemas';
 
 export default async function ClientsPage() {
   const supabase = await createClient();
@@ -117,6 +118,7 @@ export default async function ClientsPage() {
             <TableHeader className="border-slate-800">
               <TableRow className="hover:bg-transparent border-slate-850">
                 <TableHead className="text-slate-400">Name</TableHead>
+                <TableHead className="text-slate-400">Source</TableHead>
                 <TableHead className="text-slate-400">Contact</TableHead>
                 <TableHead className="text-slate-400">Subscribed Services</TableHead>
                 <TableHead className="text-slate-400">Booking Requests</TableHead>
@@ -130,7 +132,7 @@ export default async function ClientsPage() {
               {clientsWithActivity.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={7}
+                    colSpan={9}
                     className="text-center text-slate-500 py-8 italic border-transparent"
                   >
                     No client profiles found.
@@ -145,20 +147,15 @@ export default async function ClientsPage() {
                   return (
                     <TableRow key={client.id} className="border-slate-850 hover:bg-slate-800/20 transition-colors">
                       <TableCell className="font-semibold text-white">
-                        <div className="flex flex-col gap-0.5">
-                          <span>{clientName}</span>
-                          {(() => {
-                            const src = sourceLabel(client.source);
-                            return src ? (
-                              <span className="text-[10px] text-slate-400 font-normal">
-                                {src.emoji} via {src.label}
-                                {client.source === 'OTHER' && client.source_detail
-                                  ? ` — ${client.source_detail}`
-                                  : ''}
-                              </span>
-                            ) : null;
-                          })()}
-                        </div>
+                        {clientName}
+                      </TableCell>
+                      <TableCell>
+                        <ClientSourceCell
+                          clientId={client.id}
+                          clientName={clientName}
+                          source={(client.source as ClientSource) ?? null}
+                          sourceDetail={client.source_detail ?? null}
+                        />
                       </TableCell>
                       <TableCell className="text-slate-300">
                         <div className="text-xs space-y-0.5">

@@ -48,17 +48,30 @@ export const equipmentSchema = z.object({
 export type EquipmentFormData = z.infer<typeof equipmentSchema>;
 
 // Client Validation
+// Conversion channels. UNKNOWN is legacy-only — it exists so clients created
+// before source tracking was mandatory still satisfy the NOT NULL column, and
+// is deliberately excluded from SELECTABLE_CLIENT_SOURCES so it can never be
+// picked for a new client.
 export const CLIENT_SOURCES = [
-  'INSTAGRAM',
-  'REDDIT',
-  'YOUTUBE',
-  'WHATSAPP',
+  'ADS',
+  'GOOGLE',
+  'WEBSITE',
+  'WALKIN',
   'REFERRAL',
-  'BLOGGER',
-  'OTHER',
+  'AI',
+  'SOCIAL_MEDIA',
+  'UNKNOWN',
 ] as const;
 
 export type ClientSource = (typeof CLIENT_SOURCES)[number];
+
+/** Channels an operator may choose in the dashboard picker. */
+export const SELECTABLE_CLIENT_SOURCES = CLIENT_SOURCES.filter(
+  (s) => s !== 'UNKNOWN'
+) as readonly ClientSource[];
+
+/** Sources that require a free-text supplement in source_detail. */
+export const SOURCE_REQUIRES_DETAIL: ClientSource = 'SOCIAL_MEDIA';
 
 export const clientSchema = z.object({
   name: z.string().min(1, 'Client name is required'),
@@ -70,13 +83,15 @@ export const clientSchema = z.object({
     .or(z.literal('')),
   address: z.string().optional(),
   govtId: z.string().optional(),
-  source: z.enum(CLIENT_SOURCES).optional(),
+  source: z.enum(CLIENT_SOURCES, {
+    message: 'Please select how they found us',
+  }),
   sourceDetail: z.string().max(100, 'Details must be under 100 characters').optional(),
 }).superRefine((data, ctx) => {
-  if (data.source === 'OTHER' && !data.sourceDetail?.trim()) {
+  if (data.source === SOURCE_REQUIRES_DETAIL && !data.sourceDetail?.trim()) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'Please specify how they found us',
+      message: 'Please specify which social media platform',
       path: ['sourceDetail'],
     });
   }

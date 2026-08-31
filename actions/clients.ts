@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { clientSchema, CLIENT_SOURCES, type ClientSource } from '@/lib/validations/schemas';
+import { clientSchema, CLIENT_SOURCES, SOURCE_REQUIRES_DETAIL, type ClientSource } from '@/lib/validations/schemas';
 import { parseSupabaseError } from '@/lib/errorHandler';
 import { writeAuditLog } from '@/lib/audit';
 
@@ -57,7 +57,7 @@ export async function createNewClient(formData: FormData) {
     address: (formData.get('address') as string) || undefined,
     govtId: (formData.get('govt_id') as string) || undefined,
     source: rawSource as any,
-    sourceDetail: rawSource === 'OTHER'
+    sourceDetail: rawSource === SOURCE_REQUIRES_DETAIL
       ? ((formData.get('source_detail') as string) || undefined)
       : undefined,
   };
@@ -76,7 +76,7 @@ export async function createNewClient(formData: FormData) {
       ...rest,
       govtId,
       source: source ?? null,
-      source_detail: source === 'OTHER' ? (sourceDetail ?? null) : null,
+      source_detail: source === SOURCE_REQUIRES_DETAIL ? (sourceDetail ?? null) : null,
     })
     .select()
     .single();
@@ -120,7 +120,7 @@ export async function updateClient(id: string, formData: FormData) {
     address: (formData.get('address') as string) || undefined,
     govtId: (formData.get('govt_id') as string) || undefined,
     source: rawSource as any,
-    sourceDetail: rawSource === 'OTHER'
+    sourceDetail: rawSource === SOURCE_REQUIRES_DETAIL
       ? ((formData.get('source_detail') as string) || undefined)
       : undefined,
   };
@@ -139,7 +139,7 @@ export async function updateClient(id: string, formData: FormData) {
       ...rest,
       govtId,
       source: source ?? null,
-      source_detail: source === 'OTHER' ? (sourceDetail ?? null) : null,
+      source_detail: source === SOURCE_REQUIRES_DETAIL ? (sourceDetail ?? null) : null,
     })
     .eq('id', id)
     .select()
@@ -211,9 +211,16 @@ export async function updateClientSource(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Unauthorized');
 
-  // Validate source value if provided
-  if (source !== null && !(CLIENT_SOURCES as readonly string[]).includes(source)) {
+  // source is NOT NULL in the database — reject a clear here rather than
+  // letting it surface as an opaque constraint violation.
+  if (source === null) {
+    throw new Error('Please select how they found us');
+  }
+  if (!(CLIENT_SOURCES as readonly string[]).includes(source)) {
     throw new Error('Invalid source value');
+  }
+  if (source === SOURCE_REQUIRES_DETAIL && !sourceDetail?.trim()) {
+    throw new Error('Please specify which social media platform');
   }
 
   const { data: oldRow } = await supabase
@@ -226,7 +233,7 @@ export async function updateClientSource(
     .from('clients')
     .update({
       source: source ?? null,
-      source_detail: source === 'OTHER' ? (sourceDetail ?? null) : null,
+      source_detail: source === SOURCE_REQUIRES_DETAIL ? (sourceDetail ?? null) : null,
     })
     .eq('id', id);
 
@@ -238,7 +245,7 @@ export async function updateClientSource(
     table_name: 'clients',
     record_id: id,
     old_data: oldRow,
-    new_data: { source, source_detail: source === 'OTHER' ? sourceDetail : null },
+    new_data: { source, source_detail: source === SOURCE_REQUIRES_DETAIL ? sourceDetail : null },
   });
 
   revalidatePath(`/dashboard/clients/${id}`);

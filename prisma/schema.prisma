@@ -72,6 +72,11 @@ model Client {
   passwordHash  String?         @map("password_hash")
   isActive      Boolean         @default(true) @map("is_active")
   govtId              String?
+
+  // Conversion tracking — how the client found the studio.
+  // sourceDetail is required when source is SOCIAL_MEDIA (names the platform).
+  source        ClientSource
+  sourceDetail  String?         @map("source_detail")
   orders              Order[]
   services            ClientService[]
   photographyBookings PhotographyBooking[]
@@ -96,6 +101,19 @@ enum ServiceType {
   PHOTOGRAPHY
   RENTALS
   STUDIO_SPACE
+}
+
+// Conversion channels. UNKNOWN is legacy-only — it backfills clients created
+// before source tracking became mandatory and is never selectable in the UI.
+enum ClientSource {
+  ADS
+  GOOGLE
+  WEBSITE
+  WALKIN
+  REFERRAL
+  AI
+  SOCIAL_MEDIA
+  UNKNOWN
 }
 
 model ClientService {

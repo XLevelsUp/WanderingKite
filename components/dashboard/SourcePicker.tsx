@@ -4,7 +4,11 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CLIENT_SOURCES, type ClientSource } from '@/lib/validations/schemas';
+import {
+  SELECTABLE_CLIENT_SOURCES,
+  SOURCE_REQUIRES_DETAIL,
+  type ClientSource,
+} from '@/lib/validations/schemas';
 import { SOURCE_META, sourceLabel } from '@/lib/sourceUtils';
 
 // Re-export for convenience so client components only need one import
@@ -15,7 +19,7 @@ export { sourceLabel };
 interface SourcePickerProps {
   /** Current value — pass the client's saved source on the edit form, or undefined for a blank new form */
   initialSource?: ClientSource | null;
-  /** Current free-text detail — relevant only when initialSource === 'OTHER' */
+  /** Current free-text detail — relevant only when initialSource is SOCIAL_MEDIA */
   initialDetail?: string | null;
   disabled?: boolean;
 }
@@ -35,18 +39,19 @@ export function SourcePicker({ initialSource, initialDetail, disabled }: SourceP
     <div className="space-y-3">
       <Label className="text-sm font-medium text-slate-300">
         How did they find us?{' '}
-        <span className="text-slate-500 font-normal">(optional)</span>
+        <span className="text-red-400 font-normal" aria-hidden>*</span>
+        <span className="sr-only">(required)</span>
       </Label>
 
       {/* Hidden inputs for FormData submission */}
       <input type="hidden" name="source" value={selected ?? ''} />
-      {selected === 'OTHER' && (
+      {selected === SOURCE_REQUIRES_DETAIL && (
         <input type="hidden" name="source_detail" value={detail} />
       )}
 
       {/* Pill grid */}
       <div className="flex flex-wrap gap-2">
-        {CLIENT_SOURCES.map((src) => {
+        {SELECTABLE_CLIENT_SOURCES.map((src) => {
           const meta = SOURCE_META[src];
           const isActive = selected === src;
           return (
@@ -55,7 +60,8 @@ export function SourcePicker({ initialSource, initialDetail, disabled }: SourceP
               type="button"
               disabled={disabled}
               data-no-track
-              onClick={() => setSelected(isActive ? undefined : src)}
+              // Source is mandatory — clicking the active pill must not clear it.
+              onClick={() => setSelected(src)}
               className={`
                 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold
                 transition-all duration-150 select-none
@@ -74,9 +80,9 @@ export function SourcePicker({ initialSource, initialDetail, disabled }: SourceP
         })}
       </div>
 
-      {/* "Other" free-text input — animates in/out */}
+      {/* Social-media platform input — animates in/out */}
       <AnimatePresence>
-        {selected === 'OTHER' && (
+        {selected === SOURCE_REQUIRES_DETAIL && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -85,7 +91,7 @@ export function SourcePicker({ initialSource, initialDetail, disabled }: SourceP
             className="overflow-hidden"
           >
             <Input
-              placeholder="Please specify how they found us…"
+              placeholder="Which platform? e.g. Instagram, Facebook…"
               value={detail}
               onChange={(e) => setDetail(e.target.value)}
               disabled={disabled}
@@ -120,7 +126,7 @@ export function SourcePickerControlled({
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
-        {CLIENT_SOURCES.map((src) => {
+        {SELECTABLE_CLIENT_SOURCES.map((src) => {
           const meta = SOURCE_META[src];
           const isActive = value === src;
           return (
@@ -129,7 +135,8 @@ export function SourcePickerControlled({
               type="button"
               disabled={disabled}
               data-no-track
-              onClick={() => onChangeSource(isActive ? null : src)}
+              // Source is mandatory — clicking the active pill must not clear it.
+              onClick={() => onChangeSource(src)}
               className={`
                 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold
                 transition-all duration-150 select-none
@@ -149,7 +156,7 @@ export function SourcePickerControlled({
       </div>
 
       <AnimatePresence>
-        {value === 'OTHER' && (
+        {value === SOURCE_REQUIRES_DETAIL && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -158,7 +165,7 @@ export function SourcePickerControlled({
             className="overflow-hidden"
           >
             <Input
-              placeholder="Please specify how they found us…"
+              placeholder="Which platform? e.g. Instagram, Facebook…"
               value={detail}
               onChange={(e) => onChangeDetail(e.target.value)}
               disabled={disabled}
