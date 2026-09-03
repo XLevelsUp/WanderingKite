@@ -21,6 +21,7 @@ import {
   HardDrive,
   Receipt,
   Tag,
+  FileText,
 } from 'lucide-react';
 import { getNavAccess } from '@/lib/access';
 
@@ -172,6 +173,12 @@ export function SidebarNav({ profile, email }: SidebarNavProps) {
         <Link href='/dashboard/portfolio' className={getLinkClasses('/dashboard/portfolio')}>
           <FolderKanban className='w-4 h-4 opacity-75' />
           Portfolio
+        </Link>
+      )}
+      {access.canViewBlog && (
+        <Link href='/dashboard/blog' className={getLinkClasses('/dashboard/blog')}>
+          <FileText className='w-4 h-4 opacity-75' />
+          Blog
         </Link>
       )}
       {access.canViewEquipment && (
