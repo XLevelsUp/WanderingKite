@@ -1,0 +1,19 @@
+{
+  "folders": [
+    {
+      "name": "marketing",
+      "path": "apps/marketing"
+    },
+    {
+      "name": "admin",
+      "path": "apps/admin"
+    },
+    {
+      "name": "root",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "typescript.tsdk": "node_modules/typescript/lib"
+  }
+}
