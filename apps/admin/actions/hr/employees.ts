@@ -1,0 +1,525 @@
+'use server';
+
+import { createClient } from '@/lib/supabase/server';
+import { adminAuthClient } from '@/lib/supabase/admin';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import {
+  hrOnboardingSchema,
+  contractSchema,
+  unifiedOnboardingSchema,
+  personalDetailsSchema,
+  type HROnboardingFormData,
+  type ContractFormData,
+  type UnifiedOnboardingFormData,
+  type PersonalDetailsFormData,
+} from '@/lib/validations/hr';
+import type { HREmployee } from '@/lib/types/hr';
+import { parseSupabaseError } from '@/lib/errorHandler';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GUARDS
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function requireAdmin() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect('/login');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile || !['ADMIN', 'SUPER_ADMIN', 'DEVELOPER'].includes(profile.role)) {
+    redirect('/');
+  }
+
+  return { supabase, userId: user.id, role: profile.role as string };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// READ
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Returns all profiles (employees) joined with their HR contract row.
+ * Admins see everyone. Uses Supabase nested select to left-join contracts.
+ */
+export async function getHREmployees(query?: string): Promise<HREmployee[]> {
+  const { supabase } = await requireAdmin();
+
+  let dbQuery = supabase
+    .from('profiles')
+    .select(
+      `
+      id, email, fullName, role,
+      dateOfBirth, phone, gender, bloodGroup, panNumber,
+      branches(id, name),
+      employee_contracts(
+        id, profileId, jobTitle, employmentType, baseSalary,
+        joiningDate, bankAccountName, bankAccountNumber, bankIFSC, upiId,
+        avatarUrl, notes, isActive, deactivatedAt, createdAt, updatedAt,
+        employeeNumber, department, pfEnrolled, pfContinued, ptExempt, tdsExempt, exemptionReason
+      )
+    `,
+    )
+    .is('deletedAt', null)
+    .order('fullName');
+
+  if (query) {
+    dbQuery = dbQuery.ilike('fullName', `%${query}%`);
+  }
+
+  const { data, error } = await dbQuery;
+  if (error) return [];
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    email: row.email,
+    fullName: row.fullName,
+    role: row.role,
+    branch: row.branches ?? null,
+    contract: Array.isArray(row.employee_contracts)
+      ? (row.employee_contracts[0] ?? null)
+      : (row.employee_contracts ?? null),
+    dateOfBirth: row.dateOfBirth ?? null,
+    phone: row.phone ?? null,
+    gender: row.gender ?? null,
+    bloodGroup: row.bloodGroup ?? null,
+    panNumber: row.panNumber ?? null,
+  }));
+}
+
+/**
+ * Checks if an email is already registered in the profiles table.
+ * Returns true if it exists, false if it's available.
+ */
+export async function checkEmailExists(email: string): Promise<boolean> {
+  const supabase = await createClient(); // Does not require admin just to check uniqueness for UX
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('email')
+    .eq('email', email)
+    .maybeSingle();
+  
+  if (error) return false;
+  return !!data;
+}
+
+/** Single employee — profile + contract */
+export async function getHREmployee(profileId: string): Promise<HREmployee | null> {
+  const { supabase } = await requireAdmin();
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(
+      `
+      id, email, fullName, role,
+      dateOfBirth, phone, gender, bloodGroup, panNumber,
+      branches(id, name),
+      employee_contracts(
+        id, profileId, jobTitle, employmentType, baseSalary,
+        joiningDate, bankAccountName, bankAccountNumber, bankIFSC, upiId,
+        avatarUrl, notes, isActive, deactivatedAt, createdAt, updatedAt,
+        employeeNumber, department, pfEnrolled, pfContinued, ptExempt, tdsExempt, exemptionReason
+      )
+    `,
+    )
+    .eq('id', profileId)
+    .single();
+
+  if (error || !data) return null;
+
+  const row = data as any;
+  return {
+    id: row.id,
+    email: row.email,
+    fullName: row.fullName,
+    role: row.role,
+    branch: row.branches ?? null,
+    contract: Array.isArray(row.employee_contracts)
+      ? (row.employee_contracts[0] ?? null)
+      : (row.employee_contracts ?? null),
+    dateOfBirth: row.dateOfBirth ?? null,
+    phone: row.phone ?? null,
+    gender: row.gender ?? null,
+    bloodGroup: row.bloodGroup ?? null,
+    panNumber: row.panNumber ?? null,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EMPLOYEE ID AUTO-GENERATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function getNextEmployeeNumber(): Promise<string> {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from('employee_contracts')
+    .select('employeeNumber')
+    .like('employeeNumber', 'WK-%')
+    .order('employeeNumber', { ascending: false });
+
+  if (error || !data || data.length === 0) {
+    return 'WK-001';
+  }
+
+  let maxId = 0;
+  for (const row of data) {
+    if (row.employeeNumber) {
+      const match = row.employeeNumber.match(/^WK-(\d+)$/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxId) maxId = num;
+      }
+    }
+  }
+
+  return `WK-${(maxId + 1).toString().padStart(3, '0')}`;
+}
+
+/**
+ * Returns all profiles that do NOT yet have an employee_contract row.
+ * Used to populate the "Link existing profile" dropdown in onboarding.
+ */
+export async function getProfilesWithoutContract() {
+  const { supabase } = await requireAdmin();
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, email, fullName, role, employee_contracts(profileId)')
+    .is('deletedAt', null)
+    .order('fullName');
+
+  if (error) return [];
+
+  return (data ?? [])
+    .filter((p: any) => !p.employee_contracts || p.employee_contracts.length === 0)
+    .map((p: any) => ({
+      id: p.id,
+      email: p.email,
+      fullName: p.fullName,
+      role: p.role,
+    }));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CREATE
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Creates an HR contract for an existing profile.
+ * Links the `profileId` to a new `employee_contracts` row.
+ */
+export async function createHREmployee(formData: HROnboardingFormData) {
+  const { supabase } = await requireAdmin();
+
+  const result = hrOnboardingSchema.safeParse(formData);
+  if (!result.success) {
+    return { error: 'Validation failed', details: result.error.flatten() };
+  }
+
+  const { profileId, ...contractData } = result.data;
+
+  // Check profile exists
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('id', profileId)
+    .single();
+
+  if (!profile) {
+    return { error: 'Employee profile not found' };
+  }
+
+  // Check no duplicate contract
+  const { data: existing } = await supabase
+    .from('employee_contracts')
+    .select('id')
+    .eq('profileId', profileId)
+    .single();
+
+  if (existing) {
+    return { error: 'This employee already has an HR contract' };
+  }
+
+  const { error } = await supabase.from('employee_contracts').insert({
+    profileId,
+    jobTitle: contractData.jobTitle,
+    employmentType: contractData.employmentType,
+    baseSalary: contractData.baseSalary,
+    joiningDate: contractData.joiningDate,
+    bankAccountName: contractData.bankAccountName || null,
+    bankAccountNumber: contractData.bankAccountNumber || null,
+    bankIFSC: contractData.bankIFSC || null,
+    upiId: contractData.upiId || null,
+    avatarUrl: contractData.avatarUrl || null,
+    notes: contractData.notes || null,
+    incentive: contractData.incentive || 0,
+    employeeNumber: contractData.employeeNumber || null,
+    department: contractData.department || null,
+    pfEnrolled: contractData.pfEnrolled || false,
+    pfContinued: contractData.pfContinued || false,
+    ptExempt: contractData.ptExempt || false,
+    tdsExempt: contractData.tdsExempt || false,
+    exemptionReason: contractData.exemptionReason || null,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath('/hr/employees');
+  revalidatePath('/employees');
+  return { success: true };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UNIFIED CREATE + ONBOARD (single-step: profile + contract)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Creates a brand-new auth user + profile, then immediately creates the HR
+ * contract — all in one server action. This replaces the two-step flow of
+ * creating the user first and then separately onboarding them.
+ */
+export async function createAndOnboardEmployee(formData: UnifiedOnboardingFormData) {
+  await requireAdmin();
+
+  const result = unifiedOnboardingSchema.safeParse(formData);
+  if (!result.success) {
+    return { error: 'Validation failed', details: result.error.flatten() };
+  }
+
+  const {
+    fullName,
+    email,
+    password,
+    dateOfBirth,
+    phone,
+    gender,
+    bloodGroup,
+    panNumber,
+    role,
+    branchId,
+    managerId,
+    jobTitle,
+    employmentType,
+    baseSalary,
+    incentive,
+    joiningDate,
+    bankAccountName,
+    bankAccountNumber,
+    bankIFSC,
+    upiId,
+    avatarUrl,
+    notes,
+  } = result.data;
+
+  // 1. Create the auth user (admin SDK auto-confirms email)
+  const { data: authUser, error: authError } =
+    await adminAuthClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { fullName },
+    });
+
+  if (authError || !authUser.user) {
+    return { error: parseSupabaseError(authError, 'Failed to create user account') };
+  }
+
+  const newProfileId = authUser.user.id;
+
+  // 2. Update the auto-created profile (role, branch, manager, personal details)
+  const { error: profileError } = await adminAuthClient
+    .from('profiles')
+    .update({
+      role,
+      branchId: branchId && branchId !== 'no_branch' ? branchId : null,
+      managerId: managerId && managerId !== 'no_manager' ? managerId : null,
+      dateOfBirth: dateOfBirth || null,
+      phone: phone || null,
+      gender: gender || null,
+      bloodGroup: bloodGroup || null,
+      panNumber: panNumber ? panNumber.toUpperCase() : null,
+    })
+    .eq('id', newProfileId);
+
+  if (profileError) {
+    // Best-effort cleanup: delete the auth user so we don't leave orphans
+    await adminAuthClient.auth.admin.deleteUser(newProfileId);
+    return { error: parseSupabaseError(profileError, 'User created but failed to set profile details. Please try again.') };
+  }
+
+  // 3. Create the HR contract with retry logic for employeeNumber conflict
+  let contractError = null;
+  let attempt = 0;
+  let currentEmpNum = await getNextEmployeeNumber();
+
+  while (attempt < 5) {
+    const { error: insertError } = await adminAuthClient
+      .from('employee_contracts')
+      .insert({
+        profileId: newProfileId,
+        jobTitle,
+        employmentType,
+        baseSalary,
+        joiningDate,
+        bankAccountName: bankAccountName || null,
+        bankAccountNumber: bankAccountNumber || null,
+        bankIFSC: bankIFSC || null,
+        upiId: upiId || null,
+        avatarUrl: avatarUrl || null,
+        notes: notes || null,
+        incentive: incentive || 0,
+        employeeNumber: currentEmpNum,
+        department: formData.department || null,
+        pfEnrolled: formData.pfEnrolled || false,
+        pfContinued: formData.pfContinued || false,
+        ptExempt: formData.ptExempt || false,
+        tdsExempt: formData.tdsExempt || false,
+        exemptionReason: formData.exemptionReason || null,
+      });
+
+    if (insertError) {
+      if (insertError.code === '23505' && insertError.message.includes('employeeNumber')) {
+        attempt++;
+        const match = currentEmpNum.match(/^WK-(\d+)$/);
+        if (match) {
+          const nextNum = parseInt(match[1], 10) + 1;
+          currentEmpNum = `WK-${nextNum.toString().padStart(3, '0')}`;
+        }
+        continue;
+      }
+      contractError = insertError;
+      break;
+    }
+    
+    // Success
+    contractError = null;
+    break;
+  }
+
+  if (contractError || attempt >= 5) {
+    // Cleanup: delete auth user (profile row will cascade)
+    await adminAuthClient.auth.admin.deleteUser(newProfileId);
+    return { error: 'User created but failed to create HR contract: ' + (contractError?.message || 'ID conflict') };
+  }
+
+  revalidatePath('/hr/employees');
+  revalidatePath('/employees');
+  return { success: true, profileId: newProfileId };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UPDATE
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Update personal profile details (DOB, phone, gender, blood group, PAN) */
+export async function updateProfileDetails(profileId: string, data: PersonalDetailsFormData) {
+  const { supabase } = await requireAdmin();
+
+  const result = personalDetailsSchema.safeParse(data);
+  if (!result.success) {
+    return { error: 'Validation failed', details: result.error.flatten() };
+  }
+
+  const { error } = await adminAuthClient
+    .from('profiles')
+    .update({
+      dateOfBirth: result.data.dateOfBirth || null,
+      phone: result.data.phone || null,
+      gender: result.data.gender || null,
+      bloodGroup: result.data.bloodGroup || null,
+      panNumber: result.data.panNumber ? result.data.panNumber.toUpperCase() : null,
+    })
+    .eq('id', profileId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/hr/employees/${profileId}`);
+  revalidatePath('/hr/employees');
+  return { success: true };
+}
+
+/** Update an existing employee contract */
+export async function updateContract(contractId: string, data: ContractFormData) {
+  const { supabase } = await requireAdmin();
+
+
+  const result = contractSchema.safeParse(data);
+  if (!result.success) {
+    return { error: 'Validation failed', details: result.error.flatten() };
+  }
+
+  const { error } = await supabase
+    .from('employee_contracts')
+    .update({
+      jobTitle: result.data.jobTitle,
+      employmentType: result.data.employmentType,
+      baseSalary: result.data.baseSalary,
+      joiningDate: result.data.joiningDate,
+      bankAccountName: result.data.bankAccountName || null,
+      bankAccountNumber: result.data.bankAccountNumber || null,
+      bankIFSC: result.data.bankIFSC || null,
+      upiId: result.data.upiId || null,
+      avatarUrl: result.data.avatarUrl || null,
+      notes: result.data.notes || null,
+      incentive: result.data.incentive || 0,
+      employeeNumber: result.data.employeeNumber || null,
+      department: result.data.department || null,
+      pfEnrolled: result.data.pfEnrolled || false,
+      pfContinued: result.data.pfContinued || false,
+      ptExempt: result.data.ptExempt || false,
+      tdsExempt: result.data.tdsExempt || false,
+      exemptionReason: result.data.exemptionReason || null,
+    })
+    .eq('id', contractId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath('/hr/employees');
+  revalidatePath('/hr/payroll', 'layout');
+  return { success: true };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DEACTIVATE / REACTIVATE
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Soft-deactivate: sets isActive=false, does NOT delete the profile or contract */
+export async function deactivateEmployee(profileId: string) {
+  const { supabase } = await requireAdmin();
+
+  const { error } = await supabase
+    .from('employee_contracts')
+    .update({ isActive: false, deactivatedAt: new Date().toISOString() })
+    .eq('profileId', profileId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath('/hr/employees');
+  revalidatePath('/employees');
+  return { success: true };
+}
+
+export async function reactivateEmployee(profileId: string) {
+  const { supabase } = await requireAdmin();
+
+  const { error } = await supabase
+    .from('employee_contracts')
+    .update({ isActive: true, deactivatedAt: null })
+    .eq('profileId', profileId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath('/hr/employees');
+  revalidatePath('/employees');
+  return { success: true };
+}

@@ -1,0 +1,314 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════
+   BRAND TOKENS — Generated from brand.config.ts
+   The :root block has been removed as the ThemeProvider
+   dynamically injects the CSS variables based on the 
+   brand.config.ts configuration.
+═══════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════
+   LAYER BASE — Apply brand tokens to HTML elements globally.
+   This ensures brand-consistency even without explicit Tailwind classes.
+═══════════════════════════════════════════════════════ */
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
+
+  html {
+    max-width: 100vw;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-sans text-foreground;
+  }
+
+  button {
+    @apply font-sans;
+    border-radius: var(--radius-button);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   PAGE BACKGROUND — Atmospheric gradient using brand surface color
+═══════════════════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 20% -10%,
+      hsl(var(--color-surface-2) / 0.55) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 80% 10%,
+      hsl(var(--color-surface-2) / 0.3) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 100% 60% at 50% 100%,
+      hsl(var(--color-surface-1) / 0.4) 0%,
+      transparent 60%
+    ),
+    hsl(var(--background));
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCROLLBAR — Uses brand tokens
+═══════════════════════════════════════════════════════ */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--color-surface-1));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--color-neutral));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
+/* ═══════════════════════════════════════════════════════
+   TEXT SELECTION — Uses primary brand color
+═══════════════════════════════════════════════════════ */
+::selection {
+  background: hsl(var(--primary) / 0.25);
+  color: hsl(var(--foreground));
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════ */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Spotlight Card Effect
+     Usage: add className="spotlight-card" to any card wrapper.
+     Then set --mouse-x / --mouse-y via onMouseMove in JS. */
+  .spotlight-card {
+    position: relative;
+  }
+
+  .spotlight-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+      600px circle at var(--mouse-x, -400px) var(--mouse-y, -400px),
+      rgba(255, 255, 255, 0.055),
+      transparent 40%
+    );
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .spotlight-card:hover::before {
+    opacity: 1;
+  }
+
+  /* Gradient text — uses primary brand color */
+  .text-gradient-brand {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--foreground)) 0%,
+      hsl(var(--primary)) 60%,
+      hsl(var(--primary-foreground) / 0.8) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-hero {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--foreground)) 0%,
+      hsl(var(--foreground)) 30%,
+      hsl(var(--color-warning)) 65%,
+      hsl(var(--color-warning)) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Custom minimal scrollbar for horizontal scrolling elements */
+  .custom-scrollbar::-webkit-scrollbar {
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #3b82f6; /* Blue color */
+    border-radius: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #2563eb; /* Darker blue on hover */
+  }
+}
+
+/* Custom styling for date and time inputs to fit dark mode nicely */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  display: block !important;
+  opacity: 0.85 !important;
+  cursor: pointer;
+  filter: invert(62%) sepia(93%) saturate(1682%) hue-rotate(15deg) brightness(102%) contrast(101%) !important;
+  transition: opacity 0.15s ease, filter 0.15s ease;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1 !important;
+  filter: invert(72%) sepia(61%) saturate(3033%) hue-rotate(5deg) brightness(101%) contrast(97%) !important;
+}
+
+/* Autofill style overrides to prevent white/yellow backgrounds in dark mode inputs */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #020617 inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Blog post body
+ *
+ * The blog stores rich text as HTML from the Tiptap editor (<p>, <strong>,
+ * <em>, <a>, <ul>/<ol>, <li>). @tailwindcss/typography is NOT installed in
+ * this project, so prose-* utilities do nothing — and Tailwind's preflight
+ * resets list-style and padding on <ul>/<ol>, which would render lists as
+ * unmarked lines. These rules restore readable typography for that markup.
+ * ───────────────────────────────────────────────────────────────────────── */
+.blog-body > * + * {
+  margin-top: 1.25rem;
+}
+
+.blog-body p {
+  line-height: 1.75;
+  color: hsl(var(--muted-foreground));
+}
+
+.blog-body strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.blog-body em {
+  font-style: italic;
+}
+
+.blog-body a {
+  color: #fbbf24; /* amber-400 */
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.blog-body a:hover {
+  color: #fcd34d; /* amber-300 */
+}
+
+.blog-body ul,
+.blog-body ol {
+  padding-left: 1.5rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.blog-body ul {
+  list-style-type: disc;
+}
+
+.blog-body ol {
+  list-style-type: decimal;
+}
+
+.blog-body li {
+  margin-top: 0.5rem;
+  line-height: 1.75;
+  padding-left: 0.25rem;
+}
+
+.blog-body li::marker {
+  color: #f59e0b; /* amber-500 */
+  font-weight: 600;
+}
+
+/* Nested lists */
+.blog-body li > ul,
+.blog-body li > ol {
+  margin-top: 0.5rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Blog card entrance — staggered fade + rise.
+ * animation-fill-mode: both keeps cards hidden until their delay elapses,
+ * so a staggered grid does not flash fully-visible first.
+ * ───────────────────────────────────────────────────────────────────────── */
+@keyframes blog-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-blog-card-in {
+  animation: blog-card-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Users who ask for less motion get the content immediately, no movement. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-blog-card-in {
+    animation: none;
+  }
+}
