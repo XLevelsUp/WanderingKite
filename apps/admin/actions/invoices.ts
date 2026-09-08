@@ -62,6 +62,7 @@ export async function createInvoice(input: CreateInvoiceFormData) {
     discountType: data.discountType ?? null,
     discountValue: data.discountValue ?? null,
     gstRate: data.gstRate,
+    clientGstin: data.clientGstin ?? null,
   });
 
   const year = new Date().getFullYear();
@@ -81,7 +82,7 @@ export async function createInvoice(input: CreateInvoiceFormData) {
         discount_value: data.discountValue ?? null,
         discount_amount: totals.discountAmount,
         taxable_amount: totals.taxableAmount,
-        gst_rate: data.gstRate,
+        gst_rate: totals.appliedGstRate,
         gst_amount: totals.gstAmount,
         total: totals.total,
         business_gstin: siteConfig.invoice.gstin || null,
@@ -341,6 +342,7 @@ export async function updateInvoice(id: string, input: UpdateInvoiceFormData) {
     discountType: data.discountType ?? null,
     discountValue: data.discountValue ?? null,
     gstRate: data.gstRate,
+    clientGstin: data.clientGstin ?? null,
   });
 
   const { error: updateError } = await supabase
@@ -351,7 +353,7 @@ export async function updateInvoice(id: string, input: UpdateInvoiceFormData) {
       discount_value: data.discountValue ?? null,
       discount_amount: totals.discountAmount,
       taxable_amount: totals.taxableAmount,
-      gst_rate: data.gstRate,
+      gst_rate: totals.appliedGstRate,
       gst_amount: totals.gstAmount,
       total: totals.total,
       client_gstin: data.clientGstin || null,

@@ -31,7 +31,10 @@ export const authConfig = {
   pages: {
     signIn: "/client/login",
   },
-  secret:
-    process.env.NEXTAUTH_SECRET ||
-    "default_nextauth_secret_wandering_kite_38294723",
+  // No fallback on purpose. This used to default to a hardcoded literal, which
+  // meant a missing NEXTAUTH_SECRET in a deploy would silently sign real
+  // customer-portal sessions with a value committed to a public repo — anyone
+  // could have forged one. With the fallback gone, NextAuth raises MissingSecret
+  // instead, so the misconfiguration fails loudly rather than quietly.
+  secret: process.env.NEXTAUTH_SECRET,
 } satisfies NextAuthConfig;

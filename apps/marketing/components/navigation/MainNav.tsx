@@ -7,7 +7,6 @@ import { Camera, Video, Building2, MessageCircle, User } from 'lucide-react';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { siteConfig } from '@/config/site';
 import { usePathname } from 'next/navigation';
-import { NotificationBell } from '@/components/dashboard/NotificationBell';
 
 const navItems = [
   { label: 'Photography', href: '/photography', icon: Camera },
@@ -17,8 +16,10 @@ const navItems = [
 
 export function MainNav() {
   const pathname = usePathname();
-  const isDashboardOrAdmin = pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin') || false;
-  const isAuthPage = pathname === '/login' || pathname === '/client/login' || pathname === '/client/signup';
+  // Only the client-portal auth pages exist in this app now — the staff /login
+  // and the /dashboard and /admin prefixes moved to apps/admin in the split, so
+  // the branch that rendered the staff NotificationBell here could never match.
+  const isAuthPage = pathname === '/client/login' || pathname === '/client/signup';
 
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
 
@@ -62,72 +63,64 @@ export function MainNav() {
         </Link>
 
         {/* Nav links */}
-        {isDashboardOrAdmin ? (
-          <div className="flex items-center gap-4 shrink-0">
-            <NotificationBell />
-          </div>
-        ) : (
-          <>
-            <ul className="hidden items-center gap-8 md:flex">
-              {navItems.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="
-                      flex items-center gap-2
-                      text-sm text-foreground/55
-                      transition-colors duration-200
-                      hover:text-primary
-                    "
-                  >
-                    <item.icon className="h-3.5 w-3.5" />
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            {/* CTA & Client Auth Buttons */}
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              {!isAuthPage && (
-                <Link
-                  href={isAuthenticated ? "/client/dashboard" : "/client/login"}
-                  className="
-                    flex h-9 sm:h-10 items-center gap-1.5 rounded-full
-                    border border-primary/35
-                    bg-primary/8
-                    px-3 sm:px-4 text-xs sm:text-sm font-semibold text-primary
-                    transition-all duration-200
-                    hover:bg-primary/18 hover:border-primary/60
-                    hover:text-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.20)]
-                  "
-                >
-                  {isAuthenticated && <User className="h-4 w-4 shrink-0" />}
-                  {isAuthenticated ? "My Dashboard" : "Client Login/Signup"}
-                </Link>
-              )}
-              <a
-                href={generateWhatsAppLink(pathname === '/studiospace' ? 'studio' : undefined)}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Contact us on WhatsApp"
+        <ul className="hidden items-center gap-8 md:flex">
+          {navItems.map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.href}
                 className="
-                  flex h-9 sm:h-10 items-center gap-1.5 rounded-full
-                  border border-primary/35
-                  bg-primary/8
-                  px-3 sm:px-4 text-xs sm:text-sm font-semibold text-primary
-                  transition-all duration-200
-                  hover:bg-primary/18 hover:border-primary/60
-                  hover:text-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.20)]
-                  hidden sm:flex
+                  flex items-center gap-2
+                  text-sm text-foreground/55
+                  transition-colors duration-200
+                  hover:text-primary
                 "
               >
-                <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                <span className="hidden md:inline">Contact</span>
-              </a>
-            </div>
-          </>
-        )}
+                <item.icon className="h-3.5 w-3.5" />
+                {item.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        {/* CTA & Client Auth Buttons */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {!isAuthPage && (
+            <Link
+              href={isAuthenticated ? "/client/dashboard" : "/client/login"}
+              className="
+                flex h-9 sm:h-10 items-center gap-1.5 rounded-full
+                border border-primary/35
+                bg-primary/8
+                px-3 sm:px-4 text-xs sm:text-sm font-semibold text-primary
+                transition-all duration-200
+                hover:bg-primary/18 hover:border-primary/60
+                hover:text-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.20)]
+              "
+            >
+              {isAuthenticated && <User className="h-4 w-4 shrink-0" />}
+              {isAuthenticated ? "My Dashboard" : "Client Login/Signup"}
+            </Link>
+          )}
+          <a
+            href={generateWhatsAppLink(pathname === '/studiospace' ? 'studio' : undefined)}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Contact us on WhatsApp"
+            className="
+              flex h-9 sm:h-10 items-center gap-1.5 rounded-full
+              border border-primary/35
+              bg-primary/8
+              px-3 sm:px-4 text-xs sm:text-sm font-semibold text-primary
+              transition-all duration-200
+              hover:bg-primary/18 hover:border-primary/60
+              hover:text-foreground hover:shadow-[0_0_20px_hsl(var(--primary)/0.20)]
+              hidden sm:flex
+            "
+          >
+            <MessageCircle className="h-4 w-4" aria-hidden="true" />
+            <span className="hidden md:inline">Contact</span>
+          </a>
+        </div>
       </div>
     </nav>
   );
