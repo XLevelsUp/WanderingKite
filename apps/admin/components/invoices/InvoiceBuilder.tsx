@@ -127,8 +127,13 @@ export function InvoiceBuilder({
       discountType: discountType === 'NONE' ? null : discountType,
       discountValue: discountValue ? Number(discountValue) : null,
       gstRate,
+      clientGstin,
     });
-  }, [validItems, discountType, discountValue, gstRate]);
+  }, [validItems, discountType, discountValue, gstRate, clientGstin]);
+
+  // Mirrors calculateInvoiceTotals: no client GSTIN means no GST is charged,
+  // so the CGST/SGST breakdown is hidden rather than shown as a row of zeroes.
+  const gstApplies = totals.appliedGstRate > 0;
 
   const handleUpdate = async () => {
     setError('');
@@ -408,8 +413,12 @@ export function InvoiceBuilder({
                 min="0"
                 max="100"
                 value={gstRate}
+                disabled={!gstApplies}
                 onChange={(e) => setGstRate(Number(e.target.value) || 0)}
               />
+              {!gstApplies && (
+                <p className="text-xs text-muted-foreground">Enter a client GSTIN to charge GST.</p>
+              )}
             </div>
           )}
         </CardContent>
@@ -447,14 +456,22 @@ export function InvoiceBuilder({
             <span className="text-muted-foreground">Taxable Value</span>
             <span className="font-mono">{fmt(totals.taxableAmount)}</span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">CGST @ {gstRate / 2}%</span>
-            <span className="font-mono">{fmt(Math.round(totals.gstAmount / 2))}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">SGST @ {gstRate / 2}%</span>
-            <span className="font-mono">{fmt(totals.gstAmount - Math.round(totals.gstAmount / 2))}</span>
-          </div>
+          {gstApplies ? (
+            <>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">CGST @ {totals.appliedGstRate / 2}%</span>
+                <span className="font-mono">{fmt(Math.round(totals.gstAmount / 2))}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">SGST @ {totals.appliedGstRate / 2}%</span>
+                <span className="font-mono">{fmt(totals.gstAmount - Math.round(totals.gstAmount / 2))}</span>
+              </div>
+            </>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              No client GSTIN — invoiced without GST.
+            </p>
+          )}
           <div className="flex justify-between text-lg font-bold pt-2 border-t border-border">
             <span>Total</span>
             <span className="font-mono">{fmt(totals.total)}</span>

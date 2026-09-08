@@ -139,7 +139,10 @@ function InvoiceDocument({
             <span>Taxable Value</span>
             <span className="tabular-nums">{fmt(invoice.taxable_amount)}</span>
           </div>
-          {(() => {
+          {/* An invoice raised without a client GSTIN carries no GST, so the
+              CGST/SGST lines are omitted from the printed document entirely
+              rather than printed as a pair of zeroes. */}
+          {Number(invoice.gst_rate) > 0 && (() => {
             const halfRate = Number(invoice.gst_rate) / 2;
             const cgst = Math.round(invoice.gst_amount / 2);
             const sgst = invoice.gst_amount - cgst;
