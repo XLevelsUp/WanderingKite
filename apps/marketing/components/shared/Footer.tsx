@@ -31,13 +31,14 @@ interface FooterProps {
   account?: 'wanderingkite' | 'studio';
 }
 
-import { usePathname } from 'next/navigation';
-
 export function Footer({ account = 'wanderingkite' }: FooterProps) {
-  const pathname = usePathname();
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/admin')) {
-    return null;
-  }
+  // Absolute origin of the admin app, used by the staff shortcut in the bottom
+  // bar. Trailing slash trimmed so the href doesn't end up with a double slash.
+  const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL?.replace(/\/$/, '');
+
+  // The old early-return that hid this footer on /dashboard and /admin is gone:
+  // both prefixes moved to apps/admin in the split, so no path in this app can
+  // match them any more.
 
   return (
     <footer className="border-t border-border bg-background">
@@ -234,15 +235,22 @@ export function Footer({ account = 'wanderingkite' }: FooterProps) {
               reserved.
             </p>
             <div className="flex items-center gap-6">
-              <Link
-                href="/dashboard"
-                className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 text-sm"
-                title="Admin Dashboard"
-                rel="nofollow"
-              >
-                <ShieldCheck className="h-4 w-4" />
-                <span className="sr-only">Admin Dashboard</span>
-              </Link>
+              {/* Staff shortcut into the admin app. Since the split, /dashboard
+                  lives in apps/admin on its own origin, so this has to be a
+                  plain <a> to an absolute URL rather than a next/link route.
+                  Rendered only when NEXT_PUBLIC_ADMIN_URL is configured, so a
+                  missing env var hides the link instead of shipping a 404. */}
+              {adminUrl && (
+                <a
+                  href={`${adminUrl}/dashboard`}
+                  className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 text-sm"
+                  title="Admin Dashboard"
+                  rel="nofollow noopener noreferrer"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  <span className="sr-only">Admin Dashboard</span>
+                </a>
+              )}
               <p className="text-sm text-muted-foreground">
                 Built with ❤️ by{' '}
                 <a
