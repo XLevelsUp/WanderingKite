@@ -4,30 +4,12 @@ import { createClient } from '@/lib/supabase/server';
 import { hasAccess } from '@/lib/access';
 import { listInvoices } from '@/actions/invoices';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Plus, Receipt } from 'lucide-react';
+import { InvoiceMonthBrowser, type InvoiceRow } from './InvoiceMonthBrowser';
 
 export const metadata = {
   title: 'Invoices — Studio ERP',
 };
-
-const STATUS_STYLES: Record<string, string> = {
-  DRAFT: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-  ISSUED: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  PAID: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  CANCELLED: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-};
-
-function fmt(n: number) {
-  return `₹${Number(n).toLocaleString('en-IN')}`;
-}
 
 export default async function InvoicesPage() {
   const supabase = await createClient();
@@ -75,38 +57,7 @@ export default async function InvoicesPage() {
           </Link>
         </div>
       ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Invoice #</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {invoices.map((inv: any) => (
-                <TableRow key={inv.id} className="cursor-pointer hover:bg-accent/40">
-                  <TableCell className="font-medium">
-                    <Link href={`/invoices/${inv.id}`} className="hover:underline">
-                      {inv.invoice_number}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{inv.client?.name ?? '—'}</TableCell>
-                  <TableCell>{new Date(inv.issue_date).toLocaleDateString('en-IN')}</TableCell>
-                  <TableCell>
-                    <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${STATUS_STYLES[inv.status] ?? ''}`}>
-                      {inv.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right font-mono">{fmt(inv.total)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <InvoiceMonthBrowser invoices={invoices as unknown as InvoiceRow[]} />
       )}
     </div>
   );
