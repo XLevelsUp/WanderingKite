@@ -16,13 +16,13 @@ export const siteConfig = {
     studioPhone: '+91 90254 92090',
     studioWhatsapp: '919025492090',
     address: {
-      street: 'NO 178, 1st Floor A Rammachandra Road',
+      street: 'NO 178, 1st Floor A Ramachandra Road',
       city: 'RS Puram, Coimbatore',
       state: 'Tamil Nadu',
       zip: '641002',
       country: 'IN',
       googleMaps:
-        'https://maps.google.com/?q=NO+178+Rammachandra+Road+RS+Puram+Coimbatore',
+        'https://maps.google.com/?q=NO+178+Ramachandra+Road+RS+Puram+Coimbatore',
     },
   },
   geo: {

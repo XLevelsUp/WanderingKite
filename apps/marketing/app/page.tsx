@@ -58,7 +58,7 @@ const localBusinessSchema = {
   'priceRange': '₹₹',
   'address': {
     '@type': 'PostalAddress',
-    'streetAddress': 'NO 178, 1st Floor A Rammachandra Road',
+    'streetAddress': 'NO 178, 1st Floor A Ramachandra Road',
     'addressLocality': 'RS Puram',
     'addressRegion': 'Coimbatore',
     'postalCode': '641002',
