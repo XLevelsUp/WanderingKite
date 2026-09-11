@@ -24,6 +24,11 @@ import {
 } from '@/components/ui/select';
 import { ClientCombobox, type ClientOption } from '@/app/(shell)/media-tracker/ClientCombobox';
 import { createNewClient, findClientByEmail } from '@/actions/clients-admin';
+import { SourcePickerControlled } from '@/components/dashboard/SourcePicker';
+import {
+  SOURCE_REQUIRES_DETAIL,
+  type ClientSource,
+} from '@/lib/validations/schemas';
 import { createInvoice, updateInvoice } from '@/actions/invoices';
 import { calculateInvoiceTotals, type DiscountType } from '@/lib/utils/invoice-calc';
 
@@ -81,6 +86,10 @@ export function InvoiceBuilder({
   const [newClientEmail, setNewClientEmail] = useState('');
   const [newClientPhone, setNewClientPhone] = useState('');
   const [newClientAddress, setNewClientAddress] = useState('');
+  // clients.source is NOT NULL and clientSchema has no default, so this quick
+  // path has to collect it just like the full client form does.
+  const [newClientSource, setNewClientSource] = useState<ClientSource | null>(null);
+  const [newClientSourceDetail, setNewClientSourceDetail] = useState('');
 
   const [lineItems, setLineItems] = useState<LineItemRow[]>(() =>
     initialItems && initialItems.length > 0
@@ -93,6 +102,11 @@ export function InvoiceBuilder({
   const [clientGstin, setClientGstin] = useState(initialClientGstin ?? '');
   const [notes, setNotes] = useState(initialNotes ?? '');
   const [submitting, setSubmitting] = useState(false);
+  // router.push() resolves immediately — the new page is still being fetched
+  // after it returns, and the `finally` below clears `submitting` right away.
+  // This keeps a blocking loader up across that gap so the form doesn't sit
+  // there looking idle and clickable while the preview loads.
+  const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState('');
 
   const addLineItem = () => {
@@ -161,6 +175,7 @@ export function InvoiceBuilder({
       }
 
       toast.success('Invoice updated.');
+      setRedirecting(true);
       router.push(`/invoices/${invoiceId}`);
     } catch (err: any) {
       setError(err?.message || 'Failed to update invoice.');
@@ -186,6 +201,20 @@ export function InvoiceBuilder({
       }
       if (clientMode === 'NEW' && !newClientName.trim()) {
         setError("Enter the client's name.");
+        return;
+      }
+      // Mirror clientSchema here so the operator gets the message next to the
+      // field instead of a server round-trip that fails on every submit.
+      if (clientMode === 'NEW' && !newClientSource) {
+        setError('Please select how they found us.');
+        return;
+      }
+      if (
+        clientMode === 'NEW' &&
+        newClientSource === SOURCE_REQUIRES_DETAIL &&
+        !newClientSourceDetail.trim()
+      ) {
+        setError('Please specify which social media platform.');
         return;
       }
     }
@@ -216,6 +245,10 @@ export function InvoiceBuilder({
           formData.set('email', emailToUse);
           if (newClientPhone.trim()) formData.set('phone', newClientPhone.trim());
           if (newClientAddress.trim()) formData.set('address', newClientAddress.trim());
+          if (newClientSource) formData.set('source', newClientSource);
+          if (newClientSource === SOURCE_REQUIRES_DETAIL) {
+            formData.set('source_detail', newClientSourceDetail.trim());
+          }
 
           const created = await createNewClient(formData);
           if ('error' in created && created.error) {
@@ -253,6 +286,7 @@ export function InvoiceBuilder({
       }
 
       toast.success(`Invoice ${result.invoiceNumber} created.`);
+      setRedirecting(true);
       router.push(`/invoices/${result.id}`);
     } catch (err: any) {
       setError(err?.message || 'Failed to create invoice.');
@@ -319,6 +353,19 @@ export function InvoiceBuilder({
                 <div className="space-y-1.5">
                   <Label>Address</Label>
                   <Input value={newClientAddress} onChange={(e) => setNewClientAddress(e.target.value)} placeholder="Optional" />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label>
+                    How did they find us? <span className="text-red-400 font-normal" aria-hidden>*</span>
+                    <span className="sr-only">(required)</span>
+                  </Label>
+                  <SourcePickerControlled
+                    value={newClientSource}
+                    detail={newClientSourceDetail}
+                    onChangeSource={setNewClientSource}
+                    onChangeDetail={setNewClientSourceDetail}
+                    disabled={submitting}
+                  />
                 </div>
               </div>
             )}
@@ -481,10 +528,10 @@ export function InvoiceBuilder({
 
           <Button
             onClick={handleSubmit}
-            disabled={submitting || validItems.length === 0}
+            disabled={submitting || redirecting || validItems.length === 0}
             className="w-full mt-4"
           >
-            {submitting ? (
+            {submitting || redirecting ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <Receipt className="h-4 w-4 mr-2" />
@@ -493,6 +540,21 @@ export function InvoiceBuilder({
           </Button>
         </CardContent>
       </Card>
+
+      {redirecting && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm"
+        >
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">
+            {isEdit
+              ? 'Saving changes — opening preview…'
+              : 'Invoice created — opening preview…'}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

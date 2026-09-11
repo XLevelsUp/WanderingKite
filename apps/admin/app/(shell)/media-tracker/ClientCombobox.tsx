@@ -1,10 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Check, ChevronDown, Plus, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createNewClient } from '@/actions/clients-admin';
+import { SourcePickerControlled } from '@/components/dashboard/SourcePicker';
+import {
+  SOURCE_REQUIRES_DETAIL,
+  type ClientSource,
+} from '@/lib/validations/schemas';
 
 export interface ClientOption {
   id: string;
@@ -47,6 +52,12 @@ export function ClientCombobox({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [busy, setBusy] = useState(false);
+  // clients.source is NOT NULL, so a name-only create is rejected. Clicking
+  // "add as new client" captures the name and opens a source step rather than
+  // inserting straight away.
+  const [pendingName, setPendingName] = useState<string | null>(null);
+  const [source, setSource] = useState<ClientSource | null>(null);
+  const [sourceDetail, setSourceDetail] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -58,10 +69,17 @@ export function ClientCombobox({
     return clients.filter((c) => c.name.toLowerCase().includes(q));
   }, [clients, query]);
 
-  const closeAll = () => {
+  const cancelCreate = useCallback(() => {
+    setPendingName(null);
+    setSource(null);
+    setSourceDetail('');
+  }, []);
+
+  const closeAll = useCallback(() => {
     setOpen(false);
     setQuery('');
-  };
+    cancelCreate();
+  }, [cancelCreate]);
 
   useEffect(() => {
     if (!open) return;
@@ -70,7 +88,7 @@ export function ClientCombobox({
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [open]);
+  }, [open, closeAll]);
 
   const openDropdown = () => {
     setOpen(true);
@@ -84,13 +102,18 @@ export function ClientCombobox({
   };
 
   const createClient = async () => {
-    const name = query.trim();
-    if (!name) return;
+    const name = pendingName?.trim();
+    if (!name || !source) return;
+    if (source === SOURCE_REQUIRES_DETAIL && !sourceDetail.trim()) return;
     setBusy(true);
     try {
       const formData = new FormData();
       formData.set('name', name);
       formData.set('email', placeholderEmail(name));
+      formData.set('source', source);
+      if (source === SOURCE_REQUIRES_DETAIL) {
+        formData.set('source_detail', sourceDetail.trim());
+      }
 
       const created = await createNewClient(formData);
       if ('error' in created && created.error) {
@@ -162,18 +185,62 @@ export function ClientCombobox({
             )}
           </ul>
 
-          {allowCreate && query.trim() && (
+          {allowCreate && pendingName === null && query.trim() && (
             <button
               type="button"
-              disabled={busy}
-              onClick={createClient}
-              className="flex w-full items-center gap-2 border-t px-3 py-2 text-left text-sm font-medium text-primary outline-none hover:bg-accent disabled:opacity-50"
+              onClick={() => setPendingName(query.trim())}
+              className="flex w-full items-center gap-2 border-t px-3 py-2 text-left text-sm font-medium text-primary outline-none hover:bg-accent"
             >
               <Plus className="h-4 w-4 shrink-0" />
-              {busy
-                ? 'Creating…'
-                : `Add "${query.trim()}" as new client`}
+              {`Add "${query.trim()}" as new client`}
             </button>
+          )}
+
+          {allowCreate && pendingName !== null && (
+            <div className="space-y-3 border-t px-3 py-3">
+              <p className="text-sm font-medium">
+                Add &ldquo;{pendingName}&rdquo; as new client
+              </p>
+
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">
+                  How did they find us?{' '}
+                  <span className="text-red-400" aria-hidden>*</span>
+                  <span className="sr-only">(required)</span>
+                </p>
+                <SourcePickerControlled
+                  value={source}
+                  detail={sourceDetail}
+                  onChangeSource={setSource}
+                  onChangeDetail={setSourceDetail}
+                  disabled={busy}
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={
+                    busy ||
+                    !source ||
+                    (source === SOURCE_REQUIRES_DETAIL && !sourceDetail.trim())
+                  }
+                  onClick={createClient}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground shadow-sm outline-none hover:bg-primary/90 disabled:opacity-50"
+                >
+                  <Plus className="h-4 w-4 shrink-0" />
+                  {busy ? 'Creating…' : 'Create client'}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={cancelCreate}
+                  className="rounded-md px-3 py-1.5 text-sm text-muted-foreground outline-none hover:bg-accent disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           )}
         </div>
       )}
