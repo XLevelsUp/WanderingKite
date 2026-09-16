@@ -30,3 +30,16 @@ export async function getStudioAddOns(includeInactive = false) {
   }
   return data ?? [];
 }
+
+export async function getPodcastPackages(includeInactive = false) {
+  const supabase = await createClient();
+  let query = supabase.from('podcast_packages').select('*').order('sort_order', { ascending: true });
+  if (!includeInactive) query = query.eq('is_active', true);
+
+  const { data, error } = await query;
+  if (error) {
+    logger.error('getPodcastPackages failed:', error);
+    return [];
+  }
+  return data ?? [];
+}

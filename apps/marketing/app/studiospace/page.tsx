@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import { StudioCarousel } from '@/components/sections/StudioCarousel';
 import { StudioPricingEngine } from '@/components/studio/StudioPricingEngine';
-import { getStudioPackages, getStudioAddOns } from '@/actions/studio-pricing-public';
+import { getStudioPackages, getStudioAddOns, getPodcastPackages } from '@/actions/studio-pricing-public';
 import { BackdropsGallery } from '@/components/studio/BackdropsGallery';
 import ServiceTerms from '@/components/sections/ServiceTerms';
 
@@ -63,43 +63,6 @@ const podcastEquipment = [
     icon: Zap,
     title: 'Acoustic Treatment',
     description: 'Professional soundproofing & panels',
-  },
-];
-
-const podcastPackages = [
-  {
-    name: 'Single Cameraman',
-    price: '1,998',
-    duration: '/hour',
-    features: [
-      'Studio space rent included (₹999)',
-      '1 Cameraman (₹999)',
-      '1 Camera',
-      '3 Lights & 1 Mic',
-    ],
-  },
-  {
-    name: 'Double Cameraman',
-    price: '2,997',
-    duration: '/hour',
-    features: [
-      'Studio space rent included (₹999)',
-      '2 Cameramen (₹999 each)',
-      '2 Cameras',
-      '3 Lights & 1 Mic',
-    ],
-    popular: true,
-  },
-  {
-    name: 'Triple Cameraman',
-    price: '3,996',
-    duration: '/hour',
-    features: [
-      'Studio space rent included (₹999)',
-      '3 Cameramen (₹999 each)',
-      '3 Cameras',
-      '3 Lights & 1 Mic',
-    ],
   },
 ];
 
@@ -449,10 +412,23 @@ export default async function StudioPage() {
     console.error('Failed to fetch equipment for studio page:', error);
   }
 
-  const [studioPackages, studioAddOns] = await Promise.all([
+  const [studioPackages, studioAddOns, podcastRows] = await Promise.all([
     getStudioPackages(),
     getStudioAddOns(),
+    getPodcastPackages(),
   ]);
+
+  // The engine's SidePackage shape is camelCase; Supabase returns snake_case.
+  // original_price stays null when unset so the discount badge stays hidden.
+  const podcastPackages = (podcastRows as any[]).map((p) => ({
+    name: p.name,
+    price: p.price,
+    originalPrice: p.original_price ?? undefined,
+    durationLabel: p.duration_label,
+    description: p.description,
+    features: p.features ?? [],
+    popular: p.is_popular,
+  }));
 
   // Hardcoded equipment previews for the rental section below
   const previewCameras = 'Sony A7 IV, Canon EOS R5, Lumix S5 IIX ,Sony Alpha M7 V,Sony Alpha FX3 , Sony Alpha FX 30';
@@ -528,102 +504,22 @@ export default async function StudioPage() {
             <h2 className="mb-4 text-center text-4xl font-bold">
               Our Services
             </h2>
-            <p className="mb-16 text-center text-muted-foreground">
+            <p className="mb-4 text-center text-muted-foreground">
               Check our competitive photo studio rental Coimbatore price options to book photography studio Coimbatore sessions today. Everything you need under one roof.
             </p>
 
-            <StudioPricingEngine equipment={rentalEquipment} packages={studioPackages as any} addOns={studioAddOns as any} />
+            <p className="mx-auto mb-12 max-w-3xl text-center text-muted-foreground">
+              Located in RS Puram, our studio provides a professional environment for podcast recording, video production, and photography, serving clients across Coimbatore, Tiruppur, Salem, and Erode.
+            </p>
 
-            {/* Podcast Studio */}
-            <div className="mb-20">
-              <div className="mb-8 flex items-center gap-3">
-                <span className="rounded-full border border-green-500/30 bg-green-500/10 px-4 py-1 text-sm font-semibold text-green-500">
-                  Podcast Studio
-                </span>
-                <div className="h-px flex-1 bg-secondary" />
-              </div>
-              <p className="mb-8 text-muted-foreground text-lg">
-                Located in RS Puram, our studio provides a professional environment for podcast recording, video production, and photography, serving clients across Coimbatore, Tiruppur, Salem, and Erode.
-              </p>
-
-              {/* Studio Equipment - Commented out as requested
-              <div className="mb-12">
-                <h3 className="mb-6 text-2xl font-bold">Studio Equipment</h3>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                  {podcastEquipment.map((item, index) => (
-                    <div
-                      key={index}
-                      className="rounded-xl border border-border bg-muted/30 p-5 flex items-start gap-4"
-                    >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-500/10">
-                        <item.icon className="h-5 w-5 text-green-500" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-sm mb-1">{item.title}</h4>
-                        <p className="text-xs text-muted-foreground">
-                          {item.description}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              */}
-
-              <h3 className="mb-6 text-2xl font-bold">Packages with Cameraman</h3>
-              <div className="grid gap-6 md:grid-cols-3">
-                {podcastPackages.map((pkg) => (
-                  <div
-                    key={pkg.name}
-                    className={`relative rounded-2xl border p-6 flex flex-col ${pkg.popular
-                      ? 'border-green-500/50 bg-green-500/5 shadow-[0_0_15px_-5px_hsl(var(--color-green)/0.15)]'
-                      : 'border-border bg-muted/50'
-                      }`}
-                  >
-                    {pkg.popular && (
-                      <span className="absolute -top-3 left-6 rounded-full bg-green-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-950">
-                        Most Popular
-                      </span>
-                    )}
-                    <h4 className="mb-2 text-xl font-bold">{pkg.name}</h4>
-                    <div className="mb-6">
-                      <span className="text-3xl font-bold text-green-500">
-                        ₹{pkg.price}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {pkg.duration}
-                      </span>
-                    </div>
-                    <ul className="mb-8 space-y-3 flex-1">
-                      {pkg.features.map((feature, index) => (
-                        <li
-                          key={index}
-                          className="flex items-start gap-2 text-sm text-muted-foreground"
-                        >
-                          <span className="text-green-500 font-bold">✓</span>
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                    <a
-                      href={generateWhatsAppLink(
-                        'studio',
-                        `Hi! I'd like to book the ${pkg.name} podcast package in your studio.`
-                      )}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`Book the ${pkg.name} podcast package`}
-                      className={`block w-full rounded-xl py-3 text-center text-sm font-semibold transition-all ${pkg.popular
-                        ? 'bg-green-500 text-zinc-950 hover:bg-green-400'
-                        : 'border border-green-500/40 bg-green-500/10 text-green-500 hover:bg-green-500/20'
-                        }`}
-                    >
-                      Book Session
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <StudioPricingEngine
+              equipment={rentalEquipment}
+              packages={studioPackages as any}
+              addOns={studioAddOns as any}
+              sidePackages={podcastPackages}
+              sidePackagesTitle="Podcast Studio — Packages with Cameraman"
+              sidePackagesService="studio"
+            />
 
             {/* Editing Services */}
             <div className="mb-16">
