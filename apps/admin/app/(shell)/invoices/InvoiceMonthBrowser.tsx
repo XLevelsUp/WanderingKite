@@ -20,15 +20,32 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { BulkInvoiceDownload } from '@/components/invoices/BulkInvoiceDownload';
 
 export type InvoiceRow = {
   id: string;
   invoice_number: string;
+  /** false → a non-invoiced REF- entry, kept out of the filed GST series. */
+  is_invoiced: boolean;
   issue_date: string;
   status: string;
   total: number;
   client?: { name?: string | null } | null;
 };
+
+type Book = 'INVOICED' | 'NON_INVOICED' | 'ALL';
+
+const BOOK_LABELS: Record<Book, string> = {
+  INVOICED: 'Invoiced',
+  NON_INVOICED: 'Non-invoiced',
+  ALL: 'All entries',
+};
+
+// Rows written before 00071 have no flag in older cached payloads; they are all
+// real invoices, matching the column's DEFAULT true.
+function isInvoiced(inv: InvoiceRow) {
+  return inv.is_invoiced ?? true;
+}
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
@@ -90,16 +107,37 @@ const YEARS_AHEAD = 1;
 export function InvoiceMonthBrowser({ invoices }: { invoices: InvoiceRow[] }) {
   const reduceMotion = useReducedMotion();
 
+  // Which book is on screen. Everything below — month grouping, swipe range,
+  // totals — works off the scoped list, so the month navigator only ever
+  // offers months that the selected book actually has entries in.
+  const [book, setBook] = useState<Book>('INVOICED');
+
+  const counts = useMemo(() => {
+    let invoiced = 0;
+    for (const inv of invoices) if (isInvoiced(inv)) invoiced += 1;
+    return {
+      INVOICED: invoiced,
+      NON_INVOICED: invoices.length - invoiced,
+      ALL: invoices.length,
+    };
+  }, [invoices]);
+
+  const scopedInvoices = useMemo(() => {
+    if (book === 'ALL') return invoices;
+    const want = book === 'INVOICED';
+    return invoices.filter((inv) => isInvoiced(inv) === want);
+  }, [invoices, book]);
+
   const byMonth = useMemo(() => {
     const map = new Map<string, InvoiceRow[]>();
-    for (const inv of invoices) {
+    for (const inv of scopedInvoices) {
       const key = monthKey(inv.issue_date);
       const bucket = map.get(key);
       if (bucket) bucket.push(inv);
       else map.set(key, [inv]);
     }
     return map;
-  }, [invoices]);
+  }, [scopedInvoices]);
 
   // The cursor is the month itself, not an index into a fixed list — the
   // picker can land on any month, including ones far outside the invoice range.
@@ -128,14 +166,41 @@ export function InvoiceMonthBrowser({ invoices }: { invoices: InvoiceRow[] }) {
   // In "all" mode the server's ordering (created_at desc) is used as-is, which
   // is how this list read before any month filtering existed.
   const visibleInvoices = useMemo(
-    () => (showAll ? invoices : monthInvoices),
-    [showAll, invoices, monthInvoices]
+    () => (showAll ? scopedInvoices : monthInvoices),
+    [showAll, scopedInvoices, monthInvoices]
   );
 
-  const visibleTotal = useMemo(
-    () => visibleInvoices.reduce((sum, inv) => sum + Number(inv.total ?? 0), 0),
+  // Split as well as combined, so the All tab can show what each book
+  // contributes instead of only a single figure that hides the mix.
+  const visibleTotals = useMemo(() => {
+    let invoicedTotal = 0;
+    let nonInvoicedTotal = 0;
+    for (const inv of visibleInvoices) {
+      const amount = Number(inv.total ?? 0);
+      if (isInvoiced(inv)) invoicedTotal += amount;
+      else nonInvoicedTotal += amount;
+    }
+    return {
+      invoiced: invoicedTotal,
+      nonInvoiced: nonInvoicedTotal,
+      combined: invoicedTotal + nonInvoicedTotal,
+    };
+  }, [visibleInvoices]);
+
+  // The bulk download takes exactly what the table is showing, in the order
+  // it is showing it. Memoised so the array identity only changes when the
+  // visible set actually does, rather than on every render.
+  const visibleIds = useMemo(
+    () => visibleInvoices.map((inv) => inv.id),
     [visibleInvoices]
   );
+
+  // Names the downloaded file after the filter that produced it, e.g.
+  // Invoices-Invoiced-2026-09.pdf, so a month's file is identifiable later.
+  const downloadScope = useMemo(() => {
+    const bookPart = book === 'NON_INVOICED' ? 'Non-invoiced' : book === 'ALL' ? 'All' : 'Invoiced';
+    return `${bookPart}-${showAll ? 'all-months' : activeKey}`;
+  }, [book, showAll, activeKey]);
 
   const years = useMemo(() => {
     const thisYear = new Date().getFullYear();
@@ -219,6 +284,33 @@ export function InvoiceMonthBrowser({ invoices }: { invoices: InvoiceRow[] }) {
 
   return (
     <div className="space-y-6">
+      {/* Book selector — the filed GST series, the entries kept out of it, or
+          both together. */}
+      <div className="flex items-center gap-1.5 p-1 bg-white/[0.03] border border-white/5 rounded-xl self-start w-fit">
+        {(['INVOICED', 'NON_INVOICED', 'ALL'] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setBook(key)}
+            aria-pressed={book === key}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              book === key
+                ? 'bg-primary text-primary-foreground shadow-md'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {BOOK_LABELS[key]}
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                book === key ? 'bg-black/20' : 'bg-white/5 text-muted-foreground'
+              }`}
+            >
+              {counts[key]}
+            </span>
+          </button>
+        ))}
+      </div>
+
       {/* Month navigator */}
       <div className="flex items-center justify-between gap-3">
         <button
@@ -236,13 +328,19 @@ export function InvoiceMonthBrowser({ invoices }: { invoices: InvoiceRow[] }) {
             aria-live="polite"
             className="text-base font-semibold text-foreground truncate"
           >
-            {showAll ? 'All invoices' : monthLabel(activeKey)}
+            {showAll ? `${BOOK_LABELS[book]} — every month` : monthLabel(activeKey)}
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
             {visibleInvoices.length === 0
-              ? 'No invoices'
-              : `${visibleInvoices.length} invoice${visibleInvoices.length === 1 ? '' : 's'} · ${fmt(visibleTotal)}`}
+              ? 'No entries'
+              : `${visibleInvoices.length} ${visibleInvoices.length === 1 ? 'entry' : 'entries'} · ${fmt(visibleTotals.combined)}`}
           </p>
+          {book === 'ALL' && visibleInvoices.length > 0 && (
+            <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+              Invoiced {fmt(visibleTotals.invoiced)} · Non-invoiced{' '}
+              {fmt(visibleTotals.nonInvoiced)}
+            </p>
+          )}
         </div>
 
         <button
@@ -257,7 +355,7 @@ export function InvoiceMonthBrowser({ invoices }: { invoices: InvoiceRow[] }) {
       </div>
 
       {/* Jump to any month / year */}
-      <div className="flex items-center justify-center gap-2">
+      <div className="flex items-center justify-center flex-wrap gap-2">
         <Select
           value={showAll ? '' : String(Number(activeKey.slice(5, 7)))}
           onValueChange={(m) =>
@@ -304,13 +402,17 @@ export function InvoiceMonthBrowser({ invoices }: { invoices: InvoiceRow[] }) {
           <X className="h-4 w-4 mr-1.5" />
           Clear filters
         </Button>
+
+        {/* Takes whatever the filters above have left on screen. Hides itself
+            when there is nothing to download. */}
+        <BulkInvoiceDownload ids={visibleIds} scopeLabel={downloadScope} />
       </div>
 
       {/* Swipe surface */}
       <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <AnimatePresence mode="wait" initial={false} custom={direction}>
           <motion.div
-            key={showAll ? 'all' : activeKey}
+            key={`${book}-${showAll ? 'all' : activeKey}`}
             custom={direction}
             initial={{ opacity: 0, x: direction >= 0 ? slide : -slide }}
             animate={{ opacity: 1, x: 0 }}
@@ -321,11 +423,11 @@ export function InvoiceMonthBrowser({ invoices }: { invoices: InvoiceRow[] }) {
               <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-border rounded-xl">
                 <Receipt className="h-10 w-10 text-muted-foreground/50 mb-3" />
                 <p className="text-sm text-muted-foreground">
-                  No invoices in {monthLabel(activeKey)}.
+                  No {BOOK_LABELS[book].toLowerCase()} in {monthLabel(activeKey)}.
                 </p>
                 <p className="text-xs text-muted-foreground/60 mt-1">
                   Swipe or use the arrows to browse other months, or clear the
-                  filters to see every invoice.
+                  filters to see every month.
                 </p>
               </div>
             ) : (
@@ -333,7 +435,8 @@ export function InvoiceMonthBrowser({ invoices }: { invoices: InvoiceRow[] }) {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Invoice #</TableHead>
+                      <TableHead>Number</TableHead>
+                      {book === 'ALL' && <TableHead>Book</TableHead>}
                       <TableHead>Client</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Status</TableHead>
@@ -354,6 +457,19 @@ export function InvoiceMonthBrowser({ invoices }: { invoices: InvoiceRow[] }) {
                             {inv.invoice_number}
                           </Link>
                         </TableCell>
+                        {book === 'ALL' && (
+                          <TableCell>
+                            <span
+                              className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${
+                                isInvoiced(inv)
+                                  ? 'bg-primary/10 text-primary border-primary/25'
+                                  : 'bg-amber-500/10 text-amber-500 border-amber-500/25'
+                              }`}
+                            >
+                              {isInvoiced(inv) ? 'Invoiced' : 'Not invoiced'}
+                            </span>
+                          </TableCell>
+                        )}
                         <TableCell>{inv.client?.name ?? '—'}</TableCell>
                         <TableCell>
                           {new Date(inv.issue_date).toLocaleDateString('en-IN')}

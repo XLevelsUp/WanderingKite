@@ -26,15 +26,32 @@ export async function getClientBillingInfo(clientId: string) {
   return data;
 }
 
-async function getNextInvoiceNumber(supabase: any, year: number): Promise<string> {
-  const prefix = `INV-${year}-`;
+/**
+ * Two independent sequences share the invoice_number column, told apart by
+ * prefix: INV- is the filed GST invoice series, REF- is for entries that were
+ * deliberately kept out of it. Each scan is confined to its own prefix, so a
+ * non-invoiced entry never consumes an INV- number and the filed sequence
+ * never gains a gap.
+ */
+type DocumentSeries = 'INV' | 'REF';
+
+function seriesFor(isInvoiced: boolean): DocumentSeries {
+  return isInvoiced ? 'INV' : 'REF';
+}
+
+async function getNextDocumentNumber(
+  supabase: any,
+  year: number,
+  series: DocumentSeries
+): Promise<string> {
+  const prefix = `${series}-${year}-`;
   const { data } = await supabase
     .from('invoices')
     .select('invoice_number')
     .like('invoice_number', `${prefix}%`);
 
   let maxNum = 0;
-  const suffixPattern = new RegExp(`^INV-${year}-(\\d+)$`);
+  const suffixPattern = new RegExp(`^${series}-${year}-(\\d+)$`);
   for (const row of data || []) {
     const match = row.invoice_number?.match(suffixPattern);
     if (match) {
@@ -44,6 +61,19 @@ async function getNextInvoiceNumber(supabase: any, year: number): Promise<string
   }
   return `${prefix}${(maxNum + 1).toString().padStart(4, '0')}`;
 }
+
+/** A unique-violation on invoice_number — someone else took the number first. */
+function isNumberCollision(error: any): boolean {
+  return error?.code === '23505' && error.message?.includes('invoice_number');
+}
+
+function bumpDocumentNumber(current: string, year: number, series: DocumentSeries): string {
+  const match = current.match(new RegExp(`^${series}-\\d{4}-(\\d+)$`));
+  const nextNum = match ? parseInt(match[1], 10) + 1 : 1;
+  return `${series}-${year}-${nextNum.toString().padStart(4, '0')}`;
+}
+
+const NUMBER_ATTEMPTS = 5;
 
 export async function createInvoice(input: CreateInvoiceFormData) {
   const parsed = createInvoiceSchema.safeParse(input);
@@ -66,15 +96,17 @@ export async function createInvoice(input: CreateInvoiceFormData) {
   });
 
   const year = new Date().getFullYear();
-  let invoiceNumber = await getNextInvoiceNumber(supabase, year);
+  const series = seriesFor(data.isInvoiced);
+  let invoiceNumber = await getNextDocumentNumber(supabase, year, series);
   let invoiceId: string | null = null;
   let lastError: any = null;
 
-  for (let attempt = 0; attempt < 5; attempt++) {
+  for (let attempt = 0; attempt < NUMBER_ATTEMPTS; attempt++) {
     const { data: inserted, error } = await supabase
       .from('invoices')
       .insert({
         invoice_number: invoiceNumber,
+        is_invoiced: data.isInvoiced,
         client_id: data.clientId,
         status: 'ISSUED',
         subtotal: totals.subtotal,
@@ -99,10 +131,8 @@ export async function createInvoice(input: CreateInvoiceFormData) {
       break;
     }
 
-    if (error?.code === '23505' && error.message?.includes('invoice_number')) {
-      const match = invoiceNumber.match(/^INV-\d{4}-(\d+)$/);
-      const nextNum = match ? parseInt(match[1], 10) + 1 : 1;
-      invoiceNumber = `INV-${year}-${nextNum.toString().padStart(4, '0')}`;
+    if (isNumberCollision(error)) {
+      invoiceNumber = bumpDocumentNumber(invoiceNumber, year, series);
       continue;
     }
     lastError = error;
@@ -135,13 +165,18 @@ export async function createInvoice(input: CreateInvoiceFormData) {
     action: 'CREATE_INVOICE',
     table_name: 'invoices',
     record_id: invoiceId,
-    new_data: { invoiceNumber, clientId: data.clientId, total: totals.total },
+    new_data: {
+      invoiceNumber,
+      isInvoiced: data.isInvoiced,
+      clientId: data.clientId,
+      total: totals.total,
+    },
   });
 
   revalidatePath('/invoices');
   revalidatePath(`/clients/${data.clientId}`);
 
-  return { success: true, id: invoiceId, invoiceNumber };
+  return { success: true, id: invoiceId, invoiceNumber, isInvoiced: data.isInvoiced };
 }
 
 export async function getInvoice(id: string) {
@@ -164,7 +199,7 @@ export async function listInvoices() {
   const { supabase } = await requireAdminOrSuper();
   const { data, error } = await supabase
     .from('invoices')
-    .select('id, invoice_number, issue_date, status, total, client:clients(name)')
+    .select('id, invoice_number, is_invoiced, issue_date, status, total, client:clients(name)')
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
@@ -173,6 +208,112 @@ export async function listInvoices() {
     return [];
   }
   return data;
+}
+
+/**
+ * Full records for a set of ids, for the bulk PDF download on the listing.
+ *
+ * One round trip instead of N calls to getInvoice: the browser still has to
+ * rasterise every one of these, so the fetch at least should not also be
+ * serial. Ordered oldest-first so the combined PDF reads in the same
+ * direction as the filed book, whatever order the listing held the ids in.
+ *
+ * Soft-deleted rows are filtered out here as well as in listInvoices, so a
+ * row deleted between page load and download simply drops out of the file
+ * rather than being resurrected into it.
+ */
+export async function getInvoicesByIds(ids: string[]) {
+  if (ids.length === 0) return [];
+  const { supabase } = await requireAdminOrSuper();
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('*, client:clients(id, name, email, phone, address), items:invoice_items(*), created_by:profiles(fullName)')
+    .in('id', ids)
+    .is('deleted_at', null)
+    .order('issue_date', { ascending: true })
+    .order('invoice_number', { ascending: true });
+
+  if (error) {
+    logger.error('getInvoicesByIds failed:', error);
+    return [];
+  }
+  return data;
+}
+
+/**
+ * Pulls a non-invoiced (REF-) entry into the filed GST series, allocating a
+ * fresh INV- number for it.
+ *
+ * Deliberately one-way. Taking an INV- number back off an invoice would leave
+ * a permanent hole in the filed sequence, so there is no reverse action —
+ * cancel the invoice instead. The REF- number it used to carry is not reused
+ * either: the old number is recorded in the audit log and then retired.
+ */
+export async function convertToInvoiced(id: string) {
+  const { supabase, user } = await requireAdminOrSuper();
+
+  const { data: current, error: fetchError } = await supabase
+    .from('invoices')
+    .select('id, invoice_number, is_invoiced, status, client_id')
+    .eq('id', id)
+    .is('deleted_at', null)
+    .single();
+
+  if (fetchError || !current) {
+    return { error: 'Entry not found.' };
+  }
+
+  if (current.is_invoiced) {
+    return { error: 'This entry is already part of the invoice series.' };
+  }
+
+  if (current.status === 'CANCELLED') {
+    return { error: 'Cannot issue an invoice number for a cancelled entry.' };
+  }
+
+  const year = new Date().getFullYear();
+  let invoiceNumber = await getNextDocumentNumber(supabase, year, 'INV');
+  let lastError: any = null;
+  let assigned = false;
+
+  for (let attempt = 0; attempt < NUMBER_ATTEMPTS; attempt++) {
+    const { error } = await supabase
+      .from('invoices')
+      .update({ invoice_number: invoiceNumber, is_invoiced: true })
+      .eq('id', id);
+
+    if (!error) {
+      assigned = true;
+      lastError = null;
+      break;
+    }
+
+    if (isNumberCollision(error)) {
+      invoiceNumber = bumpDocumentNumber(invoiceNumber, year, 'INV');
+      continue;
+    }
+    lastError = error;
+    break;
+  }
+
+  if (!assigned) {
+    return { error: parseSupabaseError(lastError, 'Failed to assign an invoice number.') };
+  }
+
+  await writeAuditLog(supabase, {
+    user_id: user.id,
+    action: 'CONVERT_TO_INVOICED',
+    table_name: 'invoices',
+    record_id: id,
+    old_data: { invoiceNumber: current.invoice_number, isInvoiced: false },
+    new_data: { invoiceNumber, isInvoiced: true },
+  });
+
+  revalidatePath('/invoices');
+  revalidatePath(`/invoices/${id}`);
+  revalidatePath(`/clients/${current.client_id}`);
+
+  return { success: true, invoiceNumber };
 }
 
 const ALLOWED_STATUS_TRANSITIONS: Record<string, string[]> = {

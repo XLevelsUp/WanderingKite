@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Download, FileDown, ArrowLeft, CheckCircle2, Ban, Loader2, Pencil, Check, X, Trash2 } from 'lucide-react';
+import { Download, FileDown, ArrowLeft, CheckCircle2, Ban, Loader2, Pencil, Check, X, Trash2, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/Modal';
-import { updateInvoiceStatus, updateInvoiceDate, deleteInvoice } from '@/actions/invoices';
+import { updateInvoiceStatus, updateInvoiceDate, deleteInvoice, convertToInvoiced } from '@/actions/invoices';
 import { siteConfig } from '@/config/site';
 import { brandConfig } from '@/config/brand.config';
 
@@ -28,6 +28,8 @@ interface InvoiceItemRow {
 export interface InvoiceRecord {
   id: string;
   invoice_number: string;
+  /** false → a non-invoiced REF- entry, kept out of the filed GST series. */
+  is_invoiced: boolean;
   issue_date: string;
   status: 'DRAFT' | 'ISSUED' | 'PAID' | 'CANCELLED';
   subtotal: number;
@@ -52,22 +54,32 @@ const STATUS_STYLES: Record<string, string> = {
   CANCELLED: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
 };
 
-function InvoiceDocument({
+// Exported so the bulk download on the listing rasterises the exact same
+// document as the single-invoice page and the print stylesheet.
+export function InvoiceDocument({
   invoice,
   status,
   issueDate,
+  documentNumber,
+  isInvoiced,
 }: {
   invoice: InvoiceRecord;
   status: InvoiceRecord['status'];
   issueDate: string;
+  /** Live value — conversion reassigns it without a server round-trip. */
+  documentNumber: string;
+  isInvoiced: boolean;
 }) {
   return (
     <div className="bg-white text-gray-900 rounded-2xl overflow-hidden shadow-2xl print:shadow-none print:rounded-none border border-gray-100 print:w-full print:border-0 print:m-0">
       {/* Header */}
       <div className="bg-gray-950 px-6 py-5 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-gray-800 text-white print:px-4 print:py-3 print:bg-white print:text-black print:border-b-2 print:border-gray-300">
         <div>
+          {/* A non-invoiced entry must never present itself as a tax invoice —
+              it carries no number from the filed GST series, so the printed
+              document says so plainly. */}
           <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-primary opacity-80 mb-1 print:text-gray-500">
-            Tax Invoice
+            {isInvoiced ? 'Tax Invoice' : 'Not a Tax Invoice'}
           </p>
           <h1 className="text-lg font-bold tracking-tight">{brandConfig.name}</h1>
           <p className="text-[10px] text-gray-400 mt-1 print:text-gray-600 max-w-xs">
@@ -78,7 +90,7 @@ function InvoiceDocument({
           )}
         </div>
         <div className="sm:text-right">
-          <p className="text-sm font-bold text-white print:text-black">{invoice.invoice_number}</p>
+          <p className="text-sm font-bold text-white print:text-black">{documentNumber}</p>
           <p className="text-[10px] text-gray-500 mt-0.5 print:text-gray-600">
             Issued {new Date(issueDate).toLocaleDateString('en-IN')}
           </p>
@@ -175,7 +187,9 @@ function InvoiceDocument({
       {/* Footer */}
       <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-center text-gray-400 print:border-t-0">
         <p className="text-[8px]">
-          This is a computer-generated invoice and does not require a signature.
+          {isInvoiced
+            ? 'This is a computer-generated invoice and does not require a signature.'
+            : 'Internal record — not a tax invoice. Computer-generated; does not require a signature.'}
         </p>
       </div>
     </div>
@@ -194,8 +208,33 @@ export function InvoiceView({ invoice }: { invoice: InvoiceRecord }) {
   const [savingDate, setSavingDate] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  // Conversion reassigns both of these at once (REF-… → a fresh INV-…), so
+  // they're held locally to keep the on-screen and print copies in step
+  // without waiting for the server component to re-render.
+  const [isInvoiced, setIsInvoiced] = useState(invoice.is_invoiced ?? true);
+  const [documentNumber, setDocumentNumber] = useState(invoice.invoice_number);
+  const [converting, setConverting] = useState(false);
 
   useEffect(() => setMounted(true), []);
+
+  const handleConvert = async () => {
+    setConverting(true);
+    try {
+      const result = await convertToInvoiced(invoice.id);
+      if ('error' in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setDocumentNumber(result.invoiceNumber!);
+      setIsInvoiced(true);
+      toast.success(`Invoice number ${result.invoiceNumber} assigned.`);
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to assign an invoice number.');
+    } finally {
+      setConverting(false);
+    }
+  };
 
   const handleSaveDate = async () => {
     if (!dateInput) return;
@@ -262,7 +301,7 @@ export function InvoiceView({ invoice }: { invoice: InvoiceRecord }) {
     // there's nothing to draw. Blanking the title too covers browsers that
     // still print it regardless.
     const originalTitle = document.title;
-    document.title = invoice.invoice_number;
+    document.title = documentNumber;
     window.print();
     document.title = originalTitle;
   };
@@ -300,7 +339,7 @@ export function InvoiceView({ invoice }: { invoice: InvoiceRecord }) {
         heightLeft -= pageHeight;
       }
 
-      pdf.save(`${invoice.invoice_number}.pdf`);
+      pdf.save(`${documentNumber}.pdf`);
     } catch (err) {
       toast.error('Failed to generate PDF.');
     } finally {
@@ -376,6 +415,26 @@ export function InvoiceView({ invoice }: { invoice: InvoiceRecord }) {
         </div>
 
         <div className="flex items-center gap-2">
+          {!isInvoiced && (
+            <>
+              <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase border bg-amber-500/10 text-amber-500 border-amber-500/25">
+                Not invoiced
+              </span>
+              {/* One-way by design: an entry can be pulled into the filed GST
+                  series, but a numbered invoice can never be pushed back out
+                  of it without leaving a gap in the sequence. */}
+              {status !== 'CANCELLED' && (
+                <Button size="sm" variant="outline" disabled={converting} onClick={handleConvert}>
+                  {converting ? (
+                    <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                  ) : (
+                    <Hash className="h-4 w-4 mr-1.5 text-primary" />
+                  )}
+                  Add to invoice series
+                </Button>
+              )}
+            </>
+          )}
           {status === 'ISSUED' && (
             <>
               <Link href={`/invoices/${invoice.id}/edit`}>
@@ -426,13 +485,13 @@ export function InvoiceView({ invoice }: { invoice: InvoiceRecord }) {
 
       {/* On-screen preview (also the source captured for the PDF download) */}
       <div id="invoice-preview-capture">
-        <InvoiceDocument invoice={invoice} status={status} issueDate={issueDate} />
+        <InvoiceDocument invoice={invoice} status={status} issueDate={issueDate} documentNumber={documentNumber} isInvoiced={isInvoiced} />
       </div>
 
       {/* Print-only copy, portaled to <body> so hidden dashboard chrome can't leave behind blank pages */}
       {mounted && createPortal(
         <div id="invoice-print-root" className="hidden print:block">
-          <InvoiceDocument invoice={invoice} status={status} issueDate={issueDate} />
+          <InvoiceDocument invoice={invoice} status={status} issueDate={issueDate} documentNumber={documentNumber} isInvoiced={isInvoiced} />
         </div>,
         document.body
       )}
@@ -442,7 +501,7 @@ export function InvoiceView({ invoice }: { invoice: InvoiceRecord }) {
           <Modal
             id={`delete-invoice-${invoice.id}`}
             title="Delete Invoice"
-            description={`Delete ${invoice.invoice_number}? This hides it from the invoices list. The record and its audit history are kept, not removed.`}
+            description={`Delete ${documentNumber}? This hides it from the invoices list. The record and its audit history are kept, not removed.`}
             confirmText="Delete"
             cancelText="Cancel"
             onConfirm={handleDelete}

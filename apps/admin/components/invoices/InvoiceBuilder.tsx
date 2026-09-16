@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Plus, Trash2, Loader2, Receipt } from 'lucide-react';
+import { Plus, Trash2, Loader2, Receipt, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -90,6 +90,12 @@ export function InvoiceBuilder({
   // path has to collect it just like the full client form does.
   const [newClientSource, setNewClientSource] = useState<ClientSource | null>(null);
   const [newClientSourceDetail, setNewClientSourceDetail] = useState('');
+
+  // Whether this entry joins the filed GST invoice series (INV-) or is kept
+  // out of it as a non-invoiced entry (REF-). Create-only: flipping it on an
+  // existing record would renumber it, which is what convertToInvoiced() on
+  // the detail page is for. Defaults on, so the form behaves as it always has.
+  const [isInvoiced, setIsInvoiced] = useState(true);
 
   const [lineItems, setLineItems] = useState<LineItemRow[]>(() =>
     initialItems && initialItems.length > 0
@@ -271,6 +277,7 @@ export function InvoiceBuilder({
 
       const result = await createInvoice({
         clientId,
+        isInvoiced,
         items: validItems,
         discountType: discountType === 'NONE' ? null : discountType,
         discountValue: discountValue ? Number(discountValue) : null,
@@ -285,7 +292,11 @@ export function InvoiceBuilder({
         return;
       }
 
-      toast.success(`Invoice ${result.invoiceNumber} created.`);
+      toast.success(
+        isInvoiced
+          ? `Invoice ${result.invoiceNumber} created.`
+          : `Non-invoiced entry ${result.invoiceNumber} saved.`
+      );
       setRedirecting(true);
       router.push(`/invoices/${result.id}`);
     } catch (err: any) {
@@ -298,6 +309,55 @@ export function InvoiceBuilder({
 
   return (
     <div className="space-y-6">
+      {/* Numbering choice — create only. Highlighted rather than tucked into a
+          settings row, because it decides which of the two books this entry
+          lands in and cannot be undone from the form afterwards. */}
+      {!isEdit && (
+        <Card className={isInvoiced ? 'border-primary/40' : 'border-amber-500/50'}>
+          <CardContent className="pt-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Hash className={`h-4 w-4 ${isInvoiced ? 'text-primary' : 'text-amber-500'}`} />
+                  <p className="text-sm font-semibold">Generate an invoice number</p>
+                </div>
+                <p className="text-xs text-muted-foreground max-w-md">
+                  {isInvoiced
+                    ? 'This entry joins the filed GST invoice series and is numbered INV-…'
+                    : 'This entry is kept out of the GST invoice series and is numbered REF-… instead. It still prints and totals, but is filed separately as a non-invoiced entry.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isInvoiced}
+                aria-label="Generate an invoice number"
+                disabled={submitting || redirecting}
+                onClick={() => setIsInvoiced((prev) => !prev)}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+                  isInvoiced ? 'bg-primary' : 'bg-amber-500/70'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                    isInvoiced ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            <p
+              className={`mt-3 inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${
+                isInvoiced
+                  ? 'bg-primary/10 text-primary border-primary/25'
+                  : 'bg-amber-500/10 text-amber-500 border-amber-500/25'
+              }`}
+            >
+              {isInvoiced ? 'Will be invoiced' : 'Will not be invoiced'}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Bill To</CardTitle>
@@ -536,7 +596,7 @@ export function InvoiceBuilder({
             ) : (
               <Receipt className="h-4 w-4 mr-2" />
             )}
-            {isEdit ? 'Save Changes' : 'Generate Invoice'}
+            {isEdit ? 'Save Changes' : isInvoiced ? 'Generate Invoice' : 'Save Non-Invoiced Entry'}
           </Button>
         </CardContent>
       </Card>
@@ -551,7 +611,9 @@ export function InvoiceBuilder({
           <p className="text-sm text-muted-foreground">
             {isEdit
               ? 'Saving changes — opening preview…'
-              : 'Invoice created — opening preview…'}
+              : isInvoiced
+                ? 'Invoice created — opening preview…'
+                : 'Entry saved — opening preview…'}
           </p>
         </div>
       )}

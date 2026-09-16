@@ -37,6 +37,11 @@ function requiresDiscountValue(data: { discountType?: string | null; discountVal
 export const createInvoiceSchema = z
   .object({
     clientId: z.string().uuid('Select a valid client'),
+    // Whether this entry joins the filed GST invoice series (INV-) or is
+    // recorded as a non-invoiced entry (REF-). Independent of GST: a client
+    // with no GSTIN can still be invoiced, and one with a GSTIN can still be
+    // kept out. Defaults to true so the create path behaves as it always has.
+    isInvoiced: z.boolean().default(true),
     ...invoiceContentFields,
   })
   .refine(requiresDiscountValue, discountValueRequiredWhenTypeSet);
