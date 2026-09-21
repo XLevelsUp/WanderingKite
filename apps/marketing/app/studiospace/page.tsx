@@ -438,10 +438,18 @@ export default async function StudioPage() {
 
   return (
     <>
+      {/* LCP hero: `unoptimized: true` strips fetchpriority from next/image's own preload. */}
+      <link
+        rel="preload"
+        as="image"
+        href="/images/studio/placeholder1.webp"
+        fetchPriority="high"
+      />
       <JsonLd
         data={[studioFaqSchema, studioBreadcrumbSchema, studioPricingSchema]}
       />
-      <Script id="fb-pixel-studio" strategy="afterInteractive">
+      {/* lazyOnload: the Pixel was ~210ms of main-thread work competing with hydration. */}
+      <Script id="fb-pixel-studio" strategy="lazyOnload">
         {`
           !function(f,b,e,v,n,t,s)
           {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
