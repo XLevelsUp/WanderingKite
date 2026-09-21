@@ -66,7 +66,41 @@ export function InstagramFeed({ account = 'wanderingkite' }: InstagramFeedProps)
   const mobileVideoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const carouselRef = useRef<HTMLDivElement>(null);
 
+  // This feed lives in the Footer, so it is below the fold on every page, but
+  // the reels it returns are multi-MB MP4s — roughly 11 MB of the studiospace
+  // page's 14 MB total. Fetching on mount made every visitor pay for that even
+  // when they never scrolled down. Gate the fetch on the section approaching
+  // the viewport instead; 400px of rootMargin starts it early enough that the
+  // feed is usually ready by the time it is actually on screen.
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [shouldLoad, setShouldLoad] = useState<boolean>(false);
+
   useEffect(() => {
+    // No IntersectionObserver (very old browsers, some test runners) → load
+    // immediately rather than leaving the section permanently empty.
+    if (typeof IntersectionObserver === 'undefined') {
+      setShouldLoad(true);
+      return;
+    }
+    const node = sectionRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '400px' }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!shouldLoad) return;
+
     async function fetchFeed() {
       try {
         setLoading(true);
@@ -92,7 +126,7 @@ export function InstagramFeed({ account = 'wanderingkite' }: InstagramFeedProps)
     }
 
     fetchFeed();
-  }, [account]);
+  }, [account, shouldLoad]);
 
   // Desktop hover controls for videos (ignores the first video which autoplays in the center)
   const handleDesktopMouseEnter = (item: InstagramMediaItem, visualIdx: number) => {
@@ -155,10 +189,13 @@ export function InstagramFeed({ account = 'wanderingkite' }: InstagramFeedProps)
     });
   }, [activeIndex, media]);
 
-  // Loading Skeleton State
+  // Loading Skeleton State. Also the pre-load state: until the section nears
+  // the viewport the skeleton is what the observer watches, so the ref must be
+  // on it — an early `return null` here would leave nothing to observe and the
+  // feed would never load.
   if (loading) {
     return (
-      <div className="w-full">
+      <div className="w-full" ref={sectionRef}>
         {/* Desktop/Tablet Skeleton */}
         <div className="hidden md:grid grid-cols-3 lg:grid-cols-5 gap-[30px]">
           {Array.from({ length: 5 }).map((_, idx) => (
