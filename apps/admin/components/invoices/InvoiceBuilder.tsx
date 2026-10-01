@@ -92,9 +92,10 @@ export function InvoiceBuilder({
   const [newClientSourceDetail, setNewClientSourceDetail] = useState('');
 
   // Whether this entry joins the filed GST invoice series (INV-) or is kept
-  // out of it as a non-invoiced entry (REF-). Create-only: flipping it on an
-  // existing record would renumber it, which is what convertToInvoiced() on
-  // the detail page is for. Defaults on, so the form behaves as it always has.
+  // out of it as a non-invoiced entry (REF-). Create-only, and permanent: the
+  // two series are independent, and nothing moves a record between them —
+  // renumbering an existing row would tear a gap in the filed GST sequence.
+  // Defaults on, so the form behaves as it always has.
   const [isInvoiced, setIsInvoiced] = useState(true);
 
   const [lineItems, setLineItems] = useState<LineItemRow[]>(() =>

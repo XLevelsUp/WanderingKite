@@ -41,6 +41,23 @@ const BOOK_LABELS: Record<Book, string> = {
   ALL: 'All entries',
 };
 
+/**
+ * NUMBER reads the table as a document register — highest number first.
+ * RECENT keeps the server's created_at ordering, which is what this list
+ * used before and is still the honest answer to "what did we touch last".
+ *
+ * The two can still disagree on rows created before series conversion was
+ * removed: those were given a fresh INV- number long after the row itself was
+ * created, so they sort old but number high. Nothing creates that skew any
+ * more, but the historical rows keep it.
+ */
+type SortMode = 'NUMBER' | 'RECENT';
+
+const SORT_LABELS: Record<SortMode, string> = {
+  NUMBER: 'Number',
+  RECENT: 'Recent',
+};
+
 // Rows written before 00071 have no flag in older cached payloads; they are all
 // real invoices, matching the column's DEFAULT true.
 function isInvoiced(inv: InvoiceRow) {
@@ -112,6 +129,11 @@ export function InvoiceMonthBrowser({ invoices }: { invoices: InvoiceRow[] }) {
   // offers months that the selected book actually has entries in.
   const [book, setBook] = useState<Book>('INVOICED');
 
+  // Defaults to NUMBER: this is a GST register first and an activity feed
+  // second, and it matches the order getInvoicesByIds() already files a bulk
+  // download in.
+  const [sort, setSort] = useState<SortMode>('NUMBER');
+
   const counts = useMemo(() => {
     let invoiced = 0;
     for (const inv of invoices) if (isInvoiced(inv)) invoiced += 1;
@@ -165,10 +187,20 @@ export function InvoiceMonthBrowser({ invoices }: { invoices: InvoiceRow[] }) {
 
   // In "all" mode the server's ordering (created_at desc) is used as-is, which
   // is how this list read before any month filtering existed.
-  const visibleInvoices = useMemo(
-    () => (showAll ? scopedInvoices : monthInvoices),
-    [showAll, scopedInvoices, monthInvoices]
-  );
+  const visibleInvoices = useMemo(() => {
+    const rows = showAll ? scopedInvoices : monthInvoices;
+    if (sort === 'RECENT') return rows;
+    // Copy first: sort() mutates, and `rows` is a byMonth bucket that other
+    // memos still read from.
+    //
+    // A plain string compare is already numerically correct here —
+    // getNextDocumentNumber() pads the suffix to a fixed width and the year
+    // is fixed-width too, so 'INV-2026-0019' > 'INV-2026-0009'. It would stop
+    // holding if a series ever passed 9999 in one year and the padding grew.
+    return [...rows].sort((a, b) =>
+      b.invoice_number.localeCompare(a.invoice_number)
+    );
+  }, [showAll, scopedInvoices, monthInvoices, sort]);
 
   // Split as well as combined, so the All tab can show what each book
   // contributes instead of only a single figure that hides the mix.
@@ -284,6 +316,7 @@ export function InvoiceMonthBrowser({ invoices }: { invoices: InvoiceRow[] }) {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
       {/* Book selector — the filed GST series, the entries kept out of it, or
           both together. */}
       <div className="flex items-center gap-1.5 p-1 bg-white/[0.03] border border-white/5 rounded-xl self-start w-fit">
@@ -309,6 +342,33 @@ export function InvoiceMonthBrowser({ invoices }: { invoices: InvoiceRow[] }) {
             </span>
           </button>
         ))}
+      </div>
+
+      {/* Sort selector — document order vs. the order things were created. */}
+      <div
+        role="group"
+        aria-label="Sort invoices"
+        className="flex items-center gap-1.5 p-1 bg-white/[0.03] border border-white/5 rounded-xl self-start w-fit"
+      >
+        <span className="pl-2 pr-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Sort
+        </span>
+        {(['NUMBER', 'RECENT'] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setSort(key)}
+            aria-pressed={sort === key}
+            className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+              sort === key
+                ? 'bg-primary text-primary-foreground shadow-md'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {SORT_LABELS[key]}
+          </button>
+        ))}
+      </div>
       </div>
 
       {/* Month navigator */}

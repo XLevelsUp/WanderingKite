@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Download, FileDown, ArrowLeft, CheckCircle2, Ban, Loader2, Pencil, Check, X, Trash2, Hash } from 'lucide-react';
+import { Download, FileDown, ArrowLeft, CheckCircle2, Ban, Loader2, Pencil, Check, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/Modal';
-import { updateInvoiceStatus, updateInvoiceDate, deleteInvoice, convertToInvoiced } from '@/actions/invoices';
+import { updateInvoiceStatus, updateInvoiceDate, deleteInvoice } from '@/actions/invoices';
 import { siteConfig } from '@/config/site';
 import { brandConfig } from '@/config/brand.config';
 
@@ -208,33 +208,12 @@ export function InvoiceView({ invoice }: { invoice: InvoiceRecord }) {
   const [savingDate, setSavingDate] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  // Conversion reassigns both of these at once (REF-… → a fresh INV-…), so
-  // they're held locally to keep the on-screen and print copies in step
-  // without waiting for the server component to re-render.
-  const [isInvoiced, setIsInvoiced] = useState(invoice.is_invoiced ?? true);
-  const [documentNumber, setDocumentNumber] = useState(invoice.invoice_number);
-  const [converting, setConverting] = useState(false);
+  // Both are fixed for the life of the row: a document never moves between
+  // the REF- and INV- series, so neither needs to be state.
+  const isInvoiced = invoice.is_invoiced ?? true;
+  const documentNumber = invoice.invoice_number;
 
   useEffect(() => setMounted(true), []);
-
-  const handleConvert = async () => {
-    setConverting(true);
-    try {
-      const result = await convertToInvoiced(invoice.id);
-      if ('error' in result && result.error) {
-        toast.error(result.error);
-        return;
-      }
-      setDocumentNumber(result.invoiceNumber!);
-      setIsInvoiced(true);
-      toast.success(`Invoice number ${result.invoiceNumber} assigned.`);
-      router.refresh();
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to assign an invoice number.');
-    } finally {
-      setConverting(false);
-    }
-  };
 
   const handleSaveDate = async () => {
     if (!dateInput) return;
@@ -415,25 +394,15 @@ export function InvoiceView({ invoice }: { invoice: InvoiceRecord }) {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* The REF- and INV- series are fully independent: a non-invoiced
+              entry is never promoted into the filed GST sequence. Doing so
+              used to assign it a fresh INV- number late, which both created
+              gaps and left the row sorting by an old created_at under a high
+              number. Raise a real invoice instead. */}
           {!isInvoiced && (
-            <>
-              <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase border bg-amber-500/10 text-amber-500 border-amber-500/25">
-                Not invoiced
-              </span>
-              {/* One-way by design: an entry can be pulled into the filed GST
-                  series, but a numbered invoice can never be pushed back out
-                  of it without leaving a gap in the sequence. */}
-              {status !== 'CANCELLED' && (
-                <Button size="sm" variant="outline" disabled={converting} onClick={handleConvert}>
-                  {converting ? (
-                    <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-                  ) : (
-                    <Hash className="h-4 w-4 mr-1.5 text-primary" />
-                  )}
-                  Add to invoice series
-                </Button>
-              )}
-            </>
+            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase border bg-amber-500/10 text-amber-500 border-amber-500/25">
+              Not invoiced
+            </span>
           )}
           {status === 'ISSUED' && (
             <>
