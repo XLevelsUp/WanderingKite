@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { hasAccess } from '@/lib/access';
-import { getStudioPackages, getStudioAddOns } from '@/actions/studio-pricing-public';
+import { getStudioPackages, getStudioAddOns, getPodcastPackages } from '@/actions/studio-pricing-public';
 import { StudioPricingClient } from './StudioPricingClient';
 
 export const metadata = {
@@ -24,9 +24,10 @@ export default async function StudioPricingPage() {
     redirect('/');
   }
 
-  const [packages, addOns] = await Promise.all([
+  const [packages, addOns, podcastPackages] = await Promise.all([
     getStudioPackages(true),
     getStudioAddOns(true),
+    getPodcastPackages(true),
   ]);
 
   return (
@@ -34,11 +35,15 @@ export default async function StudioPricingPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Studio Pricing</h1>
         <p className="text-muted-foreground mt-2">
-          Edit the session packages and add-ons shown on the Studio Space page and in the client booking flow.
+          Edit the session packages, podcast packages and add-ons shown on the Studio Space page and in the client booking flow.
         </p>
       </div>
 
-      <StudioPricingClient initialPackages={packages} initialAddOns={addOns} />
+      <StudioPricingClient
+        initialPackages={packages}
+        initialAddOns={addOns}
+        initialPodcastPackages={podcastPackages as any}
+      />
     </div>
   );
 }

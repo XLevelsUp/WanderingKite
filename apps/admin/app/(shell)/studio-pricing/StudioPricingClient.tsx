@@ -15,6 +15,9 @@ import {
   createStudioAddOn,
   updateStudioAddOn,
   deleteStudioAddOn,
+  createPodcastPackage,
+  updatePodcastPackage,
+  deletePodcastPackage,
 } from '@/actions/studio-pricing-admin';
 import { useNotify } from '@/hooks/useNotify';
 import { Edit, Loader2, Plus, Trash2 } from 'lucide-react';
@@ -51,6 +54,19 @@ const emptyPackageForm = {
   isActive: true,
 };
 
+interface PodcastPackageRow {
+  id: string;
+  name: string;
+  price: number;
+  original_price: number | null;
+  duration_label: string;
+  description: string;
+  features: string[];
+  is_popular: boolean;
+  sort_order: number;
+  is_active: boolean;
+}
+
 const emptyAddOnForm = {
   name: '',
   price: '',
@@ -59,20 +75,37 @@ const emptyAddOnForm = {
   isActive: true,
 };
 
+const emptyPodcastForm = {
+  name: '',
+  price: '',
+  originalPrice: '',
+  durationLabel: 'Per Hour',
+  description: '',
+  // Edited as one-per-line text; split into an array on save.
+  features: '',
+  isPopular: false,
+  sortOrder: '0',
+  isActive: true,
+};
+
 export function StudioPricingClient({
   initialPackages,
   initialAddOns,
+  initialPodcastPackages = [],
 }: {
   initialPackages: StudioPackageRow[];
   initialAddOns: StudioAddOnRow[];
+  initialPodcastPackages?: PodcastPackageRow[];
 }) {
   const router = useRouter();
   const { showSuccess, showError } = useNotify();
 
   const [packages, setPackages] = useState(initialPackages);
   const [addOns, setAddOns] = useState(initialAddOns);
+  const [podcastPackages, setPodcastPackages] = useState(initialPodcastPackages);
   useEffect(() => setPackages(initialPackages), [initialPackages]);
   useEffect(() => setAddOns(initialAddOns), [initialAddOns]);
+  useEffect(() => setPodcastPackages(initialPodcastPackages), [initialPodcastPackages]);
 
   // ── Packages ────────────────────────────────────────────────────────────
   const [editingPackageId, setEditingPackageId] = useState<string | null>(null);
@@ -230,6 +263,95 @@ export function StudioPricingClient({
     }
   };
 
+  // ── Podcast packages ────────────────────────────────────────────────────
+  const [editingPodcastId, setEditingPodcastId] = useState<string | null>(null);
+  const [podcastForm, setPodcastForm] = useState(emptyPodcastForm);
+  const [isAddingPodcast, setIsAddingPodcast] = useState(false);
+  const [savingPodcast, setSavingPodcast] = useState(false);
+  const [deletePodcastId, setDeletePodcastId] = useState<string | null>(null);
+
+  const startEditPodcast = (pkg: PodcastPackageRow) => {
+    setIsAddingPodcast(false);
+    setEditingPodcastId(pkg.id);
+    setPodcastForm({
+      name: pkg.name,
+      price: String(pkg.price),
+      originalPrice: pkg.original_price == null ? '' : String(pkg.original_price),
+      durationLabel: pkg.duration_label,
+      description: pkg.description,
+      features: (pkg.features ?? []).join('\n'),
+      isPopular: pkg.is_popular,
+      sortOrder: String(pkg.sort_order),
+      isActive: pkg.is_active,
+    });
+  };
+
+  const startAddPodcast = () => {
+    setEditingPodcastId(null);
+    setIsAddingPodcast(true);
+    setPodcastForm({ ...emptyPodcastForm, sortOrder: String(podcastPackages.length + 1) });
+  };
+
+  const cancelPodcastEdit = () => {
+    setEditingPodcastId(null);
+    setIsAddingPodcast(false);
+  };
+
+  const savePodcast = async () => {
+    setSavingPodcast(true);
+    try {
+      const trimmedOriginal = podcastForm.originalPrice.trim();
+      const payload = {
+        name: podcastForm.name,
+        price: Number(podcastForm.price) || 0,
+        // Blank stays null so the strike-through / % OFF badge stays hidden,
+        // rather than showing a fake "was ₹0".
+        originalPrice: trimmedOriginal === '' ? null : Number(trimmedOriginal),
+        durationLabel: podcastForm.durationLabel,
+        description: podcastForm.description,
+        features: podcastForm.features
+          .split('\n')
+          .map((f) => f.trim())
+          .filter(Boolean),
+        isPopular: podcastForm.isPopular,
+        sortOrder: Number(podcastForm.sortOrder) || 0,
+        isActive: podcastForm.isActive,
+      };
+      const result = isAddingPodcast
+        ? await createPodcastPackage(payload)
+        : await updatePodcastPackage(editingPodcastId as string, payload);
+
+      if ('error' in result && result.error) {
+        showError(result.error);
+        return;
+      }
+      showSuccess(isAddingPodcast ? 'Podcast package created.' : 'Podcast package updated.');
+      cancelPodcastEdit();
+      router.refresh();
+    } catch (err: any) {
+      showError(err?.message || 'Failed to save podcast package.');
+    } finally {
+      setSavingPodcast(false);
+    }
+  };
+
+  const confirmDeletePodcast = async () => {
+    if (!deletePodcastId) return;
+    try {
+      const result = await deletePodcastPackage(deletePodcastId);
+      if ('error' in result && result.error) {
+        showError(result.error);
+        return;
+      }
+      showSuccess('Podcast package deleted.');
+      router.refresh();
+    } catch (err: any) {
+      showError(err?.message || 'Failed to delete podcast package.');
+    } finally {
+      setDeletePodcastId(null);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* ── SESSION PACKAGES ── */}
@@ -340,6 +462,135 @@ export function StudioPricingClient({
         </CardContent>
       </Card>
 
+      {/* ── PODCAST PACKAGES ── */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle>Podcast Packages</CardTitle>
+            <CardDescription>
+              The cameraman tiers shown beside the quotation on the Studio Space page. Booked directly over WhatsApp, so these do not feed the estimated total.
+            </CardDescription>
+          </div>
+          <Button size="sm" variant="outline" onClick={startAddPodcast} disabled={isAddingPodcast}>
+            <Plus className="h-4 w-4 mr-1.5" /> Add Package
+          </Button>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Actual Price (₹)</TableHead>
+                  <TableHead>Offer Price (₹)</TableHead>
+                  <TableHead>Duration Label</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Features</TableHead>
+                  <TableHead>Popular</TableHead>
+                  <TableHead>Active</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isAddingPodcast && (
+                  <TableRow>
+                    <TableCell><Input className="w-32 h-8" value={podcastForm.name} onChange={(e) => setPodcastForm({ ...podcastForm, name: e.target.value })} placeholder="e.g. Single Cameraman" /></TableCell>
+                    <TableCell><Input type="number" className="w-24 h-8" value={podcastForm.originalPrice} onChange={(e) => setPodcastForm({ ...podcastForm, originalPrice: e.target.value })} placeholder="optional" /></TableCell>
+                    <TableCell><Input type="number" className="w-24 h-8" value={podcastForm.price} onChange={(e) => setPodcastForm({ ...podcastForm, price: e.target.value })} /></TableCell>
+                    <TableCell><Input className="w-28 h-8" value={podcastForm.durationLabel} onChange={(e) => setPodcastForm({ ...podcastForm, durationLabel: e.target.value })} placeholder="e.g. Per Hour" /></TableCell>
+                    <TableCell><Input className="w-48 h-8" value={podcastForm.description} onChange={(e) => setPodcastForm({ ...podcastForm, description: e.target.value })} /></TableCell>
+                    <TableCell>
+                      <textarea
+                        className="w-56 h-20 rounded-md border border-input bg-transparent px-2 py-1 text-sm"
+                        value={podcastForm.features}
+                        onChange={(e) => setPodcastForm({ ...podcastForm, features: e.target.value })}
+                        placeholder={'One per line, e.g.\n1 Camera\n3 Lights & 1 Mic'}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <input type="checkbox" className="h-4 w-4" checked={podcastForm.isPopular} onChange={(e) => setPodcastForm({ ...podcastForm, isPopular: e.target.checked })} />
+                    </TableCell>
+                    <TableCell>
+                      <input type="checkbox" className="h-4 w-4" checked={podcastForm.isActive} onChange={(e) => setPodcastForm({ ...podcastForm, isActive: e.target.checked })} />
+                    </TableCell>
+                    <TableCell className="space-x-2 whitespace-nowrap text-right">
+                      <Button size="sm" onClick={savePodcast} disabled={savingPodcast}>
+                        {savingPodcast && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />} Save
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={cancelPodcastEdit} disabled={savingPodcast} data-no-track>Cancel</Button>
+                    </TableCell>
+                  </TableRow>
+                )}
+                {podcastPackages.length === 0 && !isAddingPodcast ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-10 text-slate-500">No podcast packages yet.</TableCell>
+                  </TableRow>
+                ) : (
+                  podcastPackages.map((pkg) => (
+                    <TableRow key={pkg.id} className={!pkg.is_active ? 'opacity-50' : undefined}>
+                      {editingPodcastId === pkg.id ? (
+                        <>
+                          <TableCell><Input className="w-32 h-8" value={podcastForm.name} onChange={(e) => setPodcastForm({ ...podcastForm, name: e.target.value })} /></TableCell>
+                          <TableCell><Input type="number" className="w-24 h-8" value={podcastForm.originalPrice} onChange={(e) => setPodcastForm({ ...podcastForm, originalPrice: e.target.value })} placeholder="optional" /></TableCell>
+                          <TableCell><Input type="number" className="w-24 h-8" value={podcastForm.price} onChange={(e) => setPodcastForm({ ...podcastForm, price: e.target.value })} /></TableCell>
+                          <TableCell><Input className="w-28 h-8" value={podcastForm.durationLabel} onChange={(e) => setPodcastForm({ ...podcastForm, durationLabel: e.target.value })} /></TableCell>
+                          <TableCell><Input className="w-48 h-8" value={podcastForm.description} onChange={(e) => setPodcastForm({ ...podcastForm, description: e.target.value })} /></TableCell>
+                          <TableCell>
+                            <textarea
+                              className="w-56 h-20 rounded-md border border-input bg-transparent px-2 py-1 text-sm"
+                              value={podcastForm.features}
+                              onChange={(e) => setPodcastForm({ ...podcastForm, features: e.target.value })}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <input type="checkbox" className="h-4 w-4" checked={podcastForm.isPopular} onChange={(e) => setPodcastForm({ ...podcastForm, isPopular: e.target.checked })} />
+                          </TableCell>
+                          <TableCell>
+                            <input type="checkbox" className="h-4 w-4" checked={podcastForm.isActive} onChange={(e) => setPodcastForm({ ...podcastForm, isActive: e.target.checked })} />
+                          </TableCell>
+                          <TableCell className="space-x-2 whitespace-nowrap text-right">
+                            <Button size="sm" onClick={savePodcast} disabled={savingPodcast}>
+                              {savingPodcast && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />} Save
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={cancelPodcastEdit} disabled={savingPodcast} data-no-track>Cancel</Button>
+                          </TableCell>
+                        </>
+                      ) : (
+                        <>
+                          <TableCell className="font-medium">
+                            {pkg.name}
+                            {pkg.is_popular && (
+                              <span className="ml-2 rounded bg-green-500/10 border border-green-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase text-green-500">Popular</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="line-through text-muted-foreground">
+                            {pkg.original_price == null ? '—' : `₹${pkg.original_price.toLocaleString('en-IN')}`}
+                          </TableCell>
+                          <TableCell className="font-semibold text-green-500">₹{pkg.price.toLocaleString('en-IN')}</TableCell>
+                          <TableCell>{pkg.duration_label}</TableCell>
+                          <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{pkg.description}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{(pkg.features ?? []).length} items</TableCell>
+                          <TableCell>{pkg.is_popular ? 'Yes' : '—'}</TableCell>
+                          <TableCell>{pkg.is_active ? 'Yes' : 'Hidden'}</TableCell>
+                          <TableCell className="space-x-2 whitespace-nowrap text-right">
+                            <Button size="sm" variant="outline" onClick={() => startEditPodcast(pkg)}>
+                              <Edit className="w-3.5 h-3.5 mr-1.5" /> Edit
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => setDeletePodcastId(pkg.id)}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </TableCell>
+                        </>
+                      )}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* ── ADD-ONS ── */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
@@ -435,6 +686,17 @@ export function StudioPricingClient({
             cancelText="Cancel"
             onConfirm={confirmDeletePackage}
             onCancel={() => setDeletePackageId(null)}
+          />
+        )}
+        {deletePodcastId && (
+          <Modal
+            id="delete-podcast-package"
+            title="Delete Podcast Package"
+            description="Are you sure you want to delete this podcast package? This cannot be undone."
+            confirmText="Delete"
+            cancelText="Cancel"
+            onConfirm={confirmDeletePodcast}
+            onCancel={() => setDeletePodcastId(null)}
           />
         )}
         {deleteAddOnId && (

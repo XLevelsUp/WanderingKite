@@ -4,7 +4,11 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdminOrSuper } from '@/actions/rental-policy';
 import { parseSupabaseError } from '@/lib/errorHandler';
-import { studioPackageSchema, studioAddOnSchema } from '@/lib/validations/studio-pricing';
+import {
+  studioPackageSchema,
+  studioAddOnSchema,
+  podcastPackageSchema,
+} from '@/lib/validations/studio-pricing';
 
 function revalidateStudioPricing() {
   // Note: /studiospace is apps/marketing's public pricing page — a separate
@@ -76,6 +80,75 @@ export async function deleteStudioPackage(id: string) {
   const { error } = await supabase.from('studio_packages').delete().eq('id', id);
   if (error) {
     return { error: parseSupabaseError(error, 'Failed to delete package.') };
+  }
+  revalidateStudioPricing();
+  return { success: true };
+}
+
+// ── Podcast packages CRUD (admin only) ───────────────────────────────────────
+
+export async function createPodcastPackage(input: unknown) {
+  const parsed = podcastPackageSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || 'Invalid package data.' };
+  }
+  const { supabase } = await requireAdminOrSuper();
+  const data = parsed.data;
+
+  const { error } = await supabase.from('podcast_packages').insert({
+    name: data.name,
+    price: data.price,
+    original_price: data.originalPrice,
+    duration_label: data.durationLabel,
+    description: data.description,
+    features: data.features,
+    is_popular: data.isPopular,
+    sort_order: data.sortOrder,
+    is_active: data.isActive,
+  });
+
+  if (error) {
+    return { error: parseSupabaseError(error, 'Failed to create podcast package.') };
+  }
+  revalidateStudioPricing();
+  return { success: true };
+}
+
+export async function updatePodcastPackage(id: string, input: unknown) {
+  const parsed = podcastPackageSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || 'Invalid package data.' };
+  }
+  const { supabase } = await requireAdminOrSuper();
+  const data = parsed.data;
+
+  const { error } = await supabase
+    .from('podcast_packages')
+    .update({
+      name: data.name,
+      price: data.price,
+      original_price: data.originalPrice,
+      duration_label: data.durationLabel,
+      description: data.description,
+      features: data.features,
+      is_popular: data.isPopular,
+      sort_order: data.sortOrder,
+      is_active: data.isActive,
+    })
+    .eq('id', id);
+
+  if (error) {
+    return { error: parseSupabaseError(error, 'Failed to update podcast package.') };
+  }
+  revalidateStudioPricing();
+  return { success: true };
+}
+
+export async function deletePodcastPackage(id: string) {
+  const { supabase } = await requireAdminOrSuper();
+  const { error } = await supabase.from('podcast_packages').delete().eq('id', id);
+  if (error) {
+    return { error: parseSupabaseError(error, 'Failed to delete podcast package.') };
   }
   revalidateStudioPricing();
   return { success: true };
