@@ -1,15 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import {
-  ArrowLeft,
-  Mail,
-  Phone,
-  Instagram,
-  Linkedin,
-  Twitter,
-  Youtube,
-} from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Instagram, Linkedin } from 'lucide-react';
 import Link from 'next/link';
 import { siteConfig } from '@/config/site';
 
@@ -41,7 +33,7 @@ export function FounderProfile() {
             >
               {/* Photo Placeholder */}
               <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900" />
-              <div className="absolute inset-0 bg-[url('/images/team/founder.jpg')] bg-cover bg-center opacity-50 mix-blend-overlay transition-transform duration-700 hover:scale-105" />
+              <div className="absolute inset-0 bg-[url('/founder.webp')] bg-cover bg-center opacity-50 mix-blend-overlay transition-transform duration-700 hover:scale-105" />
 
               {/* Glow/Vignette Effect */}
               <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
@@ -49,9 +41,11 @@ export function FounderProfile() {
 
               <div className="absolute bottom-0 left-0 right-0 p-8">
                 <p className="text-amber-500 font-bold uppercase tracking-widest text-xs mb-2">
-                  Founder & Creative Director
+                  Founder &amp; Creative Director
                 </p>
-                <h1 className="text-4xl font-bold text-white">Founder Name</h1>
+                <h1 className="text-4xl font-bold text-white">
+                  Sandesh Anantha Kumar
+                </h1>
               </div>
             </motion.div>
           </div>
@@ -64,25 +58,67 @@ export function FounderProfile() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="prose prose-invert prose-lg max-w-none"
             >
-              <h2 className="text-3xl lg:text-5xl font-bold text-white mb-8 leading-tight">
-                Crafting visual narratives that{' '}
-                <span className="text-amber-500">resonate and endure.</span>
-              </h2>
+              {/* The quote leads: it explains the studio's name, which the rest
+                  of the copy builds on. */}
+              <blockquote className="border-l-2 border-amber-500/60 pl-6 mb-10">
+                <p className="text-2xl lg:text-3xl font-medium text-white leading-snug mb-4">
+                  &ldquo;I named it Wandering Kite because a kite flies best
+                  with no strings attached. I wanted the freedom to work with
+                  everyone and tell every kind of story.&rdquo;
+                </p>
+                <footer className="text-sm text-amber-500 font-semibold tracking-wide">
+                  — Sandesh Anantha Kumar, Founder &amp; Creative Director
+                </footer>
+              </blockquote>
 
               <p className="text-zinc-400 leading-relaxed mb-6">
-                With over a decade of experience in visual storytelling, our
-                founder established Wandering Kite with a singular vision: to
-                build a creative infrastructure where state-of-the-art
-                technology meets boundless artistic expression.
+                Four years ago, Sandesh Anantha Kumar began working as an
+                independent photographer with a simple belief: every story
+                deserves to be told honestly, whether it belongs to a couple, a
+                family, or a brand. Working on their own, that belief took shape
+                across more than 350 weddings and over 150 corporate events,
+                each one teaching the value of preparation, patience, and being
+                present for moments that cannot be repeated.
+              </p>
+
+              <p className="text-zinc-400 leading-relaxed mb-6">
+                The name Wandering Kite carries the same philosophy. A kite
+                rises with the wind and the freedom to move with it. No strings
+                attached means no limits on who we work with or what we create.
+                From wedding ceremonies to corporate events, from portraits to
+                product and brand shoots, the approach stays the same: listen
+                first, then create.
+              </p>
+
+              <p className="text-zinc-400 leading-relaxed mb-6">
+                Since launching as Wandering Kite, the studio has delivered more
+                than 100 projects and grown into a full-service creative studio
+                in RS Puram, Coimbatore. Today the work spans wedding and event
+                photography, commercial and corporate shoots, studio and
+                equipment rentals, and a podcast recording space, all built
+                around the idea that great creative work should be open to
+                everyone with a story to tell.
+              </p>
+
+              <p className="text-zinc-400 leading-relaxed mb-6">
+                Whether it is a wedding where emotion matters most or a
+                corporate event where timing matters most, the goal is the same:
+                photographs that feel true to the people in them. Clients across
+                Coimbatore, Tiruppur, Salem, and Erode, along with destination
+                weddings across India, have trusted the studio with moments that
+                matter.
+              </p>
+
+              <p className="text-zinc-400 leading-relaxed mb-6">
+                What has never changed is how every project begins: with a
+                conversation. Understanding the people, the purpose, and the
+                feeling behind a shoot is what turns a good photograph into one
+                that lasts.
               </p>
 
               <p className="text-zinc-400 leading-relaxed mb-12">
-                Specializing in high-end cinematography and event photography,
-                the journey began as a passionate pursuit of freezing time and
-                has evolved into one of Coimbatore's premier full-service
-                creative studios. Driven by an unwavering commitment to quality,
-                every project is approached with cinematic precision and a deep
-                understanding of narrative dynamics.
+                Today, Sandesh Anantha Kumar leads Wandering Kite with the same
+                open spirit that inspired the name.
               </p>
 
               <hr className="border-white/10 my-12" />
@@ -124,14 +160,6 @@ export function FounderProfile() {
                     className="p-3 rounded-full bg-zinc-900 border border-white/5 text-zinc-400 hover:text-amber-500 hover:border-amber-500/30 transition-all"
                   >
                     <Linkedin className="w-5 h-5" />
-                  </a>
-                  <a
-                    href={siteConfig.links.youtube}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-3 rounded-full bg-zinc-900 border border-white/5 text-zinc-400 hover:text-amber-500 hover:border-amber-500/30 transition-all"
-                  >
-                    <Youtube className="w-5 h-5" />
                   </a>
                 </div>
               </div>
