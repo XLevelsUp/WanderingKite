@@ -31,21 +31,25 @@ export function FounderProfile() {
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
               className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl border border-amber-500/20 bg-zinc-900 shadow-[0_0_50px_-12px_rgba(245,158,11,0.15)]"
             >
-              {/* Photo Placeholder */}
               <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900" />
-              <div className="absolute inset-0 bg-[url('/founder.webp')] bg-cover bg-center opacity-50 mix-blend-overlay transition-transform duration-700 hover:scale-105" />
+              {/* Full opacity, no blend mode: opacity-50 + mix-blend-overlay
+                  washed the portrait into the gradient behind it. */}
+              <div className="absolute inset-0 bg-[url('/founder.webp')] bg-cover bg-center transition-transform duration-700 hover:scale-105" />
 
-              {/* Glow/Vignette Effect */}
-              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/10 to-transparent opacity-50" />
+              {/* Vignette only at the foot of the card, so the caption stays
+                  readable without dimming the face. */}
+              <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-zinc-950/80 to-transparent" />
 
-              <div className="absolute bottom-0 left-0 right-0 p-8">
-                <p className="text-amber-500 font-bold uppercase tracking-widest text-xs mb-2">
-                  Founder &amp; Creative Director
-                </p>
-                <h1 className="text-4xl font-bold text-white">
-                  Sandesh Anantha Kumar
-                </h1>
+              {/* The blur sits behind the caption alone, not over the photo. */}
+              <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
+                <div className="inline-block rounded-2xl bg-zinc-950/40 backdrop-blur-md px-4 py-3">
+                  <p className="text-amber-500 font-bold uppercase tracking-widest text-[10px] sm:text-xs mb-1">
+                    Founder &amp; Creative Director
+                  </p>
+                  <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white leading-tight">
+                    Sandesh Anantha Kumar
+                  </h1>
+                </div>
               </div>
             </motion.div>
           </div>
