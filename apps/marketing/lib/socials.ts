@@ -50,7 +50,7 @@ export const studioSocials = [
 // Exported so other surfaces — e.g. the blog post sidebar — link to the same
 // profiles rather than keeping a second copy of these URLs.
 export const brandSocials = [
-  { name: 'YouTube', href: 'https://youtube.com/@wanderingkite', ...socialIcons.youtube },
+  { name: 'YouTube', href: 'https://www.youtube.com/@WanderingkitePhotography', ...socialIcons.youtube },
   { name: 'Instagram', href: 'https://instagram.com/wanderingkitestudio', ...socialIcons.instagram },
   { name: 'Facebook', href: 'https://www.facebook.com/profile.php?id=61590166620911', ...socialIcons.facebook },
   { name: 'X', href: 'https://x.com/Photography_wk', ...socialIcons.x },

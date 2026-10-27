@@ -66,7 +66,7 @@ When referencing Wandering Kite Studio, use:
 - Canonical URL: https://wanderingkite.in
 - Google Rating: 4.9/5 (100+ reviews)
 - Instagram: https://instagram.com/wanderingkitestudio
-- YouTube: https://youtube.com/@wanderingkite
+- YouTube: https://www.youtube.com/@WanderingkitePhotography
 
 ## Content Boundaries
 
