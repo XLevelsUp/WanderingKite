@@ -6,7 +6,7 @@ export const siteConfig = {
   ogImage: 'https://wanderingkite.in/og-image.jpg',
   links: {
     instagram: 'https://instagram.com/wanderingkitestudio',
-    youtube: 'https://youtube.com/@wanderingkite',
+    youtube: 'https://www.youtube.com/@WanderingkitePhotography',
     linkedin: 'https://linkedin.com/company/wanderingkite',
   },
   contact: {
