@@ -105,56 +105,16 @@ export function Testimonials({
         <FadeIn delay={0.2} direction="up">
           <div className="relative">
             <div className="overflow-hidden" ref={emblaRef}>
-              <div className="flex -ml-6">
+              <div className="flex -ml-6 items-start">
                 {testimonials.map((testimonial, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className="pl-6 min-w-0 flex-[0_0_100%] md:flex-[0_0_50%] lg:flex-[0_0_33.333%]"
                   >
-                    <div className="flex flex-col h-full rounded-3xl border border-border bg-card p-8 shadow-sm transition-all duration-500 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] hover:shadow-xl hover:border-zinc-700/50">
-                      <Quote
-                        className={`mb-6 h-10 w-10 ${accentColors[accentColor]} opacity-20`}
-                      />
-
-                      {/* Rating */}
-                      <div className="mb-6 flex gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-4 w-4 ${
-                              i < testimonial.rating
-                                ? `${fillAccentColors[accentColor]} ${accentColors[accentColor]}`
-                                : 'text-zinc-700'
-                            }`}
-                          />
-                        ))}
-                      </div>
-
-                      {/* Content */}
-                      <p className="mb-8 text-muted-foreground leading-relaxed text-sm md:text-base flex-1">
-                        "{testimonial.content}"
-                      </p>
-
-                      {/* Author */}
-                      <div className="flex items-center gap-4 mt-auto border-t border-border/50 pt-6">
-                        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${bgAccentColors[accentColor]} text-white font-bold text-lg`}>
-                          {testimonial.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-bold text-foreground">
-                            {testimonial.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {testimonial.role}
-                          </p>
-                          {testimonial.service && (
-                            <p className={`mt-0.5 text-xs font-semibold ${accentColors[accentColor]}`}>
-                              {testimonial.service}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                    <TestimonialCard
+                      testimonial={testimonial}
+                      accentColor={accentColor}
+                    />
                   </div>
                 ))}
               </div>
@@ -163,5 +123,103 @@ export function Testimonials({
         </FadeIn>
       </div>
     </section>
+  );
+}
+
+/** One testimonial card.
+ *
+ *  Every card is the same height regardless of how long the review is: letting
+ *  cards size to their content made a one-line review sit beside a five-
+ *  paragraph one, and stretching them all to the tallest left a 13-character
+ *  review in a 985px box. Reviews that overflow get a "Read more" toggle, so
+ *  the full text is always reachable — nothing is truncated away. */
+function TestimonialCard({
+  testimonial,
+  accentColor,
+}: {
+  testimonial: Testimonial;
+  accentColor: 'amber' | 'blue' | 'purple' | 'green';
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const textRef = React.useRef<HTMLParagraphElement>(null);
+
+  // Only show the toggle when the text actually doesn't fit. Re-measured on
+  // resize because the clamp height changes with the column width.
+  useEffect(() => {
+    const check = () => {
+      const el = textRef.current;
+      if (!el) return;
+      setIsOverflowing(el.scrollHeight > el.clientHeight + 2);
+    };
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, [testimonial.content, expanded]);
+
+  return (
+    <div className="flex h-[26rem] flex-col rounded-3xl border border-border bg-card p-8 shadow-sm transition-all duration-500 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:shadow-xl hover:border-zinc-700/50">
+      <Quote
+        className={`mb-4 h-10 w-10 shrink-0 ${accentColors[accentColor]} opacity-20`}
+      />
+
+      {/* Rating */}
+      <div className="mb-4 flex shrink-0 gap-1">
+        {[...Array(5)].map((_, i) => (
+          <Star
+            key={i}
+            className={`h-4 w-4 ${
+              i < testimonial.rating
+                ? `${fillAccentColors[accentColor]} ${accentColors[accentColor]}`
+                : 'text-zinc-700'
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* Content. Collapsed it clamps; expanded it scrolls inside the card, so
+          the card itself never changes height and the row stays aligned. */}
+      <div className="min-h-0 flex-1">
+        <p
+          ref={textRef}
+          className={`text-muted-foreground leading-relaxed text-sm md:text-base whitespace-pre-line ${
+            expanded ? 'h-full overflow-y-auto pr-1 custom-scrollbar' : 'line-clamp-6'
+          }`}
+        >
+          &quot;{testimonial.content}&quot;
+        </p>
+      </div>
+
+      {(isOverflowing || expanded) && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          className={`mt-2 shrink-0 self-start text-xs font-semibold ${accentColors[accentColor]} hover:underline`}
+        >
+          {expanded ? 'Read less' : 'Read more'}
+        </button>
+      )}
+
+      {/* Author */}
+      <div className="mt-4 flex shrink-0 items-center gap-4 border-t border-border/50 pt-4">
+        <div
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${bgAccentColors[accentColor]} text-white font-bold text-lg`}
+        >
+          {testimonial.name.charAt(0)}
+        </div>
+        <div className="min-w-0">
+          <p className="font-bold text-foreground truncate">{testimonial.name}</p>
+          <p className="text-sm text-muted-foreground truncate">{testimonial.role}</p>
+          {testimonial.service && (
+            <p
+              className={`mt-0.5 text-xs font-semibold ${accentColors[accentColor]} truncate`}
+            >
+              {testimonial.service}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

@@ -244,81 +244,64 @@ const studioPricingSchema = {
     'ratingValue': '5',
     'bestRating': '5',
     'worstRating': '1',
-    'ratingCount': '5',
+    'ratingCount': '9',
   },
   'review': [
     {
       '@type': 'Review',
-      'author': {
-        '@type': 'Person',
-        'name': 'Aarav',
-      },
-      'reviewRating': {
-        '@type': 'Rating',
-        'ratingValue': '5',
-        'bestRating': '5',
-        'worstRating': '1',
-      },
-      'reviewBody': 'I searched for the best wedding photographer in Coimbatore and found Wandering Kite. Their team showed immense professionalism throughout our big day, delivering stunning wedding photography coverage. They are truly the top photography studio in Coimbatore!',
+      'author': { '@type': 'Person', 'name': 'Soundarya Jayarajopen_in_new' },
+      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
+      'reviewBody': 'Had a really good experience at this studio! ✨ The space is clean, well-maintained and has a great setup for shoots. The ambience is really nice, and there are plenty of good spots to create different kinds of content. 📸🤍\nThe overall experience was smooth and comfortable. Definitely a good place for photoshoots, reels and content creation. I would happily recommend this studio! ✨',
     },
     {
       '@type': 'Review',
-      'author': {
-        '@type': 'Person',
-        'name': 'Dia',
-      },
-      'reviewRating': {
-        '@type': 'Rating',
-        'ratingValue': '5',
-        'bestRating': '5',
-        'worstRating': '1',
-      },
-      'reviewBody': 'Rented their RS Puram studio for a product photography shoot. The infinity wall and Profoto lighting setup were phenomenal. Easily the best photography studio rental in Coimbatore.',
+      'author': { '@type': 'Person', 'name': 'sukan yaopen_in_new' },
+      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
+      'reviewBody': 'Had a wonderful experience shooting here for my portfolio. The space has a great ambience, and the arrangements and coordination were handled really well. Everything felt organised without making the experience feel rushed. Really happy with how the shoot turned out and would definitely come back again. ✨',
     },
     {
       '@type': 'Review',
-      'author': {
-        '@type': 'Person',
-        'name': 'Kabir',
-      },
-      'reviewRating': {
-        '@type': 'Rating',
-        'ratingValue': '5',
-        'bestRating': '5',
-        'worstRating': '1',
-      },
-      'reviewBody': 'We came from Tirupur and hired Wandering Kite for a corporate shoot. The experience was seamless from start to finish. They are hands down the best commercial photographer in Tamil Nadu we have worked with.',
+      'author': { '@type': 'Person', 'name': 'bharkaviopen_in_new' },
+      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
+      'reviewBody': 'Had a really good experience with the studio space. The place was clean, well-maintained, and had a great setup for photoshoots and creative work. The team was also helpful and easy to coordinate with. Would definitely recommend this studio space.',
     },
     {
       '@type': 'Review',
-      'author': {
-        '@type': 'Person',
-        'name': 'Meera',
-      },
-      'reviewRating': {
-        '@type': 'Rating',
-        'ratingValue': '5',
-        'bestRating': '5',
-        'worstRating': '1',
-      },
-      'reviewBody': 'Booked the studio for a full-day YouTube and brand content shoot. The 1200 sq ft space, 14ft ceilings, and equipment included in the package made the day so productive. Perfect for content creators in Coimbatore!',
+      'author': { '@type': 'Person', 'name': 'Ahamadhul Kabeer Nopen_in_new' },
+      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
+      'reviewBody': 'I loved my experience here! The studio has a great vibe, the staff are very friendly, and the service was really good. Definitely worth recommending!',
     },
     {
       '@type': 'Review',
-      'author': {
-        '@type': 'Person',
-        'name': 'Rohan',
-      },
-      'reviewRating': {
-        '@type': 'Rating',
-        'ratingValue': '5',
-        'bestRating': '5',
-        'worstRating': '1',
-      },
-      'reviewBody': 'We needed a newborn and maternity photographer in Coimbatore. The team showed amazing warmth and patience with our baby, and the portraits delivered were of exceptional quality. Highly recommended!',
+      'author': { '@type': 'Person', 'name': 'PraveeN Rajopen_in_new' },
+      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
+      'reviewBody': 'It was an awesome experience shooting here. The team was very helpful and I was happy with the way they treated us. Highly recommend 👍',
     },
-  ],
-};
+    {
+      '@type': 'Review',
+      'author': { '@type': 'Person', 'name': 'Shamini Deepak7open_in_new' },
+      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
+      'reviewBody': 'The studio space is awesome. Nice working with Mr.Sandesh. They cooperated very well and gave more ideas for shooting.',
+    },
+    {
+      '@type': 'Review',
+      'author': { '@type': 'Person', 'name': 'Sneha Gangadharanopen_in_new' },
+      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
+      'reviewBody': 'The space is so good! Had a wonderful shooting experience. We shot for one of our clients. Definitely recommended',
+    },
+    {
+      '@type': 'Review',
+      'author': { '@type': 'Person', 'name': 'Poovithaopen_in_new' },
+      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
+      'reviewBody': 'Good studio, we did our Onam shoot here highly recommend',
+    },
+    {
+      '@type': 'Review',
+      'author': { '@type': 'Person', 'name': 'Senthilprabhu Eopen_in_new' },
+      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
+      'reviewBody': 'Great experience and value for money. Best. studio in Coimbatore',
+    },
+  ],};
 
 const facilities = [
   {

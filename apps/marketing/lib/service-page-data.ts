@@ -81,85 +81,152 @@ export const rentalsFAQs = [
   },
 ];
 
+// Real Google reviews, reproduced verbatim — review text, emoji and author
+// names are exactly as they appear on the listing. Do not edit, shorten or
+// tidy these; they are other people's words.
 export const studioTestimonials = [
-  // ── Original testimonials ──────────────────────────────
   {
-    name: 'Vikram N.',
-    role: 'Fashion Photographer',
-    content:
-      'The Infinity wall is spotless and the Profoto lighting is top-notch. Best photography studio rental in Coimbatore for fashion shoots. I drove from Tirupur and it was 100% worth it. Already rebooked.',
-    rating: 5,
-    service: 'Studio Rental',
-  },
-  {
-    name: 'Kabir',
-    role: 'Corporate Partner',
-    content:
-      'We came from Tirupur and hired Wandering Kite for a corporate shoot. The experience was seamless from start to finish. They are hands down the best commercial photographer in Tamil Nadu we have worked with.',
-    rating: 5,
-    service: 'Corporate Shoot',
-  },
-  {
-    name: 'Meera',
+    name: 'Soundarya Jayarajopen_in_new',
     role: 'Content Creator',
     content:
-      'Booked the studio for a full-day YouTube and brand content shoot. The 1200 sq ft space, 14ft ceilings, and equipment included in the package made the day so productive. Perfect for content creators in Coimbatore!',
+      'Had a really good experience at this studio! ✨ The space is clean, well-maintained and has a great setup for shoots. The ambience is really nice, and there are plenty of good spots to create different kinds of content. 📸🤍\nThe overall experience was smooth and comfortable. Definitely a good place for photoshoots, reels and content creation. I would happily recommend this studio! ✨',
     rating: 5,
-    service: 'Content Shoot',
+    service: 'Studio rental',
   },
   {
-    name: 'Rohan',
-    role: 'Maternity Client',
+    name: 'sukan yaopen_in_new',
+    role: 'Portfolio Shoot',
     content:
-      'We needed a newborn and maternity photographer in Coimbatore. The team showed amazing warmth and patience with our baby, and the portraits delivered were of exceptional quality. Highly recommended!',
+      'Had a wonderful experience shooting here for my portfolio. The space has a great ambience, and the arrangements and coordination were handled really well. Everything felt organised without making the experience feel rushed. Really happy with how the shoot turned out and would definitely come back again. ✨',
     rating: 5,
-    service: 'Maternity & Newborn',
+    service: 'Studio rental',
   },
-  // ── New testimonials ───────────────────────────────────
   {
-    name: 'Aarav S.',
-    role: 'Groom',
+    name: 'bharkaviopen_in_new',
+    role: 'Studio Client',
     content:
-      'I searched for the best wedding photographer in Coimbatore and found Wandering Kite. Their team showed immense professionalism throughout our big day, delivering stunning wedding photography that captured every emotion. Truly the top photography studio in Coimbatore!',
+      'Had a really good experience with the studio space. The place was clean, well-maintained, and had a great setup for photoshoots and creative work. The team was also helpful and easy to coordinate with. Would definitely recommend this studio space.',
+    rating: 5,
+    service: 'Studio rental',
+  },
+  {
+    name: 'Ahamadhul Kabeer Nopen_in_new',
+    role: 'Studio Client',
+    content:
+      'I loved my experience here! The studio has a great vibe, the staff are very friendly, and the service was really good. Definitely worth recommending!',
+    rating: 5,
+    service: 'Studio rental',
+  },
+  {
+    name: 'PraveeN Rajopen_in_new',
+    role: 'Studio Client',
+    content:
+      'It was an awesome experience shooting here. The team was very helpful and I was happy with the way they treated us. Highly recommend 👍',
+    rating: 5,
+    service: 'Studio rental',
+  },
+  {
+    name: 'Shamini Deepak7open_in_new',
+    role: 'Studio Client',
+    content:
+      'The studio space is awesome. Nice working with Mr.Sandesh. They cooperated very well and gave more ideas for shooting.',
+    rating: 5,
+    service: 'Studio rental',
+  },
+  {
+    name: 'Sneha Gangadharanopen_in_new',
+    role: 'Studio Client',
+    content:
+      'The space is so good! Had a wonderful shooting experience. We shot for one of our clients. Definitely recommended',
+    rating: 5,
+    service: 'Studio rental',
+  },
+  {
+    name: 'Poovithaopen_in_new',
+    role: 'Studio Client',
+    content: 'Good studio, we did our Onam shoot here highly recommend',
+    rating: 5,
+    service: 'Studio rental',
+  },
+  {
+    name: 'Senthilprabhu Eopen_in_new',
+    role: 'Studio Client',
+    content: 'Great experience and value for money. Best. studio in Coimbatore',
+    rating: 5,
+    service: 'Studio rental',
+  },
+];
+// Real Google reviews, reproduced verbatim — review text, emoji and author
+// names are exactly as they appear on the listing. Do not edit, shorten or
+// tidy these; they are other people's words.
+export const photographyTestimonials = [
+  {
+    name: 'Athira Haridaso',
+    role: 'Wedding Client',
+    content:
+      'We booked this wonderful team for our marriage, and we are extremely happy with how everything turned out! ❤️\n\nEvery single picture is so beautiful and has captured our special moments so naturally. We’ve already shared a few photos with our friends and cousins, and everyone has been loving them and complimenting how amazing they are! 😍\n\nA big thank you to Sandy Anna, Bala Anna, the Anna who kept encouraging us with all those amazing attitude poses 😁, the light man, and everyone else who was part of the team. We truly appreciate all the effort, patience, creativity, and hard work you put into capturing our wedding memories so beautifully.\n\nWe are genuinely so happy and grateful with the final results. You have given us memories that we will cherish forever. ❤️✨\n\nThank you so much to the entire team, and highly recommended for anyone looking for a talented and dedicated wedding photography team!',
     rating: 5,
     service: 'Wedding Photography',
   },
   {
-    name: 'Dia R.',
-    role: 'Product Brand Owner',
+    name: 'Yashaswini Thanigai Kumaranopen',
+    role: 'Baby Shower Client',
     content:
-      'Rented their RS Puram studio for a product photography shoot. The cyclorama wall and Profoto lighting setup were phenomenal — my catalogue images look outstanding. Easily the best photography studio rental in Coimbatore.',
+      'We booked them for our baby shower, and we absolutely loved their work. The photos turned out absolutely beautiful. The team was incredibly creative, professional, and friendly, making us feel comfortable throughout the entire session.\n\nTruly satisfied with their work and would definitely love to work with them again for our future celebrations. Highly recommended!',
+    rating: 5,
+    service: 'Events and parties, Maternity and newborn',
+  },
+  {
+    name: 'mohammed Irshadopen_in_new',
+    role: 'Product Photography Client',
+    content:
+      'We are beyond impressed with the exceptional work of our product image photographer. Their keen eye for detail, creative composition, and mastery of lighting have truly elevated the visual appeal of our products. Each image captures the essence of quality, bringing out the finest features with clarity and precision.\n\nTheir professionalism, dedication, and ability to understand our vision made the entire process seamless. Whether it was adjusting angles for the perfect shot or ensuring consistency across different products, their expertise shone through. Thanks to their outstanding work, our product visuals now reflect the high standards we uphold, making a strong impact on our customers.\n\nHighly recommended for anyone looking for top-tier product photography. We look forward to working with them again in the future!',
     rating: 5,
     service: 'Product Photography',
   },
   {
-    name: 'Priya M.',
-    role: 'Bride',
+    name: 'Asha Shanmugapriyaopen_in_new',
+    role: 'Photography Client',
     content:
-      'Wandering Kite captured our wedding beautifully — from the mehendi to the reception, every frame tells our love story. If you are looking for the best wedding photographers in Coimbatore, look no further!',
+      'Team were friendly and their work is really good.. thanks Sandy and team for capturing our wonderful memories ❤',
     rating: 5,
-    service: 'Wedding Photography',
+    service: 'Photography',
   },
   {
-    name: 'Karthik V.',
-    role: 'YouTuber',
+    name: 'hygiene Salesopen_in_new',
+    role: 'Brand Client',
     content:
-      'The podcast studio setup at Wandering Kite is incredible. Multi-camera angles, great acoustics, and the team was super accommodating. Finally, a proper video studio rental in Coimbatore that delivers broadcast quality.',
+      'Great photo shoot work done for my Bloomvitalia handmade premium luxury soaps',
     rating: 5,
-    service: 'Podcast / Video Studio',
+    service: 'Product Photography',
   },
   {
-    name: 'Sneha L.',
-    role: 'Instagram Creator',
-    content:
-      'I booked a half-day studio session for reels and brand content. The lighting, backdrops, and makeup room are all top class. The best studio space for rent in Coimbatore — I will 100% be back!',
+    name: 'Vengadesh Sopen_in_new',
+    role: 'Commercial Client',
+    content: 'Great price',
     rating: 5,
-    service: 'Studio Rental',
+    service: 'Commercial photography',
+  },
+  {
+    name: 'Pooja kp',
+    role: 'Portrait Client',
+    content: 'Reasonable price Great',
+    rating: 5,
+    service: 'Portrait photography',
   },
 ];
-
-export const photographyTestimonials = [...studioTestimonials];
-export const homepageTestimonials = [...studioTestimonials];
+// Homepage covers every service, so it shows a blend of the real studio and
+// photography reviews rather than either list alone.
+export const homepageTestimonials = [
+  studioTestimonials[0],
+  photographyTestimonials[0],
+  studioTestimonials[1],
+  photographyTestimonials[1],
+  studioTestimonials[2],
+  photographyTestimonials[2],
+  studioTestimonials[3],
+  photographyTestimonials[3],
+];
 
 export const studioProcessSteps = [
   {
