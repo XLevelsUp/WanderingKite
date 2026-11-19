@@ -104,9 +104,15 @@ export default async function PortfolioPage() {
                       {shoot.title}
                     </TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/12 text-amber-400 border border-amber-500/25">
-                        {shoot.category}
-                      </span>
+                      {/* Category from the photo catalog (legacy sub_category mirrors its slug) + live/draft, so unclassified albums stand out. */}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/12 text-amber-400 border border-amber-500/25">
+                          {shoot.category_id ? (shoot.sub_category ?? shoot.category).replace(/-/g, ' ') : 'Needs category'}
+                        </span>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${shoot.status === 'published' ? 'bg-emerald-500/12 text-emerald-400 border-emerald-500/25' : 'bg-white/5 text-foreground/50 border-white/10'}`}>
+                          {shoot.status === 'published' ? 'Live' : 'Draft'}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5 text-foreground/60 text-sm">

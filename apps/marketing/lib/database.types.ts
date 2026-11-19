@@ -17,6 +17,16 @@ export interface Database {
           category: string;
           sub_category: string | null;
           created_at: string;
+          slug: string | null;
+          category_id: string | null;
+          city_slug: string | null;
+          client_names: string | null;
+          story: string | null;
+          shoot_date: string | null;
+          cover_image_url: string | null;
+          featured: boolean;
+          status: 'draft' | 'published';
+          updated_at: string;
         };
         Insert: {
           id?: string;
@@ -25,6 +35,16 @@ export interface Database {
           category: string;
           sub_category?: string | null;
           created_at?: string;
+          slug?: string | null;
+          category_id?: string | null;
+          city_slug?: string | null;
+          client_names?: string | null;
+          story?: string | null;
+          shoot_date?: string | null;
+          cover_image_url?: string | null;
+          featured?: boolean;
+          status?: 'draft' | 'published';
+          updated_at?: string;
         };
         Update: {
           id?: string;
@@ -33,6 +53,138 @@ export interface Database {
           category?: string;
           sub_category?: string | null;
           created_at?: string;
+          slug?: string | null;
+          category_id?: string | null;
+          city_slug?: string | null;
+          client_names?: string | null;
+          story?: string | null;
+          shoot_date?: string | null;
+          cover_image_url?: string | null;
+          featured?: boolean;
+          status?: 'draft' | 'published';
+          updated_at?: string;
+        };
+      };
+      photo_sections: {
+        Row: {
+          slug: string;
+          name: string;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          slug: string;
+          name: string;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          slug?: string;
+          name?: string;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      photo_groups: {
+        Row: {
+          section_slug: string;
+          slug: string;
+          name: string;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          section_slug: string;
+          slug: string;
+          name: string;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          section_slug?: string;
+          slug?: string;
+          name?: string;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      photo_categories: {
+        Row: {
+          id: string;
+          section_slug: string;
+          group_slug: string;
+          slug: string;
+          name: string;
+          subgroup: string | null;
+          intro: string | null;
+          sort_order: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          section_slug: string;
+          group_slug: string;
+          slug: string;
+          name: string;
+          subgroup?: string | null;
+          intro?: string | null;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          section_slug?: string;
+          group_slug?: string;
+          slug?: string;
+          name?: string;
+          subgroup?: string | null;
+          intro?: string | null;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      photo_cities: {
+        Row: {
+          slug: string;
+          name: string;
+          state: string;
+          intro: string | null;
+          sort_order: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          slug: string;
+          name: string;
+          state: string;
+          intro?: string | null;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          slug?: string;
+          name?: string;
+          state?: string;
+          intro?: string | null;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
         };
       };
       gallery_images: {

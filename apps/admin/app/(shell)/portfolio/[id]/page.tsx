@@ -6,16 +6,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
-import { getShootById } from '@/actions/shoots-admin';
+import { getPhotoCatalog, getShootById } from '@/actions/shoots-admin';
 import { redirect } from 'next/navigation';
 import { AddGalleryImageForm } from '../_components/AddGalleryImageForm';
-import { DeleteGalleryImageButton } from '../_components/DeleteGalleryImageButton';
-import { EditShootForm } from '../_components/EditShootForm';
+import { GalleryManager } from '../_components/GalleryManager';
+import { ShootForm } from '../_components/ShootForm';
 
 export default async function EditShootPage({
   params,
@@ -23,7 +20,7 @@ export default async function EditShootPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const shoot = await getShootById(id);
+  const [shoot, { categories, cities }] = await Promise.all([getShootById(id), getPhotoCatalog()]);
 
   if (!shoot) {
     redirect('/portfolio');
@@ -48,7 +45,7 @@ export default async function EditShootPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Shoot Details Form */}
         <div className="lg:col-span-1">
-          <EditShootForm shoot={shoot} />
+          <ShootForm shoot={shoot} categories={categories} cities={cities} />
         </div>
 
         {/* Right Column: Image Management */}
@@ -73,36 +70,8 @@ export default async function EditShootPage({
               <CardDescription>Current images in this shoot</CardDescription>
             </CardHeader>
             <CardContent>
-              {shoot.gallery_images && shoot.gallery_images.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {shoot.gallery_images.map((img: any) => (
-                    <div
-                      key={img.id}
-                      className="group relative aspect-square rounded-xl overflow-hidden bg-white/5 border border-white/10"
-                    >
-                      <img
-                        src={img.url}
-                        alt={img.alt_text || 'Gallery image'}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <DeleteGalleryImageButton
-                        id={img.id}
-                        shootId={shoot.id}
-                      />
-                      {img.alt_text && (
-                        <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/60 text-xs text-white truncate opacity-0 group-hover:opacity-100 transition-opacity">
-                          {img.alt_text}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 text-muted-foreground bg-white/5 rounded-xl border border-white/5 border-dashed">
-                  No images added yet.
-                </div>
-              )}
+              {/* Website order; first = shown first. Cover is the album card image. */}
+              <GalleryManager shootId={shoot.id} images={shoot.gallery_images ?? []} coverUrl={shoot.cover_image_url} />
             </CardContent>
           </Card>
         </div>
