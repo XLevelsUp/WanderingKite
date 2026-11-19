@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, Pause, Play } from 'lucide-react';
+import { retryViaRelay } from '@/lib/instagram-media';
 
 export interface ReelItem {
   id: string;
@@ -50,12 +51,13 @@ export function ReelAccordion({ media }: { media: ReelItem[] }) {
     <div
       ref={rootRef}
       // --h: strip height, capped by screen height; the open panel is exactly --h × 9/16 wide.
-      className="relative pb-3 pr-3 [--h:min(56svh,22rem)] sm:pb-4 sm:pr-4 sm:[--h:min(58svh,26rem)] 2xl:[--h:min(58svh,30rem)] 3xl:[--h:min(58svh,34rem)]"
+      className="relative pb-3 pr-3 [--h:min(56svh,22rem)] sm:pb-4 sm:pr-4 sm:[--h:min(58svh,26rem)] 2xl:[--h:min(58svh,30rem)] 3xl:[--h:min(58svh,34rem)] [--pad:0.75rem] sm:[--pad:1rem] [[data-theme=studio]_&]:p-0 [[data-theme=studio]_&]:[--pad:0rem]"
     >
-      {/* Brand motif: sandstone block offset behind, as on the hero frame. */}
-      <div aria-hidden className="absolute bottom-0 left-3 right-0 top-3 bg-neutral sm:left-4 sm:top-4" />
+      {/* Brand motif: sandstone block offset behind, as on the hero frame; hidden on dark studio pages, where it reads as a grey strip. */}
+      <div aria-hidden className="absolute bottom-0 left-3 right-0 top-3 bg-neutral sm:left-4 sm:top-4 [[data-theme=studio]_&]:hidden" />
 
-      <div role="tablist" aria-label="Instagram reels" className="relative flex h-[var(--h)] gap-1.5 bg-background p-1.5 sm:gap-2 sm:p-2">
+      {/* Studio pages drop the frame padding/fill too: on dark it showed as a grey band around the reels. */}
+      <div role="tablist" aria-label="Instagram reels" className="relative flex h-[var(--h)] gap-1.5 bg-background p-1.5 sm:gap-2 sm:p-2 [[data-theme=studio]_&]:bg-transparent [[data-theme=studio]_&]:p-0">
         {media.map((m, i) => {
           const on = i === active;
           const isVideo = m.media_type === 'VIDEO';
@@ -73,13 +75,14 @@ export function ReelAccordion({ media }: { media: ReelItem[] }) {
                 if (e.key === 'ArrowRight') setActive((i + 1) % media.length);
                 if (e.key === 'ArrowLeft') setActive((i - 1 + media.length) % media.length);
               }}
-              style={{ flex: on ? '0 0 calc((var(--h) - 1rem) * 0.5625)' : '1 1 0%' }}
+              // Open panel = exact 9:16 of the inner height (strip height minus the frame padding, 0 on studio pages).
+              style={{ flex: on ? '0 0 calc((var(--h) - var(--pad)) * 0.5625)' : '1 1 0%' }}
               className="group relative min-w-0 cursor-pointer overflow-hidden bg-muted transition-[flex] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
             >
               {on ? (
                 <>
                   {/* Open: uncropped (object-contain) over a blurred copy of the cover. */}
-                  <img src={cover(m)} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-125 object-cover opacity-80 blur-2xl" />
+                  <img src={cover(m)} alt="" aria-hidden onError={(e) => retryViaRelay(e, cover(m))} className="absolute inset-0 h-full w-full scale-125 object-cover opacity-80 blur-2xl" />
                   {isVideo ? (
                     <video
                       key={m.id}
@@ -93,12 +96,14 @@ export function ReelAccordion({ media }: { media: ReelItem[] }) {
                       onPlay={() => setPlaying(true)}
                       onPause={() => setPlaying(false)}
                       onEnded={() => setActive((i + 1) % media.length)}
+                      // Some Instagram CDN edges send CORP same-origin and the browser blocks the file; retry once through our same-origin relay.
+                      onError={(e) => retryViaRelay(e, m.media_url)}
                       className="absolute inset-0 h-full w-full object-contain"
                     >
                       <track kind="captions" src="data:text/vtt," srcLang="en" label="No captions" />
                     </video>
                   ) : (
-                    <img src={m.media_url} alt={`Instagram post ${i + 1} from @wanderingkitestudio`} className="absolute inset-0 h-full w-full object-contain" />
+                    <img src={m.media_url} alt={`Instagram post ${i + 1} from @wanderingkitestudio`} onError={(e) => retryViaRelay(e, m.media_url)} className="absolute inset-0 h-full w-full object-contain" />
                   )}
 
                   {/* Caption bar */}
@@ -123,7 +128,8 @@ export function ReelAccordion({ media }: { media: ReelItem[] }) {
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
                         aria-label="View on Instagram"
-                        className="relative flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-foreground before:absolute before:-inset-1.5 before:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        // Studio pages: deep orange (pairs with the light-orange play button); the white chip read as grey with a near-invisible arrow on dark.
+                        className="relative flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-foreground [[data-theme=studio]_&]:bg-primary-deep [[data-theme=studio]_&]:text-white before:absolute before:-inset-1.5 before:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                       >
                         <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
                       </a>
@@ -133,7 +139,7 @@ export function ReelAccordion({ media }: { media: ReelItem[] }) {
               ) : (
                 <>
                   {/* Closed: a slice of the cover, softened, with its number. */}
-                  <img src={cover(m)} alt="" aria-hidden loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-75 grayscale-[30%] transition-[opacity,filter] duration-300 group-hover:opacity-100 group-hover:grayscale-0" />
+                  <img src={cover(m)} alt="" aria-hidden loading="lazy" onError={(e) => retryViaRelay(e, cover(m))} className="absolute inset-0 h-full w-full object-cover opacity-75 grayscale-[30%] transition-[opacity,filter] duration-300 group-hover:opacity-100 group-hover:grayscale-0" />
                   <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
                   <span className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] font-semibold tracking-[0.18em] text-white">
                     {pad2(i + 1)}

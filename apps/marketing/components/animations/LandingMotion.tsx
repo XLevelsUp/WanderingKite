@@ -26,14 +26,11 @@ export function LandingMotion() {
       { rootMargin: '0px 0px -8% 0px', threshold: 0.12 }
     );
 
+    // Observe every unrevealed target, not just newly tagged ones: on client navigation the DOM already exists, and a re-run effect
+    // (StrictMode, remount) must re-observe headings an earlier run tagged — otherwise they stay blurred forever.
     const scan = () => {
-      document.querySelectorAll('main > section:not(:first-of-type) h2').forEach((h) => {
-        if (!h.hasAttribute('data-focus')) {
-          h.setAttribute('data-focus', '');
-          io.observe(h);
-        }
-      });
-      document.querySelectorAll('[data-shutter]:not(.is-in)').forEach((el) => io.observe(el));
+      document.querySelectorAll('main > section:not(:first-of-type) h2').forEach((h) => h.setAttribute('data-focus', ''));
+      document.querySelectorAll('[data-focus]:not(.is-in), [data-shutter]:not(.is-in)').forEach((el) => io.observe(el));
     };
     scan();
     const late = window.setTimeout(scan, 1500); // content that mounts late (Instagram feed)

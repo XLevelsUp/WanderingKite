@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { Instagram, Play, Film, ChevronLeft, ChevronRight } from 'lucide-react';
 import { logger } from '@/lib/logger';
+import { retryViaRelay } from '@/lib/instagram-media';
 import { ReelAccordion } from '@/components/sections/ReelAccordion';
 
 interface InstagramMediaItem {
@@ -129,6 +130,7 @@ function Card({ item, videoRef, featured = false, onMouseEnter, onMouseLeave, cl
             muted
             loop
             playsInline
+            onError={(e) => retryViaRelay(e, item.media_url)}
             className="absolute inset-0 z-[1] h-full w-full object-contain"
           >
             <track kind="captions" src="data:text/vtt," srcLang="en" label="No captions" />
@@ -149,6 +151,7 @@ function Card({ item, videoRef, featured = false, onMouseEnter, onMouseLeave, cl
           <img
             src={item.media_url}
             alt="Instagram post from @wanderingkitestudio"
+            onError={(e) => retryViaRelay(e, item.media_url)}
             className="absolute inset-0 z-[1] h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
             loading="lazy"
           />
@@ -278,7 +281,7 @@ export function InstagramFeed({ account = 'wanderingkite', variant = 'footer', o
       return (
         <div className="w-full" ref={sectionRef}>
           {/* Same height steps as ReelAccordion (+ its 12/16px offset), so nothing jumps when reels arrive. */}
-          <div className="h-[calc(min(56svh,22rem)+0.75rem)] animate-pulse bg-muted sm:h-[calc(min(58svh,26rem)+1rem)] 2xl:h-[calc(min(58svh,30rem)+1rem)] 3xl:h-[calc(min(58svh,34rem)+1rem)]" />
+          <div className="h-[calc(min(56svh,22rem)+0.75rem)] animate-pulse bg-muted sm:h-[calc(min(58svh,26rem)+1rem)] 2xl:h-[calc(min(58svh,30rem)+1rem)] 3xl:h-[calc(min(58svh,34rem)+1rem)] [[data-theme=studio]_&]:h-[min(56svh,22rem)] sm:[[data-theme=studio]_&]:h-[min(58svh,26rem)] 2xl:[[data-theme=studio]_&]:h-[min(58svh,30rem)] 3xl:[[data-theme=studio]_&]:h-[min(58svh,34rem)]" />
         </div>
       );
     }

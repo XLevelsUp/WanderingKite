@@ -8,7 +8,8 @@ import { HeroSection } from '@/components/sections/HeroSection';
 import { InstagramSection } from '@/components/sections/InstagramSection';
 import { ValuesSection } from '@/components/sections/ValuesSection';
 import { ServicesSection } from '@/components/sections/ServicesSection';
-import { PortfolioSection } from '@/components/sections/PortfolioSection';
+import { PhotographyDiptych } from '@/components/sections/PhotographyDiptych';
+import { StoriesInLight } from '@/components/photography/StoriesInLight';
 import { ClientStories } from '@/components/sections/ClientStories';
 import { LandingMotion } from '@/components/animations/LandingMotion';
 import { homepageTestimonials } from '@/lib/service-page-data';
@@ -29,7 +30,10 @@ export function HomePageClient() {
 
       <ServicesSection />
 
-      <PortfolioSection />
+      {/* Photography brand tagline, introducing the work below. */}
+      <StoriesInLight />
+
+      <PhotographyDiptych />
 
       {/* ── How It Works ────────────────────────────────── */}
       <HowItWorks />
