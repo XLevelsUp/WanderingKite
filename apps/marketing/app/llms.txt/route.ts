@@ -1,4 +1,12 @@
 import { NextResponse } from 'next/server';
+import { siteConfig } from '@/config/site';
+
+// Shown only while the Rentals page is enabled (config/site.ts).
+const RENTALS_SECTION = `## Equipment Rentals
+
+- [Camera & Equipment Rentals](https://wanderingkite.in/rentals): Sony and Canon cameras, prime and zoom lenses, lighting rigs (Godox, Profoto), Rode audio equipment — daily and weekly rental rates in Coimbatore
+
+`;
 
 // ============================================================
 // /llms.txt — Machine-Readable LLM Navigation Guide
@@ -45,11 +53,7 @@ const LLMS_TXT = `# Wandering Kite Studio — LLM Navigation Guide
 - [Music Videos](https://wanderingkite.in/photography/commercial/music-videos): Music video production and cinematography
 - [Short Films](https://wanderingkite.in/photography/commercial/short-films): Short film production services
 
-## Equipment Rentals
-
-- [Camera & Equipment Rentals](https://wanderingkite.in/rentals): Sony and Canon cameras, prime and zoom lenses, lighting rigs (Godox, Profoto), Rode audio equipment — daily and weekly rental rates in Coimbatore
-
-## Studio Spaces
+${siteConfig.features.rentals ? RENTALS_SECTION : ''}## Studio Spaces
 
 - [Photography Studio Rental](https://wanderingkite.in/studiospace): 1200 sq ft studio with cyclorama wall, ProFoto lighting, seamless backdrops — hourly and full-day rates
 - [Podcast Recording Studio](https://wanderingkite.in/podcast): Acoustic-treated studio with Rode Procaster, Shure SM7B, multi-track recording, optional 4K video setup

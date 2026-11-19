@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import Script from 'next/script';
 import { BookingFlyout } from '@/components/booking/BookingFlyout';
 import { Footer } from '@/components/shared/Footer';
-import { Testimonials } from '@/components/sections/Testimonials';
-import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
-import { ServiceFAQ } from '@/components/sections/ServiceFAQ';
+import { StudioReviews } from '@/components/studio/StudioReviews';
+import { StudioProcess } from '@/components/studio/StudioProcess';
+import { StudioFAQ } from '@/components/studio/StudioFAQ';
+import { PodcastBand } from '@/components/studio/PodcastBand';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import {
   studioTestimonials,
@@ -31,6 +32,8 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { StudioCarousel } from '@/components/sections/StudioCarousel';
+import { InstagramSection } from '@/components/sections/InstagramSection';
+import { SectionBoundary } from '@/components/shared/SectionBoundary';
 import { StudioPricingEngine } from '@/components/studio/StudioPricingEngine';
 import { getStudioPackages, getStudioAddOns, getPodcastPackages } from '@/actions/studio-pricing-public';
 import { BackdropsGallery } from '@/components/studio/BackdropsGallery';
@@ -383,6 +386,9 @@ const pricingTiers = [
   },
 ];
 
+// Same container width steps as the landing page.
+const WRAP = 'mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12 2xl:max-w-[88rem] 3xl:max-w-[112rem] 3xl:px-16';
+
 export default async function StudioPage() {
   // Fetch live equipment summary and filter for Studio Space Rental gear
   let rentalEquipment: any[] = [];
@@ -395,11 +401,20 @@ export default async function StudioPage() {
     console.error('Failed to fetch equipment for studio page:', error);
   }
 
-  const [studioPackages, studioAddOns, podcastRows] = await Promise.all([
+  // Each fetch falls back to [] on its own, so a database/network failure can't throw the whole page into error.tsx.
+  const settle = (r: PromiseSettledResult<any[]>, label: string) => {
+    if (r.status === 'fulfilled') return r.value;
+    console.error(`Failed to fetch ${label} for studio page:`, r.reason);
+    return [];
+  };
+  const [pkgRes, addOnRes, podcastRes] = await Promise.allSettled([
     getStudioPackages(),
     getStudioAddOns(),
     getPodcastPackages(),
   ]);
+  const studioPackages = settle(pkgRes, 'studio packages');
+  const studioAddOns = settle(addOnRes, 'studio add-ons');
+  const podcastRows = settle(podcastRes, 'podcast packages');
 
   // The engine's SidePackage shape is camelCase; Supabase returns snake_case.
   // original_price stays null when unset so the discount badge stays hidden.
@@ -421,13 +436,6 @@ export default async function StudioPage() {
 
   return (
     <>
-      {/* LCP hero: `unoptimized: true` strips fetchpriority from next/image's own preload. */}
-      <link
-        rel="preload"
-        as="image"
-        href="/images/studio/placeholder1.webp"
-        fetchPriority="high"
-      />
       <JsonLd
         data={[studioFaqSchema, studioBreadcrumbSchema, studioPricingSchema]}
       />
@@ -447,31 +455,42 @@ export default async function StudioPage() {
         `}
       </Script>
       <noscript dangerouslySetInnerHTML={{ __html: `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=863723466283459&ev=PageView&noscript=1" />` }} />
-      <main className="min-h-screen bg-background pt-16">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-16 lg:py-24">
-          <div className="container mx-auto px-6">
-            <div className="mx-auto max-w-4xl text-center">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm text-blue-500">
-                <Building2 className="h-4 w-4" />
+      <main className="min-h-screen bg-background">
+        {/* Order: reels → wording → studio carousel. Reels open the page, so they clear the fixed header. */}
+        <InstagramSection account="studio" first />
+
+        {/* Hero copy — headline left, intro + CTA right from lg; stacked on phones. 48/64/80 above, 64/80/96 below. */}
+        <section>
+          <div className={`${WRAP} grid gap-10 pb-16 pt-12 sm:pb-20 sm:pt-16 lg:grid-cols-12 lg:items-end lg:gap-16 lg:pb-24 lg:pt-20`}>
+            <div className="lg:col-span-7">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary-deep/50 bg-primary-deep/15 px-3 py-1.5 text-xs font-semibold text-accent-text">
+                <Building2 className="h-3.5 w-3.5" />
                 Studio Rental
               </div>
-              <h1 className="mb-6 font-bold leading-tight">
-                <span className="block text-3xl sm:text-4xl md:text-5xl text-white mb-3">
+              <h1 className="mt-6 font-bold leading-tight tracking-[-0.02em]">
+                <span className="block text-3xl text-foreground sm:text-4xl lg:text-[2.75rem]">
                   Photography Studio Space
                 </span>{' '}
-                <span className="block text-2xl sm:text-3xl md:text-4xl bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+                <span className="mt-2 block text-2xl text-accent-text sm:text-3xl">
                   Rental Place in Coimbatore
                 </span>{' '}
-                <span className="block text-sm sm:text-base md:text-lg font-semibold text-white/70 mt-3">
-                  1200 Sq Ft | RS Puram | Book by Hour
+                {/* Same words as before, shown as three chips; the " | " separators stay in the text for SEO/screen readers. */}
+                <span className="mt-6 flex flex-wrap gap-2 text-sm font-semibold text-foreground">
+                  {['1200 Sq Ft', 'RS Puram', 'Book by Hour'].map((t, i) => (
+                    <span key={t} className="inline-flex items-center">
+                      {i > 0 && <span className="sr-only"> | </span>}
+                      <span className="rounded-full border border-border bg-card px-3 py-1.5">{t}</span>
+                    </span>
+                  ))}
                 </span>
               </h1>
-              <h2 className="mb-8 leading-relaxed font-normal max-w-3xl mx-auto">
-                <span className="block text-base sm:text-lg text-amber-400 font-medium">
+            </div>
+            <div className="lg:col-span-5 lg:border-l lg:border-border lg:pl-10">
+              <h2 className="font-normal leading-relaxed">
+                <span className="block text-base font-medium text-accent-text">
                   A Professional Photography Studio Built for Creators in Coimbatore
                 </span>{' '}
-                <span className="block text-sm sm:text-base text-muted-foreground mt-1">
+                <span className="mt-2 block text-base text-muted-foreground">
                   Looking for the best photography studio for rent in Coimbatore? Studiospace offers a premium 1200 sq ft studio near RS Puram with Profoto lighting, infinity wall &amp; 9 backdrops. Book by the hour, half day or full day.
                 </span>
               </h2>
@@ -479,138 +498,139 @@ export default async function StudioPage() {
                 href={generateWhatsAppLink('studio')}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block rounded-full bg-amber-500 px-8 py-4 font-semibold text-zinc-950 transition-all hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/50"
+                data-magnetic
+                className="mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-gradient-to-r from-primary-deep to-primary px-7 text-sm font-semibold text-primary-foreground transition-[transform,filter,box-shadow] duration-200 hover:brightness-110 hover:shadow-[0_12px_30px_-10px_hsl(var(--primary)/0.6)] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 Book Your Slot
+                <ArrowRight className="h-4 w-4" />
               </a>
             </div>
           </div>
         </section>
 
-        <StudioCarousel />
+        {/* Studio photos after the wording; the footer's Instagram block is switched off below so the feed shows once. */}
+        <StudioCarousel first={false} />
 
         {/* Services */}
-        <section className="border-t border-border py-24">
-          <div className="container mx-auto px-6">
-            <h2 className="mb-4 text-center text-4xl font-bold">
-              Our Services
-            </h2>
-            <p className="mb-4 text-center text-muted-foreground">
-              Check our competitive photo studio rental Coimbatore price options to book photography studio Coimbatore sessions today. Everything you need under one roof.
-            </p>
+        <section aria-labelledby="studio-services-heading">
+          <div className={`${WRAP} py-16 sm:py-20 lg:py-24`}>
+            {/* Heading left, intro right on lg so the row spans the full width instead of leaving the right half empty. */}
+            <div className="grid gap-4 lg:grid-cols-12 lg:items-start lg:gap-16">
+              <h2 id="studio-services-heading" className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:col-span-4">
+                Our Services
+              </h2>
+              <div className="space-y-4 lg:col-span-8">
+                <p className="text-base leading-relaxed text-muted-foreground">
+                  Check our competitive photo studio rental Coimbatore price options to book photography studio Coimbatore sessions today. Everything you need under one roof.
+                </p>
+                <p className="text-base leading-relaxed text-muted-foreground">
+                  Located in RS Puram, our studio provides a professional environment for podcast recording, video production, and photography, serving clients across Coimbatore, Tiruppur, Salem, and Erode.
+                </p>
+              </div>
+            </div>
 
-            <p className="mx-auto mb-12 max-w-3xl text-center text-muted-foreground">
-              Located in RS Puram, our studio provides a professional environment for podcast recording, video production, and photography, serving clients across Coimbatore, Tiruppur, Salem, and Erode.
-            </p>
-
-            <StudioPricingEngine
-              equipment={rentalEquipment}
-              packages={studioPackages as any}
-              addOns={studioAddOns as any}
-              sidePackages={podcastPackages}
-              sidePackagesTitle="Podcast Studio — Packages with Cameraman"
-              sidePackagesService="studio"
-            />
+            <div className="mt-12 lg:mt-16">
+              {/* If pricing crashes, only this block swaps to a WhatsApp prompt; the rest of the page stays up. */}
+              <SectionBoundary
+                name="studio-pricing"
+                fallback={
+                  <div className="flex flex-col items-start gap-4 rounded-2xl border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between lg:p-8">
+                    <p className="text-base text-muted-foreground">Live pricing is unavailable right now. Message us for current rates.</p>
+                    <a
+                      href={generateWhatsAppLink('studio')}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-primary-deep to-primary px-6 text-sm font-semibold text-primary-foreground transition-[filter] duration-200 hover:brightness-110"
+                    >
+                      Book Your Slot <ArrowRight className="h-4 w-4" />
+                    </a>
+                  </div>
+                }
+              >
+                <StudioPricingEngine
+                  equipment={rentalEquipment}
+                  packages={studioPackages as any}
+                  addOns={studioAddOns as any}
+                  sidePackages={podcastPackages}
+                  sidePackagesTitle="Podcast Studio — Packages with Cameraman"
+                  sidePackagesService="studio"
+                />
+              </SectionBoundary>
+            </div>
 
             {/* Editing Services */}
-            <div className="mb-16">
-              <div className="mb-6 flex items-center gap-3">
-                <span className="rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1 text-sm font-semibold text-purple-400">
+            <div className="mt-16 lg:mt-24">
+              <div className="flex items-center gap-4">
+                <span className="rounded-full border border-primary-deep/50 bg-primary-deep/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-accent-text">
                   Post-Production
                 </span>
-                <div className="h-px flex-1 bg-secondary" />
+                <div className="h-px flex-1 bg-border" />
               </div>
 
-              <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div className="mt-8 flex flex-col justify-between gap-6 md:flex-row md:items-end">
                 <div className="max-w-2xl">
-                  <h3 className="mb-4 text-3xl font-bold tracking-tight">Premium Editing Services</h3>
-                  <p className="mb-4 text-muted-foreground text-lg leading-relaxed">
+                  <h3 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Premium Editing Services</h3>
+                  <p className="mt-4 text-base leading-relaxed text-muted-foreground">
                     Professional video and photo post-production tailored to your specific requirements.
                   </p>
-                  <div className="inline-flex items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-500/10 px-4 py-2.5 text-sm font-semibold text-purple-400">
-                    <Sparkles className="h-4 w-4" />
+                  <div className="mt-4 inline-flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm font-medium text-accent-text">
+                    <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
                     Pricing is customized entirely based on your workload and deliverables.
                   </div>
                 </div>
-                <div className="shrink-0">
-                  <a
-                    href={generateWhatsAppLink(
-                      'studio',
-                      `Hi! I'd like to get a customized quote for editing services.`
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full bg-purple-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-purple-500/20 transition-all hover:scale-105 hover:bg-purple-700"
-                  >
-                    Request a Quote <ArrowRight className="h-4 w-4" />
-                  </a>
-                </div>
+                <a
+                  href={generateWhatsAppLink('studio', `Hi! I'd like to get a customized quote for editing services.`)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-magnetic
+                  className="inline-flex h-12 shrink-0 items-center gap-2 self-start rounded-full bg-gradient-to-r from-primary-deep to-primary px-6 text-sm font-semibold text-primary-foreground transition-[transform,filter,box-shadow] duration-200 hover:brightness-110 hover:shadow-[0_12px_30px_-10px_hsl(var(--primary)/0.6)] active:scale-[0.97] md:self-auto"
+                >
+                  Request a Quote <ArrowRight className="h-4 w-4" />
+                </a>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-3">
-                <div className="group relative overflow-hidden rounded-3xl border border-border bg-card p-8 transition-all hover:border-purple-500/30 hover:bg-purple-500/5 hover:shadow-lg hover:shadow-purple-500/5">
-                  <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-500 transition-transform group-hover:scale-110 group-hover:bg-purple-500/20">
-                    <Clock className="h-6 w-6" />
+              <div className="mt-8 grid gap-4 md:grid-cols-3 lg:gap-6">
+                {[
+                  { icon: Clock, title: 'Hourly Basis', body: 'Flexible editing designed for minor tweaks, short-form content, and quick turnarounds.' },
+                  { icon: Layers, title: 'Project Basis', body: 'End-to-end post-production with a fixed scope and clear professional deliverables.' },
+                  { icon: Sparkles, title: 'Customized', body: 'Tailored workflows designed exclusively for heavy workloads and retainer models.' },
+                ].map((c) => (
+                  <div key={c.title} className="group rounded-2xl border border-border bg-card p-6 transition-colors duration-300 hover:border-primary/40 lg:p-8">
+                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary-deep/20 text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
+                      <c.icon className="h-5 w-5" />
+                    </div>
+                    <h4 className="mt-6 text-lg font-semibold text-foreground">{c.title}</h4>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{c.body}</p>
                   </div>
-                  <h4 className="mb-3 text-xl font-bold">Hourly Basis</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Flexible editing designed for minor tweaks, short-form content, and quick turnarounds.
-                  </p>
-                </div>
-
-                <div className="group relative overflow-hidden rounded-3xl border border-border bg-card p-8 transition-all hover:border-purple-500/30 hover:bg-purple-500/5 hover:shadow-lg hover:shadow-purple-500/5">
-                  <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-500 transition-transform group-hover:scale-110 group-hover:bg-purple-500/20">
-                    <Layers className="h-6 w-6" />
-                  </div>
-                  <h4 className="mb-3 text-xl font-bold">Project Basis</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    End-to-end post-production with a fixed scope and clear professional deliverables.
-                  </p>
-                </div>
-
-                <div className="group relative overflow-hidden rounded-3xl border border-border bg-card p-8 transition-all hover:border-purple-500/30 hover:bg-purple-500/5 hover:shadow-lg hover:shadow-purple-500/5">
-                  <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-500 transition-transform group-hover:scale-110 group-hover:bg-purple-500/20">
-                    <Sparkles className="h-6 w-6" />
-                  </div>
-                  <h4 className="mb-3 text-xl font-bold">Customized</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Tailored workflows designed exclusively for heavy workloads and retainer models.
-                  </p>
-                </div>
+                ))}
               </div>
             </div>
 
             {/* Equipment Rental */}
-            <div>
-              <div className="mb-6 flex items-center gap-3">
-                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-sm font-semibold text-amber-400">
+            <div className="mt-16 lg:mt-24">
+              <div className="flex items-center gap-4">
+                <span className="rounded-full border border-primary-deep/50 bg-primary-deep/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-accent-text">
                   Equipment Rental
                 </span>
-                <div className="h-px flex-1 bg-secondary" />
+                <div className="h-px flex-1 bg-border" />
               </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
                 {[
                   { title: 'Cameras', desc: previewCameras },
                   { title: 'Lenses', desc: previewLenses },
                   { title: 'Lighting', desc: previewLighting },
                   { title: 'Audio', desc: previewAudio },
                 ].map((s) => (
-                  <div
-                    key={s.title}
-                    className="flex flex-col justify-between rounded-xl border border-border bg-muted/50 p-6"
-                  >
+                  <div key={s.title} className="flex flex-col justify-between rounded-2xl border border-border bg-card p-6">
                     <div>
-                      <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
-                      <p className="text-sm text-muted-foreground">{s.desc}</p>
+                      <h3 className="text-lg font-semibold text-foreground">{s.title}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.desc}</p>
                     </div>
                     <a
-                      href={generateWhatsAppLink(
-                        'studio',
-                        `Hi! I'd like to inquire about renting ${s.title}.`
-                      )}
+                      href={generateWhatsAppLink('studio', `Hi! I'd like to inquire about renting ${s.title}.`)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-5 inline-block rounded-full border border-amber-500/40 bg-amber-500/10 px-5 py-2.5 text-center text-sm font-semibold text-amber-400 transition-colors hover:bg-amber-500/20"
+                      className="mt-6 inline-flex h-11 items-center justify-center rounded-full border border-primary/40 bg-primary/10 px-5 text-sm font-semibold text-accent-text transition-colors duration-200 hover:bg-primary hover:text-primary-foreground"
                     >
                       Browse &amp; Rent
                     </a>
@@ -621,27 +641,23 @@ export default async function StudioPage() {
           </div>
         </section>
 
+        {/* Podcast Studio lives inside the studio; linked here, not only from the footer. */}
+        <PodcastBand />
+
         {/* Facilities */}
-        <section className="border-t border-border py-24">
-          <div className="container mx-auto px-6">
-            <h2 className="mb-12 text-center text-4xl font-bold">
+        <section aria-labelledby="facilities-heading" className="border-t border-border">
+          <div className={`${WRAP} py-16 sm:py-20 lg:py-24`}>
+            <h2 id="facilities-heading" className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
               Studio Facilities
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+            <div className="mt-12 grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 md:grid-cols-3 lg:mt-16 lg:grid-cols-4 lg:gap-6">
               {facilities.map((facility, index) => (
-                <div
-                  key={index}
-                  className="rounded-2xl border border-border bg-muted/50 p-6 text-center"
-                >
-                  <div className="mb-4 flex justify-center">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
-                      <facility.icon className="h-6 w-6 text-amber-500" />
-                    </div>
+                <div key={index} className="group rounded-2xl border border-border bg-card p-6 transition-colors duration-300 hover:border-primary/40">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-deep/20 text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
+                    <facility.icon className="h-5 w-5" />
                   </div>
-                  <h3 className="mb-2 text-lg font-bold">{facility.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {facility.description}
-                  </p>
+                  <h3 className="mt-5 text-base font-semibold text-foreground">{facility.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{facility.description}</p>
                 </div>
               ))}
             </div>
@@ -651,16 +667,16 @@ export default async function StudioPage() {
         <BackdropsGallery />
 
         {/* Testimonials */}
-        <Testimonials testimonials={studioTestimonials} accentColor="amber" />
+        <StudioReviews reviews={studioTestimonials} />
 
         {/* Process Timeline */}
-        <ProcessTimeline steps={studioProcessSteps} accentColor="amber" />
+        <StudioProcess steps={studioProcessSteps} />
 
         {/* FAQ */}
-        <ServiceFAQ faqs={studioFAQs} accentColor="amber" />
+        <StudioFAQ faqs={studioFAQs} service="studio" />
         <ServiceTerms type="studio" />
         <BookingFlyout service="studio" />
-        <Footer account="studio" />
+        <Footer account="studio" showInstagram={false} />
       </main>
     </>
   );

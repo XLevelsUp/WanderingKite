@@ -1,4 +1,8 @@
 export const siteConfig = {
+  // Feature switches — set rentals to true to show the Rentals page in nav, links, sitemap and structured data again.
+  features: {
+    rentals: false,
+  },
   name: 'Wandering Kite',
   description:
     'Professional photography services, camera & equipment rentals, studio space, and podcast recording in Coimbatore, Tamil Nadu.',

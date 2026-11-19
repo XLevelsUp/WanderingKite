@@ -46,8 +46,8 @@ export function HowItWorks() {
             Book via WhatsApp
           </a>
           <p className="mt-4 flex items-center gap-2 text-sm text-foreground">
-            <Clock className="h-4 w-4" aria-hidden />
-            Average booking time: <span className="font-semibold">5 minutes</span>
+            <Clock className="h-4 w-4 text-accent-text" aria-hidden />
+            Average booking time: <span className="font-semibold text-accent-text">5 minutes</span>
           </p>
 
           {/* Desktop: a camera iris fills the open space under the CTA and opens as you scroll the steps. */}

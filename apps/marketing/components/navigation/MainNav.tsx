@@ -7,12 +7,13 @@ import { Camera, Video, Building2, MessageCircle, User, Menu, X } from 'lucide-r
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { siteConfig } from '@/config/site';
 import { usePathname } from 'next/navigation';
+import { isStudioRoute } from '@/lib/theme/studioRoutes';
 
 const navItems = [
   { label: 'Photography', href: '/photography', icon: Camera },
   { label: 'Rentals', href: '/rentals', icon: Video },
   { label: 'The Studio Space', href: '/studiospace', icon: Building2 },
-];
+].filter((item) => item.href !== '/rentals' || siteConfig.features.rentals); // Rentals toggled in config/site.ts
 
 export function MainNav() {
   const pathname = usePathname();
@@ -20,6 +21,15 @@ export function MainNav() {
   // and the /dashboard and /admin prefixes moved to apps/admin in the split, so
   // the branch that rendered the staff NotificationBell here could never match.
   const isAuthPage = pathname === '/client/login' || pathname === '/client/signup';
+
+  const studio = isStudioRoute(pathname);
+
+  // Theme <html> too on studio routes, so the page background and overscroll are dark as well.
+  React.useEffect(() => {
+    const root = document.documentElement;
+    if (studio) root.dataset.theme = 'studio';
+    else delete root.dataset.theme;
+  }, [studio]);
 
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -57,10 +67,8 @@ export function MainNav() {
 
   return (
     <nav
-      /* Translucent porcelain rather than bg-black: the logo PNG is near-black
-         ink on transparency, so it was effectively invisible on the old dark
-         bar. The slight transparency + blur keeps content visible underneath
-         as it scrolls past. */
+      data-theme={studio ? 'studio' : undefined}
+      /* Translucent bar with blur; colours follow the route theme (light, or dark on studio routes). */
       className="
       fixed top-0 z-40 w-full
       border-b border-border
@@ -73,12 +81,12 @@ export function MainNav() {
         <Link href="/" className="group flex items-center gap-2 shrink-0">
           <Image
             // "WK logo.png" cropped to its ink — the source has ~75% empty canvas.
-            src="/wk-logo-light.png"
+            // Studio (dark) uses the white logo; light pages use the dark-ink crop.
+            src={studio ? '/wk-logo-dark.png' : '/wk-logo-light.png'}
             alt={siteConfig.name}
-            width={1125}
-            height={341}
-            // Capped at h-12 (48px) in an 80px bar so the mark sits with clear
-            // space above and below. h-20 made it exactly bar height on desktop.
+            width={studio ? 474 : 1125}
+            height={studio ? 135 : 341}
+            // Logo height capped below the 80px bar so it keeps clear space.
             className="h-9 sm:h-11 3xl:h-12 w-auto transition-transform duration-300 group-hover:scale-105"
             priority
           />

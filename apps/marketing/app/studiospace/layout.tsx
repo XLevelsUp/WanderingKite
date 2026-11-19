@@ -22,7 +22,10 @@ export default function StudioSpaceLayout({
           `}
         </Script>
       )}
-      {children}
+      {/* Dark studio theme for /studiospace and its blog — tokens in globals.css. */}
+      <div data-theme="studio" className="min-h-screen bg-background text-foreground">
+        {children}
+      </div>
     </>
   );
 }

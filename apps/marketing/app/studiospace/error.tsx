@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { logger } from '@/lib/logger';
 
+// Last-resort fallback only: data fetches and the pricing engine fail locally, so this shows just for unexpected crashes.
 export default function StudioSpaceError({
   error,
   reset,
@@ -18,46 +18,34 @@ export default function StudioSpaceError({
   }, [error]);
 
   return (
-    <div className="relative flex min-h-[600px] flex-col items-center justify-center px-4 py-16 text-center bg-[#0a0a0c]">
-      {/* Background radial glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.05)_0%,transparent_60%)] pointer-events-none" />
-
-      <div className="relative z-10 max-w-md w-full space-y-6">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+    <div data-theme="studio" className="flex min-h-[600px] flex-col items-center justify-center bg-background px-5 pb-16 pt-28 text-center text-foreground">
+      <div className="w-full max-w-md">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-primary-deep/50 bg-primary-deep/15 text-primary">
           <AlertTriangle className="h-6 w-6" />
         </div>
 
-        <div className="space-y-2">
-          <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            Inventory Offline
-          </h1>
-          <p className="text-sm text-foreground/60 max-w-xs mx-auto">
-            We are experiencing temporary difficulties loading our studio space details.
-          </p>
-        </div>
+        <h1 className="mt-6 text-3xl font-bold tracking-tight sm:text-4xl">Inventory Offline</h1>
+        <p className="mx-auto mt-2 max-w-xs text-base text-muted-foreground">
+          We are experiencing temporary difficulties loading our studio space details.
+        </p>
+        {/* Raw error text is never shown publicly; the digest lets us match the server log. */}
+        {error.digest && <p className="mt-4 font-mono text-xs text-muted-foreground">Ref: {error.digest}</p>}
 
-        <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-4 text-center">
-          <p className="font-mono text-xs text-indigo-300/90 leading-relaxed">
-            {error.message || 'Unable to connect to the database.'}
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-          <Button
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <button
+            type="button"
             onClick={() => reset()}
-            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-6 rounded-xl transition-all shadow-lg shadow-indigo-600/20"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-deep to-primary px-6 text-sm font-semibold text-primary-foreground transition-[filter] duration-200 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <RefreshCw className="h-4 w-4" />
             Reload Catalog
-          </Button>
-          <Link href="/" passHref>
-            <Button
-              variant="outline"
-              className="inline-flex items-center gap-2 border-white/10 hover:bg-white/5 text-foreground/80 font-semibold py-2.5 px-6 rounded-xl transition-all"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Home
-            </Button>
+          </button>
+          <Link
+            href="/"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-border px-6 text-sm font-semibold text-foreground transition-colors duration-200 hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
           </Link>
         </div>
       </div>

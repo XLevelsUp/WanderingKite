@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
+import { siteConfig } from '@/config/site';
 
 /**
  * Blog posts are admin-authored and go live on save, so the sitemap is
@@ -77,12 +78,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly' as const,
       priority: 0.8,
     })),
-    {
-      url: `${baseUrl}/rentals`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
-      priority: 1.0,
-    },
+    ...(siteConfig.features.rentals
+      ? [{ url: `${baseUrl}/rentals`, lastModified: currentDate, changeFrequency: 'monthly' as const, priority: 1.0 }]
+      : []),
     {
       url: `${baseUrl}/studiospace`,
       lastModified: currentDate,

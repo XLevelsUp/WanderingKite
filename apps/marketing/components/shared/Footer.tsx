@@ -13,6 +13,8 @@ import {
 import { siteConfig } from '@/config/site';
 import { brandSocials, studioSocials } from '@/lib/socials';
 import { InstagramFeed } from './InstagramFeed';
+import { usePathname } from 'next/navigation';
+import { legalLinksFor } from '@/lib/theme/studioRoutes';
 
 const services = [
   { name: 'Photography', href: '/photography' },
@@ -21,10 +23,6 @@ const services = [
   { name: 'Podcast Studio', href: '/podcast' },
 ];
 
-const legal = [
-  { name: 'Privacy Policy', href: '/privacy' },
-  { name: 'Rental Terms', href: '/terms' },
-];
 
 
 interface FooterProps {
@@ -49,6 +47,7 @@ export function Footer({ account = 'wanderingkite', showInstagram = true, tone =
   // Absolute origin of the admin app, used by the staff shortcut in the bottom
   // bar. Trailing slash trimmed so the href doesn't end up with a double slash.
   const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL?.replace(/\/$/, '');
+  const legal = legalLinksFor(usePathname(), siteConfig.features.rentals);
 
   // The old early-return that hid this footer on /dashboard and /admin is gone:
   // both prefixes moved to apps/admin in the split, so no path in this app can
@@ -107,7 +106,7 @@ export function Footer({ account = 'wanderingkite', showInstagram = true, tone =
             <Link href="/" className="mb-4 inline-block group">
               <Image
                 // Studio Space stays dark, so it keeps the white-on-black original.
-                src={account === 'studio' ? '/wkfulllogo.png' : '/wk-logo-light.png'}
+                src={account === 'studio' ? '/wk-logo-dark.png' : '/wk-logo-light.png'}
                 alt={siteConfig.name}
                 width={320}
                 height={80}

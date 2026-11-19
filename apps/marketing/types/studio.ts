@@ -1,3 +1,4 @@
+import { siteConfig } from '@/config/site';
 /**
  * types/studio.ts
  * ───────────────────────────────────────────────────────────────────────────
@@ -327,7 +328,7 @@ export const SERVICE_REGISTRY: Record<string, ServiceDomain> = {
                 label: 'Bookable Services',
                 items: [
                     { label: 'Podcast Studio', slug: 'podcast', href: '/podcast', description: 'Acoustically treated podcast & interview studio' },
-                    { label: 'Equipment Rental', slug: 'equipment-rental', href: '/rentals', description: 'Professional cameras, lenses, lighting & audio' },
+                    ...(siteConfig.features.rentals ? [{ label: 'Equipment Rental', slug: 'equipment-rental' as const, href: '/rentals', description: 'Professional cameras, lenses, lighting & audio' }] : []),
                     { label: 'Space Allocation', slug: 'space-allocation', href: '/studiospace', description: 'Hourly & full-day studio floor bookings' },
                 ],
             },

@@ -51,7 +51,7 @@ export function FAQ() {
             Frequently Asked Questions
           </h2>
           <p className="mt-4 max-w-md text-base leading-relaxed text-foreground">
-            Everything you need to know before booking. Still have questions? WhatsApp us!
+            Everything you need to know before booking. Still have questions? <span className="font-semibold text-accent-text">WhatsApp us!</span>
           </p>
 
           <div className="mt-8 rounded-2xl border border-border bg-card p-6">
@@ -74,7 +74,9 @@ export function FAQ() {
           {FAQS.map((f, i) => {
             const on = open === i;
             return (
-              <motion.div key={f.question} {...reveal(0.05 * (i + 1))} className="border-t border-border last:border-b">
+              <motion.div key={f.question} {...reveal(0.05 * (i + 1))} className="relative border-t border-border last:border-b">
+                {/* Open item: an orange rule sweeps along its top edge. */}
+                <span aria-hidden className={`absolute -top-px left-0 h-px w-full origin-left bg-accent-text transition-transform duration-700 ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none ${on ? 'scale-x-100' : 'scale-x-0'}`} />
                 <h3>
                   <button
                     type="button"
@@ -87,7 +89,7 @@ export function FAQ() {
                     <span className={`text-[11px] font-semibold tracking-[0.24em] tabular-nums transition-colors duration-300 ${on ? 'text-accent-text' : 'text-foreground/50'}`}>
                       {String(i + 1).padStart(2, '0')}
                     </span>
-                    <span className="flex-1 text-base font-semibold text-foreground sm:text-lg">{f.question}</span>
+                    <span className={`flex-1 text-base font-semibold transition-colors duration-300 sm:text-lg ${on ? 'text-accent-text' : 'text-foreground group-hover:text-accent-text'}`}>{f.question}</span>
                     <span
                       aria-hidden
                       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-[transform,background-color,border-color] duration-300 ${

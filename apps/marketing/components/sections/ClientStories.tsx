@@ -91,7 +91,7 @@ export function ClientStories({ stories }: { stories: Story[] }) {
                   aria-controls="story-panel"
                   onClick={() => select(i)}
                   className={`relative shrink-0 rounded-full border px-4 py-2 text-left transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:rounded-none lg:border-0 lg:border-t lg:border-border lg:px-0 lg:py-3 lg:last:border-b ${
-                    on ? 'border-primary bg-background lg:bg-transparent' : 'border-border bg-background hover:border-primary lg:bg-transparent'
+                    on ? 'border-accent-text bg-accent-text/5 lg:bg-transparent' : 'border-border bg-background hover:border-accent-text/60 lg:bg-transparent'
                   }`}
                 >
                   <span className={`block truncate text-sm font-semibold capitalize transition-colors duration-300 lg:pl-5 ${on ? 'text-foreground' : 'text-foreground/60'}`}>
@@ -104,14 +104,14 @@ export function ClientStories({ stories }: { stories: Story[] }) {
                       {auto ? (
                         <motion.span
                           key={`p-${active}`}
-                          className="block h-full origin-left bg-primary"
+                          className="block h-full origin-left bg-accent-text"
                           initial={{ scaleX: 0 }}
                           animate={{ scaleX: 1 }}
                           transition={{ duration: DWELL_S, ease: 'linear' }}
                           onAnimationComplete={next}
                         />
                       ) : (
-                        <span className="block h-full bg-primary" />
+                        <span className="block h-full bg-accent-text" />
                       )}
                     </span>
                   )}
@@ -126,7 +126,7 @@ export function ClientStories({ stories }: { stories: Story[] }) {
         {/* ── Right: the spotlight quote ── */}
         <motion.div {...reveal(0.08)} className="min-w-0 lg:col-span-8 lg:self-center">
           <div id="story-panel" role="tabpanel" aria-live="polite" className="relative rounded-2xl border border-border bg-background p-6 sm:p-8 lg:p-12">
-            <span aria-hidden className="absolute right-6 top-4 font-serif text-7xl leading-none text-neutral sm:right-8 lg:right-12 lg:top-8">&ldquo;</span>
+            <span aria-hidden className="absolute right-6 top-4 font-serif text-7xl leading-none text-accent-text/25 sm:right-8 lg:right-12 lg:top-8">&ldquo;</span>
 
             <AnimatePresence mode="wait" initial={false}>
               <motion.figure
@@ -162,7 +162,7 @@ export function ClientStories({ stories }: { stories: Story[] }) {
                 )}
 
                 <figcaption className="mt-8 flex items-center gap-4 border-t border-border pt-6">
-                  <span aria-hidden className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neutral text-base font-semibold uppercase text-foreground">
+                  <span aria-hidden className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-text/10 text-base font-semibold uppercase text-accent-text ring-1 ring-accent-text/30">
                     {s.name.charAt(0)}
                   </span>
                   <span className="min-w-0">
@@ -173,7 +173,7 @@ export function ClientStories({ stories }: { stories: Story[] }) {
                     </span>
                   </span>
                   <span className="ml-auto shrink-0 text-[11px] font-semibold tabular-nums tracking-[0.24em] text-foreground" aria-hidden>
-                    {String(active + 1).padStart(2, '0')} <span className="text-foreground/50">/ {String(stories.length).padStart(2, '0')}</span>
+                    <span className="text-accent-text">{String(active + 1).padStart(2, '0')}</span> <span className="text-foreground/50">/ {String(stories.length).padStart(2, '0')}</span>
                   </span>
                 </figcaption>
               </motion.figure>

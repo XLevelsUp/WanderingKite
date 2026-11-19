@@ -2,14 +2,61 @@
 
 import { useCallback, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowUpRight, Instagram } from 'lucide-react';
+import { ArrowUpRight, Instagram, Play, Camera, Aperture, Clapperboard, Lightbulb, Sparkles } from 'lucide-react';
 import { InstagramFeed } from '@/components/shared/InstagramFeed';
 
-const HANDLE = 'wanderingkitestudio';
+const HANDLES = { wanderingkite: 'wanderingkitestudio', studio: 'studiospacecbe' } as const;
+
+// Image-free tiles: theme-token gradients (light/dark orange on studio, taupe on the landing page) with one craft icon each.
+const TILES = [
+  { Icon: Play, tone: 'from-primary-deep/40 via-primary/15 to-transparent' },
+  { Icon: Camera, tone: 'from-primary/25 to-transparent' },
+  { Icon: Aperture, tone: 'from-transparent to-primary-deep/30' },
+  { Icon: Lightbulb, tone: 'from-primary/10 via-transparent to-primary/25' },
+  { Icon: Clapperboard, tone: 'from-primary-deep/30 to-primary/5' },
+  { Icon: Sparkles, tone: 'from-transparent via-primary/10 to-primary-deep/40' },
+] as const;
+
+/* Feed-down fallback without photos: profile-style panel (avatar ring + handle) over a 3×2 grid of gradient tiles; the whole panel opens Instagram. */
+function InstagramFallback({ handle }: { handle: string }) {
+  return (
+    <a
+      href={`https://instagram.com/${handle}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`View @${handle} on Instagram`}
+      className="group block rounded-2xl border border-border bg-background p-4 transition-colors duration-300 hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-6"
+    >
+      <div className="flex items-center gap-4">
+        <span aria-hidden className="rounded-full bg-gradient-to-tr from-primary-deep to-primary p-0.5">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-background text-primary">
+            <Instagram className="h-5 w-5" />
+          </span>
+        </span>
+        <p className="min-w-0 flex-1 truncate text-base font-semibold text-foreground">@{handle}</p>
+        <span aria-hidden className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border text-foreground transition-colors duration-300 group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
+          <ArrowUpRight className="h-4 w-4" />
+        </span>
+      </div>
+
+      <ul aria-hidden className="mt-4 grid grid-cols-3 gap-2 sm:mt-6 sm:gap-4">
+        {TILES.map(({ Icon, tone }, i) => (
+          <li
+            key={i}
+            className={`flex aspect-square items-center justify-center rounded-xl border border-border bg-card bg-gradient-to-br sm:aspect-[4/3] ${tone}`}
+          >
+            <Icon className="h-6 w-6 text-foreground/40 transition-[color,transform] duration-500 group-hover:scale-110 group-hover:text-primary motion-reduce:transition-none" />
+          </li>
+        ))}
+      </ul>
+    </a>
+  );
+}
 const SETTLE = { type: 'spring', bounce: 0, duration: 0.9 } as const;
 
-/* Compact one-band Instagram section. */
-export function InstagramSection() {
+/* Compact one-band Instagram section; `account` picks the handle and feed (studio pages use studiospacecbe). */
+export function InstagramSection({ account = 'wanderingkite', first = false }: { account?: keyof typeof HANDLES; first?: boolean }) {
+  const HANDLE = HANDLES[account];
   const reduce = useReducedMotion();
   const [feedOk, setFeedOk] = useState(true);
   const onUnavailable = useCallback(() => setFeedOk(false), []);
@@ -22,15 +69,15 @@ export function InstagramSection() {
 
   return (
     <section className="relative border-y border-border bg-card" aria-label="Follow us on Instagram">
-      {/* Strict spacing (8px grid): py 64/80/96, block gap 48 → 64 at lg, inner 24/32. Same width steps as the hero. */}
-      <div className={`mx-auto grid w-full max-w-7xl items-center gap-12 px-5 py-16 sm:px-8 sm:py-20 ${feedOk ? 'lg:grid-cols-12' : ''} lg:gap-16 lg:px-12 lg:py-24 2xl:max-w-[88rem] 3xl:max-w-[112rem] 3xl:px-16`}>
+      {/* Strict spacing (8px grid): py 64/80/96 (top = 80px header + 32/48/64 when first on the page), block gap 48 → 64 at lg. */}
+      <div className={`mx-auto grid w-full max-w-7xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-12 lg:gap-16 lg:px-12 2xl:max-w-[88rem] 3xl:max-w-[112rem] 3xl:px-16 ${first ? 'pb-16 pt-28 sm:pb-20 sm:pt-32 lg:pb-24 lg:pt-36' : 'py-16 sm:py-20 lg:py-24'}`}>
         {/* ── Header ── */}
-        {/* Tablet (md–lg): copy left, offer right, so the header spans the same width as the reel strip below. */}
+        {/* Tablet (md–lg): copy left, offer right, so the header spans the same width as the media below. */}
         <motion.div
           {...reveal(0)}
-          className={feedOk ? 'md:grid md:grid-cols-2 md:items-end md:gap-8 lg:col-span-5 lg:block xl:col-span-4' : 'mx-auto flex max-w-xl flex-col items-center text-center 2xl:max-w-2xl'}
+          className="md:grid md:grid-cols-2 md:items-end md:gap-8 lg:col-span-5 lg:block xl:col-span-4"
         >
-          <div className={feedOk ? '' : 'flex flex-col items-center'}>
+          <div>
           <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-accent-text sm:text-xs">
             <Instagram className="h-3.5 w-3.5" aria-hidden />@{HANDLE}
           </p>
@@ -45,7 +92,7 @@ export function InstagramSection() {
           </p>
           </div>
 
-          <div className={`mt-8 flex w-full max-w-md flex-col gap-4 ${feedOk ? 'md:mt-0 md:max-w-none lg:mt-8 lg:max-w-md' : ''}`}>
+          <div className="mt-8 flex w-full max-w-md flex-col gap-4 md:mt-0 md:max-w-none lg:mt-8 lg:max-w-md">
             {/* Offer as one coupon block — label + how to claim together, instead of three loose pieces. */}
             <div className="rounded-xl border border-dashed border-primary/60 bg-background px-5 py-4 text-left">
               <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground">
@@ -71,12 +118,14 @@ export function InstagramSection() {
           </div>
         </motion.div>
 
-        {/* ── Reel strip — fetches only near the viewport; on failure the column is removed (see feedOk). ── */}
-        {feedOk && (
-          <motion.div {...reveal(0.1)} className="lg:col-span-7 xl:col-span-8">
-            <InstagramFeed account="wanderingkite" variant="gallery" onUnavailable={onUnavailable} />
-          </motion.div>
-        )}
+        {/* ── Reel strip — fetches only near the viewport; if the feed fails, our own photo bento takes its place. ── */}
+        <motion.div {...reveal(0.1)} className="lg:col-span-7 xl:col-span-8">
+          {feedOk ? (
+            <InstagramFeed account={account} variant="gallery" onUnavailable={onUnavailable} />
+          ) : (
+            <InstagramFallback handle={HANDLE} />
+          )}
+        </motion.div>
       </div>
     </section>
   );

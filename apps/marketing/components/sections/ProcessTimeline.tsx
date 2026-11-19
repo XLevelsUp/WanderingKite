@@ -11,10 +11,16 @@ interface ProcessStep {
 
 interface ProcessTimelineProps {
   steps: ProcessStep[];
-  accentColor?: 'amber' | 'blue' | 'purple' | 'green';
+  accentColor?: 'amber' | 'blue' | 'purple' | 'green' | 'brand';
 }
 
 const accentColors = {
+  // brand: follows the page theme's primary (orange on studio pages).
+  brand: {
+    bg: 'bg-primary/10',
+    text: 'text-primary',
+    border: 'border-primary/20',
+  },
   amber: {
     bg: 'bg-amber-500/10',
     text: 'text-amber-500',

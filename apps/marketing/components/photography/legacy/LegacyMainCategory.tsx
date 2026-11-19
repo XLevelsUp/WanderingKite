@@ -129,9 +129,8 @@ const categoryData = {
   },
 };
 
-type Props = {
-  params: Promise<{ mainCategory: string }>;
-};
+// Pre-revamp main-category page, kept for old URLs (/photography/events, /portraits, /commercial) until Phase 7 redirects.
+export const hasLegacyMainCategory = (id: string) => id in categoryData;
 
 const categoryMetaDescriptions: Record<string, string> = {
   events:
@@ -144,9 +143,7 @@ const categoryMetaDescriptions: Record<string, string> = {
     'High-concept commercial photography & video in Coimbatore — advertisement productions, music videos & short films. Contact Wandering Kite for a custom quote.',
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const resolvedParams = await params;
-  const categoryId = resolvedParams.mainCategory;
+export function legacyMainCategoryMetadata(categoryId: string): Metadata {
   const category = categoryData[categoryId as keyof typeof categoryData];
 
   if (!category) {
@@ -173,9 +170,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function MainCategoryPage({ params }: Props) {
-  const resolvedParams = await params;
-  const categoryId = resolvedParams.mainCategory;
+export function LegacyMainCategory({ categoryId }: { categoryId: string }) {
   const category = categoryData[categoryId as keyof typeof categoryData];
 
   if (!category) {

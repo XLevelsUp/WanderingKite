@@ -203,18 +203,23 @@ export default function RootLayout({
             areaServed: 'Coimbatore',
           },
         },
-        {
-          '@type': 'Offer',
-          itemOffered: {
-            '@type': 'Service',
-            '@id': 'https://wanderingkite.in/rentals#service',
-            name: 'Camera & Equipment Rentals',
-            url: 'https://wanderingkite.in/rentals',
-            description:
-              'Daily and weekly rental of Sony, Canon cameras, lenses, lighting rigs, and Rode audio equipment in Coimbatore.',
-            areaServed: 'Coimbatore',
-          },
-        },
+        // Rentals offer only while the page is enabled (config/site.ts).
+        ...(siteConfig.features.rentals
+          ? [
+              {
+                '@type': 'Offer',
+                itemOffered: {
+                  '@type': 'Service',
+                  '@id': 'https://wanderingkite.in/rentals#service',
+                  name: 'Camera & Equipment Rentals',
+                  url: 'https://wanderingkite.in/rentals',
+                  description:
+                    'Daily and weekly rental of Sony, Canon cameras, lenses, lighting rigs, and Rode audio equipment in Coimbatore.',
+                  areaServed: 'Coimbatore',
+                },
+              },
+            ]
+          : []),
         {
           '@type': 'Offer',
           itemOffered: {
