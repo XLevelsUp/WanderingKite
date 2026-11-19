@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import { BookingFlyout } from '@/components/booking/BookingFlyout';
 import { Footer } from '@/components/shared/Footer';
-import { Testimonials } from '@/components/sections/Testimonials';
-import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
-import { ServiceFAQ } from '@/components/sections/ServiceFAQ';
+import { StudioReviews } from '@/components/studio/StudioReviews';
+import { StudioProcess } from '@/components/studio/StudioProcess';
+import { StudioFAQ } from '@/components/studio/StudioFAQ';
+import { STUDIO_WRAP } from '@/components/studio/wrap';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import {
   podcastTestimonials,
@@ -11,7 +12,7 @@ import {
   podcastFAQs,
 } from '@/lib/service-page-data';
 import { JsonLd } from '@/lib/schema-helpers';
-import { Mic, Headphones, Radio, Zap } from 'lucide-react';
+import { Mic, Headphones, Radio, Zap, ArrowRight, Check } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Podcast Recording Studio Coimbatore | Rode, Shure | Book Now',
@@ -226,124 +227,146 @@ const packages = [
   },
 ];
 
+const specs = [
+  { title: 'Audio Setup', items: ['Rode Procaster microphones', 'Shure SM7B (premium option)', 'Scarlett 4i4 audio interface', 'Zoom H6 multi-track recorder'] },
+  { title: 'Room Acoustics', items: ['Professional acoustic panels', 'Bass traps in corners', 'Isolated recording booth', 'Noise floor: -60dB'] },
+  { title: 'Video Option', items: ['Multi-camera setup (2-3 angles)', '4K video recording', 'Professional lighting', 'Green screen available'] },
+  { title: 'Amenities', items: ['High-speed WiFi', 'Air conditioning', 'Green room/lounge', 'Free parking'] },
+];
+
+// Decorative waveform heights (%) for the hero console; static, no animation cost.
+const WAVE = [25, 45, 70, 40, 90, 55, 30, 65, 100, 50, 75, 35, 85, 60, 30, 70, 95, 45, 65, 40, 80, 50, 35, 60, 75, 45, 30, 55];
+
+const CTA = 'inline-flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-deep to-primary px-6 text-sm font-semibold text-primary-foreground transition-[filter,transform] duration-200 hover:brightness-110 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background';
+
 export default function PodcastPage() {
   return (
     <>
       <JsonLd
         data={[podcastFaqSchema, podcastBreadcrumbSchema, podcastPricingSchema]}
       />
-      <main className="min-h-screen bg-background pt-20">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">
-          <div className="container mx-auto px-6">
-            <div className="mx-auto max-w-4xl text-center">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-green-500/20 bg-green-500/10 px-4 py-2 text-sm text-green-500">
-                <Mic className="h-4 w-4" />
+      <main className="min-h-screen bg-background">
+        {/* Hero — copy left, "console" card right on lg; top padding = 80px header + 32/48/64px. */}
+        <section className="border-b border-border">
+          <div className={`${STUDIO_WRAP} grid gap-12 pb-16 pt-28 sm:pb-20 sm:pt-32 lg:grid-cols-12 lg:items-center lg:gap-16 lg:pb-24 lg:pt-36`}>
+            <div className="lg:col-span-6">
+              <p className="inline-flex items-center gap-2 rounded-full border border-primary-deep/50 bg-primary-deep/15 px-3 py-1.5 text-xs font-semibold text-accent-text">
+                <Mic className="h-3.5 w-3.5" aria-hidden />
                 Podcast Studio
-              </div>
-              <h1 className="mb-6 text-5xl font-bold leading-tight md:text-6xl lg:text-7xl">
-                Podcast Recording
-                <br />
-                <span className="bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">
-                  Studio
-                </span>
+              </p>
+              <h1 className="mt-6 text-3xl font-bold leading-tight tracking-[-0.02em] text-foreground sm:text-4xl lg:text-[2.75rem]">
+                Podcast Recording{' '}
+                <span className="text-accent-text">Studio</span>
               </h1>
-              <p className="mb-8 text-xl text-muted-foreground">
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
                 Broadcast-quality podcast recording with professional acoustics,
                 premium microphones, and expert support.
               </p>
-              <a
-                href={generateWhatsAppLink('podcast')}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block rounded-full bg-green-500 px-8 py-4 font-semibold text-foreground transition-all hover:bg-green-400 hover:shadow-lg hover:shadow-green-500/50"
-              >
+              <a href={generateWhatsAppLink('podcast')} target="_blank" rel="noopener noreferrer" className={`${CTA} mt-8`}>
                 Book Recording Session
+                <ArrowRight className="h-4 w-4" />
               </a>
+            </div>
+
+            {/* Console card: mic + live waveform look + package ladder, built from the packages below. */}
+            <div className="lg:col-span-6">
+              <div className="relative overflow-hidden rounded-2xl border border-primary-deep/40 bg-gradient-to-br from-primary-deep/20 via-card to-card p-6 sm:p-8">
+                <div className="flex items-center gap-4">
+                  <span className="relative flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary-deep to-primary text-primary-foreground">
+                    <span aria-hidden className="absolute inset-0 animate-ping rounded-full bg-primary/30 motion-reduce:hidden" />
+                    <Mic className="relative h-5 w-5" aria-hidden />
+                  </span>
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-accent-text">
+                    <span aria-hidden className="h-2 w-2 rounded-full bg-primary" />
+                    Multi-Track Recording
+                  </div>
+                </div>
+
+                <div aria-hidden className="mt-6 flex h-20 items-center gap-1">
+                  {WAVE.map((h, i) => (
+                    <span key={i} className="flex-1 rounded-full bg-gradient-to-t from-primary-deep to-primary" style={{ height: `${h}%`, opacity: 0.35 + (h / 100) * 0.65 }} />
+                  ))}
+                </div>
+
+                <ul className="mt-6 divide-y divide-border border-t border-border">
+                  {packages.map((pkg) => (
+                    <li key={pkg.name} className="flex items-center justify-between gap-4 py-4">
+                      <span className="text-sm font-medium text-foreground">{pkg.name}</span>
+                      <span className="text-sm tabular-nums text-muted-foreground">
+                        <span className="font-semibold text-foreground">₹{pkg.price}</span>
+                        {pkg.duration}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Equipment & Features */}
-        <section className="border-t border-border py-24">
-          <div className="container mx-auto px-6">
-            <h2 className="mb-12 text-center text-4xl font-bold">
+        {/* Studio Equipment */}
+        <section aria-labelledby="podcast-gear-heading">
+          <div className={`${STUDIO_WRAP} py-16 sm:py-20`}>
+            <h2 id="podcast-gear-heading" className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
               Studio Equipment
             </h2>
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-              {equipment.map((item, index) => (
-                <div
-                  key={index}
-                  className="rounded-2xl border border-border bg-muted/50 p-6 text-center"
-                >
-                  <div className="mb-4 flex justify-center">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
-                      <item.icon className="h-6 w-6 text-green-500" />
-                    </div>
-                  </div>
-                  <h3 className="mb-2 text-lg font-bold">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {item.description}
-                  </p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:mt-12 lg:grid-cols-4 lg:gap-6">
+              {equipment.map((item) => (
+                <div key={item.title} className="group rounded-2xl border border-border bg-card p-6 transition-colors duration-300 hover:border-primary/40">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-deep/20 text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
+                    <item.icon className="h-5 w-5" aria-hidden />
+                  </span>
+                  <h3 className="mt-5 text-base font-semibold text-foreground">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.description}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Packages */}
-        <section className="border-t border-border py-24">
-          <div className="container mx-auto px-6">
-            <h2 className="mb-12 text-center text-4xl font-bold">
+        {/* Recording Packages */}
+        <section aria-labelledby="podcast-packages-heading" className="border-t border-border">
+          <div className={`${STUDIO_WRAP} py-16 sm:py-20`}>
+            <h2 id="podcast-packages-heading" className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
               Recording Packages
             </h2>
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="mt-8 grid gap-4 md:grid-cols-3 lg:mt-12 lg:gap-6">
               {packages.map((pkg) => (
                 <div
                   key={pkg.name}
-                  className={`relative rounded-2xl border p-8 ${
+                  className={`relative flex flex-col rounded-2xl border p-6 lg:p-8 ${
                     pkg.popular
-                      ? 'border-green-500 bg-green-500/5'
-                      : 'border-border bg-muted/50'
+                      ? 'border-primary/60 bg-gradient-to-b from-primary-deep/20 to-card'
+                      : 'border-border bg-card'
                   }`}
                 >
                   {pkg.popular && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-green-500 px-4 py-1 text-xs font-semibold text-foreground">
+                    <span className="absolute -top-3 left-6 rounded-full bg-gradient-to-r from-primary-deep to-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
                       Most Popular
                     </span>
                   )}
-                  <h3 className="mb-2 text-2xl font-bold">{pkg.name}</h3>
-                  <div className="mb-6">
-                    <span className="text-4xl font-bold text-green-500">
-                      ₹{pkg.price}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {pkg.duration}
-                    </span>
-                  </div>
-                  <ul className="mb-8 space-y-3">
-                    {pkg.features.map((feature, index) => (
-                      <li
-                        key={index}
-                        className="flex items-start gap-2 text-sm text-muted-foreground"
-                      >
-                        <span className="text-green-500">✓</span>
+                  <h3 className="text-lg font-semibold text-foreground">{pkg.name}</h3>
+                  <p className="mt-4">
+                    <span className="text-3xl font-bold tabular-nums text-primary">₹{pkg.price}</span>
+                    <span className="text-sm text-muted-foreground">{pkg.duration}</span>
+                  </p>
+                  <ul className="mt-6 flex-1 space-y-2">
+                    {pkg.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
                         {feature}
                       </li>
                     ))}
                   </ul>
                   <a
-                    href={generateWhatsAppLink(
-                      'podcast',
-                      `Hi! I'd like to book the ${pkg.name} podcast package.`
-                    )}
+                    href={generateWhatsAppLink('podcast', `Hi! I'd like to book the ${pkg.name} podcast package.`)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`block w-full rounded-lg py-3 text-center font-semibold transition-colors ${
+                    className={
                       pkg.popular
-                        ? 'bg-green-500 text-zinc-950 hover:bg-green-400'
-                        : 'bg-white text-zinc-900 hover:bg-zinc-200'
-                    }`}
+                        ? `${CTA} mt-8 w-full`
+                        : 'mt-8 inline-flex h-12 w-full items-center justify-center rounded-full border border-border text-sm font-semibold text-foreground transition-colors duration-200 hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                    }
                   >
                     Book Now
                   </a>
@@ -353,71 +376,33 @@ export default function PodcastPage() {
           </div>
         </section>
 
-        {/* Technical Specs */}
-        <section className="border-t border-border bg-muted/30 py-24">
-          <div className="container mx-auto px-6">
-            <div className="mx-auto max-w-3xl">
-              <h2 className="mb-8 text-center text-4xl font-bold">
-                Technical Specifications
-              </h2>
-              <div className="rounded-2xl border border-border bg-muted/50 p-8">
-                <div className="grid gap-6 sm:grid-cols-2">
-                  <div>
-                    <h3 className="mb-3 font-bold text-green-500">
-                      Audio Setup
-                    </h3>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li>• Rode Procaster microphones</li>
-                      <li>• Shure SM7B (premium option)</li>
-                      <li>• Scarlett 4i4 audio interface</li>
-                      <li>• Zoom H6 multi-track recorder</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h3 className="mb-3 font-bold text-green-500">
-                      Room Acoustics
-                    </h3>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li>• Professional acoustic panels</li>
-                      <li>• Bass traps in corners</li>
-                      <li>• Isolated recording booth</li>
-                      <li>• Noise floor: -60dB</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h3 className="mb-3 font-bold text-green-500">
-                      Video Option
-                    </h3>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li>• Multi-camera setup (2-3 angles)</li>
-                      <li>• 4K video recording</li>
-                      <li>• Professional lighting</li>
-                      <li>• Green screen available</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h3 className="mb-3 font-bold text-green-500">Amenities</h3>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li>• High-speed WiFi</li>
-                      <li>• Air conditioning</li>
-                      <li>• Green room/lounge</li>
-                      <li>• Free parking</li>
-                    </ul>
-                  </div>
+        {/* Technical Specifications — four columns in one panel on lg. */}
+        <section aria-labelledby="podcast-specs-heading" className="border-t border-border">
+          <div className={`${STUDIO_WRAP} py-16 sm:py-20`}>
+            <h2 id="podcast-specs-heading" className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              Technical Specifications
+            </h2>
+            <div className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:mt-12 lg:grid-cols-4">
+              {specs.map((s) => (
+                <div key={s.title} className="bg-card p-6">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-accent-text">{s.title}</h3>
+                  <ul className="mt-4 space-y-2">
+                    {s.items.map((it) => (
+                      <li key={it} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <span aria-hidden className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary" />
+                        {it}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Testimonials */}
-        <Testimonials testimonials={podcastTestimonials} accentColor="green" />
-
-        {/* Process Timeline */}
-        <ProcessTimeline steps={podcastProcessSteps} accentColor="green" />
-
-        {/* FAQ */}
-        <ServiceFAQ faqs={podcastFAQs} accentColor="green" />
+        <StudioReviews reviews={podcastTestimonials} />
+        <StudioProcess steps={podcastProcessSteps} />
+        <StudioFAQ faqs={podcastFAQs} service="podcast" />
 
         <BookingFlyout service="podcast" />
         <Footer account="studio" />

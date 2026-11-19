@@ -30,6 +30,8 @@ const config: Config = {
         primary: {
           DEFAULT: 'hsl(var(--primary) / <alpha-value>)',
           foreground: 'hsl(var(--primary-foreground) / <alpha-value>)',
+          // Deeper shade of primary — dark half of the studio's light/dark orange pair.
+          deep: 'hsl(var(--primary-deep) / <alpha-value>)',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary) / <alpha-value>)',
@@ -48,6 +50,11 @@ const config: Config = {
         destructive: {
           DEFAULT: 'hsl(var(--destructive) / <alpha-value>)',
           foreground: 'hsl(var(--destructive-foreground) / <alpha-value>)',
+        },
+        // Section CTA: black on light grounds, white on sandstone (see [data-tone] in globals.css).
+        cta: {
+          DEFAULT: 'hsl(var(--cta) / <alpha-value>)',
+          foreground: 'hsl(var(--cta-foreground) / <alpha-value>)',
         },
         border: 'hsl(var(--border) / <alpha-value>)',
         input: 'hsl(var(--input) / <alpha-value>)',

@@ -1,4 +1,5 @@
 'use client';
+import { siteConfig } from '@/config/site';
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +13,7 @@ import {
   Box,
   Loader2,
   Clock,
+  X,
 } from 'lucide-react';
 import Image from 'next/image';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
@@ -155,7 +157,29 @@ export function StudioPricingEngine({
   const gst = subtotal * 0.18;
   const finalTotal = subtotal + gst;
 
-  const formatINR = (val: number) => `₹${val.toLocaleString('en-IN')}`;
+  // Itemised bill: one line per selection with how its amount is built, so visitors can see exactly what they picked.
+  const billLines = useMemo(() => {
+    const lines: { key: string; group: 'Session' | 'Add-ons' | 'Equipment'; name: string; detail: string; amount: number; remove: () => void }[] = [];
+    if (selectedPackage) {
+      lines.push({ key: `pkg-${selectedPackage.id}`, group: 'Session', name: selectedPackage.name, detail: selectedPackage.duration_label ?? '', amount: Number(selectedPackage.price) || 0, remove: () => togglePackage(selectedPackage) });
+    }
+    selectedAddOns.forEach((id) => {
+      const a = addOns.find((x) => x.id === id);
+      if (a) lines.push({ key: `add-${id}`, group: 'Add-ons', name: a.name, detail: `₹${(Number(a.price) || 0).toLocaleString('en-IN')}/${a.unit ?? 'hr'} × ${packageHours}h`, amount: (Number(a.price) || 0) * packageHours, remove: () => toggleAddOn(id) });
+    });
+    selectedEquipment.forEach((id) => {
+      const e = equipment.find((x) => x.id === id);
+      if (e) {
+        const rate = getEquipmentHourlyRate(e);
+        lines.push({ key: `eq-${id}`, group: 'Equipment', name: e.name, detail: `₹${rate.toLocaleString('en-IN')}/hr × ${packageHours}h`, amount: rate * packageHours, remove: () => toggleEquipment(id) });
+      }
+    });
+    return lines;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPackage, selectedAddOns, selectedEquipment, packageHours, equipment, addOns]);
+
+  // A blank price in the database renders as ₹0 instead of crashing the whole engine.
+  const formatINR = (val: number | null | undefined) => `₹${(Number(val) || 0).toLocaleString('en-IN')}`;
 
   const generateBookingMessage = () => {
     const addOnNames = Array.from(selectedAddOns)
@@ -211,17 +235,17 @@ export function StudioPricingEngine({
           rule that reads as a heading for both. */}
       <div className="mb-6 grid lg:grid-cols-12 gap-8 lg:gap-8">
         <div className="lg:col-span-4 flex items-center gap-3">
-          <span className="rounded-full border border-warning/30 bg-warning/10 px-4 py-1 text-sm font-semibold text-warning">
+          <span className="rounded-full border border-primary-deep/50 bg-primary-deep/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-accent-text">
             Quotation Engine
           </span>
-          <div className="h-px flex-1 bg-white/10" />
+          <div className="h-px flex-1 bg-border" />
         </div>
         {sidePackages.length > 0 && sidePackagesTitle && (
           <div className="lg:col-span-8 flex items-center gap-3">
-            <span className="rounded-full border border-green-500/30 bg-green-500/10 px-4 py-1 text-sm font-semibold text-green-500">
+            <span className="rounded-full border border-primary-deep/50 bg-primary-deep/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-accent-text">
               {sidePackagesTitle}
             </span>
-            <div className="h-px flex-1 bg-white/10" />
+            <div className="h-px flex-1 bg-border" />
           </div>
         )}
       </div>
@@ -265,7 +289,7 @@ export function StudioPricingEngine({
                 <div className="text-left sm:text-right flex-shrink-0 flex flex-col items-start sm:items-end mt-1 sm:mt-0 w-full sm:w-auto border-t border-white/5 sm:border-0 pt-2 sm:pt-0">
                   <div className="flex items-baseline gap-2">
                     <span
-                      className="text-sm font-semibold text-zinc-300 line-through decoration-rose-500/70 decoration-2"
+                      className="text-sm font-semibold text-zinc-300 line-through decoration-foreground/40 decoration-2"
                       aria-label={`Original price ${formatINR(pkg.original_price)}`}
                     >
                       {formatINR(pkg.original_price)}
@@ -276,10 +300,10 @@ export function StudioPricingEngine({
                   </div>
                   {save > 0 && (
                     <div className="flex items-center gap-2 mt-1 sm:mt-2">
-                      <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-emerald-500/20 inline-block">
+                      <span className="bg-primary/10 text-accent-text text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-primary/20 inline-block">
                         {Math.round((save / pkg.original_price) * 100)}% OFF
                       </span>
-                      <span className="text-xs font-semibold text-emerald-400">
+                      <span className="text-xs font-semibold text-accent-text">
                         Save {formatINR(save)}
                       </span>
                     </div>
@@ -302,12 +326,12 @@ export function StudioPricingEngine({
                   className={`relative rounded-2xl border p-4 flex flex-col gap-2 transition-all duration-300
                                  ${
                                    pkg.popular
-                                     ? 'border-green-500 bg-green-500/10 shadow-[0_0_20px_-5px_rgb(34_197_94/0.2)]'
+                                     ? 'border-primary bg-primary/10 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.2)]'
                                      : 'border-white/5 bg-zinc-900/50 hover:bg-zinc-900'
                                  }`}
                 >
                   {pkg.popular && (
-                    <span className="absolute -top-3 left-5 rounded-full bg-green-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-950">
+                    <span className="absolute -top-3 left-5 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
                       Most Popular
                     </span>
                   )}
@@ -317,7 +341,7 @@ export function StudioPricingEngine({
                       <h4 className="text-base sm:text-lg font-bold text-white leading-none">
                         {pkg.name}
                       </h4>
-                      <span className="flex items-center gap-1 rounded-full bg-green-500/15 border border-green-500/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-green-500 inline-flex">
+                      <span className="flex items-center gap-1 rounded-full bg-primary/15 border border-primary/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary inline-flex">
                         <Clock className="w-3 h-3" />
                         {pkg.durationLabel}
                       </span>
@@ -326,19 +350,19 @@ export function StudioPricingEngine({
                       <div className="flex items-baseline gap-2">
                         {pkg.originalPrice && (
                           <span
-                            className="text-sm font-semibold text-zinc-300 line-through decoration-rose-500/70 decoration-2"
+                            className="text-sm font-semibold text-zinc-300 line-through decoration-foreground/40 decoration-2"
                             aria-label={`Original price ${formatINR(pkg.originalPrice)}`}
                           >
                             {formatINR(pkg.originalPrice)}
                           </span>
                         )}
-                        <span className="text-2xl font-extrabold text-green-500 drop-shadow-[0_0_12px_rgb(34_197_94/0.35)]">
+                        <span className="text-2xl font-extrabold text-primary drop-shadow-[0_0_12px_hsl(var(--primary)/0.35)]">
                           {formatINR(pkg.price)}
                         </span>
                       </div>
                       {save > 0 && pkg.originalPrice && (
                         <div className="flex items-center justify-end gap-2 mt-1">
-                          <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-emerald-500/20">
+                          <span className="bg-primary/10 text-accent-text text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-primary/20">
                             {Math.round((save / pkg.originalPrice) * 100)}% OFF
                           </span>
                         </div>
@@ -359,7 +383,7 @@ export function StudioPricingEngine({
                           key={index}
                           className="flex items-center gap-1.5 text-xs text-zinc-400"
                         >
-                          <Check className="w-3 h-3 text-green-500 shrink-0" />
+                          <Check className="w-3 h-3 text-primary shrink-0" />
                           {feature}
                         </li>
                       ))}
@@ -375,8 +399,8 @@ export function StudioPricingEngine({
                       aria-label={`Book the ${pkg.name} package`}
                       className={`shrink-0 w-full sm:w-auto rounded-full px-6 py-2 text-center text-sm font-bold transition-all ${
                         pkg.popular
-                          ? 'bg-green-500 text-zinc-950 hover:bg-green-400 hover:shadow-[0_0_30px_-5px_rgb(34_197_94/0.5)]'
-                          : 'border border-green-500/40 bg-green-500/10 text-green-500 hover:bg-green-500/20'
+                          ? 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_30px_-5px_hsl(var(--primary)/0.5)]'
+                          : 'border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'
                       }`}
                     >
                       Book Session
@@ -462,12 +486,14 @@ export function StudioPricingEngine({
                     rented separately.{' '}
                   </>
                 )}
-                <a
-                  href="/rentals"
-                  className="underline decoration-dotted underline-offset-2 hover:text-zinc-200"
-                >
-                  Renting gear to take away?
-                </a>
+                {siteConfig.features.rentals && (
+                  <a
+                    href="/rentals"
+                    className="underline decoration-dotted underline-offset-2 hover:text-zinc-200"
+                  >
+                    Renting gear to take away?
+                  </a>
+                )}
               </p>
             </div>
 
@@ -603,59 +629,111 @@ export function StudioPricingEngine({
           </div>
         )}
 
-        {/* Summary Full Width Banner */}
+        {/* Bill: itemised lines left (lg), totals + CTA right; stacked on phones. Not sticky — a growing list would cover the page. */}
         <div className="lg:col-span-12 mt-2">
-          <div className="rounded-2xl border border-warning/20 bg-gradient-to-br from-zinc-900 to-zinc-950 p-6 md:p-8 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-8 relative md:sticky md:bottom-6 z-10">
-            <div className="flex-1 w-full">
-              <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">
-                Estimated Total
-              </h3>
-              <div className="flex flex-wrap items-end gap-6 sm:gap-12">
-                <div>
-                  <p className="text-zinc-500 text-xs mb-1">Subtotal</p>
-                  <p className="font-mono text-lg text-zinc-300">
-                    {formatINR(subtotal)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-zinc-500 text-xs mb-1">GST (18%)</p>
-                  <p className="font-mono text-lg text-zinc-500">
-                    {formatINR(Math.round(gst))}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-white text-sm mb-1 font-bold">
-                    Total Payable
-                  </p>
-                  <AnimatePresence mode="popLayout">
-                    <motion.span
-                      key={finalTotal}
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="text-4xl font-bold text-warning inline-block"
-                    >
-                      {formatINR(Math.round(finalTotal))}
-                    </motion.span>
-                  </AnimatePresence>
-                </div>
+          <div className="grid overflow-hidden rounded-2xl border border-border bg-card lg:grid-cols-12">
+            <div className="p-6 md:p-8 lg:col-span-7">
+              <div className="flex items-baseline justify-between gap-4">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  Estimated Total
+                </h3>
+                <p className="text-xs tabular-nums text-muted-foreground" aria-live="polite">
+                  {billLines.length} {billLines.length === 1 ? 'item' : 'items'}
+                </p>
               </div>
+
+              {billLines.length === 0 ? (
+                <p className="mt-6 rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+                  Select a package to request a booking
+                </p>
+              ) : (
+                <div className="mt-6 space-y-6">
+                  {(['Session', 'Add-ons', 'Equipment'] as const).map((group) => {
+                    const rows = billLines.filter((l) => l.group === group);
+                    if (!rows.length) return null;
+                    return (
+                      <div key={group}>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent-text">{group}</p>
+                        <ul className="mt-2 divide-y divide-border">
+                          <AnimatePresence initial={false}>
+                            {rows.map((l) => (
+                              <motion.li
+                                key={l.key}
+                                layout
+                                initial={{ opacity: 0, y: -4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+                                className="flex items-center gap-4 py-2"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-medium text-foreground">{l.name}</p>
+                                  {l.detail && <p className="text-xs tabular-nums text-muted-foreground">{l.detail}</p>}
+                                </div>
+                                <p className="font-mono text-sm tabular-nums text-foreground">{formatINR(l.amount)}</p>
+                                <button
+                                  type="button"
+                                  onClick={l.remove}
+                                  aria-label={`Remove ${l.name}`}
+                                  className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </motion.li>
+                            ))}
+                          </AnimatePresence>
+                        </ul>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            <div className="w-full md:w-auto flex flex-col items-center md:items-end flex-shrink-0">
-              <button
-                onClick={handleBookingRequest}
-                disabled={isLoading || !selectedPackage}
-                className="w-full md:w-auto flex items-center justify-center gap-2 rounded-full bg-warning px-8 py-4 text-center font-bold text-warning-foreground transition-all hover:opacity-90 hover:shadow-[0_0_30px_-5px_hsl(var(--color-warning)/0.5)] whitespace-nowrap disabled:opacity-50 disabled:pointer-events-none"
-              >
-                {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {isLoading ? 'Opening...' : 'Request Booking'}
-              </button>
-              <p className="text-xs text-zinc-500 mt-3">
-                {selectedPackage
-                  ? 'No payment required to request'
-                  : 'Select a package to request a booking'}
-              </p>
+            {/* Totals: receipt-style rows, dashed rule before the payable amount. */}
+            <div className="flex flex-col justify-between gap-6 border-t border-border bg-background/40 p-6 md:p-8 lg:col-span-5 lg:border-l lg:border-t-0">
+              <dl className="space-y-2 text-sm">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Subtotal</dt>
+                  <dd className="font-mono tabular-nums text-foreground">{formatINR(subtotal)}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">GST (18%)</dt>
+                  <dd className="font-mono tabular-nums text-muted-foreground">{formatINR(Math.round(gst))}</dd>
+                </div>
+                <div className="flex items-end justify-between gap-4 border-t border-dashed border-border pt-4">
+                  <dt className="font-semibold text-foreground">Total Payable</dt>
+                  <dd>
+                    <AnimatePresence mode="popLayout">
+                      <motion.span
+                        key={finalTotal}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="inline-block text-3xl font-bold tabular-nums text-primary sm:text-4xl"
+                      >
+                        {formatINR(Math.round(finalTotal))}
+                      </motion.span>
+                    </AnimatePresence>
+                  </dd>
+                </div>
+              </dl>
+
+              <div className="flex flex-col items-stretch gap-2">
+                <button
+                  onClick={handleBookingRequest}
+                  disabled={isLoading || !selectedPackage}
+                  className="flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-primary-deep to-primary px-8 text-center text-sm font-bold text-primary-foreground transition-[filter] duration-200 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                >
+                  {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {isLoading ? 'Opening...' : 'Request Booking'}
+                </button>
+                <p className="text-center text-xs text-muted-foreground">
+                  {selectedPackage
+                    ? 'No payment required to request'
+                    : 'Select a package to request a booking'}
+                </p>
+              </div>
             </div>
           </div>
         </div>

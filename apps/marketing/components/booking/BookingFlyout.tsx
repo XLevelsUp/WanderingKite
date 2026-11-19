@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Loader2 } from 'lucide-react';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { usePathname } from 'next/navigation';
+import { isStudioRoute } from '@/lib/theme/studioRoutes';
 import { useNotify } from '@/hooks/useNotify';
 
 interface BookingFlyoutProps {
@@ -69,6 +70,7 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
     <AnimatePresence>
       {visible && (
         <motion.div
+          data-theme={isStudioRoute(pathname) ? 'studio' : undefined}
           initial={{ opacity: 0, y: 24, scale: 0.92 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 24, scale: 0.92 }}

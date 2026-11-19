@@ -11,10 +11,11 @@ interface FAQItem {
 
 interface ServiceFAQProps {
   faqs: FAQItem[];
-  accentColor?: 'amber' | 'blue' | 'purple' | 'green';
+  accentColor?: 'amber' | 'blue' | 'purple' | 'green' | 'brand';
 }
 
 const accentColors = {
+  brand: 'text-primary hover:text-primary/80', // follows the page theme's primary
   amber: 'text-amber-500 hover:text-amber-400',
   blue: 'text-blue-500 hover:text-blue-400',
   purple: 'text-purple-500 hover:text-purple-400',

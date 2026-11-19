@@ -16,10 +16,11 @@ interface Testimonial {
 
 interface TestimonialsProps {
   testimonials: Testimonial[];
-  accentColor?: 'amber' | 'blue' | 'purple' | 'green';
+  accentColor?: 'amber' | 'blue' | 'purple' | 'green' | 'brand';
 }
 
 const accentColors = {
+  brand: 'text-primary', // follows the page theme's primary
   amber: 'text-amber-500',
   blue: 'text-blue-500',
   purple: 'text-purple-500',
@@ -27,6 +28,7 @@ const accentColors = {
 };
 
 const fillAccentColors = {
+  brand: 'fill-primary',
   amber: 'fill-amber-500',
   blue: 'fill-blue-500',
   purple: 'fill-purple-500',
@@ -34,6 +36,7 @@ const fillAccentColors = {
 };
 
 const bgAccentColors = {
+  brand: 'bg-primary',
   amber: 'bg-amber-500',
   blue: 'bg-blue-500',
   purple: 'bg-purple-500',
@@ -138,7 +141,7 @@ function TestimonialCard({
   accentColor,
 }: {
   testimonial: Testimonial;
-  accentColor: 'amber' | 'blue' | 'purple' | 'green';
+  accentColor: 'amber' | 'blue' | 'purple' | 'green' | 'brand';
 }) {
   const [expanded, setExpanded] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
