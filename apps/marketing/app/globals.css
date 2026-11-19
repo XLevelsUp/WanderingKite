@@ -383,3 +383,241 @@ input:-webkit-autofill:active {
   transition-duration: 0.35s;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* Light theme: deeper taupe as the --primary-deep shade. */
+:root {
+  --primary-deep: 27 20% 40%;
+}
+
+/* Studio dark theme: original dark neutrals with one orange family (light + dark shades), scoped via data-theme="studio". */
+:root[data-theme='studio'],
+[data-theme='studio'] {
+  color-scheme: dark;
+  --background: 240 6% 4%;
+  --foreground: 0 0% 98%;
+  --card: 240 8% 7%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 8% 7%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 27 96% 61%;
+  --primary-deep: 21 90% 48%;
+  --primary-foreground: 240 6% 4%;
+  --secondary: 240 8% 10%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 8% 10%;
+  --muted-foreground: 30 6% 68%; /* warm grey — the cool slate tint fought the orange */
+  --accent: 240 8% 10%;
+  --accent-foreground: 31 97% 72%;
+  --accent-text: 31 97% 72%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 8% 14%;
+  --input: 240 8% 14%;
+  --ring: 27 96% 61%;
+  --color-neutral: 240 6% 15%;
+  --color-neutral-foreground: 0 0% 90%;
+  --color-surface-1: 240 8% 7%;
+  --color-surface-2: 240 8% 10%;
+  --color-success: 142 71% 45%;
+  --color-success-foreground: 0 0% 98%;
+  --color-warning: 27 96% 61%;
+  --color-warning-foreground: 240 6% 4%;
+  --color-error: 0 84% 60%;
+  --color-error-foreground: 0 0% 98%;
+  --chart-1: 24 95% 53%;
+  --chart-2: 21 90% 48%;
+  --chart-3: 27 96% 61%;
+  --chart-4: 31 97% 72%;
+  --chart-5: 17 88% 40%;
+}
+
+/* Photography pages: zero-JS scroll reveal. Content is visible by default; only browsers with scroll-driven
+   animations (and motion allowed) fade/rise it in as it enters the viewport — no IntersectionObserver, no layout work. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+  }
+}
+@keyframes reveal-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Section tones for photography pages (scoped with data-tone). CTA token: dark on light grounds, white on sandstone.
+   Corporate runs sandstone → sand → porcelain → white down the page; Weddings & Events stay porcelain. */
+/* Dark-ground CTAs use the warm taupe brand button (was black). */
+:root { --cta: var(--primary); --cta-foreground: var(--primary-foreground); }
+[data-tone='sandstone'] {
+  --background: 32 27% 72%;
+  --card: 35 30% 80%;
+  --border: 27 17% 53%;
+  --muted-foreground: 0 0% 16%;
+  --cta: 0 0% 100%;
+  --cta-foreground: 0 0% 0%;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+[data-tone='sand'] {
+  --background: 36 31% 86%;
+  --card: 40 33% 92%;
+  --border: 30 18% 66%;
+  --muted-foreground: 0 0% 20%;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+[data-tone='white'] {
+  --background: 0 0% 100%;
+  --card: 42 31% 96%;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* Photography hero: slow settle-in zoom on collage photos (transform only, runs once). */
+@media (prefers-reduced-motion: no-preference) {
+  .kenburns { animation: kenburns 2.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+}
+@keyframes kenburns {
+  from { transform: scale(1.12); }
+  to { transform: scale(1); }
+}
+
+/* Photography hub category ticker: two identical rows, shifted by exactly one row width. */
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Photography hub motion — <PhotoMotion/> adds html.pm-motion and toggles .is-in via IntersectionObserver.
+ * Without JS, or with reduced motion, everything is simply visible. Stagger with style={{ '--d': '120ms' }}.
+ *   data-reveal          fade + rise
+ *   data-reveal="frame"  photo frame: child .frame-media wipes open upward while its image settles from a zoom
+ *   data-reveal="offset" house sandstone block slides out from behind its frame
+ *   data-reveal="line"   hairline draws left → right;  "vline" draws top → bottom
+ * ───────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .pm-motion [data-reveal] {
+    opacity: 0;
+    translate: 0 28px;
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), translate 1s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: var(--d, 0ms);
+  }
+  .pm-motion [data-reveal].is-in { opacity: 1; translate: 0 0; }
+
+  .pm-motion [data-reveal='frame'] { opacity: 1; translate: none; }
+  /* Clip the child, not the observed element: a clipped-shut target reports zero area to IntersectionObserver. */
+  .pm-motion [data-reveal='frame'] .frame-media {
+    clip-path: inset(100% 0 0 0 round 1rem);
+    transition: clip-path 1.25s cubic-bezier(0.77, 0, 0.18, 1);
+    transition-delay: var(--d, 0ms);
+  }
+  .pm-motion [data-reveal='frame'].is-in .frame-media { clip-path: inset(0 0 0 0 round 1rem); }
+  .pm-motion [data-reveal='frame'] .frame-media img {
+    scale: 1.18;
+    transition: scale 1.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: var(--d, 0ms), 0ms;
+  }
+  .pm-motion [data-reveal='frame'].is-in .frame-media img { scale: 1; }
+
+  .pm-motion [data-reveal='offset'] { opacity: 0; translate: -16px -16px; }
+  .pm-motion [data-reveal='offset'].is-in { opacity: 1; translate: 0 0; }
+
+  .pm-motion [data-reveal='line'] {
+    opacity: 1; translate: none; scale: 0 1; transform-origin: left;
+    transition: scale 1.6s cubic-bezier(0.65, 0, 0.35, 1);
+    transition-delay: var(--d, 0ms);
+  }
+  .pm-motion [data-reveal='vline'] {
+    opacity: 1; translate: none; scale: 1 0; transform-origin: top;
+    transition: scale 1.6s cubic-bezier(0.65, 0, 0.35, 1);
+    transition-delay: var(--d, 0ms);
+  }
+  .pm-motion [data-reveal='line'].is-in,
+  .pm-motion [data-reveal='vline'].is-in { scale: 1 1; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Highlighted number badge (photography): sandstone → taupe → deep taupe disc with a halo ring.
+ * Size with utilities (h-/w-/text-). Add .is-off for the quiet outline state (inactive step / closed FAQ).
+ * Inside a revealed [data-reveal] it pops in and its halo expands once; hovering a .group shifts the gradient.
+ * ───────────────────────────────────────────────────────────────────────── */
+/* display lives in @layer components so utilities like hidden / lg:inline-flex can override it. */
+@layer components {
+  .pm-num { display: inline-flex; }
+}
+.pm-num {
+  position: relative;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-family: inherit;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+  background-image: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-deep)) 55%, hsl(27 22% 30%) 100%);
+  background-size: 200% 200%;
+  background-position: 0% 0%;
+  box-shadow: 0 10px 24px -12px hsl(var(--primary-deep) / 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: background-position 0.6s ease, color 0.4s ease, box-shadow 0.4s ease, background-color 0.4s ease;
+}
+.pm-num::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: inherit;
+  border: 1.5px solid #CBB9A4;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.group:hover .pm-num { background-position: 100% 100%; }
+.pm-num.is-off {
+  color: hsl(var(--primary-deep));
+  text-shadow: none;
+  background-image: none;
+  background-color: hsl(var(--primary) / 0.1);
+  box-shadow: inset 0 0 0 1.5px hsl(var(--primary) / 0.6);
+}
+.pm-num.is-off::after { opacity: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .pm-motion [data-reveal] .pm-num { scale: 0.4; transition: scale 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), background-position 0.6s ease, color 0.4s ease, box-shadow 0.4s ease, background-color 0.4s ease; transition-delay: calc(var(--d, 0ms) + 150ms), 0ms, 0ms, 0ms, 0ms; }
+  .pm-motion [data-reveal].is-in .pm-num { scale: 1; }
+  .pm-motion [data-reveal].is-in .pm-num::after { animation: pm-halo 1.4s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: calc(var(--d, 0ms) + 300ms); }
+  /* Live steps keep a slow breathing halo. */
+  .pm-num.is-live::after { animation: pm-breathe 2.4s ease-in-out infinite; }
+}
+@keyframes pm-halo {
+  from { transform: scale(0.6); opacity: 0; }
+  60% { opacity: 1; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes pm-breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.18); opacity: 0.25; }
+}
+
+/* "Stories in Light" — a soft beam of light sweeps across the orange word (text-clipped gradient; static for reduced motion). */
+.light-sweep {
+  color: hsl(var(--accent-text));
+  background-image: linear-gradient(110deg, hsl(var(--accent-text)) 35%, #FFE3C7 48%, #FFF6EC 50%, #FFE3C7 52%, hsl(var(--accent-text)) 65%);
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-right: 0.08em; /* italic overhang */
+}
+@media (prefers-reduced-motion: no-preference) {
+  .light-sweep { animation: light-sweep 5s cubic-bezier(0.45, 0, 0.55, 1) 1.2s infinite; }
+}
+@keyframes light-sweep {
+  0% { background-position: 100% 0; }
+  45%, 100% { background-position: 0% 0; }
+}

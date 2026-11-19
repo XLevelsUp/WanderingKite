@@ -107,13 +107,11 @@ const categoryData = {
   },
 };
 
-type Props = {
-  params: Promise<{ mainCategory: string; subCategory: string }>;
-};
+// Pre-revamp sub-category page, kept for old URLs (e.g. /photography/events/wedding) until Phase 7 adds redirects.
+export const hasLegacySubCategory = (mainCategory: string, subCategory: string) =>
+  !!categoryData[mainCategory as keyof typeof categoryData]?.subCategories.some((s) => s.id === subCategory);
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const resolvedParams = await params;
-  const { mainCategory, subCategory } = resolvedParams;
+export function legacySubCategoryMetadata(mainCategory: string, subCategory: string): Metadata {
   const category = categoryData[mainCategory as keyof typeof categoryData];
   const sub = category?.subCategories.find((s) => s.id === subCategory);
 
@@ -145,9 +143,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function SubCategoryPage({ params }: Props) {
-  const resolvedParams = await params;
-  const { mainCategory, subCategory } = resolvedParams;
+export async function LegacySubCategory({ mainCategory, subCategory }: { mainCategory: string; subCategory: string }) {
   const category = categoryData[mainCategory as keyof typeof categoryData];
   const sub = category?.subCategories.find((s) => s.id === subCategory);
 

@@ -1,15 +1,24 @@
 import type { Metadata } from 'next';
-import { BookingFlyout } from '@/components/booking/BookingFlyout';
+import Link from 'next/link';
+import { ArrowRight, Camera, Monitor, Video } from 'lucide-react';
 import { Footer } from '@/components/shared/Footer';
-import { Testimonials } from '@/components/sections/Testimonials';
-import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
-import { ServiceFAQ } from '@/components/sections/ServiceFAQ';
+import { HeroFilm } from '@/components/photography/HeroFilm';
+import { FilmApproach } from '@/components/photography/FilmApproach';
+import { GearList } from '@/components/photography/GearList';
+import { PhotoReviews } from '@/components/photography/PhotoReviews';
+import { PhotoProcess } from '@/components/photography/PhotoProcess';
+import { PhotoFAQ } from '@/components/photography/PhotoFAQ';
+import { PhotoClosing } from '@/components/photography/PhotoClosing';
+import { PhotoMotion } from '@/components/photography/PhotoMotion';
+import { BlogPreview } from '@/components/photography/BlogPreview';
+import { StoriesInLight } from '@/components/photography/StoriesInLight';
+import { FeaturedStories } from '@/components/photography/FeaturedStories';
+import { StudioRows } from '@/components/photography/StudioRows';
+import { PHOTO_WRAP } from '@/components/photography/PhotoChrome';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { JsonLd } from '@/lib/schema-helpers';
 import { photographyTestimonials } from '@/lib/service-page-data';
-import { Camera, Clock, MapPin, Video, Monitor } from 'lucide-react';
-import { PortfolioCategories } from '@/components/sections/PortfolioCategories';
-import ServiceTerms from '@/components/sections/ServiceTerms';
+import { getAlbums, getCatalog } from '@/lib/photography/data';
 
 export const metadata: Metadata = {
   title: 'Best Photographers in Coimbatore | Wedding, Events & Commercial',
@@ -282,372 +291,105 @@ const faqs = [
   },
 ];
 
-export default function PhotographyPage() {
+// The hub reads live albums; static, refreshed every 5 minutes.
+export const revalidate = 300;
+
+// Equipment copy carried over verbatim from the previous page.
+const gear = [
+  { icon: Monitor, title: 'Cameras', body: 'Sony A7 M5, Sony FX3, DJI Pocket 3 Creator Combo, Action Camera Insta360 One X2 Essentials Bundle' },
+  { icon: Camera, title: 'Lenses', body: 'Sony G Master 85mm 1.4, Sony G Master 35mm 1.4, Sony G Master 50mm 1.4, Sony G Master 24mm 1.4, Sony G Master 16mm 1.4, Sony G Master 90mm macro 2.8' },
+  { icon: Video, title: 'Lighting & Grip', body: 'SK400 V, AD600 pro2, AD200 pro2, Digitek Stripe Light, Nantu Pro, Nantu,' },
+];
+
+export default async function PhotographyPage() {
+  const [cat, featured, latest] = await Promise.all([
+    getCatalog(),
+    getAlbums({ featured: true, pageSize: 6 }),
+    getAlbums({ pageSize: 6 }),
+  ]);
+  // Featured albums first (Admin → "Feature on Photography home"), topped up with the newest.
+  const stories = [...featured.albums, ...latest.albums.filter((a) => !featured.albums.some((f) => f.id === a.id))].slice(0, 4);
+
   return (
     <>
       <JsonLd data={[photographyFaqSchema, photographyBreadcrumbSchema, photographyServiceSchema]} />
-      <main className="min-h-screen bg-background pt-20">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-950 py-24">
-          <div className="container mx-auto px-6">
-            <div className="mx-auto max-w-4xl text-center">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm text-blue-500">
-                <Camera className="h-4 w-4" />
+      <main>
+        {/* ── Hero: viewfinder film — copy left, uncropped 16:9 film right (lg); H1/H2 text unchanged from the previous page. ── */}
+        <section aria-label="Introduction" className="overflow-hidden">
+          <div className={`${PHOTO_WRAP} grid gap-12 pb-12 pt-28 sm:pb-16 sm:pt-32 lg:grid-cols-12 lg:items-center lg:gap-16 lg:pb-20 lg:pt-36`}>
+            <div className="lg:col-span-5">
+              <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-accent-text">
+                <Camera className="h-3.5 w-3.5" aria-hidden />
                 Photography Services
-              </div>
-              <h1 className="mb-6 font-bold leading-tight">
-                <span className="block text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent mb-3">
-                  Best Photographers in Coimbatore
-                </span>
-                <span className="block text-xl sm:text-2xl md:text-3xl font-semibold text-white/70">
-                  Wedding, Events &amp; Commercial
-                </span>
+              </p>
+              <div className="mt-6"><StoriesInLight variant="line" /></div>
+              <h1 className="mt-6 font-bold leading-tight tracking-[-0.02em]">
+                <span className="block text-3xl text-foreground sm:text-4xl lg:text-[2.75rem]">Best Photographers in Coimbatore</span>
+                <span className="mt-2 block text-xl font-semibold text-accent-text sm:text-2xl">Wedding, Events &amp; Commercial</span>
               </h1>
-              <h2 className="mb-8 leading-relaxed font-normal max-w-3xl mx-auto">
-                <span className="block text-base sm:text-lg text-amber-400 font-medium">
-                  Looking for professional photographers in Coimbatore?
-                </span>
-                <span className="block text-sm sm:text-base text-muted-foreground mt-1">
+              <h2 className="mt-6 font-normal leading-relaxed">
+                <span className="block text-base font-medium text-foreground">Looking for professional photographers in Coimbatore?</span>
+                <span className="mt-1 block text-base text-foreground/80">
                   Wandering Kite covers weddings, events, product photography, portraits &amp; more, tailored to your needs. Based in RS Puram. View our portfolio and book today.
                 </span>
               </h2>
-              <a
-                href={generateWhatsAppLink('photography')}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Book a photography session with Wandering Kite Studio in Coimbatore"
-                className="inline-block rounded-full bg-amber-500 px-8 py-4 font-semibold text-zinc-950 transition-all hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/50"
-              >
-                Book a Session
-              </a>
-            </div>
-          </div>
-        </section>
-
-        {/* Our Approach */}
-        <section className="border-t border-border py-24">
-          <div className="container mx-auto px-6">
-            <h2 className="mb-12 text-center text-4xl font-bold">
-              Our Approach
-            </h2>
-            <div className="grid gap-8 md:grid-cols-3">
-              <div className="rounded-2xl border border-border bg-muted/50 p-8">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
-                  <Camera className="h-6 w-6 text-amber-500" />
-                </div>
-                <h3 className="mb-3 text-xl font-bold">
-                  Authentic Storytelling
-                </h3>
-                <p className="text-muted-foreground">
-                  Recognized among the Top 10 photographers in Coimbatore, we capture genuine emotions. Whether you are looking for the best wedding photographers in Coimbatore or creative portraits, we bring your unique story to life.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border bg-muted/50 p-8">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
-                  <Clock className="h-6 w-6 text-amber-500" />
-                </div>
-                <h3 className="mb-3 text-xl font-bold">
-                  Reliable Quality
-                </h3>
-                <p className="text-muted-foreground">
-                  Our team delivers professionally edited images within 7-10 days from our prime RS Puram location. We provide transparent photography packages Coimbatore price options to suit your exact needs.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border bg-muted/50 p-8">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
-                  <MapPin className="h-6 w-6 text-amber-500" />
-                </div>
-                <h3 className="mb-3 text-xl font-bold">
-                  Regional Coverage
-                </h3>
-                <p className="text-muted-foreground">
-                  From our RS Puram location, we serve clients across Coimbatore, Tiruppur, Salem, and Erode with professional wedding, event, portrait, and commercial photography.
-                </p>
+              <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+                <a
+                  href={generateWhatsAppLink('photography')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Book a photography session with Wandering Kite Studio in Coimbatore"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition-[filter,transform] duration-200 hover:brightness-95 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Book a Session
+                </a>
+                <a
+                  href="#explore"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-foreground/30 px-6 text-sm font-semibold text-foreground transition-colors hover:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  View our portfolio
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </a>
               </div>
             </div>
+            <div className="lg:col-span-7">
+              <HeroFilm src="/videos/weddings-film.webm" poster="/images/photography/weddings-film-poster.webp" label="Temple wedding · Wandering Kite" />
+            </div>
           </div>
-        </section>
 
-        {/* Portfolio Grid */}
-        <section className="border-t border-border py-24">
-          <div className="container mx-auto px-6">
-            <h2 className="mb-12 text-center text-4xl font-bold">Categories</h2>
-            <PortfolioCategories />
-          </div>
-        </section>
-
-        {/* Services */}
-        <section className="border-t border-border bg-muted/30 py-24">
-          <div className="container mx-auto px-6">
-            <h2 className="mb-4 text-center text-4xl font-bold">
-              Our Services
-            </h2>
-            <p className="mb-16 text-center text-muted-foreground">
-              Choose the session that fits your story
-            </p>
-
-            {/* ── Photography ──────────────────────────────────────── */}
-            <div className="mb-16">
-              {/* Events */}
-              <div className="mb-10">
-                <div className="mb-6 flex items-center gap-3">
-                  <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-sm font-semibold text-amber-500">
-                    Event
-                  </span>
-                  <div className="h-px flex-1 bg-secondary" />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-3">
-                  {[
-                    {
-                      title: 'Wedding Photography',
-                      desc: 'Premium photography packages crafted by top wedding photographers to beautifully capture your big day.',
-                    },
-                    {
-                      title: 'Event Photography',
-                      desc: 'Professional event photography for engagements, pre-weddings, birthdays, and special family celebrations.',
-                    },
-                    {
-                      title: 'Candid & Traditional',
-                      desc: 'A seamless blend of candid moments and traditional portraits for complete, comprehensive coverage.',
-                    },
-                  ].map((s) => (
-                    <div
-                      key={s.title}
-                      className="flex flex-col justify-between rounded-xl border border-border bg-muted/50 p-6"
-                    >
-                      <div>
-                        <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {s.desc}
-                        </p>
-                      </div>
-                      <a
-                        href={generateWhatsAppLink(
-                          'photography',
-                          `Hi! I'd like to inquire about ${s.title}.`
-                        )}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`Get a quote for ${s.title}`}
-                        className="mt-5 inline-block rounded-full bg-amber-500 px-5 py-2.5 text-center text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-400"
-                      >
-                        Get Quote
-                      </a>
-                    </div>
+          {/* Slow category ticker (transform-only CSS loop; static for reduced motion). */}
+          <div aria-hidden className="border-y border-border bg-card py-4">
+            <div className="flex w-max motion-safe:animate-[ticker_60s_linear_infinite]">
+              {[0, 1].map((k) => (
+                <ul key={k} className="flex shrink-0 items-center">
+                  {cat.categories.map((c) => (
+                    <li key={`${k}-${c.id}`} className="flex items-center gap-6 px-3 text-sm font-medium text-foreground/70">
+                      {c.name}
+                      <span className="h-1 w-1 rounded-full bg-accent-text" />
+                    </li>
                   ))}
-                </div>
-              </div>
-
-              {/* Portraits */}
-              <div>
-                <div className="mb-6 flex items-center gap-3">
-                  <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-sm font-semibold text-amber-500">
-                    Portraits
-                  </span>
-                  <div className="h-px flex-1 bg-secondary" />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-3">
-                  {[
-                    {
-                      title: 'Portrait Photography',
-                      desc: 'Creative studio and outdoor portrait photography sessions tailored to showcase your personality.',
-                    },
-                    {
-                      title: 'Maternity Photography',
-                      desc: 'Elegant maternity photography sessions to beautifully document your journey to motherhood.',
-                    },
-                    {
-                      title: 'Newborn Photography',
-                      desc: 'Safe, gentle, and heartwarming newborn photography sessions to capture your little ones earliest days.',
-                    },
-                  ].map((s) => (
-                    <div
-                      key={s.title}
-                      className="flex flex-col justify-between rounded-xl border border-border bg-muted/50 p-6"
-                    >
-                      <div>
-                        <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {s.desc}
-                        </p>
-                      </div>
-                      <a
-                        href={generateWhatsAppLink(
-                          'photography',
-                          `Hi! I'd like to inquire about ${s.title}.`
-                        )}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`Get a quote for ${s.title}`}
-                        className="mt-5 inline-block rounded-full bg-amber-500 px-5 py-2.5 text-center text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-400"
-                      >
-                        Get Quote
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* ── Corporate ─────────────────────────────────────────── */}
-            <div className="mb-16">
-              <div className="mb-6 flex items-center gap-3">
-                <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1 text-sm font-semibold text-blue-400">
-                  Corporate
-                </span>
-                <div className="h-px flex-1 bg-secondary" />
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {[
-                  {
-                    title: 'Product Photography',
-                    desc: 'High-quality e-commerce and catalogue product photography for all your retail and branding needs.',
-                  },
-                  {
-                    title: 'Music Video Production',
-                    desc: 'Cinematic brand films, social reels, and full-scale music video production projects.',
-                  },
-                  {
-                    title: 'Social Media Content',
-                    desc: 'Platform-ready visual assets created by a dedicated social media content photographer.',
-                  },
-                  {
-                    title: 'Corporate Photography',
-                    desc: 'Professional corporate photography and creative brand photography to elevate your business identity.',
-                  },
-                  {
-                    title: 'Headshot Photography',
-                    desc: 'Clean, professional corporate headshots for executive teams and business founders.',
-                  },
-                ].map((s) => (
-                  <div
-                    key={s.title}
-                    className="flex flex-col justify-between rounded-xl border border-border bg-muted/50 p-6"
-                  >
-                    <div>
-                      <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
-                      <p className="text-sm text-muted-foreground">{s.desc}</p>
-                    </div>
-                    <a
-                      href={generateWhatsAppLink(
-                        'photography',
-                        `Hi! I'd like to inquire about ${s.title}.`
-                      )}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`Get a quote for ${s.title}`}
-                      className="mt-5 inline-block rounded-full border border-blue-500/40 bg-blue-500/10 px-5 py-2.5 text-center text-sm font-semibold text-blue-400 transition-colors hover:bg-blue-500/20"
-                    >
-                      Get Quote
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* ── Commercial ────────────────────────────────────────── */}
-            <div>
-              <div className="mb-6 flex items-center gap-3">
-                <span className="rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1 text-sm font-semibold text-purple-400">
-                  Commercial
-                </span>
-                <div className="h-px flex-1 bg-secondary" />
-              </div>
-              <div className="grid gap-4 sm:grid-cols-3">
-                {[
-                  {
-                    title: 'Ads',
-                    desc: 'High-concept advertisement productions',
-                  },
-                  {
-                    title: 'Music Videos',
-                    desc: 'Full-production music videos with cinema kit',
-                  },
-                  {
-                    title: 'Short Films',
-                    desc: 'Narrative short film production & post',
-                  },
-                ].map((s) => (
-                  <div
-                    key={s.title}
-                    className="flex flex-col justify-between rounded-xl border border-border bg-muted/50 p-6"
-                  >
-                    <div>
-                      <h3 className="mb-2 text-lg font-bold">{s.title}</h3>
-                      <p className="text-sm text-muted-foreground">{s.desc}</p>
-                    </div>
-                    <a
-                      href={generateWhatsAppLink(
-                        'photography',
-                        `Hi! I'd like to inquire about ${s.title}.`
-                      )}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`Get a quote for ${s.title} production`}
-                      className="mt-5 inline-block rounded-full border border-purple-500/40 bg-purple-500/10 px-5 py-2.5 text-center text-sm font-semibold text-purple-400 transition-colors hover:bg-purple-500/20"
-                    >
-                      Get Quote
-                    </a>
-                  </div>
-                ))}
-              </div>
+                </ul>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Our Equipment */}
-        <section className="border-t border-border bg-muted/30 py-24">
-          <div className="container mx-auto px-6">
-            <div className="mx-auto max-w-4xl text-center">
-              <h2 className="mb-4 text-4xl font-bold">Equipment We Use</h2>
-              <p className="mb-12 text-muted-foreground">
-                When you hire photographer Coimbatore services from Wandering Kite, we use industry-standard gear to ensure the highest quality results. Check our photography packages Coimbatore price lists.
-              </p>
+        {/* ── Explore: contact-sheet band per section (film strip of category frames from the DB). ── */}
+        <StudioRows />
 
-              <div className="grid gap-6 sm:grid-cols-3">
-                <div className="rounded-2xl border border-border bg-background p-8 text-center">
-                  <Monitor className="mx-auto mb-4 h-8 w-8 text-amber-500" />
-                  <h3 className="mb-2 font-bold text-lg">Cameras</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Sony A7 M5, Sony FX3, DJI Pocket 3 Creator Combo, Action
-                    Camera Insta360 One X2 Essentials Bundle
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-border bg-background p-8 text-center">
-                  <Camera className="mx-auto mb-4 h-8 w-8 text-amber-500" />
-                  <h3 className="mb-2 font-bold text-lg">Lenses</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Sony G Master 85mm 1.4, Sony G Master 35mm 1.4, Sony G
-                    Master 50mm 1.4, Sony G Master 24mm 1.4, Sony G Master 16mm
-                    1.4, Sony G Master 90mm macro 2.8
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-border bg-background p-8 text-center">
-                  <Video className="mx-auto mb-4 h-8 w-8 text-amber-500" />
-                  <h3 className="mb-2 font-bold text-lg">
-                    Lighting &amp; Grip
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    SK400 V, AD600 pro2, AD200 pro2, Digitek Stripe Light, Nantu
-                    Pro, Nantu,
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Testimonials */}
-        <Testimonials testimonials={photographyTestimonials} accentColor="amber" />
-
-        {/* Process Timeline */}
-        <ProcessTimeline steps={processSteps} accentColor="amber" />
-
-        {/* FAQ */}
-        <ServiceFAQ faqs={faqs} accentColor="amber" />
-        <ServiceTerms type="photography" />
-        <Footer />
+        {/* ── Everything below the corporate band: one light, animated sequence (porcelain ↔ white ↔ sand → sandstone footer). ── */}
+        <PhotoMotion />
+        <FilmApproach wrap={PHOTO_WRAP} />
+        <StoriesInLight />
+        <FeaturedStories albums={stories} wrap={PHOTO_WRAP} />
+        <GearList gear={gear} wrap={PHOTO_WRAP} />
+        <PhotoReviews reviews={photographyTestimonials} wrap={PHOTO_WRAP} />
+        <PhotoProcess steps={processSteps} wrap={PHOTO_WRAP} />
+        <BlogPreview wrap={PHOTO_WRAP} />
+        <PhotoFAQ faqs={faqs} wrap={PHOTO_WRAP} />
+        <PhotoClosing cities={cat.cities} wrap={PHOTO_WRAP} />
       </main>
+      <Footer showInstagram={false} tone="sandstone" />
     </>
   );
 }
