@@ -29,9 +29,23 @@ const legal = [
 
 interface FooterProps {
   account?: 'wanderingkite' | 'studio';
+  /** false where the page already shows its own Instagram section (the homepage), so it isn't shown twice. */
+  showInstagram?: boolean;
+  /** 'sandstone' = revamp footer (homepage): sandstone ground, black text. Other pages keep the default. */
+  tone?: 'default' | 'sandstone';
 }
 
-export function Footer({ account = 'wanderingkite' }: FooterProps) {
+// Sandstone tone: re-points theme variables for this subtree only, so existing token classes follow.
+const SANDSTONE_VARS = {
+  '--background': '32 27% 72%',
+  '--muted-foreground': '0 0% 16%',
+  '--border': '27 17% 53%',
+  '--card': '42 31% 94%',
+  // Taupe links (e.g. "Open in Google Maps") fail on sandstone — deepen it within the footer only.
+  '--primary': '27 20% 28%',
+} as React.CSSProperties;
+
+export function Footer({ account = 'wanderingkite', showInstagram = true, tone = 'default' }: FooterProps) {
   // Absolute origin of the admin app, used by the staff shortcut in the bottom
   // bar. Trailing slash trimmed so the href doesn't end up with a double slash.
   const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL?.replace(/\/$/, '');
@@ -41,13 +55,17 @@ export function Footer({ account = 'wanderingkite' }: FooterProps) {
   // match them any more.
 
   return (
-    <footer className="border-t border-border bg-background">
+    <footer className="border-t border-border bg-background text-foreground" style={tone === 'sandstone' ? SANDSTONE_VARS : undefined}>
       {/* Instagram Follow CTA */}
-      <div className="border-b border-border bg-gradient-to-r from-purple-900/20 via-pink-900/20 to-orange-900/20">
+      {/* Porcelain mist band rather than the old purple/pink/orange gradient:
+          Instagram's own brand colours sit outside this palette and fought
+          with the brand orange. The band is set apart by surface, not hue. */}
+      {showInstagram && (
+      <div className="border-b border-border bg-card">
         <div className="container mx-auto px-6 py-12">
           <div className="mx-auto max-w-2xl text-center">
             <div className="mb-4 flex justify-center">
-              <Instagram className="h-12 w-12 text-pink-500" />
+              <Instagram className="h-12 w-12 text-primary" />
             </div>
             <h2 className="mb-2 text-2xl font-bold">
               Get 10% Off Your First Rental
@@ -68,7 +86,7 @@ export function Footer({ account = 'wanderingkite' }: FooterProps) {
               href={account === 'studio' ? 'https://instagram.com/studiospacecbe' : 'https://instagram.com/wanderingkitestudio'}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-4 font-semibold text-foreground transition-all hover:from-purple-500 hover:to-pink-500 hover:shadow-lg hover:shadow-pink-500/50"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-4 font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30"
             >
               <Instagram className="h-5 w-5" />
               Follow @{account === 'studio' ? 'studiospacecbe' : 'wanderingkitestudio'}
@@ -79,6 +97,7 @@ export function Footer({ account = 'wanderingkite' }: FooterProps) {
           </div>
         </div>
       </div>
+      )}
 
       {/* Main Footer */}
       <div className="container mx-auto px-6 py-16">
@@ -87,7 +106,8 @@ export function Footer({ account = 'wanderingkite' }: FooterProps) {
           <div>
             <Link href="/" className="mb-4 inline-block group">
               <Image
-                src="/wkfulllogo.png"
+                // Studio Space stays dark, so it keeps the white-on-black original.
+                src={account === 'studio' ? '/wkfulllogo.png' : '/wk-logo-light.png'}
                 alt={siteConfig.name}
                 width={320}
                 height={80}
@@ -165,7 +185,7 @@ export function Footer({ account = 'wanderingkite' }: FooterProps) {
                   href={siteConfig.contact.address.googleMaps}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300"
+                  className={`inline-flex items-center gap-2 text-primary hover:text-primary/75 ${tone === 'sandstone' ? 'underline decoration-1 underline-offset-4' : ''}`}
                 >
                   <MapPin className="h-4 w-4" />
                   Open in Google Maps

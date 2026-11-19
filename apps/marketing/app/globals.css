@@ -65,20 +65,24 @@ body::before {
   position: fixed;
   inset: 0;
   z-index: -1;
+  /* Opacities are deliberately low. On the old dark theme these washes were
+     barely visible at 0.55; over porcelain the same values read as flat grey
+     and drain the warmth out of the page. Kept subtle so the background
+     stays porcelain with a faint sandstone glow at the edges. */
   background:
     radial-gradient(
       ellipse 80% 50% at 20% -10%,
-      hsl(var(--color-surface-2) / 0.55) 0%,
+      hsl(var(--color-surface-2) / 0.18) 0%,
       transparent 60%
     ),
     radial-gradient(
       ellipse 60% 40% at 80% 10%,
-      hsl(var(--color-surface-2) / 0.3) 0%,
+      hsl(var(--color-surface-2) / 0.12) 0%,
       transparent 55%
     ),
     radial-gradient(
       ellipse 100% 60% at 50% 100%,
-      hsl(var(--color-surface-1) / 0.4) 0%,
+      hsl(var(--color-surface-1) / 0.5) 0%,
       transparent 60%
     ),
     hsl(var(--background));
@@ -133,9 +137,11 @@ body::before {
     position: absolute;
     inset: 0;
     border-radius: inherit;
+    /* Warm, not white: a white glow is invisible on the porcelain surfaces.
+       A faint brand-orange wash reads as light catching the card instead. */
     background: radial-gradient(
       600px circle at var(--mouse-x, -400px) var(--mouse-y, -400px),
-      rgba(255, 255, 255, 0.055),
+      hsl(var(--primary) / 0.07),
       transparent 40%
     );
     opacity: 0;
@@ -161,13 +167,15 @@ body::before {
     background-clip: text;
   }
 
+  /* Black into brand orange. Previously ran into --color-warning, which is a
+     functional status colour, not a brand one. */
   .text-gradient-hero {
     background: linear-gradient(
       135deg,
       hsl(var(--foreground)) 0%,
       hsl(var(--foreground)) 30%,
-      hsl(var(--color-warning)) 65%,
-      hsl(var(--color-warning)) 100%
+      hsl(var(--primary)) 75%,
+      hsl(var(--primary)) 100%
     );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -182,38 +190,42 @@ body::before {
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #3b82f6; /* Blue color */
+    background: hsl(var(--color-surface-2)); /* soft sandstone */
     border-radius: 4px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #2563eb; /* Darker blue on hover */
+    background: hsl(var(--primary)); /* brand orange */
   }
 }
 
-/* Custom styling for date and time inputs to fit dark mode nicely */
+/* Date/time picker icons.
+   The icon is a dark glyph by default, which reads correctly on the light
+   porcelain inputs — so no invert filter here. The previous rule inverted it
+   to orange for the dark theme; on a light background that left a washed-out
+   icon with poor contrast. */
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator,
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   display: block !important;
-  opacity: 0.85 !important;
+  opacity: 0.55;
   cursor: pointer;
-  filter: invert(62%) sepia(93%) saturate(1682%) hue-rotate(15deg) brightness(102%) contrast(101%) !important;
-  transition: opacity 0.15s ease, filter 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 input[type="date"]::-webkit-calendar-picker-indicator:hover,
 input[type="time"]::-webkit-calendar-picker-indicator:hover,
 input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
-  opacity: 1 !important;
-  filter: invert(72%) sepia(61%) saturate(3033%) hue-rotate(5deg) brightness(101%) contrast(97%) !important;
+  opacity: 1;
 }
 
-/* Autofill style overrides to prevent white/yellow backgrounds in dark mode inputs */
+/* Autofill overrides. Chrome forces its own pale-yellow fill, which clashes
+   with the porcelain surfaces, so repaint it as the card colour with black
+   text. box-shadow is the only way to override the autofill background. */
 input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus, 
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 30px #020617 inset !important;
-  -webkit-text-fill-color: #ffffff !important;
+  -webkit-box-shadow: 0 0 0 30px hsl(var(--card)) inset !important;
+  -webkit-text-fill-color: hsl(var(--foreground)) !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 
@@ -238,7 +250,7 @@ input:-webkit-autofill:active {
 }
 
 .blog-body strong {
-  color: #ffffff;
+  color: hsl(var(--foreground));
   font-weight: 600;
 }
 
@@ -247,12 +259,12 @@ input:-webkit-autofill:active {
 }
 
 .blog-body a {
-  color: #fbbf24; /* amber-400 */
+  color: hsl(var(--primary)); /* brand orange */
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 .blog-body a:hover {
-  color: #fcd34d; /* amber-300 */
+  color: hsl(var(--primary) / 0.75);
 }
 
 .blog-body ul,
@@ -276,7 +288,7 @@ input:-webkit-autofill:active {
 }
 
 .blog-body li::marker {
-  color: #f59e0b; /* amber-500 */
+  color: hsl(var(--primary)); /* brand orange */
   font-weight: 600;
 }
 
@@ -311,4 +323,63 @@ input:-webkit-autofill:active {
   .animate-blog-card-in {
     animation: none;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Instagram section — continuous horizontal marquee
+ * ───────────────────────────────────────────────────────────────────────── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* Users who prefer reduced motion: freeze the marquee */
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-[marquee"] {
+    animation: none;
+  }
+}
+
+/* Landing motion (photography): active only after <LandingMotion/> adds .js-motion and motion is allowed. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Clip the frame's contents, not the frame: a clipped-shut target reports zero area to IntersectionObserver. */
+  .js-motion [data-shutter] > * {
+    clip-path: inset(50% 0 50% 0);
+    transition: clip-path 1.1s cubic-bezier(0.77, 0, 0.18, 1);
+  }
+  .js-motion [data-shutter].is-in > * {
+    clip-path: inset(0 0 0 0);
+  }
+  .js-motion [data-focus] {
+    filter: blur(6px);
+    opacity: 0.35;
+    transition: filter 0.9s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .js-motion [data-focus].is-in {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+/* Viewfinder cursor (LandingMotion): brackets shrink onto the subject like AF lock. */
+.viewfinder .viewfinder-box {
+  width: 56px;
+  height: 56px;
+  opacity: 0;
+  scale: 1.6;
+  transition: opacity 0.2s ease-out, scale 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.viewfinder[data-on='true'] .viewfinder-box {
+  opacity: 1;
+  scale: 1;
+}
+/* Lens parallax: images inside photo frames ease their `translate` (composes with hover-zoom transforms). */
+.js-motion [data-shutter] img {
+  transition: transform 0.7s ease-out, translate 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* Magnetic CTAs ease back when released. */
+[data-magnetic] {
+  transition-property: translate, transform, background-color, box-shadow;
+  transition-duration: 0.35s;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }

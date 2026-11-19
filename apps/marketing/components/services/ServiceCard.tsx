@@ -66,43 +66,43 @@ export function ServiceCard({
     >
       <div
         ref={cardRef}
+        // Porcelain mist card on a porcelain white page; sandstone border carries the edge.
         className="
           relative flex h-full flex-col overflow-hidden rounded-2xl
-          border border-primary/15
-          bg-[rgba(17,17,22,0.80)] backdrop-blur-md
+          border border-border
+          bg-card
           transition-all duration-300 ease-out
-          group-hover:border-primary/42
+          group-hover:border-neutral
           group-hover:shadow-[0_20px_60px_var(--tw-shadow-color)]
-          group-hover:[--tw-shadow-color:hsl(var(--primary)/0.22)]
+          group-hover:[--tw-shadow-color:hsl(var(--color-surface-2)/0.45)]
         "
       >
-        <div className="absolute inset-x-0 top-0 h-px z-10 bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-50" />
-
-        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,rgba(46,49,69,0.45),transparent)]" />
+        <div className="absolute inset-x-0 top-0 h-px z-10 bg-gradient-to-r from-transparent via-neutral to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-70" />
 
         <div className="relative z-10 flex h-full flex-col p-7">
           {badge && (
-            <span className="mb-4 self-start rounded-full border border-primary/28 bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+            // Sandstone badge, black label — orange on sandstone measures 1.68:1.
+            <span className="mb-4 self-start rounded-full bg-neutral px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground">
               {badge}
             </span>
           )}
 
-          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-primary/18 bg-primary/8 transition-all duration-300 group-hover:border-primary/40 group-hover:bg-primary/16 group-hover:shadow-[0_0_20px_hsl(var(--primary)/0.18)]">
+          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-neutral transition-all duration-300 group-hover:bg-secondary">
             {Icon && (
               <Icon
-                className="h-5 w-5 text-primary transition-transform duration-300 group-hover:scale-110"
+                className="h-5 w-5 text-foreground transition-transform duration-300 group-hover:scale-110"
                 strokeWidth={1.5}
               />
             )}
           </div>
 
           {tagline && (
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary opacity-75">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-text opacity-75">
               {tagline}
             </p>
           )}
 
-          <h3 className="mb-3 text-xl font-semibold leading-snug text-foreground transition-all duration-300 group-hover:text-gradient-gold">
+          <h3 className="mb-3 text-xl font-semibold leading-snug text-foreground transition-all duration-300 ">
             {title}
           </h3>
 
@@ -124,11 +124,11 @@ export function ServiceCard({
             </ul>
           )}
 
-          <div className="mt-auto border-t border-primary/10 pt-5">
+          <div className="mt-auto border-t border-border pt-5">
             <Link
               href={href}
               aria-label={`Explore ${title} services by Wandering Kite Studio`}
-              className="group/btn inline-flex items-center gap-2 rounded-xl border border-primary/28 bg-primary/6 px-5 py-2.5 text-sm font-medium text-primary transition-all duration-200 hover:border-primary/55 hover:bg-primary/16 hover:text-foreground hover:shadow-[0_0_16px_hsl(var(--primary)/0.20)]"
+              className="group/btn inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/85 hover:shadow-[0_8px_24px_hsl(var(--primary)/0.35)]"
             >
               Explore {title}
               <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover/btn:translate-x-0.5" />

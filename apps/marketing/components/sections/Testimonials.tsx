@@ -158,7 +158,7 @@ function TestimonialCard({
   }, [testimonial.content, expanded]);
 
   return (
-    <div className="flex h-[26rem] flex-col rounded-3xl border border-border bg-card p-8 shadow-sm transition-all duration-500 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:shadow-xl hover:border-zinc-700/50">
+    <div className="flex h-[26rem] flex-col rounded-3xl border border-border bg-card p-8 shadow-sm transition-all duration-500 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] hover:shadow-xl hover:border-primary/40">
       <Quote
         className={`mb-4 h-10 w-10 shrink-0 ${accentColors[accentColor]} opacity-20`}
       />
@@ -171,7 +171,7 @@ function TestimonialCard({
             className={`h-4 w-4 ${
               i < testimonial.rating
                 ? `${fillAccentColors[accentColor]} ${accentColors[accentColor]}`
-                : 'text-zinc-700'
+                : 'text-border'
             }`}
           />
         ))}

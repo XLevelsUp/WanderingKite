@@ -31,7 +31,7 @@ export function TeamSection() {
     <section className="py-24 container mx-auto px-6 relative">
       <FadeIn>
         <div className="mb-16 text-center max-w-2xl mx-auto">
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-500 opacity-80">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-accent-text opacity-80">
             The Visionaries
           </p>
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -53,8 +53,8 @@ export function TeamSection() {
           className="lg:col-span-1"
         >
           <Link href="/about/founder" className="block h-full group">
-            <div className="relative h-full overflow-hidden rounded-3xl border border-amber-500/20 bg-zinc-900 shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:border-amber-500/50 hover:shadow-amber-500/10">
-              <div className="aspect-[4/5] relative bg-zinc-800">
+            <div className="relative h-full overflow-hidden rounded-3xl border border-border bg-card shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:border-neutral hover:shadow-[0_20px_60px_hsl(var(--color-surface-2)/0.45)]">
+              <div className="aspect-[4/5] relative bg-muted">
                 {/* Icon sits underneath the photo so it still shows if the
                     image ever fails to load. */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-20">
@@ -67,21 +67,21 @@ export function TeamSection() {
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent z-10" />
               </div>
 
               {/* Content */}
               <div className="absolute bottom-0 left-0 right-0 p-8 z-20">
                 <div className="flex items-end justify-between">
                   <div>
-                    <span className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2 block">
+                    <span className="text-xs font-bold text-accent-text uppercase tracking-wider mb-2 block">
                       {founder.role}
                     </span>
-                    <h3 className="text-2xl font-bold text-white group-hover:text-amber-400 transition-colors">
+                    <h3 className="text-2xl font-bold text-foreground group-hover:text-accent-text transition-colors">
                       {founder.name}
                     </h3>
                   </div>
-                  <div className="bg-amber-500/10 p-3 rounded-full text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-all duration-300">
+                  <div className="bg-card p-3 rounded-full text-accent-text group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
                     <ArrowRight className="w-5 h-5 -rotate-45 group-hover:rotate-0 transition-transform duration-300" />
                   </div>
                 </div>
@@ -104,7 +104,7 @@ export function TeamSection() {
               shorter than the founder card beside it. Portraits sit directly
               on the section background and are vertically centred instead. */}
           <div className="h-full flex flex-col justify-center">
-            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-[0.18em] mb-5">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.18em] mb-5">
               The Collective
             </p>
 
@@ -112,7 +112,7 @@ export function TeamSection() {
               {teamMembers.map((member) => (
                 <div
                   key={member.id}
-                  className="group/member aspect-[3/4] relative overflow-hidden rounded-2xl bg-zinc-800"
+                  className="group/member aspect-[3/4] relative overflow-hidden rounded-2xl bg-muted"
                 >
                   {/* Icon sits underneath so it shows if an image fails. */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-20">
@@ -137,11 +137,11 @@ export function TeamSection() {
           a team page exists. */}
       <FadeIn>
         <div className="mt-14 flex items-center justify-center gap-4">
-          <span className="h-px w-12 bg-gradient-to-r from-transparent to-amber-500/40" />
+          <span className="h-px w-12 bg-gradient-to-r from-transparent to-primary/40" />
           <p className="text-lg font-medium tracking-wide text-foreground">
             Meet the team
           </p>
-          <span className="h-px w-12 bg-gradient-to-l from-transparent to-amber-500/40" />
+          <span className="h-px w-12 bg-gradient-to-l from-transparent to-primary/40" />
         </div>
       </FadeIn>
     </section>
