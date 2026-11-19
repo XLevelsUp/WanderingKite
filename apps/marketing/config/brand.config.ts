@@ -31,6 +31,9 @@ export interface BrandColors {
   accent: HslValue;
   accentForeground: HslValue;
 
+  /** Brand orange, for sub-headings only — separate from `primary` (buttons). */
+  accentText: HslValue;
+
   /** Muted — low-emphasis backgrounds and text */
   muted: HslValue;
   mutedForeground: HslValue;
@@ -128,74 +131,78 @@ export const brandConfig: BrandConfig = {
     'Photography, camera & equipment rentals, 1200 sq ft studio & podcast recording in RS Puram, Coimbatore. 4.9★ on Google. 500+ projects delivered.',
   url: 'https://wanderingkite.in',
 
+  /* ─── LIGHT BRAND PALETTE ──────────────────────────────────────────────
+   *   Porcelain white  #FAF9F6  page background      Warm taupe  #9A8472  buttons/CTAs
+   *   Porcelain mist   #F4F1EA  cards (lighter)      Brand orange #FF5500  sub-headings
+   *   Soft sandstone   #CBB9A4  cards (heavier)      Black       #000000  all text
+   *   Sandy beige      #C8B39A  fills, dividers
+   *
+   * Elevation comes from choosing mist vs sandstone — never from tinting orange.
+   * Measured: black-on-taupe 5.92, orange-on-porcelain 3.04, orange-on-sandstone
+   * 1.68 (so sandstone cards take black sub-headings, not orange).
+   * ──────────────────────────────────────────────────────────────────── */
   colors: {
-    // /* --- PREVIOUS COLOR TEMPLATE (Electric Blue) --- */
-    primary: '217 91% 60%',
-    primaryForeground: '0 0% 100%',
+    // Warm taupe — every button and CTA. Black text sits on it (5.92:1).
+    primary: '27 17% 53%',
+    primaryForeground: '0 0% 0%',
 
-    // Secondary: navy surface
-    secondary: '240 8% 10%',
-    secondaryForeground: '0 0% 98%',
+    // Secondary: sandy beige fills, black text on top for contrast.
+    secondary: '33 29% 69%',
+    secondaryForeground: '0 0% 0%',
 
-    // Accent: matches secondary (used for hover states)
-    accent: '240 8% 10%',
-    accentForeground: '217 91% 60%',
+    // Accent: porcelain mist, used for hover/active surfaces.
+    accent: '42 31% 94%',
+    accentForeground: '0 0% 0%',
 
-    /* --- NEW COLOR TEMPLATE (Orange-Red) ---
-     primary: '19 100% 50%',
-    primaryForeground: '0 0% 100%',
-    secondary: '240 8% 10%',
-    secondaryForeground: '0 0% 98%',
-    accent: '240 8% 10%',
-    accentForeground: '20 100% 50%',
-    */
-    
+    // Brand orange — sub-headings and second lines of copy ONLY.
+    accentText: '20 100% 50%',
 
-    // Muted
-    muted: '240 8% 10%',
-    mutedForeground: '215 20% 65%',
+    // Muted: mist surface. Muted text is black at reduced opacity rather
+    // than a grey, so secondary copy stays inside the palette.
+    muted: '42 31% 94%',
+    mutedForeground: '27 17% 53%',
 
-    // Neutral
-    neutral: '240 6% 15%',
-    neutralForeground: '0 0% 90%',
+    // Neutral: soft sandstone structure — the heavier card surface.
+    neutral: '32 27% 72%',
+    neutralForeground: '0 0% 0%',
 
     // Destructive
-    destructive: '0 62.8% 30.6%',
-    destructiveForeground: '0 0% 98%',
+    destructive: '0 72% 45%',
+    destructiveForeground: '0 0% 100%',
 
-    // Status
-    success: '142 71% 45%',
-    successForeground: '0 0% 98%',
-    warning: '38 92% 50%',
-    warningForeground: '240 6% 4%',
-    error: '0 84% 60%',
-    errorForeground: '0 0% 98%',
+    // Status — functional, not brand. Darkened for legibility on porcelain.
+    success: '142 64% 34%',
+    successForeground: '0 0% 100%',
+    warning: '32 90% 42%',
+    warningForeground: '0 0% 100%',
+    error: '0 72% 45%',
+    errorForeground: '0 0% 100%',
 
-    // Page backgrounds
-    background: '240 6% 4%',
-    foreground: '0 0% 98%',
+    // Page: porcelain white, black text.
+    background: '45 29% 97%',
+    foreground: '0 0% 0%',
 
-    // Card / popover
-    card: '240 8% 7%',
-    cardForeground: '0 0% 98%',
-    popover: '240 8% 7%',
-    popoverForeground: '0 0% 98%',
+    // Card / popover: porcelain mist, one step up from the page.
+    card: '42 31% 94%',
+    cardForeground: '0 0% 0%',
+    popover: '42 31% 94%',
+    popoverForeground: '0 0% 0%',
 
     // Surface layers
-    surface1: '240 8% 7%',
-    surface2: '240 8% 10%',
+    surface1: '42 31% 94%',
+    surface2: '32 27% 72%',
 
-    // Form
-    border: '240 8% 14%',
-    input: '240 8% 14%',
-    ring: '217 91% 60%',
+    // Focus ring stays orange: taupe on sandstone would be invisible to keyboard users.
+    border: '32 27% 72%',
+    input: '32 27% 72%',
+    ring: '20 100% 50%',
 
-    // Charts
-    chart1: '217 91% 60%',
-    chart2: '230 25% 41%',
-    chart3: '210 40% 70%',
-    chart4: '230 25% 55%',
-    chart5: '217 91% 70%',
+    // Charts — the palette's warm range, orange through taupe.
+    chart1: '20 100% 50%',
+    chart2: '27 17% 53%',
+    chart3: '33 29% 69%',
+    chart4: '32 27% 72%',
+    chart5: '20 60% 65%',
   },
 
   radius: {

@@ -90,7 +90,7 @@ export function EquipmentCard({
         ref={cardRef}
         className={`
           relative h-full overflow-hidden rounded-2xl
-          bg-[rgba(17,17,22,0.80)] backdrop-blur-md
+          bg-card/80 backdrop-blur-md
           transition-all duration-300
           ${
             isSelected
@@ -100,7 +100,7 @@ export function EquipmentCard({
         `}
       >
         {/* Image / placeholder */}
-        <div className="relative aspect-square overflow-hidden bg-[rgba(26,29,46,0.80)]">
+        <div className="relative aspect-square overflow-hidden bg-muted/80">
           {image ? (
             <Image
               src={image}

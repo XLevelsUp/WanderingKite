@@ -9,6 +9,8 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // Large monitors: 2xl (1536) is Tailwind's last default step; 3xl covers 1920px+ displays.
+      screens: { '3xl': '1920px' },
       colors: {
         // ── Shadcn/UI semantic tokens ────────────────────────────────────────
         // All reference CSS variables injected by ThemeProvider from brand.config.ts.
@@ -41,6 +43,8 @@ const config: Config = {
           DEFAULT: 'hsl(var(--accent) / <alpha-value>)',
           foreground: 'hsl(var(--accent-foreground) / <alpha-value>)',
         },
+        // Brand orange — sub-headings and second lines only, never a background.
+        'accent-text': 'hsl(var(--accent-text) / <alpha-value>)',
         destructive: {
           DEFAULT: 'hsl(var(--destructive) / <alpha-value>)',
           foreground: 'hsl(var(--destructive-foreground) / <alpha-value>)',
@@ -120,6 +124,10 @@ const config: Config = {
 
       // ── Animations ─────────────────────────────────────────────────────────
       keyframes: {
+        'scroll-cue': {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(200%)' },
+        },
         shimmer: {
           '0%': { backgroundPosition: '-200% center' },
           '100%': { backgroundPosition: '200% center' },
@@ -134,6 +142,7 @@ const config: Config = {
         },
       },
       animation: {
+        'scroll-cue': 'scroll-cue 1.8s cubic-bezier(0.65,0,0.35,1) infinite',
         shimmer: 'shimmer 2.5s ease-in-out infinite',
         'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.4,0,0.2,1) forwards',
         'pulse-brand': 'pulseBrand 2s cubic-bezier(0.4,0,0.6,1) infinite',

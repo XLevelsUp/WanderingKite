@@ -67,6 +67,9 @@ export function generateThemeVars(config: BrandConfig): string {
     '--color-surface-1': c.surface1,
     '--color-surface-2': c.surface2,
 
+    // Brand orange — sub-headings. Separate from --primary (taupe buttons).
+    '--accent-text': c.accentText,
+
     // ── Radius tokens ─────────────────────────────────────────────────────
     '--radius': r.default,
     '--radius-button': r.button,

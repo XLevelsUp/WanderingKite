@@ -86,7 +86,7 @@ export const rentalsFAQs = [
 // tidy these; they are other people's words.
 export const studioTestimonials = [
   {
-    name: 'Soundarya Jayarajopen_in_new',
+    name: 'Soundarya Jayaraj',
     role: 'Content Creator',
     content:
       'Had a really good experience at this studio! ✨ The space is clean, well-maintained and has a great setup for shoots. The ambience is really nice, and there are plenty of good spots to create different kinds of content. 📸🤍\nThe overall experience was smooth and comfortable. Definitely a good place for photoshoots, reels and content creation. I would happily recommend this studio! ✨',
@@ -94,7 +94,7 @@ export const studioTestimonials = [
     service: 'Studio rental',
   },
   {
-    name: 'sukan yaopen_in_new',
+    name: 'sukan ya',
     role: 'Portfolio Shoot',
     content:
       'Had a wonderful experience shooting here for my portfolio. The space has a great ambience, and the arrangements and coordination were handled really well. Everything felt organised without making the experience feel rushed. Really happy with how the shoot turned out and would definitely come back again. ✨',
@@ -102,7 +102,7 @@ export const studioTestimonials = [
     service: 'Studio rental',
   },
   {
-    name: 'bharkaviopen_in_new',
+    name: 'bharkavi',
     role: 'Studio Client',
     content:
       'Had a really good experience with the studio space. The place was clean, well-maintained, and had a great setup for photoshoots and creative work. The team was also helpful and easy to coordinate with. Would definitely recommend this studio space.',
@@ -110,7 +110,7 @@ export const studioTestimonials = [
     service: 'Studio rental',
   },
   {
-    name: 'Ahamadhul Kabeer Nopen_in_new',
+    name: 'Ahamadhul Kabeer N',
     role: 'Studio Client',
     content:
       'I loved my experience here! The studio has a great vibe, the staff are very friendly, and the service was really good. Definitely worth recommending!',
@@ -118,7 +118,7 @@ export const studioTestimonials = [
     service: 'Studio rental',
   },
   {
-    name: 'PraveeN Rajopen_in_new',
+    name: 'PraveeN Raj',
     role: 'Studio Client',
     content:
       'It was an awesome experience shooting here. The team was very helpful and I was happy with the way they treated us. Highly recommend 👍',
@@ -126,7 +126,7 @@ export const studioTestimonials = [
     service: 'Studio rental',
   },
   {
-    name: 'Shamini Deepak7open_in_new',
+    name: 'Shamini Deepak7',
     role: 'Studio Client',
     content:
       'The studio space is awesome. Nice working with Mr.Sandesh. They cooperated very well and gave more ideas for shooting.',
@@ -134,7 +134,7 @@ export const studioTestimonials = [
     service: 'Studio rental',
   },
   {
-    name: 'Sneha Gangadharanopen_in_new',
+    name: 'Sneha Gangadharan',
     role: 'Studio Client',
     content:
       'The space is so good! Had a wonderful shooting experience. We shot for one of our clients. Definitely recommended',
@@ -142,14 +142,14 @@ export const studioTestimonials = [
     service: 'Studio rental',
   },
   {
-    name: 'Poovithaopen_in_new',
+    name: 'Poovitha',
     role: 'Studio Client',
     content: 'Good studio, we did our Onam shoot here highly recommend',
     rating: 5,
     service: 'Studio rental',
   },
   {
-    name: 'Senthilprabhu Eopen_in_new',
+    name: 'Senthilprabhu E',
     role: 'Studio Client',
     content: 'Great experience and value for money. Best. studio in Coimbatore',
     rating: 5,
@@ -169,7 +169,7 @@ export const photographyTestimonials = [
     service: 'Wedding Photography',
   },
   {
-    name: 'Yashaswini Thanigai Kumaranopen',
+    name: 'Yashaswini Thanigai Kumaran',
     role: 'Baby Shower Client',
     content:
       'We booked them for our baby shower, and we absolutely loved their work. The photos turned out absolutely beautiful. The team was incredibly creative, professional, and friendly, making us feel comfortable throughout the entire session.\n\nTruly satisfied with their work and would definitely love to work with them again for our future celebrations. Highly recommended!',
@@ -177,7 +177,7 @@ export const photographyTestimonials = [
     service: 'Events and parties, Maternity and newborn',
   },
   {
-    name: 'mohammed Irshadopen_in_new',
+    name: 'mohammed Irshad',
     role: 'Product Photography Client',
     content:
       'We are beyond impressed with the exceptional work of our product image photographer. Their keen eye for detail, creative composition, and mastery of lighting have truly elevated the visual appeal of our products. Each image captures the essence of quality, bringing out the finest features with clarity and precision.\n\nTheir professionalism, dedication, and ability to understand our vision made the entire process seamless. Whether it was adjusting angles for the perfect shot or ensuring consistency across different products, their expertise shone through. Thanks to their outstanding work, our product visuals now reflect the high standards we uphold, making a strong impact on our customers.\n\nHighly recommended for anyone looking for top-tier product photography. We look forward to working with them again in the future!',
@@ -185,7 +185,7 @@ export const photographyTestimonials = [
     service: 'Product Photography',
   },
   {
-    name: 'Asha Shanmugapriyaopen_in_new',
+    name: 'Asha Shanmugapriya',
     role: 'Photography Client',
     content:
       'Team were friendly and their work is really good.. thanks Sandy and team for capturing our wonderful memories ❤',
@@ -193,7 +193,7 @@ export const photographyTestimonials = [
     service: 'Photography',
   },
   {
-    name: 'hygiene Salesopen_in_new',
+    name: 'hygiene Sales',
     role: 'Brand Client',
     content:
       'Great photo shoot work done for my Bloomvitalia handmade premium luxury soaps',
@@ -201,7 +201,7 @@ export const photographyTestimonials = [
     service: 'Product Photography',
   },
   {
-    name: 'Vengadesh Sopen_in_new',
+    name: 'Vengadesh S',
     role: 'Commercial Client',
     content: 'Great price',
     rating: 5,

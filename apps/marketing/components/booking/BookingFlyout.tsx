@@ -86,13 +86,13 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
                 transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                 className="
                   w-72 overflow-hidden rounded-2xl
-                  border border-primary/22
-                  bg-[rgba(14,15,22,0.96)] backdrop-blur-2xl
+                  border border-border
+                  bg-card/95 backdrop-blur-2xl
                   shadow-[0_24px_80px_rgba(0,0,0,0.50),0_0_0_1px_hsl(var(--primary)/0.08)]
                 "
               >
                 {/* Header */}
-                <div className="flex items-start justify-between border-b border-primary/12 p-4">
+                <div className="flex items-start justify-between border-b border-border p-4">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary opacity-80">
                       Quick Inquiry
@@ -106,9 +106,9 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
                     data-no-track
                     className="
                       flex h-7 w-7 items-center justify-center rounded-lg
-                      border border-primary/15 text-primary
+                      border border-border text-foreground
                       transition-all duration-200
-                      hover:border-primary/40 hover:bg-primary/12
+                      hover:border-neutral hover:bg-accent
                     "
                   >
                     <X className="h-3.5 w-3.5" />
@@ -156,13 +156,13 @@ export function BookingFlyout({ service }: BookingFlyoutProps = {}) {
                 data-no-track
                 className="
                   flex items-center gap-3 rounded-full
-                  border border-primary/35
-                  bg-[rgba(14,15,22,0.90)] backdrop-blur-xl
+                  border border-border
+                  bg-card/90 backdrop-blur-xl
                   px-5 py-3.5 text-sm font-semibold text-primary
                   shadow-[0_8px_32px_rgba(0,0,0,0.40),0_0_0_1px_hsl(var(--primary)/0.08)]
                   transition-all duration-200
-                  hover:border-primary/60
-                  hover:bg-primary/12
+                  hover:border-neutral
+                  hover:bg-accent
                   hover:text-foreground
                   hover:shadow-[0_8px_32px_hsl(var(--primary)/0.25)]
                 "
