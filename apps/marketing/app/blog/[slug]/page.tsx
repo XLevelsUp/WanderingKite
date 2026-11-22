@@ -22,6 +22,7 @@ import {
 export const dynamic = 'force-dynamic';
 
 const SITE_URL = 'https://wanderingkite.in';
+const WRAP = 'mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12 2xl:max-w-[88rem] 3xl:max-w-[112rem] 3xl:px-16';
 
 export async function generateMetadata({
   params,
@@ -35,8 +36,6 @@ export async function generateMetadata({
     return { title: 'Post not found | Wandering Kite' };
   }
 
-  // Author-supplied meta wins; otherwise fall back to the title and an
-  // excerpt of the introduction.
   const title = post.meta_title || post.title;
   const description = post.meta_description || excerptFrom(post.intro ?? '', 155);
 
@@ -101,7 +100,6 @@ export default async function BlogPostPage({
     },
   ];
 
-  // Q&A pairs map cleanly onto FAQPage, which can earn a rich result.
   if ((post.blog_qa ?? []).length > 0) {
     structuredData.push({
       '@context': 'https://schema.org',
@@ -121,13 +119,13 @@ export default async function BlogPostPage({
     <>
       <JsonLd data={structuredData} />
 
-      <main className="min-h-screen pt-32">
+      <main className="min-h-screen pt-28 sm:pt-32">
         <article>
-          {/* ── Hero ──────────────────────────────────────────────────────── */}
-          <div className="container mx-auto px-6">
+          {/* ── Hero ── */}
+          <div className={WRAP}>
             <Link
               href="/blog"
-              className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-white"
+              className="mb-8 inline-flex items-center gap-2 text-sm text-foreground/70 transition-colors hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
               All posts
@@ -136,18 +134,17 @@ export default async function BlogPostPage({
             <div className="mb-8">
               <Link
                 href={`/blog?category=${CATEGORY_SLUGS[post.category as BlogCategory]}`}
-                className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-xs font-semibold tracking-wider text-amber-400 transition-colors hover:border-amber-500/60 hover:text-amber-300"
+                className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs font-semibold tracking-wider text-accent-text transition-colors hover:border-accent-text/50"
               >
                 {CATEGORY_LABELS[post.category as BlogCategory] ?? post.category}
               </Link>
-              {/* max-w-4xl holds the title to a readable measure on desktop. */}
-              <h1 className="max-w-4xl text-3xl font-bold leading-[1.15] tracking-tight text-white md:text-5xl">
+              <h1 className="max-w-4xl text-3xl font-bold leading-[1.15] tracking-tight text-foreground sm:text-4xl md:text-5xl">
                 {post.title}
               </h1>
             </div>
 
             {post.featured_image && (
-              <div className="relative mb-12 aspect-[16/9] overflow-hidden rounded-3xl bg-card">
+              <div className="relative mb-12 aspect-[16/9] overflow-hidden rounded-3xl border border-border bg-card">
                 <Image
                   src={post.featured_image}
                   alt={post.featured_image_alt ?? post.title}
@@ -160,8 +157,8 @@ export default async function BlogPostPage({
             )}
           </div>
 
-          {/* ── Body + sidebar ────────────────────────────────────────────── */}
-          <div className="container mx-auto px-6 pb-20">
+          {/* ── Body + sidebar ── */}
+          <div className={`${WRAP} pb-20`}>
             <div className="grid gap-12 lg:grid-cols-12">
               <div className="lg:col-span-8">
                 <BlogBody
@@ -176,16 +173,14 @@ export default async function BlogPostPage({
                 </div>
               </div>
 
-              {/* self-start is required: a grid item stretches by default,
-                  which leaves position:sticky nothing to float within. */}
               <aside className="lg:col-span-4 lg:self-start lg:sticky lg:top-28">
-                <div className="space-y-6 rounded-2xl border border-border bg-card/40 p-6">
+                <div className="space-y-6 rounded-2xl border border-border bg-card p-6">
                   <div className="space-y-3 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <User className="h-4 w-4 text-amber-500" />
-                      <span className="text-white">{post.author}</span>
+                    <div className="flex items-center gap-2 text-foreground/70">
+                      <User className="h-4 w-4 text-accent-text" />
+                      <span className="font-medium text-foreground">{post.author}</span>
                     </div>
-                    <div className="text-muted-foreground">
+                    <div className="text-foreground/70">
                       <time dateTime={post.published_at}>
                         {new Date(post.published_at).toLocaleDateString('en-IN', {
                           day: 'numeric',
@@ -194,15 +189,15 @@ export default async function BlogPostPage({
                         })}
                       </time>
                     </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Clock className="h-4 w-4 text-amber-500" />
+                    <div className="flex items-center gap-2 text-foreground/70">
+                      <Clock className="h-4 w-4 text-accent-text" />
                       {post.reading_time} min read
                     </div>
                   </div>
 
                   {(post.tags ?? []).length > 0 && (
                     <div className="border-t border-border pt-4">
-                      <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-foreground/60">
                         Tags
                       </p>
                       <div className="flex flex-wrap gap-2">
@@ -210,7 +205,7 @@ export default async function BlogPostPage({
                           <Link
                             key={tag}
                             href={`/blog?tag=${encodeURIComponent(tag)}`}
-                            className="rounded-full border border-border bg-background px-3 py-1 text-[11px] text-muted-foreground transition-colors hover:border-amber-500/40 hover:text-white"
+                            className="rounded-full border border-border bg-background px-3 py-1 text-[11px] text-foreground/70 transition-colors hover:border-accent-text/40 hover:text-foreground"
                           >
                             {tag}
                           </Link>
@@ -222,7 +217,7 @@ export default async function BlogPostPage({
                   <div className="space-y-2 border-t border-border pt-4">
                     <a
                       href="#comments"
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-border bg-card/50 px-4 py-2.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-amber-500/40 hover:text-white"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-semibold text-foreground/70 transition-colors hover:border-accent-text/40 hover:text-foreground"
                     >
                       <MessageSquare className="h-3.5 w-3.5" />
                       {comments.length} comment{comments.length === 1 ? '' : 's'}
@@ -230,10 +225,8 @@ export default async function BlogPostPage({
                     <BlogShareButton title={post.title} />
                   </div>
 
-                  {/* Same profiles as the footer — brandSocials is exported
-                      from Footer.tsx so the URLs live in one place. */}
                   <div className="border-t border-border pt-4">
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-foreground/60">
                       Follow us
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -244,7 +237,7 @@ export default async function BlogPostPage({
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={social.name}
-                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors ${social.hover}`}
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border text-foreground/70 transition-colors hover:text-accent-text hover:border-accent-text/40`}
                         >
                           <svg
                             viewBox="0 0 24 24"
@@ -265,7 +258,7 @@ export default async function BlogPostPage({
         </article>
       </main>
 
-      <Footer />
+      <Footer showInstagram={false} tone="sandstone" />
     </>
   );
 }

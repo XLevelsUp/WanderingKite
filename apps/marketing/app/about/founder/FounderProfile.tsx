@@ -1,91 +1,157 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { ArrowLeft, Mail, Phone, Instagram, Linkedin } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
+import { ArrowLeft, Mail, Phone, Instagram, Linkedin, MapPin, Calendar, Camera } from 'lucide-react';
 import { siteConfig } from '@/config/site';
+import { Footer } from '@/components/shared/Footer';
+
+/** Standard container wrap with strict responsive padding */
+const WRAP = 'mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8';
+
+/** Exact stats matching the home page proof band (ValuesSection.tsx) */
+const STATS = [
+  { value: '100+', label: 'Weddings' },
+  { value: '50+', label: 'Corporate Events' },
+  { value: '100+', label: 'Projects as Wandering Kite' },
+];
 
 export function FounderProfile() {
   return (
-    <main className="min-h-screen bg-zinc-950 pt-20">
-      {/* Header */}
-      <header className="sticky top-20 z-40 border-b border-white/5 bg-zinc-950/80 backdrop-blur-md">
-        <div className="container mx-auto px-6 py-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-zinc-400 hover:text-amber-500 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Home
-          </Link>
-        </div>
-      </header>
-
-      <section className="container mx-auto px-6 py-12 lg:py-24">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-start">
-          {/* Left Column: Photo & Parallax Entry */}
-          <div className="lg:col-span-5 relative lg:sticky lg:top-40">
-            <motion.div
-              initial={{ opacity: 0, y: 40, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl border border-amber-500/20 bg-zinc-900 shadow-[0_0_50px_-12px_rgba(245,158,11,0.15)]"
+    <>
+      <main className="min-h-screen pt-24 sm:pt-28 pb-16">
+        <div className={WRAP}>
+          {/* ── Breadcrumb Navigation ── */}
+          <div className="mb-8">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-foreground/60 transition-colors hover:text-foreground"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900" />
-              {/* Full opacity, no blend mode: opacity-50 + mix-blend-overlay
-                  washed the portrait into the gradient behind it. */}
-              <div className="absolute inset-0 bg-[url('/founder.webp')] bg-cover bg-center transition-transform duration-700 hover:scale-105" />
-
-              {/* Vignette only at the foot of the card, so the caption stays
-                  readable without dimming the face. */}
-              <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-zinc-950/80 to-transparent" />
-
-              {/* The blur sits behind the caption alone, not over the photo. */}
-              <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
-                <div className="inline-block rounded-2xl bg-zinc-950/40 backdrop-blur-md px-4 py-3">
-                  <p className="text-amber-500 font-bold uppercase tracking-widest text-[10px] sm:text-xs mb-1">
-                    Founder &amp; Creative Director
-                  </p>
-                  <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white leading-tight">
-                    Sandesh Anantha Kumar
-                  </h1>
-                </div>
-              </div>
-            </motion.div>
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
+              Back to Home
+            </Link>
           </div>
 
-          {/* Right Column: Content */}
-          <div className="lg:col-span-7">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="prose prose-invert prose-lg max-w-none"
-            >
-              {/* The quote leads: it explains the studio's name, which the rest
-                  of the copy builds on. */}
-              <blockquote className="border-l-2 border-amber-500/60 pl-6 mb-10">
-                <p className="text-2xl lg:text-3xl font-medium text-white leading-snug mb-4">
+          {/* ── Executive Profile Header (Strict 8px spacing, clean avatar) ── */}
+          <section aria-label="Founder Profile" className="rounded-2xl border border-border bg-card p-6 sm:p-8 lg:p-10 shadow-sm">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+              {/* Photo + Identity */}
+              <div className="flex items-center gap-4 sm:gap-6">
+                {/* Circular photo size as requested from landing page */}
+                <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-full border border-border bg-muted ring-2 ring-border/50">
+                  <Image
+                    src="/founder.webp"
+                    alt="Sandesh Anantha Kumar, Founder & Creative Director"
+                    fill
+                    sizes="(max-width: 640px) 64px, 80px"
+                    priority
+                    className="object-cover object-top"
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-text">
+                    Founder &amp; Creative Director
+                  </p>
+                  <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                    Sandesh Anantha Kumar
+                  </h1>
+                  <p className="mt-1 flex items-center gap-1.5 text-xs text-foreground/70 sm:text-sm">
+                    <MapPin className="h-3.5 w-3.5 text-accent-text shrink-0" aria-hidden />
+                    Wandering Kite Studio · RS Puram, Coimbatore
+                  </p>
+                </div>
+              </div>
+
+              {/* Direct Quick Actions */}
+              <div className="flex items-center gap-3 pt-2 sm:pt-0 border-t border-border/60 sm:border-t-0">
+                <a
+                  href={`mailto:${siteConfig.contact.email}`}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-semibold text-primary-foreground transition-[filter,transform] duration-200 hover:brightness-95 active:scale-[0.98]"
+                >
+                  <Mail className="h-3.5 w-3.5" aria-hidden />
+                  Email Directly
+                </a>
+                <a
+                  href={`tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 text-xs font-semibold text-foreground transition-colors hover:border-foreground"
+                >
+                  <Phone className="h-3.5 w-3.5" aria-hidden />
+                  Call
+                </a>
+              </div>
+            </div>
+
+            {/* Signature Quote Banner */}
+            <div className="mt-8 rounded-xl border border-border/70 bg-background/60 p-5 sm:p-6">
+              <blockquote className="relative">
+                <p className="text-base sm:text-lg font-medium leading-relaxed text-foreground italic">
                   &ldquo;I named it Wandering Kite because a kite flies best
                   with no strings attached. I wanted the freedom to work with
                   everyone and tell every kind of story.&rdquo;
                 </p>
-                <footer className="text-sm text-amber-500 font-semibold tracking-wide">
+                <footer className="mt-3 text-xs font-semibold tracking-wide text-accent-text not-italic">
                   — Sandesh Anantha Kumar, Founder &amp; Creative Director
                 </footer>
               </blockquote>
+            </div>
 
-              <p className="text-zinc-400 leading-relaxed mb-6">
+            {/* Studio Credentials Strip */}
+            <div className="mt-6 flex flex-wrap items-center gap-4 text-xs text-foreground/70 border-t border-border/60 pt-6">
+              <span className="inline-flex items-center gap-1.5">
+                <Camera className="h-3.5 w-3.5 text-accent-text" aria-hidden />
+                Wedding, Event &amp; Commercial Photography
+              </span>
+              <span aria-hidden className="hidden sm:inline h-3 w-px bg-border" />
+              <span className="inline-flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-accent-text" aria-hidden />
+                Active Since 2022
+              </span>
+            </div>
+          </section>
+
+          {/* ── Exact Home Page Proof Stats (Strict 8px Spacing) ── */}
+          <section aria-label="Key Milestones" className="mt-6">
+            <dl className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border rounded-2xl border border-border bg-card overflow-hidden">
+              {STATS.map((s) => (
+                <div
+                  key={s.label}
+                  className="p-6 text-center sm:text-left transition-colors hover:bg-muted/30"
+                >
+                  <dd className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground font-mono">
+                    {s.value}
+                  </dd>
+                  <dt className="mt-2 text-xs font-semibold uppercase tracking-wider text-foreground/70">
+                    {s.label}
+                  </dt>
+                </div>
+              ))}
+            </dl>
+          </section>
+
+          {/* ── Editorial Narrative (Strict Content Preservation) ── */}
+          <article aria-labelledby="story-heading" className="mt-10 sm:mt-14 rounded-2xl border border-border bg-card p-6 sm:p-10 lg:p-12">
+            <header className="mb-8 border-b border-border/70 pb-6">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-text">
+                The Journey
+              </p>
+              <h2 id="story-heading" className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                Behind Wandering Kite
+              </h2>
+            </header>
+
+            <div className="space-y-6 text-base leading-relaxed text-foreground/80 sm:text-lg sm:leading-relaxed">
+              <p>
                 Four years ago, Sandesh Anantha Kumar began working as an
                 independent photographer with a simple belief: every story
                 deserves to be told honestly, whether it belongs to a couple, a
                 family, or a brand. Working on their own, that belief took shape
-                across more than 350 weddings and over 150 corporate events,
+                across more than 100 weddings and over 50 corporate events,
                 each one teaching the value of preparation, patience, and being
                 present for moments that cannot be repeated.
               </p>
 
-              <p className="text-zinc-400 leading-relaxed mb-6">
+              <p>
                 The name Wandering Kite carries the same philosophy. A kite
                 rises with the wind and the freedom to move with it. No strings
                 attached means no limits on who we work with or what we create.
@@ -94,7 +160,7 @@ export function FounderProfile() {
                 first, then create.
               </p>
 
-              <p className="text-zinc-400 leading-relaxed mb-6">
+              <p>
                 Since launching as Wandering Kite, the studio has delivered more
                 than 100 projects and grown into a full-service creative studio
                 in RS Puram, Coimbatore. Today the work spans wedding and event
@@ -104,7 +170,7 @@ export function FounderProfile() {
                 everyone with a story to tell.
               </p>
 
-              <p className="text-zinc-400 leading-relaxed mb-6">
+              <p>
                 Whether it is a wedding where emotion matters most or a
                 corporate event where timing matters most, the goal is the same:
                 photographs that feel true to the people in them. Clients across
@@ -113,64 +179,59 @@ export function FounderProfile() {
                 matter.
               </p>
 
-              <p className="text-zinc-400 leading-relaxed mb-6">
+              <p>
                 What has never changed is how every project begins: with a
                 conversation. Understanding the people, the purpose, and the
                 feeling behind a shoot is what turns a good photograph into one
                 that lasts.
               </p>
 
-              <p className="text-zinc-400 leading-relaxed mb-12">
+              <p>
                 Today, Sandesh Anantha Kumar leads Wandering Kite with the same
                 open spirit that inspired the name.
               </p>
+            </div>
 
-              <hr className="border-white/10 my-12" />
-
-              {/* Contact & Socials */}
+            {/* Social profiles & direct connect */}
+            <div className="mt-10 border-t border-border/70 pt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h3 className="text-2xl font-bold text-white mb-6">Connect</h3>
-
-                <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                  <a
-                    href={`mailto:${siteConfig.contact.email}`}
-                    className="inline-flex items-center justify-center gap-2 bg-amber-500 text-zinc-950 px-8 py-4 rounded-full font-bold hover:bg-amber-400 transition-colors"
-                  >
-                    <Mail className="w-5 h-5" />
-                    Email Directly
-                  </a>
-                  <a
-                    href={`tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`}
-                    className="inline-flex items-center justify-center gap-2 bg-zinc-900 border border-white/10 text-white px-8 py-4 rounded-full font-medium hover:border-amber-500/50 hover:bg-zinc-800 transition-all"
-                  >
-                    <Phone className="w-5 h-5" />
-                    {siteConfig.contact.phone}
-                  </a>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <a
-                    href={siteConfig.links.instagram}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-3 rounded-full bg-zinc-900 border border-white/5 text-zinc-400 hover:text-amber-500 hover:border-amber-500/30 transition-all"
-                  >
-                    <Instagram className="w-5 h-5" />
-                  </a>
-                  <a
-                    href={siteConfig.links.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-3 rounded-full bg-zinc-900 border border-white/5 text-zinc-400 hover:text-amber-500 hover:border-amber-500/30 transition-all"
-                  >
-                    <Linkedin className="w-5 h-5" />
-                  </a>
-                </div>
+                <p className="text-sm font-semibold text-foreground">Connect with Sandesh</p>
+                <p className="text-xs text-foreground/60">Follow updates on social or reach out directly.</p>
               </div>
-            </motion.div>
-          </div>
+
+              <div className="flex items-center gap-3">
+                <a
+                  href={siteConfig.links.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Follow on Instagram"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background text-foreground/70 transition-colors hover:border-accent-text/40 hover:text-accent-text"
+                >
+                  <Instagram className="h-4 w-4" />
+                </a>
+                <a
+                  href={siteConfig.links.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Follow on LinkedIn"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background text-foreground/70 transition-colors hover:border-accent-text/40 hover:text-accent-text"
+                >
+                  <Linkedin className="h-4 w-4" />
+                </a>
+                <a
+                  href={`mailto:${siteConfig.contact.email}`}
+                  className="inline-flex h-10 items-center gap-1.5 rounded-full border border-border bg-background px-4 text-xs font-semibold text-foreground transition-colors hover:border-foreground"
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  Email
+                </a>
+              </div>
+            </div>
+          </article>
         </div>
-      </section>
-    </main>
+      </main>
+
+      <Footer showInstagram={false} tone="sandstone" />
+    </>
   );
 }

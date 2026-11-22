@@ -13,6 +13,8 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+const WRAP = 'mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12 2xl:max-w-[88rem] 3xl:max-w-[112rem] 3xl:px-16';
+
 export async function generateMetadata({
   searchParams,
 }: {
@@ -75,40 +77,41 @@ export default async function BlogListingPage({
 
   return (
     <>
-      <main className="min-h-screen pt-32">
-        <section className="pb-16">
-          <div className="container mx-auto px-6">
-            <div className="mx-auto mb-14 text-center">
-              <span className="mb-5 inline-block rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-xs font-semibold tracking-[0.2em] text-amber-400">
-                THE JOURNAL
+      <main className="min-h-screen pt-28 sm:pt-32">
+        <section className="pb-16 sm:pb-20">
+          <div className={WRAP}>
+            {/* Header */}
+            <div className="mx-auto mb-14 max-w-3xl text-center">
+              <span className="mb-5 inline-block rounded-full border border-border bg-card px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-accent-text">
+                The Journal
               </span>
-              {/* max-w-3xl keeps the headline near the 60-75 character measure
-                  that stays readable on wide screens. */}
-              <h1 className="mx-auto mb-5 max-w-3xl text-4xl font-bold leading-[1.15] tracking-tight text-white md:text-6xl">
+              <h1 className="mx-auto mb-5 max-w-3xl text-3xl font-bold leading-[1.15] tracking-tight text-foreground sm:text-4xl md:text-5xl lg:text-6xl">
                 Photography Stories{' '}
-                <span className="text-amber-500">&amp; Insights</span>
+                <span className="text-accent-text">&amp; Insights</span>
               </h1>
-              <p className="mx-auto max-w-2xl text-base leading-relaxed text-muted-foreground">
+              <p className="mx-auto max-w-2xl text-base leading-relaxed text-foreground/70 sm:text-lg">
                 Notes on visual storytelling, wedding and portrait work, and
                 commercial photography from our team in Coimbatore.
               </p>
             </div>
 
+            {/* Category filter + tag indicator */}
             <div className="mb-12 space-y-4">
               <BlogCategoryFilter active={activeCategory} section="PHOTOGRAPHY" basePath="/blog" />
 
               {tag && (
-                <p className="text-center text-sm text-muted-foreground">
+                <p className="text-center text-sm text-foreground/70">
                   Showing posts tagged{' '}
-                  <span className="font-semibold text-amber-400">{tag}</span>
+                  <span className="font-semibold text-accent-text">{tag}</span>
                   {' · '}
-                  <Link href="/blog" className="underline underline-offset-2 hover:text-white">
+                  <Link href="/blog" className="underline underline-offset-2 hover:text-foreground">
                     clear
                   </Link>
                 </p>
               )}
             </div>
 
+            {/* Post grid */}
             <BlogPostGrid
               posts={posts}
               initialHasMore={hasMore}
@@ -121,7 +124,7 @@ export default async function BlogListingPage({
         </section>
       </main>
 
-      <Footer />
+      <Footer showInstagram={false} tone="sandstone" />
     </>
   );
 }

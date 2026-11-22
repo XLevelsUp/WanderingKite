@@ -40,7 +40,7 @@ export function BlogBody({ intro, sections, qa, cta }: BlogBodyProps) {
 
       {sections.map((section: any) => (
         <section key={section.id} className="space-y-5">
-          <h2 className="text-2xl font-bold text-amber-500 md:text-3xl">
+          <h2 className="text-2xl font-bold text-foreground md:text-3xl">
             {section.heading}
           </h2>
 
@@ -62,7 +62,7 @@ export function BlogBody({ intro, sections, qa, cta }: BlogBodyProps) {
 
           {(section.blog_subsections ?? []).map((sub: any) => (
             <div key={sub.id} className="space-y-3 pt-2">
-              <h3 className="text-xl font-semibold text-amber-400">{sub.heading}</h3>
+              <h3 className="text-xl font-semibold text-foreground/90">{sub.heading}</h3>
               <RichBody html={sub.body} />
             </div>
           ))}
@@ -71,16 +71,16 @@ export function BlogBody({ intro, sections, qa, cta }: BlogBodyProps) {
 
       {qa.length > 0 && (
         <section className="space-y-6">
-          <h2 className="text-2xl font-bold text-amber-500 md:text-3xl">
+          <h2 className="text-2xl font-bold text-foreground md:text-3xl">
             Questions &amp; Answers
           </h2>
           <div className="space-y-5">
             {qa.map((item: any) => (
               <div
                 key={item.id}
-                className="rounded-2xl border border-border bg-card/40 p-6"
+                className="rounded-2xl border border-border bg-card p-6"
               >
-                <h3 className="mb-2 text-base font-semibold text-amber-400">
+                <h3 className="mb-2 text-base font-semibold text-foreground">
                   {item.question}
                 </h3>
                 <RichBody html={item.answer} />
@@ -91,9 +91,9 @@ export function BlogBody({ intro, sections, qa, cta }: BlogBodyProps) {
       )}
 
       {cta && (cta.heading || cta.body || (cta.blog_cta_buttons ?? []).length > 0) && (
-        <section className="rounded-3xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-transparent p-8 md:p-10">
+        <section className="rounded-3xl border border-accent-text/20 bg-gradient-to-br from-accent-text/5 to-transparent p-8 md:p-10">
           {cta.heading && (
-            <h2 className="mb-3 text-2xl font-bold text-white md:text-3xl">
+            <h2 className="mb-3 text-2xl font-bold text-foreground md:text-3xl">
               {cta.heading}
             </h2>
           )}
@@ -105,7 +105,7 @@ export function BlogBody({ intro, sections, qa, cta }: BlogBodyProps) {
                 <a
                   key={button.id}
                   href={button.href}
-                  className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-bold text-black transition-transform hover:scale-105"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition-[filter,transform] duration-200 hover:brightness-95 active:scale-[0.97]"
                 >
                   {button.label}
                 </a>
