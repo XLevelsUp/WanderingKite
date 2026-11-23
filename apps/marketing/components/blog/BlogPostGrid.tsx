@@ -94,9 +94,9 @@ export function BlogPostGrid({
   if (loaded.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 py-20 text-center">
-        <ImageIcon className="h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
-        <p className="text-muted-foreground">No posts here yet.</p>
-        <p className="text-sm text-muted-foreground/70">
+        <ImageIcon className="h-8 w-8 text-foreground/30" strokeWidth={1.5} />
+        <p className="text-foreground/70">No posts here yet.</p>
+        <p className="text-sm text-foreground/50">
           Try another category, or check back soon.
         </p>
       </div>
@@ -107,7 +107,7 @@ export function BlogPostGrid({
 
   return (
     <div className="space-y-12">
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
         {shown.map((post, i) => (
           <article
             key={post.id}
@@ -119,9 +119,10 @@ export function BlogPostGrid({
           >
             <Link
               href={`${basePath}/${post.slug}`}
-              className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="block h-full rounded-2xl border border-border/70 bg-card overflow-hidden transition-all duration-300 hover:border-accent-text/40 hover:shadow-[0_16px_36px_-12px_rgba(0,0,0,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
-              <div className="relative mb-5 aspect-[3/2] overflow-hidden rounded-2xl border border-border/60 bg-card">
+              {/* Image */}
+              <div className="relative aspect-[3/2] overflow-hidden bg-muted">
                 {post.featured_image ? (
                   <>
                     <Image
@@ -131,50 +132,52 @@ export function BlogPostGrid({
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       className={`${imageFitClass(post.featured_image_fit)} transition-transform duration-700 ease-out group-hover:scale-[1.04]`}
                     />
-                    {/* Bottom scrim so the card reads as one unit and the
-                        image never competes with the title below it. */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                    {/* Subtle hover scrim */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                   </>
                 ) : (
-                  <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground/50">
+                  <div className="flex h-full flex-col items-center justify-center gap-2 text-foreground/30">
                     <ImageIcon className="h-7 w-7" strokeWidth={1.5} />
                   </div>
                 )}
               </div>
 
-              {/* Category sits with the content, not on the image. */}
-              <div className="mb-2.5 flex items-center gap-2">
-                <span className="h-px w-5 bg-amber-500/60" aria-hidden />
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-500">
-                  {CATEGORY_LABELS[post.category] ?? post.category}
-                </span>
-              </div>
+              {/* Content */}
+              <div className="p-5 sm:p-6">
+                {/* Category tag */}
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="h-px w-5 bg-accent-text/50" aria-hidden />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-accent-text">
+                    {CATEGORY_LABELS[post.category] ?? post.category}
+                  </span>
+                </div>
 
-              <h2 className="mb-2 text-xl font-bold leading-snug text-white transition-colors group-hover:text-amber-400">
-                {post.title}
-              </h2>
+                <h2 className="mb-2 text-lg font-bold leading-snug tracking-tight text-foreground transition-colors group-hover:text-accent-text sm:text-xl line-clamp-2">
+                  {post.title}
+                </h2>
 
-              {post.excerpt && (
-                <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-                  {post.excerpt}
-                </p>
-              )}
+                {post.excerpt && (
+                  <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-foreground/70">
+                    {post.excerpt}
+                  </p>
+                )}
 
-              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <time dateTime={post.published_at}>
-                  {new Date(post.published_at).toLocaleDateString('en-IN', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}
-                </time>
-                <span className="text-muted-foreground/40" aria-hidden>
-                  •
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {post.reading_time} min read
-                </span>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-foreground/60">
+                  <time dateTime={post.published_at}>
+                    {new Date(post.published_at).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </time>
+                  <span className="text-foreground/30" aria-hidden>
+                    •
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {post.reading_time} min read
+                  </span>
+                </div>
               </div>
             </Link>
           </article>

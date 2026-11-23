@@ -55,11 +55,11 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
 
   return (
     <section id="comments" className="scroll-mt-24">
-      <h2 className="mb-6 flex items-center gap-2 text-2xl font-bold text-white">
-        <MessageSquare className="h-5 w-5 text-amber-500" />
+      <h2 className="mb-6 flex items-center gap-2 text-2xl font-bold text-foreground">
+        <MessageSquare className="h-5 w-5 text-accent-text" />
         Comments
         {comments.length > 0 && (
-          <span className="text-base font-normal text-slate-500">
+          <span className="text-base font-normal text-foreground/50">
             ({comments.length})
           </span>
         )}
@@ -70,13 +70,13 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
           {comments.map((comment) => (
             <div
               key={comment.id}
-              className="rounded-xl border border-border bg-card/50 p-5"
+              className="rounded-xl border border-border bg-card p-5"
             >
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold text-white">
+                <span className="font-semibold text-foreground">
                   {comment.author_name}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-foreground/60">
                   {new Date(comment.created_at).toLocaleDateString('en-IN', {
                     day: 'numeric',
                     month: 'long',
@@ -84,7 +84,7 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
                   })}
                 </span>
               </div>
-              <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground/70">
                 {comment.body}
               </p>
             </div>
@@ -92,19 +92,19 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
         </div>
       )}
 
-      <div className="rounded-2xl border border-border bg-card/40 p-6">
-        <h3 className="mb-1 text-lg font-bold text-white">Leave a comment</h3>
-        <p className="mb-5 text-xs text-muted-foreground">
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <h3 className="mb-1 text-lg font-bold text-foreground">Leave a comment</h3>
+        <p className="mb-5 text-xs text-foreground/60">
           Comments are reviewed before they appear.
         </p>
 
         {submitted ? (
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-300">
+          <div className="rounded-xl border border-emerald-600/30 bg-emerald-600/10 p-4 text-sm text-emerald-700">
             Thanks — your comment has been submitted.
             <button
               type="button"
               onClick={() => setSubmitted(false)}
-              className="ml-2 underline underline-offset-2 hover:text-emerald-200"
+              className="ml-2 underline underline-offset-2 hover:text-emerald-600"
             >
               Write another
             </button>
@@ -125,7 +125,7 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="comment-email">
-                  Email <span className="text-muted-foreground">(optional)</span>
+                  Email <span className="text-foreground/50">(optional)</span>
                 </Label>
                 <Input
                   id="comment-email"
@@ -147,10 +147,10 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
                 maxLength={2000}
                 rows={4}
                 disabled={isPending}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:border-amber-500/50 focus:outline-none"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:border-accent-text/50 focus:outline-none focus:ring-1 focus:ring-ring"
                 placeholder="Share your thoughts…"
               />
-              <p className="text-right text-[11px] text-muted-foreground">
+              <p className="text-right text-[11px] text-foreground/50">
                 {body.length}/2000
               </p>
             </div>
