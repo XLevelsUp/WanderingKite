@@ -109,9 +109,10 @@ function ReviewCard({ review }: { review: Review }) {
 
   return (
     <figure className="flex w-full flex-col rounded-2xl border border-border bg-card p-6 transition-colors duration-300 hover:border-primary/40">
-      <div className="flex gap-1" aria-label={`${review.rating} out of 5 stars`}>
+      <div className="flex gap-1">
+        <span className="sr-only">{review.rating} out of 5 stars</span>
         {[...Array(5)].map((_, i) => (
-          <Star key={i} aria-hidden className={`h-4 w-4 ${i < review.rating ? 'fill-primary text-primary' : 'text-border'}`} />
+          <Star key={i} aria-hidden="true" className={`h-4 w-4 ${i < review.rating ? 'fill-primary text-primary' : 'text-border'}`} />
         ))}
       </div>
 

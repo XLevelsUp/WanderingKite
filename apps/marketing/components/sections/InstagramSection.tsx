@@ -1,55 +1,200 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowUpRight, Instagram, Play, Camera, Aperture, Clapperboard, Lightbulb, Sparkles } from 'lucide-react';
+import { ArrowUpRight, ChevronLeft, ChevronRight, Instagram } from 'lucide-react';
 import { InstagramFeed } from '@/components/shared/InstagramFeed';
 
 const HANDLES = { wanderingkite: 'wanderingkitestudio', studio: 'studiospacecbe' } as const;
 
-// Image-free tiles: theme-token gradients (light/dark orange on studio, taupe on the landing page) with one craft icon each.
-const TILES = [
-  { Icon: Play, tone: 'from-primary-deep/40 via-primary/15 to-transparent' },
-  { Icon: Camera, tone: 'from-primary/25 to-transparent' },
-  { Icon: Aperture, tone: 'from-transparent to-primary-deep/30' },
-  { Icon: Lightbulb, tone: 'from-primary/10 via-transparent to-primary/25' },
-  { Icon: Clapperboard, tone: 'from-primary-deep/30 to-primary/5' },
-  { Icon: Sparkles, tone: 'from-transparent via-primary/10 to-primary-deep/40' },
+const STUDIO_FALLBACK_SLIDES = [
+  {
+    src: '/images/instagram-fallback/podcast-carousel-01-overview.webp',
+    alt: 'Studio Space Coimbatore — One Space, Three Ways to Podcast',
+  },
+  {
+    src: '/images/instagram-fallback/podcast-carousel-02-single-camera.webp',
+    alt: '01 Single Camera — Personal Content setup at Studio Space Coimbatore',
+  },
+  {
+    src: '/images/instagram-fallback/podcast-carousel-03-double-camera.webp',
+    alt: '02 Double Camera — Split Screen host and guest angles',
+  },
+  {
+    src: '/images/instagram-fallback/podcast-carousel-04-triple-camera.webp',
+    alt: '03 Triple Camera — Multi-Angle wide, host close, and guest close shots',
+  },
+  {
+    src: '/images/instagram-fallback/podcast-carousel-05-ready-to-record.webp',
+    alt: 'Ready to Record — Contact Studio Space Coimbatore',
+  },
 ] as const;
 
-/* Feed-down fallback without photos: profile-style panel (avatar ring + handle) over a 3×2 grid of gradient tiles; the whole panel opens Instagram. */
-function InstagramFallback({ handle }: { handle: string }) {
+const PHOTOGRAPHY_FALLBACK_SLIDES = [
+  {
+    src: '/images/instagram-fallback/bridal-carousel-01-the-bride.webp',
+    alt: 'The Bride — A celebration of love and tradition by Wandering Kite Photography',
+  },
+  {
+    src: '/images/instagram-fallback/bridal-carousel-02-a-new-journey.webp',
+    alt: 'A New Journey — Monochrome bridal portrait editorial',
+  },
+  {
+    src: '/images/instagram-fallback/bridal-carousel-03-monochrome-portraits.webp',
+    alt: 'Black and white bridal portrait diptych by Wandering Kite',
+  },
+  {
+    src: '/images/instagram-fallback/bridal-carousel-04-getting-ready-collage.webp',
+    alt: 'Bridal getting ready monochrome collage',
+  },
+  {
+    src: '/images/instagram-fallback/bridal-carousel-05-shejal-story.webp',
+    alt: 'Shejal — Bridal story editorial in red',
+  },
+  {
+    src: '/images/instagram-fallback/bridal-carousel-06-the-regal-grace.webp',
+    alt: 'The Regal Grace — Bridal portrait triptych',
+  },
+  {
+    src: '/images/instagram-fallback/bridal-carousel-07-every-detail-held-close.webp',
+    alt: 'Every detail, held close — Getting ready bridal close-up',
+  },
+  {
+    src: '/images/instagram-fallback/bridal-carousel-08-quiet-radiance.webp',
+    alt: 'Quiet Radiance — Bridal editorial collage',
+  },
+  {
+    src: '/images/instagram-fallback/bridal-carousel-09-grace-portrait.webp',
+    alt: 'Grace — Smiling bridal portrait in red attire',
+  },
+  {
+    src: '/images/instagram-fallback/bridal-carousel-10-every-detail-matters.webp',
+    alt: 'Because in your dreams, every detail matters — Bridal portrait',
+  },
+] as const;
+
+/* Feed-down fallback carousel: displays curated account-specific slides in numbered order when the Instagram token is unavailable. */
+function InstagramFallback({ handle, account }: { handle: string; account: keyof typeof HANDLES }) {
+  const slides = account === 'studio' ? STUDIO_FALLBACK_SLIDES : PHOTOGRAPHY_FALLBACK_SLIDES;
+  const aspectClass = account === 'studio' ? 'aspect-square' : 'aspect-[4/5]';
+  const reduce = useReducedMotion();
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { loop: true, align: 'start', containScroll: 'trimSnaps' },
+    reduce ? [] : [Autoplay({ delay: 4500, stopOnInteraction: true })]
+  );
+  const [selected, setSelected] = useState(0);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => setSelected(emblaApi.selectedScrollSnap());
+    onSelect();
+    emblaApi.on('select', onSelect);
+    emblaApi.on('reInit', onSelect);
+    return () => {
+      emblaApi.off('select', onSelect);
+      emblaApi.off('reInit', onSelect);
+    };
+  }, [emblaApi]);
+
   return (
-    <a
-      href={`https://instagram.com/${handle}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={`View @${handle} on Instagram`}
-      className="group block rounded-2xl border border-border bg-background p-4 transition-colors duration-300 hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-6"
-    >
-      <div className="flex items-center gap-4">
-        <span aria-hidden className="rounded-full bg-gradient-to-tr from-primary-deep to-primary p-0.5">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-background text-primary">
-            <Instagram className="h-5 w-5" />
+    <div className="rounded-2xl border border-border bg-background p-4 sm:p-6">
+      <div className="flex items-center justify-between gap-3">
+        <a
+          href={`https://instagram.com/${handle}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`View @${handle} on Instagram`}
+          className="group inline-flex min-w-0 items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
+        >
+          <span aria-hidden className="rounded-full bg-gradient-to-tr from-primary-deep to-primary p-0.5 shrink-0">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-background text-primary">
+              <Instagram className="h-4 w-4" />
+            </span>
           </span>
-        </span>
-        <p className="min-w-0 flex-1 truncate text-base font-semibold text-foreground">@{handle}</p>
-        <span aria-hidden className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border text-foreground transition-colors duration-300 group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
-          <ArrowUpRight className="h-4 w-4" />
-        </span>
+          <span className="truncate text-sm font-semibold text-foreground group-hover:text-accent-text transition-colors sm:text-base">
+            @{handle}
+          </span>
+          <ArrowUpRight className="h-4 w-4 shrink-0 text-foreground/60 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden />
+        </a>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => emblaApi?.scrollPrev()}
+            aria-label="Previous slide"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => emblaApi?.scrollNext()}
+            aria-label="Next slide"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
-      <ul aria-hidden className="mt-4 grid grid-cols-3 gap-2 sm:mt-6 sm:gap-4">
-        {TILES.map(({ Icon, tone }, i) => (
-          <li
-            key={i}
-            className={`flex aspect-square items-center justify-center rounded-xl border border-border bg-card bg-gradient-to-br sm:aspect-[4/3] ${tone}`}
-          >
-            <Icon className="h-6 w-6 text-foreground/40 transition-[color,transform] duration-500 group-hover:scale-110 group-hover:text-primary motion-reduce:transition-none" />
-          </li>
-        ))}
-      </ul>
-    </a>
+      <div className="mt-4 overflow-hidden sm:mt-5" ref={emblaRef}>
+        <div className="-ml-3 flex sm:-ml-4">
+          {slides.map((slide, i) => (
+            <div
+              key={slide.src}
+              className="min-w-0 flex-[0_0_88%] pl-3 sm:flex-[0_0_50%] sm:pl-4"
+            >
+              <a
+                href={`https://instagram.com/${handle}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group relative block ${aspectClass} overflow-hidden rounded-xl border border-border bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+              >
+                {/* srcSet: phones take the 640px copy (name-w640.webp, made with sharp); big/retina screens the 1440px original.
+                    Image optimisation is off site-wide, so next/image would always send the 1440px file. */}
+                <img
+                  src={slide.src.replace(/\.webp$/, '-w640.webp')}
+                  srcSet={`${slide.src.replace(/\.webp$/, '-w640.webp')} 640w, ${slide.src} 1440w`}
+                  sizes="(min-width: 1024px) 28vw, (min-width: 640px) 45vw, 85vw"
+                  alt={slide.alt}
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+                <span className="sr-only">Slide {i + 1} of {slides.length}</span>
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-1" role="tablist" aria-label="Carousel slides">
+          {slides.map((slide, i) => (
+            <button
+              key={slide.src}
+              type="button"
+              role="tab"
+              onClick={() => emblaApi?.scrollTo(i)}
+              aria-label={`Go to slide ${i + 1}`}
+              aria-selected={selected === i}
+              className="flex h-7 items-center justify-center px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
+            >
+              <span
+                className={`block h-2 rounded-full transition-all duration-300 ${
+                  selected === i ? 'w-6 bg-accent-text' : 'w-2 bg-border hover:bg-foreground/40'
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+        <span className="text-xs font-medium tabular-nums text-foreground/60">
+          {String(selected + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
+        </span>
+      </div>
+    </div>
   );
 }
 const SETTLE = { type: 'spring', bounce: 0, duration: 0.9 } as const;
@@ -60,17 +205,23 @@ export function InstagramSection({ account = 'wanderingkite', first = false }: {
   const reduce = useReducedMotion();
   const [feedOk, setFeedOk] = useState(true);
   const onUnavailable = useCallback(() => setFeedOk(false), []);
-  const reveal = (delay = 0) => ({
-    initial: reduce ? { opacity: 0 } : { opacity: 0, y: 24 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: '-60px' },
-    transition: { ...SETTLE, delay },
-  });
+  // When this is the FIRST section on the page (e.g. /studiospace), its text is the page's LCP element: render it
+  // visible straight from the HTML. A hide-then-fade-in here kept it invisible until JS hydrated (~3.8s render delay
+  // on mobile). Lower on a page, the scroll reveal stays.
+  const reveal = (delay = 0) =>
+    first
+      ? {}
+      : {
+          initial: reduce ? { opacity: 0 } : { opacity: 0, y: 24 },
+          whileInView: { opacity: 1, y: 0 },
+          viewport: { once: true, margin: '-60px' },
+          transition: { ...SETTLE, delay },
+        };
 
   return (
     <section className="relative border-y border-border bg-card" aria-label="Follow us on Instagram">
       {/* Strict spacing (8px grid): py 64/80/96 (top = 80px header + 32/48/64 when first on the page), block gap 48 → 64 at lg. */}
-      <div className={`mx-auto grid w-full max-w-7xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-12 lg:gap-16 lg:px-12 2xl:max-w-[88rem] 3xl:max-w-[112rem] 3xl:px-16 ${first ? 'pb-16 pt-28 sm:pb-20 sm:pt-32 lg:pb-24 lg:pt-36' : 'py-16 sm:py-20 lg:py-24'}`}>
+      <div className={`mx-auto grid w-full max-w-7xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-12 lg:gap-16 lg:px-12 2xl:max-w-[88rem] 3xl:max-w-[112rem] 3xl:px-16 ${first ? 'pb-16 pt-28 sm:pb-20 sm:pt-32 lg:pb-24 lg:pt-36' : 'pt-10 pb-16 sm:pt-12 sm:pb-20 lg:pt-14 lg:pb-24'}`}>
         {/* ── Header ── */}
         {/* Tablet (md–lg): copy left, offer right, so the header spans the same width as the media below. */}
         <motion.div
@@ -123,7 +274,7 @@ export function InstagramSection({ account = 'wanderingkite', first = false }: {
           {feedOk ? (
             <InstagramFeed account={account} variant="gallery" onUnavailable={onUnavailable} />
           ) : (
-            <InstagramFallback handle={HANDLE} />
+            <InstagramFallback handle={HANDLE} account={account} />
           )}
         </motion.div>
       </div>

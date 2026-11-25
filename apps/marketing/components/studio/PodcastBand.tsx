@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { ArrowRight, Headphones, Mic, Radio, Zap } from 'lucide-react';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
 import { STUDIO_WRAP } from './wrap';
@@ -16,7 +15,7 @@ const WAVE = [30, 55, 80, 45, 95, 60, 35, 70, 100, 50, 75, 40, 85, 55, 30, 65, 9
 /** Studio-page band that promotes the Podcast Studio page (previously only linked from the footer). */
 export function PodcastBand() {
   return (
-    <section aria-labelledby="podcast-band-heading" className="border-t border-border">
+    <section id="podcast" aria-labelledby="podcast-band-heading" className="scroll-mt-20 border-t border-border">
       <div className={`${STUDIO_WRAP} py-16 sm:py-20`}>
         <div className="relative overflow-hidden rounded-2xl border border-primary-deep/40 bg-gradient-to-br from-primary-deep/20 via-card to-card">
           <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 flex h-16 items-end gap-1 px-6 opacity-10 lg:h-20">
@@ -38,13 +37,13 @@ export function PodcastBand() {
                 Broadcast-quality podcast recording with professional acoustics, premium microphones, and expert support.
               </p>
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                <Link
-                  href="/podcast"
+                <a
+                  href="#studio-pricing"
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-deep to-primary px-6 text-sm font-semibold text-primary-foreground transition-[filter,transform] duration-200 hover:brightness-110 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  Podcast Studio
+                  View Podcast Packages
                   <ArrowRight className="h-4 w-4" />
-                </Link>
+                </a>
                 <a
                   href={generateWhatsAppLink('podcast')}
                   target="_blank"

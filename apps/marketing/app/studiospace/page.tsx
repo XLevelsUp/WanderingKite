@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Script from 'next/script';
+import { AfterInteraction } from '@/components/analytics/AfterInteraction';
 import { BookingFlyout } from '@/components/booking/BookingFlyout';
 import { Footer } from '@/components/shared/Footer';
 import { StudioReviews } from '@/components/studio/StudioReviews';
@@ -12,7 +12,7 @@ import {
   studioProcessSteps,
   studioFAQs,
 } from '@/lib/service-page-data';
-import { getEquipment } from '@/actions/equipment-public';
+import { getStudioEquipmentCached, getStudioPackagesCached, getStudioAddOnsCached, getPodcastPackagesCached } from '@/lib/studio-data';
 
 import {
   Building2,
@@ -35,16 +35,14 @@ import { StudioCarousel } from '@/components/sections/StudioCarousel';
 import { InstagramSection } from '@/components/sections/InstagramSection';
 import { SectionBoundary } from '@/components/shared/SectionBoundary';
 import { StudioPricingEngine } from '@/components/studio/StudioPricingEngine';
-import { getStudioPackages, getStudioAddOns, getPodcastPackages } from '@/actions/studio-pricing-public';
 import { BackdropsGallery } from '@/components/studio/BackdropsGallery';
 import ServiceTerms from '@/components/sections/ServiceTerms';
 
-import { JsonLd } from '@/lib/schema-helpers';
+import { JsonLd, buildReviewSchema } from '@/lib/schema-helpers';
 
-// This page fetches live equipment via a cookie-based Supabase client, so it
-// must render per-request. Marking it dynamic stops the build-time
-// DYNAMIC_SERVER_USAGE error and ensures the equipment section always loads.
-export const dynamic = 'force-dynamic';
+// Pricing + equipment come from cached, cookie-free reads (lib/studio-data.ts), so the page is pre-built and
+// refreshed every 5 minutes (ISR) instead of rendered on every request — ~1.2s faster first byte on mobile.
+export const revalidate = 300;
 
 const podcastEquipment = [
   {
@@ -72,7 +70,7 @@ const podcastEquipment = [
 export const metadata: Metadata = {
   title: 'Photography Studio Rental in Coimbatore | 1200 Sq Ft | RS Puram | Book by Hour',
   description:
-    'A Professional Photography Studio Built for Creators in Coimbatore. Rent our premium 1200 sq ft studio space with Profoto lighting, infinity wall, and backdrops. Book by the hour.',
+    'A Professional Photography Studio Built for Creators in Coimbatore. Rent our premium 1200 sq ft studio space with Godox lighting, infinity wall, and backdrops. Book by the hour.',
   keywords: [
     // Core local terms
     'photography studio rental Coimbatore',
@@ -98,22 +96,22 @@ export const metadata: Metadata = {
     'photo studio Salem Tamil Nadu',
     'studio for rent Tamil Nadu',
     // Equipment included
-    'studio with Profoto lighting Coimbatore',
+    'studio with Godox lighting Coimbatore',
     'studio rental with equipment included',
   ],
   openGraph: {
     title: 'Photography Studio Rental in Coimbatore | 1200 Sq Ft | RS Puram | Book by Hour',
     description:
-      'A Professional Photography Studio Built for Creators in Coimbatore. Rent our premium 1200 sq ft studio space with Profoto lighting, infinity wall & backdrops.',
-    url: 'https://wanderingkite.in/studiospace',
+      'A Professional Photography Studio Built for Creators in Coimbatore. Rent our premium 1200 sq ft studio space with Godox lighting, infinity wall & backdrops.',
+    url: 'https://www.wanderingkite.in/studiospace',
     images: [{ url: '/og-studio.jpg', width: 1200, height: 630 }],
   },
   alternates: {
-    canonical: 'https://wanderingkite.in/studiospace',
+    canonical: 'https://www.wanderingkite.in/studiospace',
   },
 };
 
-const studioFaqSchema = {
+const buildStudioFaqSchema = (priceAnswer: string) => ({
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
   mainEntity: [
@@ -122,7 +120,7 @@ const studioFaqSchema = {
       name: 'What is the studio rental price per hour in Coimbatore?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Our hourly studio rental starts at ₹999/hr. Half Day (4 hrs) is ₹3,499 and Full Day (8 hrs) is ₹6,999. All packages include lights, tripod and studio space.',
+        text: priceAnswer,
       },
     },
     {
@@ -182,7 +180,7 @@ const studioFaqSchema = {
       },
     },
   ],
-};
+});
 
 const studioBreadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -192,27 +190,27 @@ const studioBreadcrumbSchema = {
       '@type': 'ListItem',
       position: 1,
       name: 'Home',
-      item: 'https://wanderingkite.in',
+      item: 'https://www.wanderingkite.in',
     },
     {
       '@type': 'ListItem',
       position: 2,
       name: 'Studio Space Rental',
-      item: 'https://wanderingkite.in/studiospace',
+      item: 'https://www.wanderingkite.in/studiospace',
     },
   ],
 };
 
-const studioPricingSchema = {
+const buildStudioPricingSchema = (hourly: number, halfDay: number, fullDay: number) => ({
   '@context': 'https://schema.org',
   '@type': 'Service',
-  '@id': 'https://wanderingkite.in/studiospace#service',
+  '@id': 'https://www.wanderingkite.in/studiospace#service',
   'name': 'Photography Studio Rental Coimbatore',
-  'image': 'https://wanderingkite.in/images/studiospace/infinity.webp',
-  'description': 'Rent our premium 1200 sq ft photography and video studio in RS Puram, Coimbatore. Infinity wall, Profoto lighting, and flexible hourly booking.',
+  'image': 'https://www.wanderingkite.in/images/studiospace/infinity.webp',
+  'description': 'Rent our premium 1200 sq ft photography and video studio in RS Puram, Coimbatore. Infinity wall, Godox lighting, and flexible hourly booking.',
   'provider': {
     '@type': 'LocalBusiness',
-    '@id': 'https://wanderingkite.in/#business',
+    '@id': 'https://www.wanderingkite.in/#business',
     'name': 'Wandering Kite',
   },
   'areaServed': { '@type': 'City', 'name': 'Coimbatore' },
@@ -220,11 +218,11 @@ const studioPricingSchema = {
     {
       '@type': 'Offer',
       'name': 'Hourly Studio Rental',
-      'price': '1500',
+      'price': String(hourly),
       'priceCurrency': 'INR',
       'priceSpecification': {
         '@type': 'UnitPriceSpecification',
-        'price': '1500',
+        'price': String(hourly),
         'priceCurrency': 'INR',
         'unitText': 'HOUR',
       },
@@ -232,79 +230,18 @@ const studioPricingSchema = {
     {
       '@type': 'Offer',
       'name': 'Half Day Studio Rental',
-      'price': '6000',
+      'price': String(halfDay),
       'priceCurrency': 'INR',
     },
     {
       '@type': 'Offer',
       'name': 'Full Day Studio Rental',
-      'price': '10000',
+      'price': String(fullDay),
       'priceCurrency': 'INR',
     },
   ],
-  'aggregateRating': {
-    '@type': 'AggregateRating',
-    'ratingValue': '5',
-    'bestRating': '5',
-    'worstRating': '1',
-    'ratingCount': '9',
-  },
-  'review': [
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'Soundarya Jayaraj' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'Had a really good experience at this studio! ✨ The space is clean, well-maintained and has a great setup for shoots. The ambience is really nice, and there are plenty of good spots to create different kinds of content. 📸🤍\nThe overall experience was smooth and comfortable. Definitely a good place for photoshoots, reels and content creation. I would happily recommend this studio! ✨',
-    },
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'sukan ya' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'Had a wonderful experience shooting here for my portfolio. The space has a great ambience, and the arrangements and coordination were handled really well. Everything felt organised without making the experience feel rushed. Really happy with how the shoot turned out and would definitely come back again. ✨',
-    },
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'bharkavi' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'Had a really good experience with the studio space. The place was clean, well-maintained, and had a great setup for photoshoots and creative work. The team was also helpful and easy to coordinate with. Would definitely recommend this studio space.',
-    },
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'Ahamadhul Kabeer N' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'I loved my experience here! The studio has a great vibe, the staff are very friendly, and the service was really good. Definitely worth recommending!',
-    },
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'PraveeN Raj' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'It was an awesome experience shooting here. The team was very helpful and I was happy with the way they treated us. Highly recommend 👍',
-    },
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'Shamini Deepak7' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'The studio space is awesome. Nice working with Mr.Sandesh. They cooperated very well and gave more ideas for shooting.',
-    },
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'Sneha Gangadharan' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'The space is so good! Had a wonderful shooting experience. We shot for one of our clients. Definitely recommended',
-    },
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'Poovitha' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'Good studio, we did our Onam shoot here highly recommend',
-    },
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'Senthilprabhu E' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'Great experience and value for money. Best. studio in Coimbatore',
-    },
-  ],};
+  ...buildReviewSchema(studioTestimonials),
+});
 
 const facilities = [
   {
@@ -315,7 +252,7 @@ const facilities = [
   {
     icon: Lightbulb,
     title: 'Professional Lighting',
-    description: 'Continuous & strobe lighting setups featuring Profoto gear.',
+    description: 'Continuous & strobe lighting setups featuring Godox gear.',
   },
   {
     icon: Building2,
@@ -393,10 +330,8 @@ export default async function StudioPage() {
   // Fetch live equipment summary and filter for Studio Space Rental gear
   let rentalEquipment: any[] = [];
   try {
-    const allEquipment = await getEquipment();
-    rentalEquipment = allEquipment.filter(
-      (eq: any) => eq.available_for_studio === true
-    );
+    // Already filtered to studio gear, names cleaned, photos as 800px thumbnails (lib/studio-data.ts).
+    rentalEquipment = await getStudioEquipmentCached();
   } catch (error) {
     console.error('Failed to fetch equipment for studio page:', error);
   }
@@ -408,13 +343,32 @@ export default async function StudioPage() {
     return [];
   };
   const [pkgRes, addOnRes, podcastRes] = await Promise.allSettled([
-    getStudioPackages(),
-    getStudioAddOns(),
-    getPodcastPackages(),
+    getStudioPackagesCached(),
+    getStudioAddOnsCached(),
+    getPodcastPackagesCached(),
   ]);
   const studioPackages = settle(pkgRes, 'studio packages');
   const studioAddOns = settle(addOnRes, 'studio add-ons');
   const podcastRows = settle(podcastRes, 'podcast packages');
+
+  // Keep FAQ copy and JSON-LD schemas synced with live studio_packages prices.
+  const findPkgPrice = (match: RegExp, fallback: number) => {
+    const pkg = (studioPackages as any[]).find(
+      (p) => match.test(String(p.duration_label ?? '')) || match.test(String(p.name ?? ''))
+    );
+    const val = Number(pkg?.price);
+    return Number.isFinite(val) && val > 0 ? val : fallback;
+  };
+  const hourlyPrice = findPkgPrice(/per\s*hour|quick/i, 999);
+  const halfDayPrice = findPkgPrice(/4\s*hours|creator/i, 3999);
+  const fullDayPrice = findPkgPrice(/8\s*hours|production/i, 7999);
+  const formatInr = (n: number) => `₹${n.toLocaleString('en-IN')}`;
+  const priceFaqAnswer = `Our hourly studio rental starts at ${formatInr(hourlyPrice)}/hr. Half Day (4 hrs) is ${formatInr(halfDayPrice)} and Full Day (8 hrs) is ${formatInr(fullDayPrice)}. All packages include lights, tripod and studio space.`;
+  const syncedFaqs = studioFAQs.map((faq, idx) =>
+    idx === 0 ? { ...faq, answer: priceFaqAnswer } : faq
+  );
+  const studioFaqSchema = buildStudioFaqSchema(priceFaqAnswer);
+  const studioPricingSchema = buildStudioPricingSchema(hourlyPrice, halfDayPrice, fullDayPrice);
 
   // The engine's SidePackage shape is camelCase; Supabase returns snake_case.
   // original_price stays null when unset so the discount badge stays hidden.
@@ -428,20 +382,22 @@ export default async function StudioPage() {
     popular: p.is_popular,
   }));
 
-  // Hardcoded equipment previews for the rental section below
-  const previewCameras = 'Sony A7 IV, Canon EOS R5, Lumix S5 IIX ,Sony Alpha M7 V,Sony Alpha FX3 , Sony Alpha FX 30';
-  const previewLenses = 'Sony 24-70mm f/2.8, Canon 50mm f/1.2, Sigma 35mm Art';
-  const previewLighting = 'Godox AD600 Pro, Aputure 300d II, Profoto B10X';
-  const previewAudio = 'Rode NTG4+, DJI Mic 2, Zoom H6 Essential';
+  // Aligned with the live studio equipment catalogue above (Sony, Sigma, Godox, Hollyland, DJI)
+  const previewCameras = 'Sony Alpha 7 M5, Sony ILME FX-3, DJI Pocket 3, Insta360 X5';
+  const previewLenses = 'Sony G-Master 24mm / 35mm / 50mm / 85mm f/1.4, Sigma 24-70mm f/2.8';
+  const previewLighting = 'Godox AD600 Pro II, Godox AD-200 Pro II, Godox SK400V, Godox RGB LC1000R, Nanlite Wand';
+  const previewAudio = 'Hollyland Lark 2, Sony ECM-M1';
 
   return (
     <>
       <JsonLd
         data={[studioFaqSchema, studioBreadcrumbSchema, studioPricingSchema]}
       />
-      {/* lazyOnload: the Pixel was ~210ms of main-thread work competing with hydration. */}
-      <Script id="fb-pixel-studio" strategy="lazyOnload">
-        {`
+      {/* Studio Pixel loads on the first interaction (or after 8s) so its ~210 KB / ~200ms of main-thread work
+          never competes with page load — same approach as the photography pages (AfterInteraction). */}
+      <AfterInteraction
+        id="fb-pixel-studio"
+        code={`
           !function(f,b,e,v,n,t,s)
           {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
           n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -453,7 +409,7 @@ export default async function StudioPage() {
           fbq('init', '863723466283459');
           fbq('track', 'PageView');
         `}
-      </Script>
+      />
       <noscript dangerouslySetInnerHTML={{ __html: `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=863723466283459&ev=PageView&noscript=1" />` }} />
       <main className="min-h-screen bg-background">
         {/* Order: reels → wording → studio carousel. Reels open the page, so they clear the fixed header. */}
@@ -491,7 +447,7 @@ export default async function StudioPage() {
                   A Professional Photography Studio Built for Creators in Coimbatore
                 </span>{' '}
                 <span className="mt-2 block text-base text-muted-foreground">
-                  Looking for the best photography studio for rent in Coimbatore? Studiospace offers a premium 1200 sq ft studio near RS Puram with Profoto lighting, infinity wall &amp; 9 backdrops. Book by the hour, half day or full day.
+                  Looking for the best photography studio for rent in Coimbatore? Studiospace offers a premium 1200 sq ft studio near RS Puram with Godox lighting, infinity wall &amp; 9 backdrops. Book by the hour, half day or full day.
                 </span>
               </h2>
               <a
@@ -529,7 +485,7 @@ export default async function StudioPage() {
               </div>
             </div>
 
-            <div className="mt-12 lg:mt-16">
+            <div id="studio-pricing" className="mt-12 scroll-mt-24 lg:mt-16">
               {/* If pricing crashes, only this block swaps to a WhatsApp prompt; the rest of the page stays up. */}
               <SectionBoundary
                 name="studio-pricing"
@@ -673,7 +629,7 @@ export default async function StudioPage() {
         <StudioProcess steps={studioProcessSteps} />
 
         {/* FAQ */}
-        <StudioFAQ faqs={studioFAQs} service="studio" />
+        <StudioFAQ faqs={syncedFaqs} service="studio" />
         <ServiceTerms type="studio" />
         <BookingFlyout service="studio" />
         <Footer account="studio" showInstagram={false} />
