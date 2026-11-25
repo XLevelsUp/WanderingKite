@@ -50,11 +50,11 @@ export const metadata: Metadata = {
     title: 'Podcast Recording Studio Coimbatore | Rode, Shure, 4K Video',
     description:
       'Professional podcast studio in Coimbatore with acoustic treatment, Rode Procaster, Shure SM7B & 4K video option. From ₹1,200/hr.',
-    url: 'https://wanderingkite.in/podcast',
+    url: 'https://www.wanderingkite.in/podcast',
     images: [{ url: '/og-podcast.jpg', width: 1200, height: 630 }],
   },
   alternates: {
-    canonical: 'https://wanderingkite.in/podcast',
+    canonical: 'https://www.wanderingkite.in/podcast',
   },
 };
 
@@ -121,13 +121,13 @@ const podcastBreadcrumbSchema = {
       '@type': 'ListItem',
       position: 1,
       name: 'Home',
-      item: 'https://wanderingkite.in',
+      item: 'https://www.wanderingkite.in',
     },
     {
       '@type': 'ListItem',
       position: 2,
       name: 'Podcast Studio',
-      item: 'https://wanderingkite.in/podcast',
+      item: 'https://www.wanderingkite.in/podcast',
     },
   ],
 };
@@ -135,9 +135,9 @@ const podcastBreadcrumbSchema = {
 const podcastPricingSchema = {
   '@context': 'https://schema.org',
   '@type': 'Service',
-  '@id': 'https://wanderingkite.in/podcast#service',
+  '@id': 'https://www.wanderingkite.in/podcast#service',
   name: 'Podcast Recording Studio Coimbatore',
-  provider: { '@id': 'https://wanderingkite.in/#business' },
+  provider: { '@id': 'https://www.wanderingkite.in/#business' },
   areaServed: { '@type': 'City', name: 'Coimbatore' },
   offers: [
     {

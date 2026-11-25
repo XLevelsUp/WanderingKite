@@ -23,9 +23,9 @@ export const termsData: Record<ServiceType, { header: string; items: TermItem[] 
           'For events and weddings, we recommend booking at least 30 days in advance. Bookings are on a first-come, first-served basis.',
       },
       {
-        title: 'ID Verification',
+        title: 'Booking confirmation',
         details:
-          'MANDATORY: Submission of a valid ID proof and two active mobile numbers is required for final session confirmation.',
+          'When you pay the advance, we ask for one valid ID proof and two contact numbers. It confirms who the booking is for, and gives our team a second person to reach on the shoot day if plans change.',
       },
     ],
   },

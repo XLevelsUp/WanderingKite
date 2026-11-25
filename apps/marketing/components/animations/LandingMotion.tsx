@@ -12,6 +12,10 @@ export function LandingMotion() {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const root = document.documentElement;
+    // First-screen content is never hidden: mark it revealed before .js-motion turns the effects on.
+    document.querySelectorAll('[data-shutter], main > section:not(:first-of-type) h2').forEach((el) => {
+      if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('is-in');
+    });
     root.classList.add('js-motion');
 
     const io = new IntersectionObserver(

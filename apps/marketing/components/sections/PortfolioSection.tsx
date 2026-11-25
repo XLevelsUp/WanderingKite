@@ -127,7 +127,7 @@ export function PortfolioSection() {
         <motion.div {...reveal(0.08)}>
           <div className="mt-8 flex items-center justify-between">
             <p className="text-[11px] font-semibold tabular-nums tracking-[0.24em] text-foreground" aria-live="polite">
-              {pad2(slide + 1)} <span className="text-foreground/50">/ {pad2(WORK.length)}</span>
+              {pad2(slide + 1)} <span className="text-foreground/65">/ {pad2(WORK.length)}</span>
             </p>
             <div className="flex gap-3">
               <button

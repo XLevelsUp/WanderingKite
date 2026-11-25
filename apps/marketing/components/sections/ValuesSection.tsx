@@ -44,7 +44,7 @@ const VALUES = [
 ] as const;
 
 const STATS = [
-  { value: 100, label: 'Weddings' },
+  { value: 200, label: 'Weddings' },
   { value: 50, label: 'Corporate events' },
   { value: 100, label: 'Projects as Wandering Kite' },
 ];
@@ -165,7 +165,7 @@ export function ValuesSection() {
                       onClick={() => setActive(i)}
                       className="group flex w-full items-center gap-6 py-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <span className={`text-[11px] font-semibold tracking-[0.24em] tabular-nums transition-colors duration-300 ${on ? 'text-accent-text' : 'text-foreground/50'}`}>
+                      <span className={`text-[11px] font-semibold tracking-[0.24em] tabular-nums transition-colors duration-300 ${on ? 'text-accent-text' : 'text-foreground/65'}`}>
                         {pad2(i + 1)}
                       </span>
                       <span className={`flex-1 text-xl font-semibold tracking-[-0.015em] transition-colors duration-300 xl:text-2xl ${on ? 'text-foreground' : 'text-foreground/60 group-hover:text-foreground'}`}>
@@ -195,7 +195,7 @@ export function ValuesSection() {
           {/* Phone-only arrows + counter, above the cards (tablets show all four in a grid). 44px targets. */}
           <div className="mt-8 flex items-center justify-between md:hidden">
             <p className="text-[11px] font-semibold tracking-[0.24em] tabular-nums text-foreground" aria-live="polite">
-              {pad2(slide + 1)} <span className="text-foreground/50">/ {pad2(VALUES.length)}</span>
+              {pad2(slide + 1)} <span className="text-foreground/65">/ {pad2(VALUES.length)}</span>
             </p>
             <div className="flex gap-3">
               <button

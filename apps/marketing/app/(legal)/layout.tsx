@@ -23,7 +23,7 @@ export default function LegalLayout({
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
-    '@id': 'https://wanderingkite.in/#business', // same @id as root layout
+    '@id': 'https://www.wanderingkite.in/#business', // same @id as root layout
     name: siteConfig.name,
     image: `${siteConfig.url}/wkfulllogo.png`,
     address: {

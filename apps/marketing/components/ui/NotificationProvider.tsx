@@ -6,7 +6,6 @@ import { Toast, ToastProps } from './Toast';
 import { Banner, BannerProps } from './Banner';
 import { Modal, ModalProps } from './Modal';
 import { setupFetchInterceptor, restoreFetch } from '@/lib/fetch-interceptor';
-import { createClient } from '@/lib/supabase/client';
 import { usePathname } from 'next/navigation';
 import { WKLogo } from '@/components/shared/WKLogo';
 
@@ -169,32 +168,41 @@ export function NotificationProvider({
     };
   }, [showBanner, removeBanner]);
 
-  // 2. Session Expiry Alert
+  // 2. Session Expiry Alert — only inside the logged-in area (/client). The Supabase client (~55 KB gzipped) is
+  // imported on demand there, so public pages (home, photography, studio…) never download it.
+  const inClientArea = pathname?.startsWith('/client') ?? false;
   useEffect(() => {
-    const supabase = createClient();
+    if (!inClientArea) return;
+    let unsubscribe: (() => void) | undefined;
+    let cancelled = false;
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      // NOTE: For true 2-minute warning, you'd need to inspect session.expires_at and set a timer.
-      // This basic implementation handles the actual expiry / logout event.
-      if (event === 'SIGNED_OUT') {
-        showModal({
-          title: 'Session expired',
-          description: 'Your session has expired. Please log in again.',
-          confirmText: 'Log In',
-          isBlocking: true,
-          onConfirm: () => {
-            window.location.href = '/login';
-          },
-        });
-      }
+    import('@/lib/supabase/client').then(({ createClient }) => {
+      if (cancelled) return;
+      const {
+        data: { subscription },
+      } = createClient().auth.onAuthStateChange((event) => {
+        // NOTE: For true 2-minute warning, you'd need to inspect session.expires_at and set a timer.
+        // This basic implementation handles the actual expiry / logout event.
+        if (event === 'SIGNED_OUT') {
+          showModal({
+            title: 'Session expired',
+            description: 'Your session has expired. Please log in again.',
+            confirmText: 'Log In',
+            isBlocking: true,
+            onConfirm: () => {
+              window.location.href = '/login';
+            },
+          });
+        }
+      });
+      unsubscribe = () => subscription.unsubscribe();
     });
 
     return () => {
-      subscription.unsubscribe();
+      cancelled = true;
+      unsubscribe?.();
     };
-  }, [showModal]);
+  }, [inClientArea, showModal]);
 
   // 3. Global Fetch Interceptor
   useEffect(() => {

@@ -14,6 +14,7 @@ import {
 } from '@/lib/service-page-data';
 import { JsonLd } from '@/lib/schema-helpers';
 import { Video, Shield, Headphones } from 'lucide-react';
+import { siteConfig } from '@/config/site';
 import { RentalCartProvider } from '@/components/rentals/RentalCartContext';
 import { RentalCartSummary } from '@/components/rentals/RentalCartSummary';
 import ServiceTerms from '@/components/sections/ServiceTerms';
@@ -54,12 +55,13 @@ export const metadata: Metadata = {
     title: 'Camera & Equipment Rental Coimbatore | Sony, Canon, Rode',
     description:
       'Rent professional cameras, lenses & audio gear in Coimbatore. Daily & weekly rates. Insured & well-maintained.',
-    url: 'https://wanderingkite.in/rentals',
+    url: 'https://www.wanderingkite.in/rentals',
     images: [{ url: '/og-rentals.jpg', width: 1200, height: 630 }],
   },
   alternates: {
-    canonical: 'https://wanderingkite.in/rentals',
+    canonical: 'https://www.wanderingkite.in/rentals',
   },
+  ...(siteConfig.features.rentals ? {} : { robots: { index: false, follow: false } }),
 };
 
 const rentalsFaqSchema = {
@@ -125,13 +127,13 @@ const rentalsBreadcrumbSchema = {
       '@type': 'ListItem',
       position: 1,
       name: 'Home',
-      item: 'https://wanderingkite.in',
+      item: 'https://www.wanderingkite.in',
     },
     {
       '@type': 'ListItem',
       position: 2,
       name: 'Camera & Equipment Rentals',
-      item: 'https://wanderingkite.in/rentals',
+      item: 'https://www.wanderingkite.in/rentals',
     },
   ],
 };

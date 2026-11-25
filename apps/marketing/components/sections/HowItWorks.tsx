@@ -62,7 +62,7 @@ export function HowItWorks() {
               {...reveal(0.08 * (i + 1))}
               className="grid grid-cols-[3rem_1fr] gap-x-4 border-b border-border py-8 first:border-t sm:grid-cols-[4rem_1fr] lg:py-10"
             >
-              <span className="text-2xl font-bold tabular-nums leading-none tracking-[-0.03em] text-accent-text sm:text-3xl">
+              <span className="text-2xl font-bold tabular-nums leading-none tracking-[-0.03em] text-accent-bright sm:text-3xl">
                 {String(i + 1).padStart(2, '0')}
               </span>
               <div>

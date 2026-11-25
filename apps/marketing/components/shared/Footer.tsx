@@ -1,5 +1,5 @@
-'use client';
-
+// Server component: the footer is static markup on every page, so it no longer ships as client JS
+// (less hydration work). Only the live "Open now" label (OpenNowStatus) and InstagramFeed run in the browser.
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -8,19 +8,19 @@ import {
   Phone,
   Instagram,
   Clock,
-  ShieldCheck,
 } from 'lucide-react';
+import { openingHoursLines } from '@/lib/hours';
 import { siteConfig } from '@/config/site';
 import { brandSocials, studioSocials } from '@/lib/socials';
 import { InstagramFeed } from './InstagramFeed';
-import { usePathname } from 'next/navigation';
+import { OpenNowStatus } from './OpenNowStatus';
 import { legalLinksFor } from '@/lib/theme/studioRoutes';
 
 const services = [
   { name: 'Photography', href: '/photography' },
   //{ name: "Equipment Rentals", href: "/rentals" },
   { name: 'Studio Space', href: '/studiospace' },
-  { name: 'Podcast Studio', href: '/podcast' },
+  { name: 'Podcast Studio', href: '/studiospace#podcast' },
 ];
 
 
@@ -31,6 +31,8 @@ interface FooterProps {
   showInstagram?: boolean;
   /** 'sandstone' = revamp footer (homepage): sandstone ground, black text. Other pages keep the default. */
   tone?: 'default' | 'sandstone';
+  /** Photography pages pass 'photography': photography tagline + Photography Terms only (was read from the URL client-side). */
+  section?: 'photography';
 }
 
 // Sandstone tone: re-points theme variables for this subtree only, so existing token classes follow.
@@ -43,11 +45,11 @@ const SANDSTONE_VARS = {
   '--primary': '27 20% 28%',
 } as React.CSSProperties;
 
-export function Footer({ account = 'wanderingkite', showInstagram = true, tone = 'default' }: FooterProps) {
-  // Absolute origin of the admin app, used by the staff shortcut in the bottom
-  // bar. Trailing slash trimmed so the href doesn't end up with a double slash.
-  const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL?.replace(/\/$/, '');
-  const legal = legalLinksFor(usePathname(), siteConfig.features.rentals);
+export function Footer({ account = 'wanderingkite', showInstagram = true, tone = 'default', section }: FooterProps) {
+  const photography = section === 'photography';
+  // Same links as before, now chosen from props instead of the URL: studio pages → Studio Terms,
+  // photography pages → Photography Terms, everything else → both.
+  const legal = legalLinksFor(account === 'studio' ? '/studiospace' : photography ? '/photography' : null, siteConfig.features.rentals);
 
   // The old early-return that hid this footer on /dashboard and /admin is gone:
   // both prefixes moved to apps/admin in the split, so no path in this app can
@@ -59,7 +61,8 @@ export function Footer({ account = 'wanderingkite', showInstagram = true, tone =
       {/* Porcelain mist band rather than the old purple/pink/orange gradient:
           Instagram's own brand colours sit outside this palette and fought
           with the brand orange. The band is set apart by surface, not hue. */}
-      {showInstagram && (
+      {/* The rental promo shows only while rentals are actually offered (siteConfig.features.rentals). */}
+      {showInstagram && siteConfig.features.rentals && (
       <div className="border-b border-border bg-card">
         <div className="container mx-auto px-6 py-12">
           <div className="mx-auto max-w-2xl text-center">
@@ -103,19 +106,20 @@ export function Footer({ account = 'wanderingkite', showInstagram = true, tone =
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           {/* Column 1: Brand & Socials */}
           <div>
-            <Link href="/" className="mb-4 inline-block group">
+            <Link href={account === 'studio' ? '/studiospace' : '/'} className="mb-4 inline-block group">
               <Image
-                // Studio Space stays dark, so it keeps the white-on-black original.
-                src={account === 'studio' ? '/wk-logo-dark.png' : '/wk-logo-light.png'}
-                alt={siteConfig.name}
-                width={320}
-                height={80}
+                // Studio Space uses its own logo; photography and landing pages keep the light WK logo.
+                src={account === 'studio' ? '/studio-space-logo.webp' : '/wk-logo-light.png'}
+                alt={account === 'studio' ? 'Studio Space Coimbatore' : siteConfig.name}
+                width={account === 'studio' ? 214 : 320}
+                height={account === 'studio' ? 100 : 80}
                 className="h-20 w-auto transition-transform duration-300 group-hover:scale-105"
               />
             </Link>
             <p className="mb-6 text-sm text-muted-foreground">
-              Creative infrastructure for modern creators. Empowering your
-              vision with professional gear and spaces.
+              {photography
+                ? 'Stories in Light — candid wedding, event, portrait and commercial photography from RS Puram, Coimbatore.'
+                : 'Creative infrastructure for modern creators. Empowering your vision with professional gear and spaces.'}
             </p>
             <div className="flex flex-nowrap gap-2">
               {(account === 'studio' ? studioSocials : brandSocials).map(
@@ -190,21 +194,31 @@ export function Footer({ account = 'wanderingkite', showInstagram = true, tone =
                   Open in Google Maps
                 </a>
               </li>
-              <li className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                  Open Now (9 AM - 9 PM)
+              <li className="flex items-start gap-2">
+                <Clock className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                <span>
+                  <OpenNowStatus />
+                  {openingHoursLines().map((l) => (
+                    <span key={l} className="block">{l}</span>
+                  ))}
                 </span>
               </li>
-              <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                <a
-                  href={`tel:${account === 'studio' ? siteConfig.contact.studioPhone.replace(/[^0-9+]/g, '') : siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`}
-                  className="hover:text-foreground"
-                >
-                  {account === 'studio' ? siteConfig.contact.studioPhone : siteConfig.contact.phone}
-                </a>
+              <li className="flex items-start gap-2">
+                <Phone className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                <div className="space-y-1">
+                  <a
+                    href={`tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`}
+                    className="block hover:text-foreground"
+                  >
+                    <span className="text-foreground/70">Photography:</span> {siteConfig.contact.phone}
+                  </a>
+                  <a
+                    href={`tel:${siteConfig.contact.studioPhone.replace(/[^0-9+]/g, '')}`}
+                    className="block hover:text-foreground"
+                  >
+                    <span className="text-foreground/70">Studio Space:</span> {siteConfig.contact.studioPhone}
+                  </a>
+                </div>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
@@ -237,9 +251,6 @@ export function Footer({ account = 'wanderingkite', showInstagram = true, tone =
               <p className="text-xs text-muted-foreground">
                 Made by Creators for Creators
               </p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Trusted by 500+ creative professionals
-              </p>
             </div>
           </div>
         </div>
@@ -254,22 +265,7 @@ export function Footer({ account = 'wanderingkite', showInstagram = true, tone =
               reserved.
             </p>
             <div className="flex items-center gap-6">
-              {/* Staff shortcut into the admin app. Since the split, /dashboard
-                  lives in apps/admin on its own origin, so this has to be a
-                  plain <a> to an absolute URL rather than a next/link route.
-                  Rendered only when NEXT_PUBLIC_ADMIN_URL is configured, so a
-                  missing env var hides the link instead of shipping a 404. */}
-              {adminUrl && (
-                <a
-                  href={`${adminUrl}/dashboard`}
-                  className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 text-sm"
-                  title="Admin Dashboard"
-                  rel="nofollow noopener noreferrer"
-                >
-                  <ShieldCheck className="h-4 w-4" />
-                  <span className="sr-only">Admin Dashboard</span>
-                </a>
-              )}
+              {/* No staff/admin link here on purpose: staff go to the admin app directly (audit 2026-11-12). */}
               <p className="text-sm text-muted-foreground">
                 Built with ❤️ by{' '}
                 <a

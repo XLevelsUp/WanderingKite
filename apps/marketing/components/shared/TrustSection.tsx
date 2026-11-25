@@ -30,7 +30,7 @@ export function TrustSection() {
               Client Reviews
             </h3>
             <div className="flex items-center gap-4">
-              <span className="text-4xl font-bold text-foreground">4.9</span>
+              <span className="text-4xl font-bold text-foreground">5.0</span>
               <div>
                 <div className="text-lg text-accent-text">★★★★★</div>
                 <p className="text-sm text-foreground/55">Google Reviews</p>

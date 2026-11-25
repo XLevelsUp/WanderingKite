@@ -47,6 +47,8 @@ const config: Config = {
         },
         // Brand orange — sub-headings and second lines only, never a background.
         'accent-text': 'hsl(var(--accent-text) / <alpha-value>)',
+        // Bright brand orange (#FF5500) — large display text only (≥24px, or ≥18.66px bold), where 3:1 contrast is enough.
+        'accent-bright': 'hsl(var(--accent-bright) / <alpha-value>)',
         destructive: {
           DEFAULT: 'hsl(var(--destructive) / <alpha-value>)',
           foreground: 'hsl(var(--destructive-foreground) / <alpha-value>)',

@@ -136,9 +136,10 @@ export function ClientStories({ stories }: { stories: Story[] }) {
                 exit={reduce ? { opacity: 0 } : { opacity: 0, y: -12 }}
                 transition={{ duration: reduce ? 0 : 0.35, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div className="flex gap-1" role="img" aria-label={`Rated ${s.rating} out of 5`}>
+                <div className="flex gap-1">
+                  <span className="sr-only">Rated {s.rating} out of 5</span>
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} aria-hidden className={`h-4 w-4 ${i < s.rating ? 'fill-accent-text text-accent-text' : 'text-border'}`} />
+                    <Star key={i} aria-hidden="true" className={`h-4 w-4 ${i < s.rating ? 'fill-accent-text text-accent-text' : 'text-border'}`} />
                   ))}
                 </div>
 
@@ -173,7 +174,7 @@ export function ClientStories({ stories }: { stories: Story[] }) {
                     </span>
                   </span>
                   <span className="ml-auto shrink-0 text-[11px] font-semibold tabular-nums tracking-[0.24em] text-foreground" aria-hidden>
-                    <span className="text-accent-text">{String(active + 1).padStart(2, '0')}</span> <span className="text-foreground/50">/ {String(stories.length).padStart(2, '0')}</span>
+                    <span className="text-accent-text">{String(active + 1).padStart(2, '0')}</span> <span className="text-foreground/65">/ {String(stories.length).padStart(2, '0')}</span>
                   </span>
                 </figcaption>
               </motion.figure>
