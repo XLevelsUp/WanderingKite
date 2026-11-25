@@ -23,7 +23,7 @@ export function FeaturedStories({ albums, wrap }: { albums: Album[]; wrap: strin
 
   return (
     <section aria-labelledby="stories-heading" data-tone="white">
-      <div className={`${wrap} py-16 sm:py-20 lg:py-24`}>
+      <div className={`${wrap} pt-10 pb-16 sm:pt-12 sm:pb-20 lg:pt-14 lg:pb-24`}>
         <div data-reveal className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-accent-text">Portfolio</p>

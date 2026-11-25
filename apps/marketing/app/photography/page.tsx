@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, Camera, Monitor, Video } from 'lucide-react';
+import { preload } from 'react-dom';
+import { ArrowRight, Camera, Crosshair, Monitor, Video } from 'lucide-react';
 import { Footer } from '@/components/shared/Footer';
 import { HeroFilm } from '@/components/photography/HeroFilm';
 import { FilmApproach } from '@/components/photography/FilmApproach';
@@ -16,54 +17,42 @@ import { FeaturedStories } from '@/components/photography/FeaturedStories';
 import { StudioRows } from '@/components/photography/StudioRows';
 import { PHOTO_WRAP } from '@/components/photography/PhotoChrome';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
-import { JsonLd } from '@/lib/schema-helpers';
+import { siteConfig } from '@/config/site';
+import { openingHoursSchema } from '@/lib/hours';
+import { brandSocials } from '@/lib/socials';
+import { PortfolioGrid } from '@/components/photography/PortfolioGrid';
+import { JsonLd, buildReviewSchema } from '@/lib/schema-helpers';
 import { photographyTestimonials } from '@/lib/service-page-data';
-import { getAlbums, getCatalog } from '@/lib/photography/data';
+import { getAlbums, getCatalog, getPortfolioPhotos } from '@/lib/photography/data';
 
+const PAGE_URL = `${siteConfig.url}/photography`;
+const TITLE = 'Wedding & Event Photographer in Coimbatore | Wandering Kite';
+const DESCRIPTION =
+  'Candid wedding, event, portrait and product photography from RS Puram, Coimbatore. See real albums, how we work and check your date on WhatsApp.';
+const OG_IMAGE = { url: '/og-photography.jpg', width: 1200, height: 630, alt: 'Bride and groom at a temple wedding in Coimbatore, photographed by Wandering Kite' };
+
+// Title is absolute (≈60 chars) so the layout's " | Wandering Kite Studio" template doesn't push it past what Google shows.
+// No `keywords`: search engines ignore the tag and the audit flagged it as stuffing.
 export const metadata: Metadata = {
-  title: 'Best Photographers in Coimbatore | Wedding, Events & Commercial',
-  description:
-    'Looking for professional photographers in Coimbatore? Wandering Kite covers weddings, events, products, portraits & more. Based in RS Puram. View our portfolio and book today.',
-  keywords: [
-    // Answer the Public: "photographer in / near / for" patterns
-    'photographer in Coimbatore',
-    'photographer near RS Puram',
-    'best wedding photographer Coimbatore',
-    'event photographer Coimbatore',
-    'portrait photographer Coimbatore',
-    // Service-specific
-    'wedding photography Coimbatore',
-    'product photography Coimbatore',
-    'corporate photography Coimbatore',
-    'newborn photography Coimbatore',
-    'maternity photography Coimbatore',
-    // Commercial / content
-    'commercial photographer Tamil Nadu',
-    'brand photography Coimbatore',
-    'social media content photographer Coimbatore',
-    'headshot photographer Coimbatore',
-    'music video production Coimbatore',
-    // Neighboring cities
-    'photographer Tirupur',
-    'wedding photographer Salem',
-    'event photography Erode',
-    // Intent signals
-    'hire photographer Coimbatore',
-    'photography packages Coimbatore price',
-  ],
+  title: { absolute: TITLE },
+  description: DESCRIPTION,
+  keywords: null, // drop the site-wide (rental-heavy) keywords tag inherited from the root layout
+
   openGraph: {
-    title: 'Best Photographers in Coimbatore | Wedding, Events & Commercial',
-    description:
-      'Looking for professional photographers in Coimbatore? Wandering Kite covers weddings, events, products, portraits & more. Based in RS Puram. View our portfolio and book today.',
-    url: 'https://wanderingkite.in/photography',
-    images: [{ url: '/og-photography.jpg', width: 1200, height: 630 }],
+    type: 'website',
+    siteName: 'Wandering Kite Photography',
+    locale: 'en_IN',
+    title: TITLE,
+    description: DESCRIPTION,
+    url: PAGE_URL,
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Best Photographers in Coimbatore | Wedding, Events & Commercial',
-    description:
-      'Looking for professional photographers in Coimbatore? Wandering Kite covers weddings, events, products, portraits & more. Based in RS Puram. View our portfolio and book today.',
-    images: ['/og-photography.jpg'],
+    site: siteConfig.twitter,
+    title: TITLE,
+    description: DESCRIPTION,
+    images: [{ url: OG_IMAGE.url, alt: OG_IMAGE.alt }],
   },
   robots: {
     index: true,
@@ -76,64 +65,10 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: 'https://wanderingkite.in/photography',
+    canonical: PAGE_URL,
   },
 };
 
-const photographyFaqSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'How far in advance should I book a photographer in Coimbatore?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'For events and weddings in Coimbatore, we recommend booking at least 30 days in advance. For lifestyle and portrait sessions, 7–14 days is usually sufficient. Last-minute bookings may be accommodated based on availability.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Do you travel outside Coimbatore for destination shoots?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Yes! We cover destination weddings and events across India including Tirupur, Salem, Erode, and beyond. Travel and accommodation costs are additional and will be included in your custom quote.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'How many edited photos will I receive?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'This varies by package: Events (200–300 photos), Weddings (500–800 photos), Lifestyle sessions (50–100 photos). All photos are professionally edited and color-corrected.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Can I request specific photography styles or shot lists?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Absolutely! During the consultation, share your Pinterest boards, reference photos, or specific must-have shots. We will create a shot list to ensure we capture everything you want.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'What is the photography delivery timeline?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Within 7–10 days, you receive professionally edited high-resolution images via cloud link.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'What is the advance payment required to confirm a photography booking?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'A 30% advance payment secures your date. The remaining balance is due on or before the day of the shoot.',
-      },
-    },
-  ],
-};
 
 const photographyBreadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -143,13 +78,13 @@ const photographyBreadcrumbSchema = {
       '@type': 'ListItem',
       position: 1,
       name: 'Home',
-      item: 'https://wanderingkite.in',
+      item: 'https://www.wanderingkite.in',
     },
     {
       '@type': 'ListItem',
       position: 2,
       name: 'Photography',
-      item: 'https://wanderingkite.in/photography',
+      item: 'https://www.wanderingkite.in/photography',
     },
   ],
 };
@@ -157,76 +92,16 @@ const photographyBreadcrumbSchema = {
 const photographyServiceSchema = {
   '@context': 'https://schema.org',
   '@type': 'Service',
-  '@id': 'https://wanderingkite.in/photography#service',
+  '@id': 'https://www.wanderingkite.in/photography#service',
   'name': 'Wandering Kite Photography Services',
-  'image': 'https://wanderingkite.in/images/photography/events.webp',
-  'description': "Book Coimbatore's top wedding, event & commercial photographers. High-quality wedding photography, product shoots, and corporate headshots.",
+  'image': 'https://www.wanderingkite.in/images/photography/events.webp',
+  'description': 'Wedding, event, portrait, product and corporate photography from RS Puram, Coimbatore.',
   'provider': {
     '@type': 'LocalBusiness',
-    '@id': 'https://wanderingkite.in/#business',
+    '@id': 'https://www.wanderingkite.in/#business',
     'name': 'Wandering Kite',
   },
-  'offers': {
-    '@type': 'Offer',
-    'url': 'https://wanderingkite.in/photography',
-    'priceCurrency': 'INR',
-    'price': 'Custom',
-    'priceSpecification': {
-      '@type': 'UnitPriceSpecification',
-      'price': 'Call for Quote',
-    },
-  },
-  'aggregateRating': {
-    '@type': 'AggregateRating',
-    'ratingValue': '5',
-    'bestRating': '5',
-    'worstRating': '1',
-    'ratingCount': '7',
-  },
-  'review': [
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'Athira Haridaso' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'We booked this wonderful team for our marriage, and we are extremely happy with how everything turned out! ❤️\n\nEvery single picture is so beautiful and has captured our special moments so naturally. We’ve already shared a few photos with our friends and cousins, and everyone has been loving them and complimenting how amazing they are! 😍\n\nA big thank you to Sandy Anna, Bala Anna, the Anna who kept encouraging us with all those amazing attitude poses 😁, the light man, and everyone else who was part of the team. We truly appreciate all the effort, patience, creativity, and hard work you put into capturing our wedding memories so beautifully.\n\nWe are genuinely so happy and grateful with the final results. You have given us memories that we will cherish forever. ❤️✨\n\nThank you so much to the entire team, and highly recommended for anyone looking for a talented and dedicated wedding photography team!',
-    },
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'Yashaswini Thanigai Kumaran' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'We booked them for our baby shower, and we absolutely loved their work. The photos turned out absolutely beautiful. The team was incredibly creative, professional, and friendly, making us feel comfortable throughout the entire session.\n\nTruly satisfied with their work and would definitely love to work with them again for our future celebrations. Highly recommended!',
-    },
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'mohammed Irshad' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'We are beyond impressed with the exceptional work of our product image photographer. Their keen eye for detail, creative composition, and mastery of lighting have truly elevated the visual appeal of our products. Each image captures the essence of quality, bringing out the finest features with clarity and precision.\n\nTheir professionalism, dedication, and ability to understand our vision made the entire process seamless. Whether it was adjusting angles for the perfect shot or ensuring consistency across different products, their expertise shone through. Thanks to their outstanding work, our product visuals now reflect the high standards we uphold, making a strong impact on our customers.\n\nHighly recommended for anyone looking for top-tier product photography. We look forward to working with them again in the future!',
-    },
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'Asha Shanmugapriya' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'Team were friendly and their work is really good.. thanks Sandy and team for capturing our wonderful memories ❤',
-    },
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'hygiene Sales' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'Great photo shoot work done for my Bloomvitalia handmade premium luxury soaps',
-    },
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'Vengadesh S' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'Great price',
-    },
-    {
-      '@type': 'Review',
-      'author': { '@type': 'Person', 'name': 'Pooja kp' },
-      'reviewRating': { '@type': 'Rating', 'ratingValue': '5', 'bestRating': '5', 'worstRating': '1' },
-      'reviewBody': 'Reasonable price Great',
-    },
-  ],
+  ...buildReviewSchema(photographyTestimonials),
 };
 
 
@@ -289,6 +164,10 @@ const faqs = [
     answer:
       'For outdoor shoots, we monitor weather forecasts closely. If conditions are unfavorable, we can reschedule at no extra cost or suggest indoor alternatives/backup locations.',
   },
+  {
+    question: 'How much advance is needed to confirm a booking?',
+    answer: 'A 30% advance secures your date. The balance is due on or before the day of the shoot.',
+  },
 ];
 
 // The hub reads live albums; static, refreshed every 5 minutes.
@@ -296,56 +175,119 @@ export const revalidate = 300;
 
 // Equipment copy carried over verbatim from the previous page.
 const gear = [
-  { icon: Monitor, title: 'Cameras', body: 'Sony A7 M5, Sony FX3, DJI Pocket 3 Creator Combo, Action Camera Insta360 One X2 Essentials Bundle' },
-  { icon: Camera, title: 'Lenses', body: 'Sony G Master 85mm 1.4, Sony G Master 35mm 1.4, Sony G Master 50mm 1.4, Sony G Master 24mm 1.4, Sony G Master 16mm 1.4, Sony G Master 90mm macro 2.8' },
-  { icon: Video, title: 'Lighting & Grip', body: 'SK400 V, AD600 pro2, AD200 pro2, Digitek Stripe Light, Nantu Pro, Nantu,' },
+  { icon: Monitor, title: 'Cameras', body: 'Sony A7 M5, Sony A7 M4, Sony FX3, Sony FX30, DJI Pocket 3 Creator Combo, Action Camera Insta360 One X2 Essentials Bundle' },
+  { icon: Camera, title: 'Lenses', body: 'Sony G Master 85mm 1.4, Sony G Master 35mm 1.4, Sony G Master 50mm 1.4, Sony G Master 24mm 1.4, Sony G Master 16mm 1.4, Sony G Master 90mm macro 2.8, Sigma Art 24-70mm 2.8, Tamron 17-28mm 2.8' },
+  { icon: Video, title: 'Lighting & Grip', body: 'SK400 V, AD600 pro2, AD200 pro2, Digitek Stripe Light, Nantu Pro 450, Nantu Bi Color 450' },
+  { icon: Crosshair, title: 'Stands and Stabilizers', body: 'Gimbal, Manfrotto Video Tripod, Manfrotto Photo Tripod' },
 ];
 
 export default async function PhotographyPage() {
-  const [cat, featured, latest] = await Promise.all([
+  // The hero film poster is the first big image on screen (LCP): fetch it at high priority instead of
+  // waiting for the <video> element to be parsed and competing with lazy-loaded photos below.
+  preload('/images/photography/weddings-film-poster.webp', { as: 'image', fetchPriority: 'high' });
+  const [cat, featured, latest, portfolio] = await Promise.all([
     getCatalog(),
     getAlbums({ featured: true, pageSize: 6 }),
     getAlbums({ pageSize: 6 }),
+    getPortfolioPhotos(10),
   ]);
   // Featured albums first (Admin → "Feature on Photography home"), topped up with the newest.
   const stories = [...featured.albums, ...latest.albums.filter((a) => !featured.albums.some((f) => f.id === a.id))].slice(0, 4);
 
+  // FAQPage is built from the same list the page renders, so the markup always matches the visible questions.
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
+  };
+
+  // The photography business itself. schema.org has no "Photographer" business type, so this is
+  // LocalBusiness + ProfessionalService; it points at the site-wide #business entity as its parent.
+  const businessSchema = {
+    '@context': 'https://schema.org',
+    '@type': ['LocalBusiness', 'ProfessionalService'],
+    '@id': `${PAGE_URL}#photographer`,
+    name: 'Wandering Kite Photography',
+    description: DESCRIPTION,
+    url: PAGE_URL,
+    image: `${siteConfig.url}${OG_IMAGE.url}`,
+    logo: `${siteConfig.url}/logo.svg`,
+    telephone: siteConfig.contact.phone,
+    email: siteConfig.contact.email,
+    priceRange: '₹₹',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: siteConfig.contact.address.street,
+      addressLocality: 'Coimbatore',
+      addressRegion: siteConfig.contact.address.state,
+      postalCode: siteConfig.contact.address.zip,
+      addressCountry: siteConfig.contact.address.country,
+    },
+    geo: { '@type': 'GeoCoordinates', latitude: siteConfig.geo.latitude, longitude: siteConfig.geo.longitude },
+    openingHoursSpecification: openingHoursSchema(),
+    areaServed: cat.cities.map((c) => ({ '@type': 'City', name: c.name })),
+    // Google Business Profile first: ties this entity to the Maps listing and its 5★ reviews.
+    hasMap: siteConfig.googleBusiness,
+    sameAs: [siteConfig.googleBusiness, ...brandSocials.map((s) => s.href)],
+    parentOrganization: { '@id': `${siteConfig.url}/#business` },
+  };
+
   return (
     <>
-      <JsonLd data={[photographyFaqSchema, photographyBreadcrumbSchema, photographyServiceSchema]} />
+      <JsonLd data={[businessSchema, faqSchema, photographyBreadcrumbSchema, photographyServiceSchema]} />
       <main>
-        {/* ── Hero: viewfinder film — copy left, uncropped 16:9 film right (lg); H1/H2 text unchanged from the previous page. ── */}
-        <section aria-label="Introduction" className="overflow-hidden">
-          <div className={`${PHOTO_WRAP} grid gap-12 pb-12 pt-28 sm:pb-16 sm:pt-32 lg:grid-cols-12 lg:items-center lg:gap-16 lg:pb-20 lg:pt-36`}>
+        {/* ── Hero: viewfinder film — copy left, uncropped 16:9 film right (lg). ── */}
+        <section aria-label="Introduction" className="overflow-hidden border-b border-border/60 bg-background">
+          <div className={`${PHOTO_WRAP} grid gap-10 pb-12 pt-24 sm:pb-16 sm:pt-28 lg:grid-cols-12 lg:items-center lg:gap-14 lg:pb-20 lg:pt-32`}>
             <div className="lg:col-span-5">
-              <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-accent-text">
+              <div className="inline-flex items-center gap-2 rounded-full border border-accent-text/25 bg-accent-text/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-text">
                 <Camera className="h-3.5 w-3.5" aria-hidden />
                 Photography Services
-              </p>
-              <div className="mt-6"><StoriesInLight variant="line" /></div>
-              <h1 className="mt-6 font-bold leading-tight tracking-[-0.02em]">
+              </div>
+
+              <h1 className="mt-5 font-bold leading-[1.08] tracking-[-0.03em]">
                 <span className="block text-3xl text-foreground sm:text-4xl lg:text-[2.75rem]">Best Photographers in Coimbatore</span>
-                <span className="mt-2 block text-xl font-semibold text-accent-text sm:text-2xl">Wedding, Events &amp; Commercial</span>
+                <span className="mt-2 block text-lg font-semibold tracking-[-0.01em] text-accent-text sm:text-xl">Wedding, Events &amp; Commercial</span>
               </h1>
-              <h2 className="mt-6 font-normal leading-relaxed">
-                <span className="block text-base font-medium text-foreground">Looking for professional photographers in Coimbatore?</span>
-                <span className="mt-1 block text-base text-foreground/80">
-                  Wandering Kite covers weddings, events, product photography, portraits &amp; more, tailored to your needs. Based in RS Puram. View our portfolio and book today.
+
+              <div className="mt-4">
+                <StoriesInLight variant="line" />
+              </div>
+
+              {/* Intro is a paragraph, not an H2 (audit: headings should be short labels, not prose). */}
+              <p className="mt-5 text-sm leading-relaxed sm:text-base">
+                <span className="block font-medium text-foreground">Looking for professional photographers in Coimbatore?</span>
+                <span className="mt-1.5 block text-foreground/75">
+                  Wandering Kite covers weddings, events, product photography, portraits &amp; more, tailored to your needs. Based in RS Puram.
                 </span>
-              </h2>
-              <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+              </p>
+
+              <ul className="mt-5 flex flex-wrap gap-2" aria-label="Photography specialties">
+                {['Weddings', 'Events', 'Portraits', 'Commercial'].map((tag) => (
+                  <li key={tag}>
+                    <a
+                      href="#portfolio"
+                      className="inline-block rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground/80 transition-colors hover:border-accent-text/50 hover:text-foreground"
+                    >
+                      {tag}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <a
                   href={generateWhatsAppLink('photography')}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Book a photography session with Wandering Kite Studio in Coimbatore"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition-[filter,transform] duration-200 hover:brightness-95 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Book a Session with Wandering Kite Photography on WhatsApp"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-[filter,transform,box-shadow] duration-200 hover:brightness-95 hover:shadow-[0_12px_28px_-10px_hsl(var(--primary)/0.6)] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   Book a Session
                 </a>
                 <a
-                  href="#explore"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-foreground/30 px-6 text-sm font-semibold text-foreground transition-colors hover:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  href="#portfolio"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-border bg-card px-6 text-sm font-semibold text-foreground transition-colors hover:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   View our portfolio
                   <ArrowRight className="h-4 w-4" aria-hidden />
@@ -377,19 +319,23 @@ export default async function PhotographyPage() {
         {/* ── Explore: contact-sheet band per section (film strip of category frames from the DB). ── */}
         <StudioRows />
 
+        {/* ── Portfolio: real photos with descriptive alt text ("View our portfolio" lands here). ── */}
+        <PortfolioGrid photos={portfolio} wrap={PHOTO_WRAP} />
+
         {/* ── Everything below the corporate band: one light, animated sequence (porcelain ↔ white ↔ sand → sandstone footer). ── */}
         <PhotoMotion />
         <FilmApproach wrap={PHOTO_WRAP} />
         <StoriesInLight />
         <FeaturedStories albums={stories} wrap={PHOTO_WRAP} />
         <GearList gear={gear} wrap={PHOTO_WRAP} />
-        <PhotoReviews reviews={photographyTestimonials} wrap={PHOTO_WRAP} />
+        {/* Strongest (longest, most specific) reviews lead; one-line ones go last. */}
+        <PhotoReviews reviews={[...photographyTestimonials].sort((x, y) => y.content.length - x.content.length)} wrap={PHOTO_WRAP} sourceUrl={siteConfig.googleReviews} />
         <PhotoProcess steps={processSteps} wrap={PHOTO_WRAP} />
         <BlogPreview wrap={PHOTO_WRAP} />
         <PhotoFAQ faqs={faqs} wrap={PHOTO_WRAP} />
         <PhotoClosing cities={cat.cities} wrap={PHOTO_WRAP} />
       </main>
-      <Footer showInstagram={false} tone="sandstone" />
+      <Footer showInstagram={false} tone="sandstone" section="photography" />
     </>
   );
 }

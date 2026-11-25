@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { unstable_cache } from 'next/cache';
 import { ArrowRight, ArrowUpRight, Clock } from 'lucide-react';
 import { publicClient } from '@/lib/supabase/public';
+import { getThumbIndex, toThumb } from '@/lib/images';
 import { CATEGORY_LABELS, excerptFrom, imageFitClass, type BlogCategory } from '@/lib/blog';
 import { MediaPlaceholder } from './MediaPlaceholder';
 
@@ -30,7 +31,10 @@ const getLatestPosts = unstable_cache(
       .eq('section', 'PHOTOGRAPHY')
       .order('published_at', { ascending: false })
       .limit(3);
-    return error || !data ? [] : (data as PreviewPost[]);
+    if (error || !data) return [];
+    // Covers are shown as cards here: use the 800px thumbnail when it exists (the blog post page keeps the original).
+    const thumbs = await getThumbIndex();
+    return (data as PreviewPost[]).map((p) => ({ ...p, featured_image: toThumb(p.featured_image, thumbs) }));
   },
   ['photography-blog-preview'],
   { revalidate: 300, tags: ['blog'] }

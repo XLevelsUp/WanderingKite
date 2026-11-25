@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { ArrowUpRight, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 
 interface Review {
   name: string;
@@ -16,7 +16,7 @@ interface Review {
  * Photography reviews (light, sand tone). lg: score + controls left, a 2-up drag carousel right with a progress hairline.
  * Phones: heading, carousel, then controls. Cards share the row height; long reviews clamp and expand in place.
  */
-export function PhotoReviews({ reviews, wrap }: { reviews: Review[]; wrap: string }) {
+export function PhotoReviews({ reviews, wrap, sourceUrl }: { reviews: Review[]; wrap: string; sourceUrl?: string }) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: 'start', containScroll: 'trimSnaps', dragFree: false });
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
@@ -75,13 +75,25 @@ export function PhotoReviews({ reviews, wrap }: { reviews: Review[]; wrap: strin
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-accent-text">Reviews</p>
           <h2 id="reviews-heading" className="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">What Our Clients Say</h2>
           <p className="mt-4 text-base text-foreground/80">Real feedback from creators, brands, and clients who have worked with us.</p>
+          {sourceUrl && (
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-1.5 self-start text-sm font-semibold text-foreground underline decoration-accent-text decoration-2 underline-offset-4 hover:text-accent-text"
+            >
+              Read all reviews on Google
+              <ArrowUpRight className="h-4 w-4" aria-hidden />
+            </a>
+          )}
           {/* Score derived from the reviews shown, not a separate claim. */}
           <div className="mt-8 flex items-end gap-4">
             <span className="text-5xl font-bold tabular-nums tracking-tight text-foreground">{avg.toFixed(1)}</span>
             <div className="pb-1">
-              <div className="flex gap-0.5" aria-hidden>
+              <div className="flex gap-0.5">
+                <span className="sr-only">Average rating: {avg.toFixed(1)} out of 5 stars</span>
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className={`h-4 w-4 ${i < Math.round(avg) ? 'fill-primary-deep text-primary-deep' : 'text-foreground/25'}`} />
+                  <Star key={i} aria-hidden="true" className={`h-4 w-4 ${i < Math.round(avg) ? 'fill-primary-deep text-primary-deep' : 'text-foreground/25'}`} />
                 ))}
               </div>
               <p className="mt-1 text-sm text-foreground/70">{reviews.length} reviews</p>
@@ -130,10 +142,11 @@ function ReviewCard({ review }: { review: Review }) {
   return (
     <figure className="flex w-full select-none flex-col rounded-2xl bg-card p-6 shadow-[0_1px_0_rgba(0,0,0,0.04)] transition-shadow duration-500 hover:shadow-[0_24px_50px_-30px_rgba(0,0,0,0.35)] sm:p-8">
       <div className="flex items-center justify-between">
-        <span aria-hidden className="font-serif text-6xl leading-none text-primary/40">&ldquo;</span>
-        <div className="flex gap-0.5" aria-label={`${review.rating} out of 5 stars`}>
+        <span aria-hidden="true" className="font-serif text-6xl leading-none text-primary/40">&ldquo;</span>
+        <div className="flex gap-0.5">
+          <span className="sr-only">{review.rating} out of 5 stars</span>
           {[...Array(5)].map((_, i) => (
-            <Star key={i} aria-hidden className={`h-4 w-4 ${i < review.rating ? 'fill-primary-deep text-primary-deep' : 'text-foreground/25'}`} />
+            <Star key={i} aria-hidden="true" className={`h-4 w-4 ${i < review.rating ? 'fill-primary-deep text-primary-deep' : 'text-foreground/25'}`} />
           ))}
         </div>
       </div>

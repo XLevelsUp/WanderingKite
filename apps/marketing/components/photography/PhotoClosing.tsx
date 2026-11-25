@@ -26,7 +26,7 @@ export function PhotoClosing({ cities, wrap }: { cities: { slug: string; name: s
               href={generateWhatsAppLink('photography')}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Book a photography session with Wandering Kite Studio in Coimbatore"
+              aria-label="Book a Session with Wandering Kite Photography on WhatsApp"
               className="group mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-full bg-cta px-6 text-sm font-semibold text-cta-foreground transition-[opacity,transform] duration-200 hover:opacity-90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               Book a Session

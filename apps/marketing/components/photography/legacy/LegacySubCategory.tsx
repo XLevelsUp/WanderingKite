@@ -138,7 +138,7 @@ export function legacySubCategoryMetadata(mainCategory: string, subCategory: str
       images: ['/og-photography.jpg'],
     },
     alternates: {
-      canonical: `https://wanderingkite.in/photography/${mainCategory}/${subCategory}`,
+      canonical: `https://www.wanderingkite.in/photography/${mainCategory}/${subCategory}`,
     },
   };
 }
@@ -156,7 +156,7 @@ export async function LegacySubCategory({ mainCategory, subCategory }: { mainCat
     '@type': 'ImageGallery',
     name: `${sub.title} Portfolio`,
     description: `Gallery of ${sub.title} by Wandering Kite Studio.`,
-    url: `https://wanderingkite.in/photography/${mainCategory}/${subCategory}`,
+    url: `https://www.wanderingkite.in/photography/${mainCategory}/${subCategory}`,
     provider: {
       '@type': 'LocalBusiness',
       name: 'Wandering Kite Studio',
@@ -189,7 +189,7 @@ export async function LegacySubCategory({ mainCategory, subCategory }: { mainCat
         }}
         shoots={shoots}
       />
-      <Footer />
+      <Footer section="photography" />
     </>
   );
 }

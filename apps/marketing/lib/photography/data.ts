@@ -2,6 +2,7 @@
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { publicClient } from '@/lib/supabase/public';
+import { getThumbIndex, toThumb } from '@/lib/images';
 import type { Database } from '@/lib/database.types';
 
 type T = Database['public']['Tables'];
@@ -100,7 +101,10 @@ export const getAlbums = cached(async function getAlbums(opts: { section?: strin
     .range(from, from + pageSize - 1);
 
   const total = count ?? 0;
-  return { albums: attach(cat, (data ?? []) as Omit<Album, 'category' | 'city'>[]), total, page, pageCount: Math.ceil(total / pageSize) };
+  // List views show covers small (cards, tiles): use the 800px thumbnail when it exists. getAlbum keeps originals.
+  const thumbs = await getThumbIndex();
+  const rows = ((data ?? []) as Omit<Album, 'category' | 'city'>[]).map((r) => ({ ...r, cover_image_url: toThumb(r.cover_image_url, thumbs) }));
+  return { albums: attach(cat, rows), total, page, pageCount: Math.ceil(total / pageSize) };
 }, 'albums');
 
 /** One published album with its images in admin order; null if missing, draft, or under a different category. */
@@ -124,6 +128,48 @@ export const getAlbum = cache(cached(async (section: string, categorySlug: strin
   const [album] = attach(cat, [row]);
   return { ...album, images: gallery_images ?? [] };
 }, 'album'));
+
+export type PortfolioPhoto = { id: string; url: string; alt: string; href: string; caption: string };
+
+/**
+ * Real photos for the hub's portfolio grid: interleaves images across the newest published albums
+ * (one from each album in turn) so the grid shows range rather than one shoot. Alt text uses the
+ * image's own alt from Admin, else a plain description built from category + city.
+ */
+export const getPortfolioPhotos = cached(async (limit: number): Promise<PortfolioPhoto[]> => {
+  const cat = await getCatalog();
+  const { data } = await publicClient()
+    .from('shoots')
+    .select(`${ALBUM_COLS}, gallery_images(id, url, alt_text, sort_order)`)
+    .eq('status', 'published')
+    .not('category_id', 'is', null)
+    .order('shoot_date', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .order('sort_order', { referencedTable: 'gallery_images' })
+    .limit(24);
+
+  const rows = (data ?? []) as unknown as (Omit<Album, 'category' | 'city'> & { gallery_images: AlbumImage[] })[];
+  const albums = rows.map((r) => ({ album: attach(cat, [r])[0], images: r.gallery_images ?? [] }));
+
+  const thumbs = await getThumbIndex();
+  const out: PortfolioPhoto[] = [];
+  for (let round = 0; out.length < limit && albums.some((a) => a.images[round]); round++) {
+    for (const { album, images } of albums) {
+      const img = images[round];
+      if (!img || out.length >= limit) continue;
+      const kind = album.category?.name ?? 'Photography';
+      const where = album.city?.name ?? 'Coimbatore';
+      out.push({
+        id: img.id,
+        url: toThumb(img.url, thumbs),
+        alt: img.alt_text?.trim() || `${kind} photography in ${where} by Wandering Kite`,
+        href: albumHref(album),
+        caption: `${kind} · ${where}`,
+      });
+    }
+  }
+  return out;
+}, 'portfolio-photos');
 
 /** Up to `limit` other albums from the same category (falls back to the section). */
 export async function getRelatedAlbums(album: Album, limit = 3) {
@@ -149,6 +195,7 @@ export const getSectionOverview = cached(async (section: string) => {
   const stats: Record<string, { count: number; cover: string | null }> = {};
   if (ids.length === 0) return stats;
 
+  const thumbs = await getThumbIndex();
   const { data } = await publicClient()
     .from('shoots')
     .select('category_id, cover_image_url, shoot_date, created_at')
@@ -161,7 +208,7 @@ export const getSectionOverview = cached(async (section: string) => {
     if (!r.category_id) continue;
     const s = (stats[r.category_id] ??= { count: 0, cover: null });
     s.count += 1;
-    s.cover ??= r.cover_image_url;
+    s.cover ??= toThumb(r.cover_image_url, thumbs);
   }
   return stats;
 }, 'section-overview');
