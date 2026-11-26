@@ -22,6 +22,19 @@ export function VideoSlot({
   const ref = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [userPaused, setUserPaused] = useState(false);
+  // A <video poster> downloads immediately even with preload="none", so the poster (and its blurred backdrop)
+  // is only attached once the slot is within ~400px of the viewport.
+  const [near, setNear] = useState(false);
+
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setNear(true); io.disconnect(); }
+    }, { rootMargin: '400px' });
+    io.observe(v);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
     const v = ref.current;
@@ -45,11 +58,12 @@ export function VideoSlot({
 
   return (
     <div className={`relative overflow-hidden bg-black ${className}`}>
-      {poster && <img src={poster} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-2xl" />}
+      {/* Blurred backdrop is decorative and below the fold: lazy, so it isn't preloaded ahead of the hero (LCP). */}
+      {poster && near && <img src={poster} alt="" aria-hidden decoding="async" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-2xl" />}
       <video
         ref={ref}
         src={src}
-        poster={poster ?? undefined}
+        poster={near ? poster ?? undefined : undefined}
         muted
         loop
         playsInline

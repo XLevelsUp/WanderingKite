@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { parseSupabaseError } from '@/lib/errorHandler';
+import { cleanEquipmentName } from '@/lib/equipment-name';
 
 // Get all equipment — excludes soft-deleted rows
 export async function getEquipment() {
@@ -17,5 +18,8 @@ export async function getEquipment() {
     throw new Error(parseSupabaseError(error, 'Failed to fetch equipment.'));
   }
 
-  return data ?? [];
+  return (data ?? []).map((item) => ({
+    ...item,
+    name: typeof item.name === 'string' ? cleanEquipmentName(item.name) : item.name,
+  }));
 }

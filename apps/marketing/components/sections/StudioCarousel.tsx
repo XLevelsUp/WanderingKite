@@ -5,21 +5,39 @@ import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import Image from 'next/image';
 
 const CAROUSEL_IMAGES = [
-  { id: 1, src: '/images/studio/placeholder1.webp', alt: 'Photography studio rental in Coimbatore - 1200 sq ft space' },
-  { id: 2, src: '/images/studio/placeholder2.webp', alt: 'Studio with cyclorama wall Coimbatore for video shoot' },
-  { id: 3, src: '/images/studio/placeholder3.webp', alt: 'Studio with Profoto lighting Coimbatore setup' },
+  { id: 1, src: '/images/studio/studio-floor-infinity-wall.webp', alt: 'Photography studio rental in Coimbatore - 1200 sq ft space' },
+  { id: 2, src: '/images/studio/studio-cyclorama-wall.webp', alt: 'Studio with cyclorama wall Coimbatore for video shoot' },
+  { id: 3, src: '/images/studio/studio-godox-lighting.webp', alt: 'Studio with Godox lighting Coimbatore setup' },
   {
     id: 4,
-    src: '/images/studio/placeholder4.webp',
+    src: '/images/studio/studio-makeup-room.webp',
     alt: 'Studio space for rent Coimbatore with dedicated makeup room',
   },
-  { id: 5, src: '/images/studio/placeholder5.webp', alt: 'Studio rental with equipment included Coimbatore' },
+  { id: 5, src: '/images/studio/studio-equipment-setup.webp', alt: 'Studio rental with equipment included Coimbatore' },
 ];
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/**
+ * Responsive sources for the static studio photos. Image optimisation is off site-wide (next.config), so next/image
+ * would send the full 1600px file to every phone; instead each photo has pre-made 640/960px copies (made with sharp,
+ * next to the original as name-w640.webp / name-w960.webp) and the browser picks via srcSet + sizes.
+ */
+const VARIANTS: Record<string, { w: number[]; full: number }> = {
+  'studio-floor-infinity-wall': { w: [640, 960], full: 1600 },
+  'studio-cyclorama-wall': { w: [640], full: 800 },
+  'studio-godox-lighting': { w: [640, 960], full: 1600 },
+  'studio-makeup-room': { w: [640, 960], full: 1600 },
+  'studio-equipment-setup': { w: [640, 960], full: 1600 },
+};
+const srcSetFor = (src: string) => {
+  const base = src.replace(/\.webp$/, '');
+  const v = VARIANTS[base.split('/').pop() ?? ''];
+  if (!v) return undefined;
+  return [...v.w.map((w) => `${base}-w${w}.webp ${w}w`), `${src} ${v.full}w`].join(', ');
+};
 
 /** Opening hero of the studio page: large centred slides with peeking neighbours; theme colours only. */
 export function StudioCarousel({ first = true }: { first?: boolean }) {
@@ -63,15 +81,16 @@ export function StudioCarousel({ first = true }: { first?: boolean }) {
                   transition={{ duration: reduce ? 0 : 0.8, ease: [0.32, 0.72, 0, 1] }}
                   className={`relative aspect-[4/3] overflow-hidden rounded-2xl bg-card sm:aspect-[16/9] ${isActive ? 'ring-1 ring-primary/40' : ''}`}
                 >
-                  <Image
+                  {/* Plain <img> with srcSet so phones get the 640/960px copy (see VARIANTS). Slide 0 is the page's LCP image on /studiospace, so it always loads eagerly at high priority. */}
+                  <img
                     src={img.src}
-                    alt={img.alt}
-                    fill
-                    // Slide 0 is the LCP image: keyed off the static index so it ships high-priority in the initial HTML.
-                    priority={first && index === 0}
-                    loading={first && index === 0 ? undefined : 'lazy'}
-                    className={img.id === 5 ? 'object-contain' : 'object-cover'}
+                    srcSet={srcSetFor(img.src)}
                     sizes="(min-width: 1024px) 64vw, (min-width: 768px) 72vw, 88vw"
+                    alt={img.alt}
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    fetchPriority={index === 0 ? 'high' : 'auto'}
+                    decoding="async"
+                    className={`absolute inset-0 h-full w-full ${img.id === 5 ? 'object-contain' : 'object-cover'}`}
                   />
                 </motion.div>
               </div>

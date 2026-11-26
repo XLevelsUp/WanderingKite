@@ -161,11 +161,11 @@ export function legacyMainCategoryMetadata(categoryId: string): Metadata {
       title: `${category.title} in Coimbatore | Wandering Kite Studio`,
       description:
         categoryMetaDescriptions[categoryId] ?? category.description,
-      url: `https://wanderingkite.in/photography/${categoryId}`,
+      url: `https://www.wanderingkite.in/photography/${categoryId}`,
       images: [{ url: '/og-photography.jpg', width: 1200, height: 630 }],
     },
     alternates: {
-      canonical: `https://wanderingkite.in/photography/${categoryId}`,
+      canonical: `https://www.wanderingkite.in/photography/${categoryId}`,
     },
   };
 }
@@ -240,7 +240,7 @@ export function LegacyMainCategory({ categoryId }: { categoryId: string }) {
           ))}
         </div>
       </section>
-      <Footer />
+      <Footer section="photography" />
     </main>
   );
 }

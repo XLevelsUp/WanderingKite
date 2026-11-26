@@ -228,6 +228,15 @@ export function StudioPricingEngine({
     }
   };
 
+  // Podcast Studio packages get their own, deeper red-orange so they read as a different family from the
+  // Quotation Engine (which keeps the studio's lighter amber-orange). Overriding the theme variables on the
+  // podcast column re-colours everything inside it at once: price, badges, ticks, border and buttons.
+  const podcastOrange = {
+    '--primary': '16 100% 52%',
+    '--primary-deep': '12 90% 42%',
+    '--accent-text': '16 100% 66%',
+  } as React.CSSProperties;
+
   return (
     <div className="mb-6">
       {/* Header row mirrors the 6/6 package grid below so each badge and its
@@ -241,7 +250,7 @@ export function StudioPricingEngine({
           <div className="h-px flex-1 bg-border" />
         </div>
         {sidePackages.length > 0 && sidePackagesTitle && (
-          <div className="lg:col-span-8 flex items-center gap-3">
+          <div className="lg:col-span-8 flex items-center gap-3" style={podcastOrange}>
             <span className="rounded-full border border-primary-deep/50 bg-primary-deep/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-accent-text">
               {sidePackagesTitle}
             </span>
@@ -262,7 +271,7 @@ export function StudioPricingEngine({
                                  ${
                                    selectedPackage?.id === pkg.id
                                      ? 'border-warning bg-warning/10 shadow-[0_0_20px_-5px_hsl(var(--color-warning)/0.2)]'
-                                     : 'border-white/5 bg-zinc-900/50 hover:bg-zinc-900'
+                                     : 'border-white/5 bg-[#121214] hover:bg-[#18181b]'
                                  }`}
               >
                 {pkg.is_best_value && (
@@ -317,7 +326,7 @@ export function StudioPricingEngine({
         {/* Side packages (Podcast Studio) — fixed-price, booked directly, so
             they sit beside the quotation without feeding into its total. */}
         {sidePackages.length > 0 && (
-          <div className="lg:col-span-8 flex flex-col gap-4">
+          <div className="lg:col-span-8 flex flex-col gap-4" style={podcastOrange}>
             {sidePackages.map((pkg) => {
               const save = pkg.originalPrice ? pkg.originalPrice - pkg.price : 0;
               return (
@@ -325,9 +334,11 @@ export function StudioPricingEngine({
                   key={pkg.name}
                   className={`relative rounded-2xl border p-4 flex flex-col gap-2 transition-all duration-300
                                  ${
+                                   // Podcast packages use a warm espresso shade (vs the neutral charcoal of the Quotation
+                                   // Engine cards on the left), so the two pricing families read as different groups.
                                    pkg.popular
-                                     ? 'border-primary bg-primary/10 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.2)]'
-                                     : 'border-white/5 bg-zinc-900/50 hover:bg-zinc-900'
+                                     ? 'border-primary bg-[#2A1A10] shadow-[0_0_20px_-5px_hsl(var(--primary)/0.25)]'
+                                     : 'border-primary/15 bg-[#1B1410] hover:bg-[#221813]'
                                  }`}
                 >
                   {pkg.popular && (
@@ -415,7 +426,7 @@ export function StudioPricingEngine({
         {/* Add-ons — moved below the package columns so the podcast menu can sit
             beside the quotation list. */}
         <div className="lg:col-span-12 flex flex-col gap-6">
-          <div className="rounded-2xl border border-white/5 bg-zinc-900/50 p-6 h-full">
+          <div className="rounded-2xl border border-white/5 bg-[#121214] p-6 h-full">
             <h3 className="text-lg font-bold text-white mb-4">
               Add-ons (Optional)
             </h3>
@@ -531,7 +542,7 @@ export function StudioPricingEngine({
                                                                 ? 'border-white/5 bg-zinc-900/30 opacity-50 cursor-not-allowed'
                                                                 : isSelected
                                                                   ? 'border-warning bg-warning/10 shadow-[0_0_15px_-5px_hsl(var(--color-warning)/0.15)] cursor-pointer'
-                                                                  : 'border-white/5 bg-zinc-900/50 hover:bg-zinc-900 cursor-pointer'
+                                                                  : 'border-white/5 bg-[#121214] hover:bg-[#18181b] cursor-pointer'
                                                             }`}
                             onClick={() => toggleEquipment(item.id)}
                           >

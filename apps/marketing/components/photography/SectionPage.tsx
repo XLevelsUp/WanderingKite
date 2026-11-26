@@ -49,24 +49,39 @@ const COPY: Record<string, {
 const tone = (corporate: boolean, t: 'sandstone' | 'sand' | 'white') => (corporate ? t : undefined);
 
 /**
- * Hero picture: ONE portrait photo in the house frame (porcelain mat + offset sandstone block) with a slow settle-zoom,
- * and a "Latest story" card overlapping its lower-left corner (real album name, place, date → links to it).
+ * Hero photo spread: a large landscape photo in the house frame (porcelain mat + offset sandstone block, slow
+ * settle-zoom), a second smaller print from another recent album tilted over its top-right corner (sm+), and a
+ * "Latest story" card overlapping the lower-left (real album name, place, date → links to it).
  */
-function HeroFrame({ album }: { album: Album | undefined }) {
+function HeroFrame({ album, second }: { album: Album | undefined; second?: Album }) {
   const meta = album ? [album.city?.name, formatShootDate(album.shoot_date)].filter(Boolean).join(' · ') : '';
   return (
-    <div className="relative mx-auto w-full max-w-[22rem] pb-10 sm:max-w-[26rem] lg:mr-0 lg:max-w-[min(100%,calc(min(72svh,40rem)*4/5))] lg:pl-10">
+    <div className="relative w-full pb-10 pt-0 sm:pt-6 lg:pl-6">
       <div className="relative">
         <div aria-hidden data-reveal="offset" style={{ '--d': '300ms' } as CSSProperties} className="absolute -bottom-4 -right-4 left-4 top-4 rounded-2xl bg-[#CBB9A4] sm:-bottom-5 sm:-right-5 sm:left-5 sm:top-5 [[data-tone=sandstone]_&]:bg-[#FAF9F6]/45" />
         <div className="relative rounded-2xl bg-[#FAF9F6] p-2.5 shadow-[0_30px_70px_-30px_rgba(0,0,0,0.5)] sm:p-3">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-muted">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-muted">
             {album?.cover_image_url ? (
-              <Image src={album.cover_image_url} alt={`${albumTitle(album)} photography by Wandering Kite`} fill priority sizes="(min-width: 1024px) 34vw, 90vw" className="kenburns object-cover" />
+              <Image src={album.cover_image_url} alt={`${albumTitle(album)} photography by Wandering Kite`} fill priority sizes="(min-width: 1024px) 52vw, 92vw" className="kenburns object-cover" />
             ) : (
               <MediaPlaceholder className="absolute inset-0" />
             )}
           </div>
         </div>
+        {/* Second print, tilted over the top-right corner (hidden on phones to keep the hero clean). */}
+        {second?.cover_image_url && (
+          <Link
+            href={albumHref(second)}
+            data-reveal
+            style={{ '--d': '650ms' } as CSSProperties}
+            aria-label={`${albumTitle(second)} — view album`}
+            className="absolute -right-3 -top-6 z-10 hidden w-[26%] rotate-[4deg] bg-white p-1.5 pb-5 shadow-[0_18px_36px_-16px_rgba(0,0,0,0.55)] transition-transform duration-500 ease-[cubic-bezier(0.34,1.4,0.64,1)] hover:rotate-0 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:block lg:-right-4"
+          >
+            <span className="relative block aspect-[4/5] overflow-hidden bg-muted">
+              <Image src={second.cover_image_url} alt="" fill sizes="14vw" className="object-cover" />
+            </span>
+          </Link>
+        )}
       </div>
       {album && (
         <Link
@@ -115,12 +130,14 @@ export async function SectionPage({ section }: { section: Section }) {
         />
         {/* ── Hero ── */}
         <section data-tone={tone(corporate, 'sandstone')} className="overflow-hidden border-b border-border">
-          <div className={`${PHOTO_WRAP} grid gap-8 pb-12 pt-8 sm:pb-16 sm:pt-12 lg:grid-cols-12 lg:items-center lg:gap-16 lg:pb-20 lg:pt-16`}>
-            <div className="lg:col-span-6">
+          {/* Text ~46% / photo spread ~54% with a normal gap — no empty band between them. */}
+          <div className={`${PHOTO_WRAP} grid gap-10 pb-12 pt-8 sm:pb-16 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-center lg:gap-14 lg:pb-20 lg:pt-14 xl:gap-20`}>
+            <div>
               <Breadcrumbs items={[{ label: 'Photography', href: '/photography' }, { label: section.name }]} />
-              <h1 className="mt-8 max-w-[18ch] text-3xl font-bold leading-[1.2] tracking-[-0.01em] text-foreground [word-spacing:0.06em] sm:text-4xl lg:text-[2.75rem] lg:leading-[1.18]">
+              {/* No forced narrow width: text-balance evens the line breaks instead. */}
+              <h1 className="mt-6 text-balance text-3xl font-bold leading-[1.2] tracking-[-0.015em] text-foreground sm:text-4xl lg:mt-8 lg:text-[2.75rem]">
                 {copy.h1}
-                <span className="mt-2 block text-accent-text">{copy.h1b}</span>
+                <span className="mt-2 block text-balance text-accent-bright">{copy.h1b}</span>
               </h1>
               <p className="mt-6 max-w-xl text-base leading-[1.75] text-foreground/80">{copy.lead}</p>
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
@@ -158,8 +175,8 @@ export async function SectionPage({ section }: { section: Section }) {
                 ))}
               </dl>}
             </div>
-            <div className="lg:col-span-6">
-              <HeroFrame album={hero[0]} />
+            <div>
+              <HeroFrame album={hero[0]} second={hero[1]} />
             </div>
           </div>
         </section>
@@ -241,7 +258,11 @@ export async function SectionPage({ section }: { section: Section }) {
                 <p className="mt-4 text-base leading-relaxed text-foreground/80">{copy.filmsLead}</p>
               </div>
               <div className="reveal lg:col-span-8">
-                <VideoSlot className="aspect-video rounded-2xl" label={`${copy.films} coming soon`} />
+                {corporate ? (
+                  <VideoSlot src="/videos/corporate-showreel.webm" poster="/images/photography/corporate-film-poster.webp" className="aspect-video rounded-2xl" label={copy.films} />
+                ) : (
+                  <VideoSlot className="aspect-video rounded-2xl" label={`${copy.films} coming soon`} />
+                )}
               </div>
             </div>
           </section>
@@ -251,7 +272,7 @@ export async function SectionPage({ section }: { section: Section }) {
           <BookingBand title={copy.book.title} subtitle={copy.book.subtitle} message={copy.book.message} />
         </div>
       </main>
-      <Footer showInstagram={false} tone="sandstone" />
+      <Footer showInstagram={false} tone="sandstone" section="photography" />
     </>
   );
 }

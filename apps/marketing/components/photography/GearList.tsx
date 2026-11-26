@@ -12,7 +12,7 @@ export function GearList({ wrap, gear }: { wrap: string; gear: { icon: LucideIco
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-accent-text">The kit</p>
           <h2 id="gear-heading" className="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Equipment We Use</h2>
           <p className="mt-4 text-base leading-relaxed text-foreground/80">
-            When you hire photographer Coimbatore services from Wandering Kite, we use industry-standard gear to ensure the highest quality results. Check our photography packages Coimbatore price lists.
+            We shoot on Sony full-frame cameras and G Master prime lenses, with professional flash and continuous lighting — so your photos hold up on a phone screen and as a wall-sized print.
           </p>
         </div>
 

@@ -1,6 +1,5 @@
 'use client';
 
-import { Footer } from '@/components/shared/Footer';
 import { HowItWorks } from '@/components/sections/HowItWorks';
 import { TechSpecs } from '@/components/sections/TechSpecs';
 import { FAQ } from '@/components/sections/FAQ';
@@ -47,8 +46,6 @@ export function HomePageClient() {
       {/* ── FAQ ─────────────────────────────────────────── */}
       <FAQ />
 
-      {/* ── Footer ──────────────────────────────────────── */}
-      <Footer showInstagram={false} tone="sandstone" />
     </main>
   );
 }

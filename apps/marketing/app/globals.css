@@ -350,10 +350,10 @@ input:-webkit-autofill:active {
   .js-motion [data-shutter].is-in > * {
     clip-path: inset(0 0 0 0);
   }
+  /* Blur only — no opacity fade, so headings keep full contrast at every moment (Lighthouse measures them mid-effect). */
   .js-motion [data-focus] {
     filter: blur(6px);
-    opacity: 0.35;
-    transition: filter 0.9s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: filter 0.9s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .js-motion [data-focus].is-in {
     filter: blur(0);
@@ -384,8 +384,9 @@ input:-webkit-autofill:active {
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Light theme: deeper taupe as the --primary-deep shade. */
+/* Light theme: deeper taupe as the --primary-deep shade; bright brand orange for large display text (3:1 is enough there). */
 :root {
+  --accent-bright: 20 100% 50%;
   --primary-deep: 27 20% 40%;
 }
 
@@ -450,9 +451,14 @@ input:-webkit-autofill:active {
 /* Section tones for photography pages (scoped with data-tone). CTA token: dark on light grounds, white on sandstone.
    Corporate runs sandstone → sand → porcelain → white down the page; Weddings & Events stay porcelain. */
 /* Dark-ground CTAs use the warm taupe brand button (was black). */
-:root { --cta: var(--primary); --cta-foreground: var(--primary-foreground); }
+:root {
+  --accent-text: 20 100% 50%;
+  --cta: var(--primary);
+  --cta-foreground: var(--primary-foreground);
+}
 [data-tone='sandstone'] {
   --background: 32 27% 72%;
+  --accent-text: 20 100% 50%;
   --card: 35 30% 80%;
   --border: 27 17% 53%;
   --muted-foreground: 0 0% 16%;
@@ -605,8 +611,8 @@ input:-webkit-autofill:active {
 
 /* "Stories in Light" — a soft beam of light sweeps across the orange word (text-clipped gradient; static for reduced motion). */
 .light-sweep {
-  color: hsl(var(--accent-text));
-  background-image: linear-gradient(110deg, hsl(var(--accent-text)) 35%, #FFE3C7 48%, #FFF6EC 50%, #FFE3C7 52%, hsl(var(--accent-text)) 65%);
+  color: hsl(var(--accent-bright));
+  background-image: linear-gradient(110deg, hsl(var(--accent-bright)) 35%, #FFE3C7 48%, #FFF6EC 50%, #FFE3C7 52%, hsl(var(--accent-bright)) 65%);
   background-size: 300% 100%;
   background-position: 100% 0;
   -webkit-background-clip: text;
@@ -615,9 +621,93 @@ input:-webkit-autofill:active {
   padding-right: 0.08em; /* italic overhang */
 }
 @media (prefers-reduced-motion: no-preference) {
-  .light-sweep { animation: light-sweep 5s cubic-bezier(0.45, 0, 0.55, 1) 1.2s infinite; }
+  /* background-position can't run on the GPU, so the sweep starts only after the first interaction
+     (html.sweep-on, set by StoriesInLight) — it never competes with page load. */
+  .sweep-on .light-sweep { animation: light-sweep 5s cubic-bezier(0.45, 0, 0.55, 1) 0.6s infinite; }
 }
 @keyframes light-sweep {
   0% { background-position: 100% 0; }
   45%, 100% { background-position: 0% 0; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Buttons turn brand orange on hover (landing, photography and every page using these button styles).
+ *   Solid buttons  (taupe .bg-primary / .bg-cta)            → fill bright orange, black text, warm glow
+ *   Outline buttons (rounded-full + border-foreground/30 · border-foreground/25 · border-primary)
+ *                                                            → fill bright orange, orange border, black text
+ * Only real buttons/links (a, button), never when disabled, and only on devices with a mouse —
+ * so a tap on a phone doesn't leave a button "stuck" orange. Black on #FF5500 is 6.4:1 contrast.
+ * ───────────────────────────────────────────────────────────────────────── */
+@media (hover: hover) and (pointer: fine) {
+  :is(a, button):is(.bg-primary, .bg-cta):not(:disabled):hover {
+    background-color: hsl(var(--accent-bright));
+    color: #000;
+    opacity: 1;
+    filter: none;
+    box-shadow: 0 12px 30px -12px rgba(255, 85, 0, 0.65);
+  }
+  :is(a, button).rounded-full:is(.border-foreground\/30, .border-foreground\/25, .border-primary):not(:disabled):hover {
+    background-color: hsl(var(--accent-bright));
+    border-color: hsl(var(--accent-bright));
+    color: #000;
+  }
+  :is(a, button):is(.bg-primary, .bg-cta, .rounded-full) {
+    transition-property: background-color, border-color, color, box-shadow, transform, opacity, filter, translate;
+    transition-duration: 200ms;
+  }
+}
+
+/* Our Approach on xl+: the three principles sit side by side and are all "on", so every badge is filled. */
+@media (min-width: 1280px) {
+  .approach-steps .pm-num.is-off {
+    color: #fff;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+    background-image: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-deep)) 55%, hsl(27 22% 30%) 100%);
+    box-shadow: 0 10px 24px -12px hsl(var(--primary-deep) / 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  .approach-steps .pm-num.is-off::after { opacity: 1; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Home hero "doors" (Photography / Studio Space). Transform-only animations (GPU), off for reduced motion.
+ *   .door        a soft light sweep crosses the card every 6s (.door-late runs half a cycle later, so they alternate)
+ *   .door-arrow  the arrow nudges right on a slow loop — "this goes somewhere"
+ *   .door-bob    the small ↓ next to "Explore our two studios" bobs gently
+ * ───────────────────────────────────────────────────────────────────────── */
+.door::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 48%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0.35) 52%, transparent 70%);
+  transform: translateX(-120%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .door::after { animation: door-shine 6s ease-in-out 1.5s infinite; }
+  .door-late::after { animation-delay: 4.5s; }
+  .door .door-arrow svg { animation: door-nudge 2.4s ease-in-out infinite; }
+  .door-late .door-arrow svg { animation-delay: 1.2s; }
+  .door:hover .door-arrow svg { animation: none; transform: translateX(3px); }
+  .door-bob { animation: door-bob 1.8s ease-in-out infinite; }
+}
+@keyframes door-shine {
+  0%, 60% { transform: translateX(-120%); }
+  85%, 100% { transform: translateX(120%); }
+}
+@keyframes door-nudge {
+  0%, 60%, 100% { transform: translateX(0); }
+  75% { transform: translateX(4px); }
+}
+@keyframes door-bob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 3px; }
+}
+
+/* Hold CSS transitions until the page is ready (MainNav adds html.tx-ready two frames after hydrating and applying
+   the theme). Otherwise the theme switch on load animated every transition-colors element light → dark —
+   Lighthouse flagged 119 non-composited animations on /studiospace. Interactions after load animate as normal. */
+html:not(.tx-ready) *,
+html:not(.tx-ready) *::before,
+html:not(.tx-ready) *::after {
+  transition: none !important;
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ChevronDown, MessageCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronDown, MessageCircle } from 'lucide-react';
 
 export interface SubNavCategory { id: string; name: string; href: string; subgroup: string | null; count?: number }
 export interface SubNavGroup { slug: string; name: string; categories: SubNavCategory[] }
@@ -67,6 +67,15 @@ export function SectionSubNav({
   return (
     <div ref={root} className="sticky top-20 z-30 mt-20 border-b border-border bg-[#FAF9F6]/90 backdrop-blur-md" onPointerLeave={hoverClose} onPointerEnter={() => window.clearTimeout(closeTimer.current)}>
       <nav aria-label={`${sectionName} categories`} className="mx-auto flex h-12 w-full max-w-7xl items-center gap-3 px-5 sm:px-8 lg:px-12 2xl:max-w-[88rem] 3xl:max-w-[112rem] 3xl:px-16">
+        {/* Back to the photography hub: icon-only pill on phones, "← Photography" from sm up. */}
+        <Link
+          href="/photography"
+          aria-label="Back to Photography"
+          className="group inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-border px-2 text-xs font-semibold text-foreground/80 transition-colors duration-200 hover:border-accent-text hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-3"
+        >
+          <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" aria-hidden />
+          <span className="hidden sm:inline">Photography</span>
+        </Link>
         <Link href={sectionHref} className="hidden shrink-0 text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-text sm:block">
           {sectionName}
         </Link>
@@ -143,7 +152,7 @@ export function SectionSubNav({
             <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
               {columns.map(([sub, cats]) => (
                 <div key={sub || 'all'} className={columns.length === 1 ? 'sm:col-span-2 lg:col-span-4' : ''}>
-                  {sub && <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-foreground/50">{sub}</p>}
+                  {sub && <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-foreground/65">{sub}</p>}
                   <ul className={columns.length === 1 ? 'grid gap-x-8 sm:grid-cols-2 lg:grid-cols-4' : ''}>
                     {cats.map((c, i) => {
                       const on = c.id === activeId;
@@ -160,7 +169,7 @@ export function SectionSubNav({
                               {c.name}
                             </span>
                             {c.count !== undefined && (
-                              <span className="text-xs tabular-nums text-foreground/50">{c.count ? `${c.count} ${c.count === 1 ? 'album' : 'albums'}` : 'Soon'}</span>
+                              <span className="text-xs tabular-nums text-foreground/65">{c.count ? `${c.count} ${c.count === 1 ? 'album' : 'albums'}` : 'Soon'}</span>
                             )}
                           </Link>
                         </li>

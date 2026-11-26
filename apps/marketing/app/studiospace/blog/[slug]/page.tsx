@@ -22,7 +22,7 @@ import {
 export const dynamic = 'force-dynamic';
 
 const BASE_PATH = '/studiospace/blog';
-const SITE_URL = 'https://wanderingkite.in';
+const SITE_URL = 'https://www.wanderingkite.in';
 
 export async function generateMetadata({
   params,

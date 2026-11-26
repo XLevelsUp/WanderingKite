@@ -55,8 +55,10 @@ export function BackdropsGallery() {
               className="group"
             >
               <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-border bg-card">
+                {/* Swatches show at ≤ ~290px, so a 480px copy (name-w480.webp, made with sharp) covers every screen incl. 2-3x phones:
+                    9 swatches went from ~860 KB to ~33 KB. */}
                 <Image
-                  src={backdrop.image}
+                  src={backdrop.image.replace(/\.webp$/, '-w480.webp')}
                   alt={`Studio backdrop: ${backdrop.name} background for photography studio rental in RS Puram Coimbatore`}
                   fill
                   sizes="(min-width: 1280px) 11vw, (min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"

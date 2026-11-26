@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
-import Script from 'next/script';
+import { AfterInteraction } from '@/components/analytics/AfterInteraction';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { MainNav } from '@/components/navigation/MainNav';
 import { BookingFlyout } from '@/components/booking/BookingFlyout';
 import { brandConfig } from '@/config/brand.config';
+import { openingHoursSchema } from '@/lib/hours';
 import { siteConfig } from '@/config/site';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import { NotificationProvider } from '@/components/ui/NotificationProvider';
 import NextTopLoader from 'nextjs-toploader';
-import { Toaster } from 'sonner';
+import { LazyToaster } from '@/components/ui/LazyToaster';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -27,7 +28,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   // Fixes broken OG/Twitter image URLs — Next.js requires this for relative paths
-  metadataBase: new URL('https://wanderingkite.in'),
+  metadataBase: new URL('https://www.wanderingkite.in'),
 
   title: {
     default: 'Wandering Kite Studio | Photography & Studio Coimbatore',
@@ -128,15 +129,33 @@ export default function RootLayout({
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': ['LocalBusiness', 'ProfessionalService', 'Store'],
-    '@id': 'https://wanderingkite.in/#business',
+    '@id': 'https://www.wanderingkite.in/#business',
     name: 'Wandering Kite Studio',
     alternateName: 'Wandering Kite',
     description: siteConfig.description,
     url: siteConfig.url,
     telephone: siteConfig.contact.phone,
+    contactPoint: [
+      {
+        '@type': 'ContactPoint',
+        telephone: siteConfig.contact.phone,
+        contactType: 'customer service',
+        areaServed: 'IN',
+        availableLanguage: ['English', 'Tamil'],
+        description: 'Photography & Events',
+      },
+      {
+        '@type': 'ContactPoint',
+        telephone: siteConfig.contact.studioPhone,
+        contactType: 'reservations',
+        areaServed: 'IN',
+        availableLanguage: ['English', 'Tamil'],
+        description: 'Studio Space & Podcast',
+      },
+    ],
     email: siteConfig.contact.email,
-    image: 'https://wanderingkite.in/og-image.jpg',
-    logo: 'https://wanderingkite.in/logo.svg',
+    image: 'https://www.wanderingkite.in/og-image.jpg',
+    logo: 'https://www.wanderingkite.in/logo.svg',
     // Correct Indian Rupee symbol for Indian market SERP display
     priceRange: '₹₹',
     address: {
@@ -167,26 +186,13 @@ export default function RootLayout({
     // AggregateRating — enables gold star rich snippet in Google SERPs
     aggregateRating: {
       '@type': 'AggregateRating',
-      ratingValue: '4.9',
+      ratingValue: '5',
       bestRating: '5',
       worstRating: '1',
       ratingCount: '100',
       reviewCount: '100',
     },
-    openingHoursSpecification: [
-      {
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-        opens: '09:00',
-        closes: '18:00',
-      },
-      {
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: 'Saturday',
-        opens: '10:00',
-        closes: '17:00',
-      },
-    ],
+    openingHoursSpecification: openingHoursSchema(),
     hasOfferCatalog: {
       '@type': 'OfferCatalog',
       name: 'Creative Services',
@@ -195,9 +201,9 @@ export default function RootLayout({
           '@type': 'Offer',
           itemOffered: {
             '@type': 'Service',
-            '@id': 'https://wanderingkite.in/photography#service',
+            '@id': 'https://www.wanderingkite.in/photography#service',
             name: 'Event & Lifestyle Photography',
-            url: 'https://wanderingkite.in/photography',
+            url: 'https://www.wanderingkite.in/photography',
             description:
               'Professional photography for weddings, events, portraits, product, and commercial projects in Coimbatore and across India.',
             areaServed: 'Coimbatore',
@@ -210,9 +216,9 @@ export default function RootLayout({
                 '@type': 'Offer',
                 itemOffered: {
                   '@type': 'Service',
-                  '@id': 'https://wanderingkite.in/rentals#service',
+                  '@id': 'https://www.wanderingkite.in/rentals#service',
                   name: 'Camera & Equipment Rentals',
-                  url: 'https://wanderingkite.in/rentals',
+                  url: 'https://www.wanderingkite.in/rentals',
                   description:
                     'Daily and weekly rental of Sony, Canon cameras, lenses, lighting rigs, and Rode audio equipment in Coimbatore.',
                   areaServed: 'Coimbatore',
@@ -224,11 +230,11 @@ export default function RootLayout({
           '@type': 'Offer',
           itemOffered: {
             '@type': 'Service',
-            '@id': 'https://wanderingkite.in/studiospace#service',
+            '@id': 'https://www.wanderingkite.in/studiospace#service',
             name: 'Photography Studio Rental',
-            url: 'https://wanderingkite.in/studiospace',
+            url: 'https://www.wanderingkite.in/studiospace',
             description:
-              '1200 sq ft photography and video studio with cyclorama wall, ProFoto lighting, and backdrops. Hourly and full-day rates.',
+              '1200 sq ft photography and video studio with cyclorama wall, Godox lighting, and backdrops. Hourly and full-day rates.',
             areaServed: 'Coimbatore',
           },
         },
@@ -236,11 +242,11 @@ export default function RootLayout({
           '@type': 'Offer',
           itemOffered: {
             '@type': 'Service',
-            '@id': 'https://wanderingkite.in/podcast#service',
+            '@id': 'https://www.wanderingkite.in/studiospace#podcast',
             name: 'Podcast Recording Studio',
-            url: 'https://wanderingkite.in/podcast',
+            url: 'https://www.wanderingkite.in/studiospace#podcast',
             description:
-              'Acoustic-treated podcast recording studio with Rode Procaster, Shure SM7B, multi-track recording, and 4K video option.',
+              'Podcast recording inside our 1200 sq ft RS Puram studio with multi-camera setups, lighting, and studio microphones.',
             areaServed: 'Coimbatore',
           },
         },
@@ -251,9 +257,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <ThemeProvider />
-      <link rel="preconnect" href="https://www.googletagmanager.com" />
-      <link rel="preconnect" href="https://www.clarity.ms" />
-      <link rel="preconnect" href="https://scontent.cdninstagram.com" crossOrigin="anonymous" />
+      {/* Preconnect only to origins needed for first paint: Supabase serves the photos. Analytics load after
+          interaction (AfterInteraction), so preconnecting to them early was wasted work. */}
+      <link rel="preconnect" href="https://umifcvgdbcpqzgjwuoqc.supabase.co" />
       <body className={`${inter.variable} font-sans antialiased`}>
         <NextTopLoader
           color="#f59e0b"
@@ -266,30 +272,21 @@ export default function RootLayout({
           speed={200}
           shadow="0 0 10px #f59e0b,0 0 5px #f59e0b"
         />
-        {/* Google Analytics 4 – loads whenever GA_ID is available */}
+        {/* Google Analytics 4 — loads on first interaction (or after 8s) so it never competes with page load. */}
         {GA_ID && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-              strategy="lazyOnload"
-            />
-            <Script id="google-analytics" strategy="lazyOnload">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${GA_ID}', {
-                  send_page_view: true,
-                  enhanced_measurement: {
-                    scrolls: true,
-                    outbound_clicks: true,
-                    file_downloads: true,
-                    video_engagement: true
-                  }
-                });
-              `}
-            </Script>
-          </>
+          <AfterInteraction
+            id="ga4"
+            src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+            code={`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${GA_ID}', {
+                send_page_view: true,
+                enhanced_measurement: { scrolls: true, outbound_clicks: true, file_downloads: true, video_engagement: true }
+              });
+            `}
+          />
         )}
         <script
           type="application/ld+json"
@@ -299,7 +296,7 @@ export default function RootLayout({
             <MainNav />
             {children}
             <BookingFlyout />
-            <Toaster richColors position="bottom-right" />
+            <LazyToaster />
           </NotificationProvider>
       </body>
     </html>

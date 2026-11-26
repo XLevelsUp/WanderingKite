@@ -10,7 +10,7 @@ import { BookingBand, Breadcrumbs, CitiesBand, PHOTO_WRAP } from './PhotoChrome'
 import { cityCopy } from '@/lib/photography/city-copy';
 import { categoryHref, cityHref, getAlbums, getCatalog, sectionTree, type Album, type City } from '@/lib/photography/data';
 
-const SITE = 'https://wanderingkite.in';
+const SITE = 'https://www.wanderingkite.in';
 
 /** Prefix used by city landing pages: /photography/wedding-photographer-in-{city}. */
 export const CITY_PREFIX = 'wedding-photographer-in-';
@@ -192,7 +192,7 @@ export async function CityPage({ city, page }: { city: City; page: number }) {
           message={`Hi! I'm planning a wedding/event in ${city.name}. Is my date available?`}
         />
       </main>
-      <Footer showInstagram={false} tone="sandstone" />
+      <Footer showInstagram={false} tone="sandstone" section="photography" />
     </>
   );
 }

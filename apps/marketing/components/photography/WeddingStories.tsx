@@ -25,7 +25,7 @@ export function WeddingStats({ wrap, albums, categories, cities }: { wrap: strin
             <dt className="sr-only">{s.label}</dt>
             <dd>
               <span className={`${storySerif.className} block text-5xl font-semibold leading-none text-foreground lining-nums tabular-nums sm:text-6xl`}>
-                {s.prefix && <span className="text-accent-text">{s.prefix}</span>}
+                {s.prefix && <span className="text-accent-bright">{s.prefix}</span>}
                 <CountUp to={s.n} />
                 {s.unit && <span className="ml-1 font-sans text-sm font-semibold uppercase tracking-[0.18em] text-foreground/60">{s.unit.trim()}</span>}
               </span>
@@ -109,9 +109,9 @@ export function StoryGrid({ wrap, albums, total }: { wrap: string; albums: Album
 
 // "Why choose us" — every point is existing site copy (Our Approach + the weddings films line).
 const WHY = [
-  { icon: Camera, title: 'Authentic Storytelling', body: 'Recognized among the Top 10 photographers in Coimbatore, we capture genuine emotions. Whether you are looking for the best wedding photographers in Coimbatore or creative portraits, we bring your unique story to life.' },
-  { icon: Clock, title: 'Reliable Quality', body: 'Our team delivers professionally edited images within 7-10 days from our prime RS Puram location. We provide transparent photography packages Coimbatore price options to suit your exact needs.' },
-  { icon: MapPin, title: 'Regional Coverage', body: 'From our RS Puram location, we serve clients across Coimbatore, Tiruppur, Salem, and Erode with professional wedding, event, portrait, and commercial photography.' },
+  { icon: Camera, title: 'Authentic Storytelling', body: 'We photograph what actually happens — the glance before the thaali, the laugh after the rituals, the quiet in between. Whether it is your wedding or a portrait session, the photos should feel the way the day felt.' },
+  { icon: Clock, title: 'Reliable Quality', body: 'Professionally edited photos reach you within 7–10 days. Your quote lists exactly what is included before you pay an advance, so there are no surprises later.' },
+  { icon: MapPin, title: 'Regional Coverage', body: 'From our studio in RS Puram, Coimbatore, we photograph weddings, events, portraits and commercial work across Tiruppur, Salem, Erode and further when you need us.' },
   { icon: Film, title: 'Wedding films', body: 'Cinematic highlights and full-length films, cut to your music and your story.' },
 ];
 

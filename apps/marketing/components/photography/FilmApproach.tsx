@@ -4,7 +4,7 @@ import { ApproachSteps } from './ApproachSteps';
 
 const d = (ms: number) => ({ '--d': `${ms}ms` }) as CSSProperties;
 // Film width follows a capped height so the 9:16 frame never outgrows the viewport (never cropped).
-const FILM_W = 'mx-auto w-full max-w-[17rem] sm:max-w-[19rem] lg:mx-0 lg:max-w-none lg:w-[min(100%,calc(min(70svh,36rem)*9/16))]';
+const FILM_W = 'mx-auto w-full max-w-[17rem] sm:max-w-[19rem] lg:mx-0 lg:max-w-none lg:w-[calc(min(70svh,36rem)*9/16)]';
 
 /**
  * Showreel + Our Approach. lg: the film stays pinned (sticky) while the showreel intro and the three principles
@@ -13,9 +13,10 @@ const FILM_W = 'mx-auto w-full max-w-[17rem] sm:max-w-[19rem] lg:mx-0 lg:max-w-n
 export function FilmApproach({ wrap }: { wrap: string }) {
   return (
     <section aria-labelledby="showreel-heading" className="relative overflow-x-clip">
-      <div className={`${wrap} grid gap-12 py-16 sm:py-20 lg:grid-cols-12 lg:gap-16 lg:py-24`}>
+      <div className={`${wrap} grid gap-12 pt-16 pb-8 sm:pt-20 sm:pb-10 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-20 lg:pt-24 lg:pb-12`}>
         {/* ── Film (sticky on lg) ── */}
-        <div className="lg:col-span-5">
+        {/* Film column is exactly as wide as the film (auto), so the text sits right beside it — no empty band. */}
+        <div>
           <figure className="lg:sticky lg:top-28">
             <div className={`relative ${FILM_W}`}>
               <div aria-hidden data-reveal="offset" style={d(250)} className="absolute -bottom-4 -right-4 left-4 top-4 rounded-2xl bg-[#CBB9A4]" />
@@ -31,7 +32,7 @@ export function FilmApproach({ wrap }: { wrap: string }) {
         </div>
 
         {/* ── Showreel intro + Our Approach ── */}
-        <div className="lg:col-span-7 lg:pt-8">
+        <div className="lg:pt-8">
           <div data-reveal>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-accent-text">Films</p>
             <h2 id="showreel-heading" className="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Showreel</h2>
@@ -40,9 +41,9 @@ export function FilmApproach({ wrap }: { wrap: string }) {
             </p>
           </div>
 
-          <div className="relative mt-12 lg:mt-16">
+          <div className="relative mt-10 lg:mt-12 xl:mt-8">
             <span aria-hidden data-reveal="line" className="absolute inset-x-0 top-0 h-px bg-foreground/20" />
-            <h2 id="approach-heading" data-reveal style={d(150)} className="pt-12 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            <h2 id="approach-heading" data-reveal style={d(150)} className="pt-10 text-3xl font-bold tracking-tight text-foreground sm:text-4xl xl:pt-8">
               Our Approach
             </h2>
             <ApproachSteps />

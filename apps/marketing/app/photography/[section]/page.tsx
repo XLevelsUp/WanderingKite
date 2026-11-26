@@ -4,11 +4,11 @@ import { SectionPage } from '@/components/photography/SectionPage';
 import { CITY_PREFIX, CityPage, cityPageTitle } from '@/components/photography/CityPage';
 import { LegacyMainCategory, hasLegacyMainCategory, legacyMainCategoryMetadata } from '@/components/photography/legacy/LegacyMainCategory';
 import { cityCopy } from '@/lib/photography/city-copy';
-import { findCity, findSection, getCatalog } from '@/lib/photography/data';
+import { findCity, findSection, getAlbums, getCatalog } from '@/lib/photography/data';
 
 type Props = { params: Promise<{ section: string }>; searchParams: Promise<{ page?: string }> };
 
-const SITE = 'https://wanderingkite.in';
+const SITE = 'https://www.wanderingkite.in';
 
 const META: Record<string, { title: string; description: string }> = {
   weddings: {
@@ -38,9 +38,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const copy = cityCopy(city.slug, city.name, city.intro);
     const url = `${SITE}/photography/${CITY_PREFIX}${city.slug}`;
     const description = copy.intro[0].slice(0, 158);
+    // A city page with no published albums is thin content: keep it reachable but out of the index until there's local work to show.
+    const { total } = await getAlbums({ city: city.slug, pageSize: 1 });
     return {
       title: `${cityPageTitle(city)} | Candid Wedding & Event Photography`,
       description,
+      ...(total === 0 ? { robots: { index: false, follow: true } } : {}),
       alternates: { canonical: url },
       openGraph: { title: `${cityPageTitle(city)} | Wandering Kite`, description, url },
     };

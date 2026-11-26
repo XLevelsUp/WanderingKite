@@ -17,7 +17,7 @@ type Props = {
   searchParams: Promise<{ city?: string; page?: string }>;
 };
 
-const SITE = 'https://wanderingkite.in';
+const SITE = 'https://www.wanderingkite.in';
 
 // Fallback intro until one is written in the DB (photo_categories.intro). Names the cities we cover, from the catalog.
 function defaultIntro(c: Category, cat: Catalog) {
@@ -205,7 +205,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           />
         </div>
       </main>
-      <Footer showInstagram={false} tone="sandstone" />
+      <Footer showInstagram={false} tone="sandstone" section="photography" />
     </>
   );
 }

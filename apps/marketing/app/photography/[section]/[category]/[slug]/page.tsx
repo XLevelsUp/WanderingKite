@@ -12,7 +12,7 @@ import { albumHref, albumTitle, categoryHref, findSection, formatShootDate, getA
 
 type Props = { params: Promise<{ section: string; category: string; slug: string }> };
 
-const SITE = 'https://wanderingkite.in';
+const SITE = 'https://www.wanderingkite.in';
 
 // Static-by-default: each album renders once and refreshes every 5 minutes (unknown slugs render on first visit).
 export const revalidate = 300;
@@ -143,7 +143,7 @@ export default async function AlbumPage({ params }: Props) {
           )}
         </div>
       </main>
-      <Footer showInstagram={false} tone="sandstone" />
+      <Footer showInstagram={false} tone="sandstone" section="photography" />
     </>
   );
 }

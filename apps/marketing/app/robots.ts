@@ -25,6 +25,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: 'https://wanderingkite.in/sitemap.xml',
+    sitemap: 'https://www.wanderingkite.in/sitemap.xml',
   };
 }

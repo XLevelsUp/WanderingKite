@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+    experimental: {
+        // Put the (Tailwind) CSS straight into each page's HTML instead of a separate render-blocking
+        // stylesheet request — Lighthouse measured ~460ms of render blocking on mobile from the CSS files.
+        inlineCss: true,
+    },
     images: {
         // Vercel's Image Optimization pipeline hit its plan quota (402
         // Payment Required on every next/image request, local and remote).
@@ -29,6 +34,12 @@ const nextConfig: NextConfig = {
             // Marketing-only concern — admin has no equivalent route.
             {
                 source: '/studio',
+                destination: '/studiospace',
+                permanent: true,
+            },
+            // Podcast is part of Studio Space — 301 to /studiospace so old links/bookmarks consolidate.
+            {
+                source: '/podcast',
                 destination: '/studiospace',
                 permanent: true,
             },

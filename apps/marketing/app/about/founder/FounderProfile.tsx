@@ -11,7 +11,7 @@ const WRAP = 'mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8';
 
 /** Exact stats matching the home page proof band (ValuesSection.tsx) */
 const STATS = [
-  { value: '100+', label: 'Weddings' },
+  { value: '200+', label: 'Weddings' },
   { value: '50+', label: 'Corporate Events' },
   { value: '100+', label: 'Projects as Wandering Kite' },
 ];

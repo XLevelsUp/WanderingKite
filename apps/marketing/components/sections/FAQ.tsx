@@ -86,7 +86,7 @@ export function FAQ() {
                     onClick={() => setOpen(on ? null : i)}
                     className="group flex w-full items-center gap-6 py-6 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <span className={`text-[11px] font-semibold tracking-[0.24em] tabular-nums transition-colors duration-300 ${on ? 'text-accent-text' : 'text-foreground/50'}`}>
+                    <span className={`text-[11px] font-semibold tracking-[0.24em] tabular-nums transition-colors duration-300 ${on ? 'text-accent-text' : 'text-foreground/65'}`}>
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <span className={`flex-1 text-base font-semibold transition-colors duration-300 sm:text-lg ${on ? 'text-accent-text' : 'text-foreground group-hover:text-accent-text'}`}>{f.question}</span>

@@ -24,7 +24,7 @@ const ROWS = [
     title: 'Corporate',
     body: 'Events, conferences, headshots, product shoots, ads, music videos and short films.',
     tags: ['Corporate Events', 'Conferences', 'Headshots', 'Product', 'Ads', 'Music Videos', 'Short Films'],
-    film: '/videos/corporate-film.webm',
+    film: '/videos/corporate-showreel.webm',
     poster: '/images/photography/corporate-film-poster.webp',
     label: 'Corporate event film',
   },
@@ -118,7 +118,7 @@ export function PhotographyDiptych() {
                     </div>
 
                     <div className="flex items-start gap-4 sm:gap-8">
-                      <span className={`pt-2 font-mono text-sm font-semibold tabular-nums transition-colors duration-300 ${on ? 'text-accent-text' : 'text-accent-text/40'} lg:pt-3`}>
+                      <span className={`pt-2 font-mono text-sm font-semibold tabular-nums transition-colors duration-300 ${on ? 'text-accent-text' : 'text-foreground/65'} lg:pt-3`}>
                         {r.n}
                       </span>
                       <div className="min-w-0 flex-1">

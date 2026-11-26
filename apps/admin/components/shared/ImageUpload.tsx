@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { logger } from '@/lib/logger';
 import { compressImageClient } from '@/lib/images/compressImageClient';
+import { makeThumbnail, thumbPathFor } from '@/lib/images/thumbnail';
 import {
   Upload,
   X,
@@ -132,6 +133,16 @@ export function ImageUpload({
           });
 
         if (uploadError) throw new Error(uploadError.message);
+
+        // Small WebP copy for the website's grids (see lib/images/thumbnail.ts). Best-effort: the site
+        // falls back to the original when it's missing, so a failure here must not fail the upload.
+        const thumb = await makeThumbnail(fileToUpload);
+        if (thumb) {
+          const { error: thumbError } = await supabase.storage
+            .from(bucket)
+            .upload(thumbPathFor(filePath), thumb, { upsert: true, contentType: 'image/webp', cacheControl: '31536000' });
+          if (thumbError) logger.error('[ImageUpload] Thumbnail upload failed:', thumbError.message);
+        }
 
         const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
         const publicUrl = data.publicUrl;

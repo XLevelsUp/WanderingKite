@@ -259,7 +259,7 @@ export const studioFAQs = [
   {
     question: 'What is the studio rental price per hour in Coimbatore?',
     answer:
-      'Our hourly studio rental starts at ₹999/hr. Half Day (4 hrs) is ₹3,499 and Full Day (8 hrs) is ₹6,999. All packages include lights, tripod and studio space.',
+      'Our hourly studio rental starts at ₹999/hr. Half Day (4 hrs) is ₹3,999 and Full Day (8 hrs) is ₹7,999. All packages include lights, tripod and studio space.',
   },
   {
     question: 'What equipment is included in the studio rental?',

@@ -1,6 +1,29 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { siteConfig } from '@/config/site';
+import { albumHref, categoryHref, cityHref, getAlbums, getCatalog } from '@/lib/photography/data';
+
+/**
+ * Photography URLs from the live catalog (replaces the hard-coded pre-revamp list): sections, categories,
+ * published albums, and city pages — but only cities that have at least one published album, since an
+ * empty location page is thin content (those are also noindexed on the page itself).
+ */
+async function getPhotographyEntries(baseUrl: string): Promise<MetadataRoute.Sitemap> {
+  try {
+    const [cat, { albums }] = await Promise.all([getCatalog(), getAlbums({ pageSize: 1000 })]);
+    const now = new Date();
+    const entry = (path: string, priority: number) => ({ url: `${baseUrl}${path}`, lastModified: now, changeFrequency: 'monthly' as const, priority });
+    const citiesWithWork = new Set(albums.map((a) => a.city_slug).filter(Boolean));
+    return [
+      ...cat.sections.map((sec) => entry(`/photography/${sec.slug}`, 0.9)),
+      ...cat.categories.map((c) => entry(categoryHref(c), 0.8)),
+      ...albums.map((a) => entry(albumHref(a), 0.7)),
+      ...cat.cities.filter((c) => citiesWithWork.has(c.slug)).map((c) => entry(cityHref(c), 0.7)),
+    ];
+  } catch {
+    return [];
+  }
+}
 
 /**
  * Blog posts are admin-authored and go live on save, so the sitemap is
@@ -31,10 +54,10 @@ async function getBlogEntries(baseUrl: string): Promise<MetadataRoute.Sitemap> {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://wanderingkite.in';
+  const baseUrl = siteConfig.url;
   const currentDate = new Date();
 
-  const blogEntries = await getBlogEntries(baseUrl);
+  const [blogEntries, photographyEntries] = await Promise.all([getBlogEntries(baseUrl), getPhotographyEntries(baseUrl)]);
 
   return [
     {
@@ -49,46 +72,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 1.0,
     },
-    ...['events', 'portraits', 'corporate', 'commercial'].map((cat) => ({
-      url: `${baseUrl}/photography/${cat}`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly' as const,
-      priority: 0.9,
-    })),
-    ...[
-      'events/wedding',
-      'events/engagements',
-      'events/birthdays',
-      'events/house-warming',
-      'events/puberty-ceremonies',
-      'portraits/family',
-      'portraits/maternity',
-      'portraits/baby-shoots',
-      'corporate/product',
-      'corporate/cinematic-videos',
-      'corporate/social-media',
-      'corporate/model-shoots',
-      'corporate/headshots',
-      'commercial/ads',
-      'commercial/music-videos',
-      'commercial/short-films',
-    ].map((subCat) => ({
-      url: `${baseUrl}/photography/${subCat}`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
-    })),
+    ...photographyEntries,
     ...(siteConfig.features.rentals
       ? [{ url: `${baseUrl}/rentals`, lastModified: currentDate, changeFrequency: 'monthly' as const, priority: 1.0 }]
       : []),
     {
       url: `${baseUrl}/studiospace`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
-      priority: 1.0,
-    },
-    {
-      url: `${baseUrl}/podcast`,
       lastModified: currentDate,
       changeFrequency: 'monthly',
       priority: 1.0,

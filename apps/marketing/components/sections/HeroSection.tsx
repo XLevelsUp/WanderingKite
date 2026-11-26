@@ -11,7 +11,7 @@ import {
   useSpring,
   useTransform,
 } from 'framer-motion';
-import { ArrowRight, Aperture, Pause, Play } from 'lucide-react';
+import { ArrowRight, Aperture, Building2, Camera, Pause, Play } from 'lucide-react';
 
 export type HeroMedia =
   | { type: 'image'; src: string; alt: string; caption?: string }
@@ -37,7 +37,7 @@ export function HeroSection({ media }: { media?: HeroMedia }) {
   return (
     <section
       ref={sectionRef}
-      className="relative isolate overflow-hidden bg-background pb-20 pt-28 sm:pb-24 sm:pt-32 lg:flex lg:min-h-[100svh] lg:flex-col lg:justify-center lg:pb-10 lg:pt-28"
+      className="relative isolate overflow-hidden bg-background pb-10 pt-28 sm:pb-12 sm:pt-32 lg:flex lg:min-h-[88svh] lg:flex-col lg:justify-center lg:pb-6 lg:pt-24"
     >
       {/* Background photo — decorative, so empty alt; the porcelain wash keeps black text legible. */}
       <div aria-hidden="true" className="absolute inset-0 -z-10">
@@ -61,7 +61,7 @@ export function HeroSection({ media }: { media?: HeroMedia }) {
           <h1 className="text-[clamp(2.75rem,9vw,5.25rem)] font-bold leading-[1.02] tracking-[-0.035em] text-foreground lg:text-[clamp(3rem,4.6vw,4.75rem)] 2xl:text-[clamp(4.75rem,4.3vw,6.5rem)]">
             Where Vision
             <br />
-            <span className="text-accent-text">Meets Craft</span>
+            <span className="text-accent-bright">Meets Craft</span>
           </h1>
 
           <motion.div
@@ -69,27 +69,49 @@ export function HeroSection({ media }: { media?: HeroMedia }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...SETTLE, delay: 0.15 }}
           >
-            <h2 className="mx-auto mt-6 max-w-md text-balance text-base font-normal leading-relaxed text-foreground sm:text-lg lg:mx-0 lg:max-w-xl 2xl:mt-8 2xl:max-w-2xl 2xl:text-xl 3xl:text-2xl">
+            <h2 className="mx-auto mt-6 max-w-md text-balance text-[11px] font-semibold uppercase tracking-[0.28em] leading-relaxed text-foreground sm:text-xs lg:mx-0 lg:max-w-xl lg:text-[13px] 2xl:mt-8 2xl:max-w-2xl 2xl:text-sm">
               {/* Two fixed pairs, so a wrap never leaves a dangling "·" at a line end. */}
               <span className="block">Photography · Equipment Rentals</span>
-              <span className="block">Studio Spaces · Podcast Production</span>
+              <span className="block mt-1 sm:mt-1.5">Studio Spaces · Podcast Production</span>
             </h2>
 
-            <div className="mt-9 2xl:mt-11 flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center lg:justify-start">
+            {/* Two "doors" — one per part of the site — so visitors see there are two places to go.
+                Photography = warm taupe card; Studio Space = dark card (previews the dark studio pages).
+                A light sweep crosses each card in turn and the arrows nudge on a slow loop (CSS, reduced-motion safe). */}
+            <p className="mt-9 flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-foreground/70 lg:justify-start 2xl:mt-11">
+              Explore our two studios
+              <ArrowRight aria-hidden className="door-bob h-3.5 w-3.5 rotate-90 text-accent-bright" />
+            </p>
+            <div className="mx-auto mt-3 flex max-w-[26rem] flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:justify-center lg:mx-0 lg:max-w-[26rem] lg:flex-col">
               <Link
-                data-magnetic
                 href="/photography"
-                className="group inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-7 lg:px-6 xl:px-7 2xl:h-14 2xl:px-9 2xl:text-base text-sm font-semibold text-primary-foreground transition-[transform,background-color,box-shadow] duration-200 hover:bg-primary/90 hover:shadow-[0_12px_30px_-10px_hsl(var(--primary)/0.7)] active:scale-[0.97]"
+                className="door group relative flex min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-2xl bg-primary py-3 pl-3 pr-3 text-left text-primary-foreground shadow-[0_12px_30px_-14px_hsl(var(--primary-deep)/0.8)] transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-14px_rgba(255,85,0,0.55)] active:scale-[0.98] sm:max-w-[19rem] lg:max-w-none"
               >
-                Explore Photography
-                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-black/10">
+                  <Camera className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block whitespace-nowrap text-base font-bold leading-tight">Photography</span>
+                  <span className="block truncate text-xs font-medium text-black/70">Weddings, events &amp; brands</span>
+                </span>
+                <span aria-hidden className="door-arrow flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/10 transition-colors duration-300 group-hover:bg-black group-hover:text-white">
+                  <ArrowRight className="h-4 w-4" />
+                </span>
               </Link>
               <Link
-                data-magnetic
                 href="/studiospace"
-                className="inline-flex h-12 items-center justify-center whitespace-nowrap rounded-full border border-primary px-7 lg:px-6 xl:px-7 2xl:h-14 2xl:px-9 2xl:text-base text-sm font-semibold text-foreground transition-[transform,background-color] duration-200 hover:bg-card active:scale-[0.97]"
+                className="door door-late group relative flex min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-2xl border border-white/10 bg-[#141212] py-3 pl-3 pr-3 text-left text-white shadow-[0_12px_30px_-14px_rgba(0,0,0,0.7)] transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-0.5 hover:border-accent-bright/60 hover:shadow-[0_18px_36px_-14px_rgba(255,85,0,0.55)] active:scale-[0.98] sm:max-w-[19rem] lg:max-w-none"
               >
-                Explore Studio Space
+                <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-bright/15 text-accent-bright">
+                  <Building2 className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block whitespace-nowrap text-base font-bold leading-tight">Studio Space</span>
+                  <span className="block truncate text-xs font-medium text-white/70">1200 sq ft studio &amp; podcast</span>
+                </span>
+                <span aria-hidden className="door-arrow flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-bright text-black transition-transform duration-300">
+                  <ArrowRight className="h-4 w-4" />
+                </span>
               </Link>
             </div>
 

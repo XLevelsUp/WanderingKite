@@ -14,10 +14,28 @@ export function HeroFilm({ src, poster, label }: { src: string; poster: string; 
   const [playing, setPlaying] = useState(false);
   const userPaused = useRef(false);
 
+  // The poster is the page's LCP, so the film doesn't start during page load: it loads and plays on the first
+  // interaction (scroll / tap / key / mouse move) or after 4s. After that it plays only while visible.
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    const events = ['pointerdown', 'pointermove', 'keydown', 'scroll', 'touchstart'] as const;
+    const arm = () => {
+      setArmed(true);
+      window.clearTimeout(t);
+      events.forEach((e) => window.removeEventListener(e, arm));
+    };
+    const t = window.setTimeout(arm, 4000);
+    events.forEach((e) => window.addEventListener(e, arm, { once: true, passive: true }));
+    return () => {
+      window.clearTimeout(t);
+      events.forEach((e) => window.removeEventListener(e, arm));
+    };
+  }, []);
+
   // Play only while visible (and motion allowed); pause off-screen to save CPU/battery.
   useEffect(() => {
     const v = videoRef.current;
-    if (!v) return;
+    if (!v || !armed) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const io = new IntersectionObserver(([e]) => {
       if (e.isIntersecting && !reduce && !userPaused.current) v.play().catch(() => {});
@@ -25,23 +43,21 @@ export function HeroFilm({ src, poster, label }: { src: string; poster: string; 
     }, { threshold: 0.25 });
     io.observe(v);
     return () => io.disconnect();
-  }, []);
+  }, [armed]);
 
-  // Timecode HH:MM:SS:FF at 24fps, written straight to the DOM while playing.
+  // Timecode HH:MM:SS:FF at 24fps, written straight to the DOM while playing (~12 updates/s is plenty for the eye
+  // and keeps the main thread free, versus a style recalculation on every animation frame).
   useEffect(() => {
     if (!playing) return;
-    let raf = 0;
-    const tick = () => {
+    const p = (n: number) => String(Math.floor(n)).padStart(2, '0');
+    const id = window.setInterval(() => {
       const v = videoRef.current;
       if (v && tcRef.current) {
         const t = v.currentTime;
-        const p = (n: number) => String(Math.floor(n)).padStart(2, '0');
         tcRef.current.textContent = `00:${p(t / 60)}:${p(t % 60)}:${p((t % 1) * 24)}`;
       }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    }, 83);
+    return () => window.clearInterval(id);
   }, [playing]);
 
   const toggle = () => {
@@ -60,6 +76,10 @@ export function HeroFilm({ src, poster, label }: { src: string; poster: string; 
       <div aria-hidden className="absolute -bottom-3 -right-3 left-3 top-3 rounded-2xl bg-[#CBB9A4] sm:-bottom-4 sm:-right-4 sm:left-4 sm:top-4" />
       <div className="relative rounded-2xl bg-[#FAF9F6] p-2 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.45)] sm:p-3">
         <div className="relative aspect-video overflow-hidden rounded-xl bg-black">
+          {/* The poster as a real image underneath the video: it paints with the first frame of the page (LCP),
+              whereas a <video poster> only paints once the video element initialises. Same picture, same place;
+              the film covers it once it plays. */}
+          <img src={poster} alt="" aria-hidden fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-contain" />
           <video
             ref={videoRef}
             src={src}
@@ -67,7 +87,7 @@ export function HeroFilm({ src, poster, label }: { src: string; poster: string; 
             muted
             loop
             playsInline
-            preload="metadata"
+            preload={armed ? 'auto' : 'none'}
             onPlay={() => setPlaying(true)}
             onPause={() => setPlaying(false)}
             aria-label={label}

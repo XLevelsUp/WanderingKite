@@ -128,8 +128,8 @@ export interface BrandConfig {
 export const brandConfig: BrandConfig = {
   name: 'Wandering Kite',
   description:
-    'Photography, camera & equipment rentals, 1200 sq ft studio & podcast recording in RS Puram, Coimbatore. 4.9★ on Google. 500+ projects delivered.',
-  url: 'https://wanderingkite.in',
+    'Photography, camera & equipment rentals, 1200 sq ft studio & podcast recording in RS Puram, Coimbatore. 5★ on Google. 500+ projects delivered.',
+  url: 'https://www.wanderingkite.in',
 
   /* ─── LIGHT BRAND PALETTE ──────────────────────────────────────────────
    *   Porcelain white  #FAF9F6  page background      Warm taupe  #9A8472  buttons/CTAs
@@ -160,7 +160,7 @@ export const brandConfig: BrandConfig = {
     // Muted: mist surface. Muted text is black at reduced opacity rather
     // than a grey, so secondary copy stays inside the palette.
     muted: '42 31% 94%',
-    mutedForeground: '27 17% 53%',
+    mutedForeground: '27 15% 40%',
 
     // Neutral: soft sandstone structure — the heavier card surface.
     neutral: '32 27% 72%',
@@ -222,6 +222,6 @@ export const brandConfig: BrandConfig = {
     logoLight: '/logo-light.svg',
     logoDark: '/logo-dark.svg',
     favicon: '/favicon.ico',
-    ogImage: 'https://wanderingkite.in/og-image.jpg',
+    ogImage: 'https://www.wanderingkite.in/og-image.jpg',
   },
 };

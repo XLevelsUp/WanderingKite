@@ -7,6 +7,11 @@ export function PhotoMotion() {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const root = document.documentElement;
+    // Anything already on screen when the page opens stays visible: only content below the first screen
+    // gets the reveal. Hiding painted content (even briefly) delays LCP/Speed Index and causes a flash.
+    document.querySelectorAll('[data-reveal]').forEach((el) => {
+      if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('is-in');
+    });
     root.classList.add('pm-motion');
 
     const io = new IntersectionObserver(

@@ -7,10 +7,10 @@ import { Camera, Mic, Pause, Play, ShieldCheck, Star, Zap, type LucideIcon } fro
 // Copy unchanged from the previous versions of this section and the old trust strip.
 const GEAR: { name: string; category: string; badge: string; icon: LucideIcon; specs: string[] }[] = [
   { name: 'Sony G-Master Lenses', category: 'Optics', badge: 'Industry Standard', icon: Camera, specs: ['f/1.4-2.8', 'Full-Frame', 'OSS'] },
-  { name: 'Hollyland Lark2 Mic', category: 'Audio', badge: 'Broadcast Quality', icon: Mic, specs: ['XLR', 'Low Noise', 'Phantom Power'] },
-  { name: 'Aputure LED Panels', category: 'Lighting', badge: 'CRI 96+', icon: Zap, specs: ['Bi-Color', 'DMX Control', 'Wireless'] },
+  { name: 'Hollyland Lark2 Mic', category: 'Audio', badge: 'Broadcast Quality', icon: Mic, specs: ['Wireless', 'Low Noise', 'Dual-Channel'] },
+  { name: 'Godox Studio Lighting', category: 'Lighting', badge: 'Pro Output', icon: Zap, specs: ['AD600 Pro II', 'RGB LC1000R', 'Softboxes'] },
 ];
-const BRANDS = ['Sony', 'Canon', 'Nikon', 'Rode'];
+const BRANDS = ['Sony', 'Sigma', 'Godox', 'Hollyland'];
 const GOOGLE_RATING = '5.0';
 
 const SETTLE = { type: 'spring', bounce: 0, duration: 0.9 } as const;
@@ -141,8 +141,9 @@ export function TechSpecs() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-accent-text">Google Reviews</p>
               <div className="mt-2 flex items-center gap-3">
                 <span className="text-3xl font-bold tabular-nums leading-none tracking-[-0.03em] text-foreground">{GOOGLE_RATING}</span>
-                <span className="flex gap-0.5" role="img" aria-label={`Rated ${GOOGLE_RATING} out of 5 on Google`}>
-                  {[0, 1, 2, 3, 4].map((i) => <Star key={i} aria-hidden className="h-4 w-4 fill-accent-text text-accent-text" />)}
+                <span className="flex gap-0.5">
+                  <span className="sr-only">Rated {GOOGLE_RATING} out of 5 on Google</span>
+                  {[0, 1, 2, 3, 4].map((i) => <Star key={i} aria-hidden="true" className="h-4 w-4 fill-accent-text text-accent-text" />)}
                 </span>
               </div>
             </div>
@@ -176,7 +177,7 @@ export function TechSpecs() {
               </span>
               <div className="min-w-0">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-accent-text">
-                  {g.category} <span className="text-foreground/50">· {g.badge}</span>
+                  {g.category} <span className="text-foreground/65">· {g.badge}</span>
                 </p>
                 <h3 className="mt-1 text-lg font-semibold tracking-[-0.015em] text-foreground">{g.name}</h3>
                 <ul className="mt-3 flex flex-wrap gap-2" aria-label={`${g.name} specifications`}>
