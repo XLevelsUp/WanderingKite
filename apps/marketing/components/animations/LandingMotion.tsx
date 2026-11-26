@@ -13,9 +13,11 @@ export function LandingMotion() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const root = document.documentElement;
     // First-screen content is never hidden: mark it revealed before .js-motion turns the effects on.
-    document.querySelectorAll('[data-shutter], main > section:not(:first-of-type) h2').forEach((el) => {
-      if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('is-in');
-    });
+    // Reads first, then writes, so adding classes doesn't force a fresh layout for every element measured.
+    const vh = window.innerHeight;
+    Array.from(document.querySelectorAll('[data-shutter], main > section:not(:first-of-type) h2'))
+      .filter((el) => el.getBoundingClientRect().top < vh)
+      .forEach((el) => el.classList.add('is-in'));
     root.classList.add('js-motion');
 
     const io = new IntersectionObserver(

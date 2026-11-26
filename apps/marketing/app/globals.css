@@ -451,14 +451,17 @@ input:-webkit-autofill:active {
 /* Section tones for photography pages (scoped with data-tone). CTA token: dark on light grounds, white on sandstone.
    Corporate runs sandstone → sand → porcelain → white down the page; Weddings & Events stay porcelain. */
 /* Dark-ground CTAs use the warm taupe brand button (was black). */
+/* --accent-text is the orange for SMALL text (eyebrow labels, links, numbers): 20 100% 33% (#A83800) passes WCAG AA
+   4.5:1 on porcelain, white and sand. The bright brand orange #FF5500 is only ~3:1 there, so it stays reserved for
+   large display text via --accent-bright (text-accent-bright). */
 :root {
-  --accent-text: 20 100% 50%;
+  --accent-text: 20 100% 33%;
   --cta: var(--primary);
   --cta-foreground: var(--primary-foreground);
 }
 [data-tone='sandstone'] {
   --background: 32 27% 72%;
-  --accent-text: 20 100% 50%;
+  --accent-text: 20 100% 26%; /* darker still: sandstone is a mid tone (4.7:1) */
   --card: 35 30% 80%;
   --border: 27 17% 53%;
   --muted-foreground: 0 0% 16%;
@@ -710,4 +713,11 @@ html:not(.tx-ready) *,
 html:not(.tx-ready) *::before,
 html:not(.tx-ready) *::after {
   transition: none !important;
+}
+
+/* Long pages: sections far below the first screen skip layout and paint until they come near the viewport.
+   `auto` in contain-intrinsic-size remembers each section's real height once rendered, so the scrollbar stays steady. */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
 }

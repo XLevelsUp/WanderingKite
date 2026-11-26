@@ -4,6 +4,7 @@ import { preload } from 'react-dom';
 import { ArrowRight, Camera, Crosshair, Monitor, Video } from 'lucide-react';
 import { Footer } from '@/components/shared/Footer';
 import { HeroFilm } from '@/components/photography/HeroFilm';
+import { HERO_POSTER, HERO_POSTER_SIZES, heroPosterSrcSet } from '@/lib/photography/hero-poster';
 import { FilmApproach } from '@/components/photography/FilmApproach';
 import { GearList } from '@/components/photography/GearList';
 import { PhotoReviews } from '@/components/photography/PhotoReviews';
@@ -184,7 +185,8 @@ const gear = [
 export default async function PhotographyPage() {
   // The hero film poster is the first big image on screen (LCP): fetch it at high priority instead of
   // waiting for the <video> element to be parsed and competing with lazy-loaded photos below.
-  preload('/images/photography/weddings-film-poster.webp', { as: 'image', fetchPriority: 'high' });
+  // Same srcSet/sizes as the <img>, so the browser preloads the copy it will actually use (800px on phones).
+  preload(HERO_POSTER, { as: 'image', fetchPriority: 'high', imageSrcSet: heroPosterSrcSet(HERO_POSTER), imageSizes: HERO_POSTER_SIZES });
   const [cat, featured, latest, portfolio] = await Promise.all([
     getCatalog(),
     getAlbums({ featured: true, pageSize: 6 }),
@@ -295,7 +297,7 @@ export default async function PhotographyPage() {
               </div>
             </div>
             <div className="lg:col-span-7">
-              <HeroFilm src="/videos/weddings-film.webm" poster="/images/photography/weddings-film-poster.webp" label="Temple wedding · Wandering Kite" />
+              <HeroFilm src="/videos/weddings-film.webm" poster={HERO_POSTER} label="Temple wedding · Wandering Kite" />
             </div>
           </div>
 
@@ -326,14 +328,15 @@ export default async function PhotographyPage() {
         <PhotoMotion />
         <FilmApproach wrap={PHOTO_WRAP} />
         <StoriesInLight />
-        <FeaturedStories albums={stories} wrap={PHOTO_WRAP} />
-        <GearList gear={gear} wrap={PHOTO_WRAP} />
+        {/* Far below the first screen: .cv-auto lets the browser skip layout/paint until they scroll near (globals.css). */}
+        <div className="cv-auto"><FeaturedStories albums={stories} wrap={PHOTO_WRAP} /></div>
+        <div className="cv-auto"><GearList gear={gear} wrap={PHOTO_WRAP} /></div>
         {/* Strongest (longest, most specific) reviews lead; one-line ones go last. */}
-        <PhotoReviews reviews={[...photographyTestimonials].sort((x, y) => y.content.length - x.content.length)} wrap={PHOTO_WRAP} sourceUrl={siteConfig.googleReviews} />
-        <PhotoProcess steps={processSteps} wrap={PHOTO_WRAP} />
-        <BlogPreview wrap={PHOTO_WRAP} />
-        <PhotoFAQ faqs={faqs} wrap={PHOTO_WRAP} />
-        <PhotoClosing cities={cat.cities} wrap={PHOTO_WRAP} />
+        <div className="cv-auto"><PhotoReviews reviews={[...photographyTestimonials].sort((x, y) => y.content.length - x.content.length)} wrap={PHOTO_WRAP} sourceUrl={siteConfig.googleReviews} /></div>
+        <div className="cv-auto"><PhotoProcess steps={processSteps} wrap={PHOTO_WRAP} /></div>
+        <div className="cv-auto"><BlogPreview wrap={PHOTO_WRAP} /></div>
+        <div className="cv-auto"><PhotoFAQ faqs={faqs} wrap={PHOTO_WRAP} /></div>
+        <div className="cv-auto"><PhotoClosing cities={cat.cities} wrap={PHOTO_WRAP} /></div>
       </main>
       <Footer showInstagram={false} tone="sandstone" section="photography" />
     </>

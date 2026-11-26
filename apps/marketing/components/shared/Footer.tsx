@@ -109,10 +109,11 @@ export function Footer({ account = 'wanderingkite', showInstagram = true, tone =
             <Link href={account === 'studio' ? '/studiospace' : '/'} className="mb-4 inline-block group">
               <Image
                 // Studio Space uses its own logo; photography and landing pages keep the light WK logo.
-                src={account === 'studio' ? '/studio-space-logo.webp' : '/wk-logo-light.png'}
+                // 480px copy of the WK logo (shown ~265px wide): 5KB instead of the 15KB 1125px original.
+                src={account === 'studio' ? '/studio-space-logo.webp' : '/wk-logo-light-480.png'}
                 alt={account === 'studio' ? 'Studio Space Coimbatore' : siteConfig.name}
-                width={account === 'studio' ? 214 : 320}
-                height={account === 'studio' ? 100 : 80}
+                width={account === 'studio' ? 214 : 480}
+                height={account === 'studio' ? 100 : 145}
                 className="h-20 w-auto transition-transform duration-300 group-hover:scale-105"
               />
             </Link>

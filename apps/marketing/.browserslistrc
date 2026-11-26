@@ -1,0 +1,8 @@
+# Modern browsers only, so Next.js stops shipping polyfills/transforms for very old ones
+# (Lighthouse "Legacy JavaScript"). Safari/iOS 15 is kept so older iPhones that can't update past iOS 15 still work.
+chrome >= 93
+edge >= 93
+firefox >= 92
+safari >= 15
+ios_saf >= 15
+samsung >= 17

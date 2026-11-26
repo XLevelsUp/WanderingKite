@@ -150,7 +150,7 @@ export function PortfolioRail({ photos }: { photos: PortfolioPhoto[] }) {
                     <span className={`${storySerif.className} truncate text-xl font-semibold italic leading-none text-foreground transition-colors group-hover:text-accent-text`}>
                       {p.caption.split(' · ')[0]}
                     </span>
-                    <span className="shrink-0 font-mono text-[10px] font-semibold tracking-[0.15em] text-foreground/50">№ {String(i + 1).padStart(2, '0')}</span>
+                    <span className="shrink-0 font-mono text-[10px] font-semibold tracking-[0.15em] text-foreground/70">№ {String(i + 1).padStart(2, '0')}</span>
                   </div>
                   <p className="px-1 pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/55">{p.caption.split(' · ')[1] ?? ''}</p>
                 </div>

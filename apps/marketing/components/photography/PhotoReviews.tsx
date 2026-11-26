@@ -129,14 +129,14 @@ function ReviewCard({ review }: { review: Review }) {
   const [overflows, setOverflows] = useState(false);
   const ref = useRef<HTMLParagraphElement>(null);
 
+  // ResizeObserver reports after the browser's own layout, so reading the heights there costs nothing; reading them
+  // straight in the effect forced an extra layout during page load (Lighthouse "forced reflow"). Also fires on resize.
   useEffect(() => {
-    const check = () => {
-      const el = ref.current;
-      if (el && !expanded) setOverflows(el.scrollHeight > el.clientHeight + 2);
-    };
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    const el = ref.current;
+    if (!el || expanded) return;
+    const ro = new ResizeObserver(() => setOverflows(el.scrollHeight > el.clientHeight + 2));
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [review.content, expanded]);
 
   return (

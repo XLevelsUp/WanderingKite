@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Pause, Play } from 'lucide-react';
+import { HERO_POSTER_SIZES, heroPosterSrcSet } from '@/lib/photography/hero-poster';
 
 /**
  * Photography hero film inside a camera-viewfinder frame: whole 16:9 frame (never cropped), muted loop, plays only
@@ -15,21 +16,17 @@ export function HeroFilm({ src, poster, label }: { src: string; poster: string; 
   const userPaused = useRef(false);
 
   // The poster is the page's LCP, so the film doesn't start during page load: it loads and plays on the first
-  // interaction (scroll / tap / key / mouse move) or after 4s. After that it plays only while visible.
+  // interaction (scroll / tap / key / mouse move). No timer fallback: a timed start repainted the hero mid-load
+  // (~1MB video + ticking timecode), which pushed Speed Index past 4s. After that it plays only while visible.
   const [armed, setArmed] = useState(false);
   useEffect(() => {
-    const events = ['pointerdown', 'pointermove', 'keydown', 'scroll', 'touchstart'] as const;
+    const events = ['pointerdown', 'pointermove', 'keydown', 'scroll', 'touchstart', 'wheel'] as const;
     const arm = () => {
       setArmed(true);
-      window.clearTimeout(t);
       events.forEach((e) => window.removeEventListener(e, arm));
     };
-    const t = window.setTimeout(arm, 4000);
     events.forEach((e) => window.addEventListener(e, arm, { once: true, passive: true }));
-    return () => {
-      window.clearTimeout(t);
-      events.forEach((e) => window.removeEventListener(e, arm));
-    };
+    return () => events.forEach((e) => window.removeEventListener(e, arm));
   }, []);
 
   // Play only while visible (and motion allowed); pause off-screen to save CPU/battery.
@@ -79,11 +76,12 @@ export function HeroFilm({ src, poster, label }: { src: string; poster: string; 
           {/* The poster as a real image underneath the video: it paints with the first frame of the page (LCP),
               whereas a <video poster> only paints once the video element initialises. Same picture, same place;
               the film covers it once it plays. */}
-          <img src={poster} alt="" aria-hidden fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-contain" />
+          <img src={poster} srcSet={heroPosterSrcSet(poster)} sizes={HERO_POSTER_SIZES} alt="" aria-hidden fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-contain" />
           <video
             ref={videoRef}
             src={src}
-            poster={poster}
+            // No poster attribute: the responsive <img> above already shows it, and a video poster fetched the full
+            // 1280px file a second time on phones.
             muted
             loop
             playsInline
