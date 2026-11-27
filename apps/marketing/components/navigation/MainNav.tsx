@@ -88,10 +88,11 @@ export function MainNav() {
           <Link href={studio ? '/studiospace' : '/'} className="group flex items-center gap-2 shrink-0">
             <Image
               // Studio routes use the Studio Space Coimbatore logo; photography and landing pages keep the light WK logo.
-              src={studio ? '/studio-space-logo.webp' : '/wk-logo-light.png'}
+              // 480px copy of the WK logo (shown ~120-160px wide): 5KB instead of the 15KB 1125px original.
+              src={studio ? '/studio-space-logo.webp' : '/wk-logo-light-480.png'}
               alt={studio ? 'Studio Space Coimbatore' : siteConfig.name}
-              width={studio ? 269 : 1125}
-              height={studio ? 100 : 341}
+              width={studio ? 269 : 480}
+              height={studio ? 100 : 145}
               // Logo height capped below the 80px bar so it keeps clear space.
               className={`${studio ? 'h-12 sm:h-14 3xl:h-16' : 'h-9 sm:h-11 3xl:h-12'} w-auto transition-transform duration-300 group-hover:scale-105`}
               priority

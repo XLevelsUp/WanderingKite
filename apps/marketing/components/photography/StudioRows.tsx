@@ -24,7 +24,7 @@ const COPY: Record<string, { n: string; eyebrow: string; body: string; cta: stri
 
 // Book look per section: weddings = porcelain cloth with a taupe spine; corporate = deep charcoal with a sandstone spine.
 const BOOK: Record<string, { spine: string; edge: string }> = {
-  weddings: { spine: 'bg-[#8B7462]', edge: 'from-[#F4F1EA]' },
+  weddings: { spine: 'bg-[#7A6453]', edge: 'from-[#F4F1EA]' }, // spine a shade deeper than #8B7462 so its white label passes 4.5:1
   corporate: { spine: 'bg-[#2B2522]', edge: 'from-[#E8E0D4]' },
 };
 
@@ -110,7 +110,7 @@ export async function StudioRows() {
                         <div className="absolute inset-0 overflow-hidden rounded-r-lg rounded-l-sm shadow-[0_30px_60px_-25px_rgba(0,0,0,0.6)] [backface-visibility:hidden]">
                           {/* Spine */}
                           <div className={`absolute inset-y-0 left-0 z-10 flex w-[11%] items-center justify-center ${book.spine} shadow-[inset_-6px_0_10px_-4px_rgba(0,0,0,0.45)]`}>
-                            <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.35em] text-white/85 [writing-mode:vertical-rl] rotate-180 sm:text-[11px]">
+                            <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.35em] text-white [writing-mode:vertical-rl] rotate-180 sm:text-[11px]">
                               {s.name} · {c.n}
                             </span>
                           </div>

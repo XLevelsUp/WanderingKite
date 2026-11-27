@@ -234,7 +234,7 @@ export function StudioPricingEngine({
   const podcastOrange = {
     '--primary': '16 100% 52%',
     '--primary-deep': '12 90% 42%',
-    '--accent-text': '16 100% 66%',
+    '--accent-text': '16 100% 72%',
   } as React.CSSProperties;
 
   return (
@@ -342,7 +342,7 @@ export function StudioPricingEngine({
                                  }`}
                 >
                   {pkg.popular && (
-                    <span className="absolute -top-3 left-5 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
+                    <span className="absolute -top-3 left-5 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-950">
                       Most Popular
                     </span>
                   )}
@@ -352,7 +352,7 @@ export function StudioPricingEngine({
                       <h4 className="text-base sm:text-lg font-bold text-white leading-none">
                         {pkg.name}
                       </h4>
-                      <span className="flex items-center gap-1 rounded-full bg-primary/15 border border-primary/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary inline-flex">
+                      <span className="flex items-center gap-1 rounded-full bg-primary/15 border border-primary/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-text inline-flex">
                         <Clock className="w-3 h-3" />
                         {pkg.durationLabel}
                       </span>
@@ -367,7 +367,7 @@ export function StudioPricingEngine({
                             {formatINR(pkg.originalPrice)}
                           </span>
                         )}
-                        <span className="text-2xl font-extrabold text-primary drop-shadow-[0_0_12px_hsl(var(--primary)/0.35)]">
+                        <span className="text-2xl font-extrabold text-accent-text drop-shadow-[0_0_12px_hsl(var(--primary)/0.35)]">
                           {formatINR(pkg.price)}
                         </span>
                       </div>
@@ -381,7 +381,7 @@ export function StudioPricingEngine({
                     </div>
                   </div>
 
-                  <p className="text-xs text-zinc-400 leading-relaxed">
+                  <p className="text-xs text-zinc-300 leading-relaxed">
                     {pkg.description}
                   </p>
 
@@ -392,9 +392,9 @@ export function StudioPricingEngine({
                       {pkg.features.map((feature, index) => (
                         <li
                           key={index}
-                          className="flex items-center gap-1.5 text-xs text-zinc-400"
+                          className="flex items-center gap-1.5 text-xs text-zinc-300"
                         >
-                          <Check className="w-3 h-3 text-primary shrink-0" />
+                          <Check className="w-3 h-3 text-accent-text shrink-0" />
                           {feature}
                         </li>
                       ))}
@@ -410,8 +410,8 @@ export function StudioPricingEngine({
                       aria-label={`Book the ${pkg.name} package`}
                       className={`shrink-0 w-full sm:w-auto rounded-full px-6 py-2 text-center text-sm font-bold transition-all ${
                         pkg.popular
-                          ? 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_30px_-5px_hsl(var(--primary)/0.5)]'
-                          : 'border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'
+                          ? 'bg-primary text-zinc-950 hover:bg-primary/90 hover:shadow-[0_0_30px_-5px_hsl(var(--primary)/0.5)]'
+                          : 'border border-primary/40 bg-primary/10 text-accent-text hover:bg-primary/20'
                       }`}
                     >
                       Book Session

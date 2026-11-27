@@ -171,7 +171,7 @@ function InstagramFallback({ handle, account }: { handle: string; account: keyof
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-1" role="tablist" aria-label="Carousel slides">
+        <div className="flex items-center" role="tablist" aria-label="Carousel slides">
           {slides.map((slide, i) => (
             <button
               key={slide.src}
@@ -180,7 +180,7 @@ function InstagramFallback({ handle, account }: { handle: string; account: keyof
               onClick={() => emblaApi?.scrollTo(i)}
               aria-label={`Go to slide ${i + 1}`}
               aria-selected={selected === i}
-              className="flex h-7 items-center justify-center px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
+              className="flex h-11 w-7 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span
                 className={`block h-2 rounded-full transition-all duration-300 ${
